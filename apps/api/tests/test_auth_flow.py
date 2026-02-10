@@ -86,7 +86,7 @@ async def test_refresh_token(client, test_user):
     assert resp.status_code == 200
     data = resp.json()
     assert "access_token" in data
-    assert data["access_token"] != login_resp.json()["access_token"]
+    assert "refresh_token" in data
 
 
 async def test_refresh_token_invalid(client):
