@@ -17,6 +17,7 @@ export interface User {
   phone: string | null;
   is_superadmin: boolean;
   locale: string;
+  permissions?: string[];
 }
 
 export interface Membership {

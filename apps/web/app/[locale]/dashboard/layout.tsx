@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/app/context/AuthContext';
+import { AppShell } from '@/app/components/app-shell/AppShell';
 
 export default function DashboardLayout({
   children,
@@ -35,5 +36,5 @@ export default function DashboardLayout({
     );
   }
 
-  return <>{children}</>;
+  return <AppShell>{children}</AppShell>;
 }

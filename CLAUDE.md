@@ -70,7 +70,15 @@ The spec defines 65+ tables across these domains: organizations/auth/RBAC, peopl
 
 ## Current Status
 
-Early scaffolding. Only the API has a basic skeleton with a `/health/db` endpoint. The docker-compose only has PostgreSQL (missing Redis, MinIO, API/worker/web services). No database models, migrations, auth, or business logic yet.
+**Milestone 1 (DONE - Backend):** Async SQLAlchemy + Supabase, Organization + Animal (basic), Alembic, JWT auth, RBAC (22 permissions, 7 role templates), audit logging.
+
+**Milestone 2 (DONE - Frontend):** Next.js frontend with App Shell (Sidebar, Topbar, Mobile Nav), Dashboard with 6 widgets (drag-drop customizable), OrgSwitcher, RBAC navigation, i18n (cs/en), Zustand UI state, TanStack Query setup.
+
+**Milestone 3 (IN PROGRESS - Backend):** Animal CRUD API with breeds, identifiers, extended fields, filters, pagination, audit logging. Migration and seeds complete. Some tests passing (20/39), but DB transaction issues in remaining tests need fixing.
+
+**Next:** Build Animals frontend (list + detail + create/edit forms) to connect to the Animal CRUD API.
+
+Docker-compose currently has PostgreSQL only (missing Redis, MinIO, API/worker/web services).
 
 ## Key Conventions
 
@@ -78,3 +86,226 @@ Early scaffolding. Only the API has a basic skeleton with a `/health/db` endpoin
 - UI text always through i18n (Czech + English)
 - Contract templates use `{{placeholder}}` syntax (e.g. `{{person.first_name}}`, `{{animal.name}}`)
 - Public animal listings are configurable: mode A (all in shelter) vs mode B (adoptable only)
+- **TODO comments for future work:** When implementing a feature that will be completed in a future milestone, add a TODO comment with the milestone number (e.g. `// TODO: M3+ - Fetch real data from API`). This helps track implementation hooks and makes it easy to find what needs to be built next.
+
+## Internationalization (i18n)
+
+**Language Support:** Czech (cs) and English (en)
+
+**User Language Preferences:**
+- Each **User** can set their own preferred language (`locale` field on users table)
+- Each **Organization** can set a default language for the organization (`default_locale` field on organizations table)
+- Language preference priority: User preference > Organization default > System default (cs)
+- All API responses should respect the user's language preference for error messages, notifications, and dynamic content
+- Frontend UI text must be fully translatable (use i18n keys, no hardcoded strings)
+- Database content (animal descriptions, notes, etc.) is stored in the language entered by the user
+- System-generated content (email templates, reports, exports) should use the user's preferred language
+
+**Implementation Notes:**
+- Add `locale` column to `users` table (VARCHAR(5), default 'cs', values: 'cs', 'en')
+- Add `default_locale` column to `organizations` table (VARCHAR(5), default 'cs')
+- Backend error messages and validation should use i18n keys
+- Frontend uses next-intl or similar for React Server Components
+- **Database content i18n (breeds, diagnosis types, etc.):** Use separate translation tables. Example: `breeds` table has `id` and `code`, `breeds_i18n` table has `breed_id`, `locale`, and `name`. This allows system data to be translatable while keeping the schema clean.
+
+---
+
+## Frontend Specification (Web + PWA)
+
+### 0. Goal
+Build a modern, extremely user-friendly web frontend for shelter DMS (data-heavy app), responsive + PWA offline-first, ready for future mobile app. UX must be faster and friendlier than legacy systems (PetPoint), with focus on daily operations: today's medications, feeding, walks, kennels, tasks, alerts. All UI text exclusively through i18n (cs+en) from first commit.
+
+### 1. Tech Stack (Required)
+- **Core:** Next.js 14+ App Router, TypeScript
+- **Styling:** TailwindCSS + shadcn/ui (Radix) + lucide-react
+- **Data:** TanStack Query (server state), TanStack Table (datagrid)
+- **Forms:** React Hook Form + Zod (validation), toast/sonner
+- **UI State:** Zustand (sidebar, command palette state, dashboard edit mode)
+- **i18n:** next-intl recommended (cs/en)
+- **Offline:** Dexie (IndexedDB) + offline queue + service worker (PWA)
+- **Drag & drop:** dnd-kit (boards + dashboard widget reorder; kennel map admin)
+- **API client:** Generate typed client from OpenAPI into /packages/shared (orval / openapi-typescript)
+
+### 2. UX Principles (Must be felt everywhere)
+- **Minimal click path:** Quick actions, inline editing, sheet/drawer instead of multi-page
+- **Global search + command palette (Cmd/Ctrl+K):** Search Animals/People/Tasks + quick actions
+- **"Today first":** Dashboard as operational center, not management graphs
+- **Mobile-first modes:** Large touch elements, sticky bottom action bar, "Shelter Walk Mode"
+- **Status & severity language consistent:** Same colors, badges, icons across app
+- **RBAC in UI:** What you can't do, you don't see / is disabled with tooltip; but backend enforcement is primary
+- **AI is optional:** AI buttons only when org + permission; otherwise disabled
+
+### 3. i18n (Required from start)
+All UI strings through i18n (cs+en), including:
+- Navigation, buttons, validations, empty states
+- Enum labels (status, sex, priority, severity…)
+
+**Key conventions:**
+```
+nav.dashboard
+animals.status.available
+actions.save
+errors.required
+```
+
+- **Date/time:** Display in organization timezone (from org settings)
+- **Units:** metric/imperial per org settings + format helpers
+
+### 4. Information Architecture & Routes (App Router)
+
+#### Auth
+- `/login`
+- `/select-org`
+
+#### App (after login)
+- `/dashboard`
+- `/animals`, `/animals/new`, `/animals/[id]`
+- `/intake/new` (wizard)
+- `/kennels/map`, `/kennels/manage`
+- `/inventory/walk` (nose count)
+- `/medical/today`, `/medical/catalog`, `/medical/visits`
+- `/feeding/today`, `/feeding/plans`
+- `/tasks`, `/boards`, `/calendar`
+- `/people`, `/people/[id]`
+- `/adoptions/pipeline`, `/adoptions/new`
+- `/fosters/network`
+- `/documents`
+- `/reports`
+- `/alerts`
+- `/settings/org`, `/settings/users-roles`, `/settings/public`, `/settings/ai…`
+
+#### Public / volunteer
+- `/public/[orgSlug]`, `/public/[orgSlug]/animals`, `/public/[orgSlug]/animals/[id]`
+- `/sign/[token]` (public e-sign)
+- `/volunteer/submit` (+ variants with QR prefill)
+
+Each group has its own layout: auth layout (minimal), app shell layout (sidebar/topbar), public layout (SEO), volunteer layout (minimal + mobile-first).
+
+### 5. App Shell Layout
+
+#### Desktop
+- **Left sidebar** (sections per RBAC)
+- **Topbar:**
+  - Org switcher
+  - Global search (cmd+k)
+  - Quick actions dropdown
+  - Alerts bell (badge)
+  - User menu: language, theme, density, logout
+
+#### Mobile
+- **Bottom nav** (Dashboard / Animals / Walk Mode / Alerts / Menu)
+- **FAB** for quick actions
+- **Sticky action bar** in animal detail (most common actions)
+
+### 6. Data Patterns (TanStack Query)
+- **Standard query keys** (org-aware): `['org', orgId, 'animals', filters]`
+- **Mutations** with optimistic update for fast "mark given/fed"
+- **Central error handling:**
+  - 401 → redirect login
+  - 403 → toast + inline "no access"
+- **Skeleton loading** and empty states with clear CTA
+
+### 7. PWA & Offline-first (MVP scope)
+
+#### Offline read (cache)
+- Kennel map + daily lists (medical today, feeding today, tasks today) available offline (last snapshot)
+
+#### Offline write (queue)
+Must work offline and sync later:
+- Walk log
+- Feeding log
+- Volunteer submission (health/behavior report + photos)
+- Inventory walk confirmations
+
+#### Implementation
+- **IndexedDB (Dexie):** offlineQueue + offlineFiles (photos) + snapshots
+- **Sync manager:** When online, drain queue, UI shows queued/syncing/failed
+- **Conflicts in MVP:** Failed item + retry + option to open draft for correction
+
+### 8. AI-ready UI (feature-flagged)
+
+AI entry points (only if AI enabled + permission ai.use):
+- **Animal → Public profile:** "Generate bio (cs/en)", "Translate"
+- **Animal → Overview:** "Summarize history"
+- **Import wizard:** "Suggest CSV mapping"
+- **Volunteer report:** Display triage result (severity + tips)
+
+**UX for AI jobs:**
+- Async job status (queued/running/done/failed)
+- Preview + "Apply" / "Discard"
+- Without AI: disabled button with tooltip
+
+### 9. Dashboard (editable widgets)
+
+**MVP:** Per-user customization:
+- Show/hide widgets
+- Reorder (drag/drop)
+- Desktop grid sizing (optional)
+
+Save layout ideally on server (user settings), fallback localStorage.
+
+**Default widgets:**
+- Today: Meds due (top priority)
+- Today: Feeding due
+- Today: Tasks due
+- Alerts (unacknowledged)
+- Occupancy by zone
+- Quick actions
+- Recently viewed animals
+
+### 10. Key Screens — Specific UX Requirements
+
+#### Animals list `/animals`
+- **Desktop:** Datatable + filters (species/status/zone/kennel/age/sex/breed/tags)
+- **Mobile:** Card list (not table)
+- **Quick row actions:** Move, status change, log walk/feeding, print kennel card
+- **Saved views** (MVP localStorage)
+
+#### Animal detail `/animals/[id]`
+- **Entity header:** Photo, name, public_code, status badge, location, alert badge
+- **Quick actions (sheet):** Change status, move kennel, log walk, log feeding, add medical, upload photos, print PDF+QR
+- **Tabs:** Overview, Timeline, Medical, Feeding, Behavior, Tasks, Documents, Public profile
+- **Timeline:** Unified stream (intake, move, med, note, photo, outcome)
+
+#### Intake wizard `/intake/new`
+Steps:
+1. Identify (search existing + microchip input)
+2. Intake details
+3. Assign kennel (available finder + map picker)
+4. Auto-create tasks (checkbox templates)
+5. Review + Save + print kennel card
+
+#### Kennels map `/kennels/map` + Shelter Walk Mode
+- **View map:** Kennel boxes, occupancy, alerts, quarantine
+- **Admin edit mode:** Drag/resize map coords, edit zones/kennels
+- **Walk Mode (mobile-first):** Walk through kennels, large buttons (fed/walked/cleaned), offline queue
+
+#### Medical today `/medical/today`
+- Daily medication list with extremely fast "Given/Missed/Refused"
+- **Grouping toggle** (by zone / by time)
+- **Offline queue supported**
+
+#### Feeding today `/feeding/today`
+- **Group by** zone/kennel
+- **Batch mark fed**
+- **Offline queue supported**
+
+#### Volunteer submit `/volunteer/submit`
+- **Minimal UI,** no login, mobile-first
+- **QR prefill** animal/kennel
+- **Forms:** Log walk, Health issue, Behavior issue, Add photos
+- **After submit:** Clear instruction if critical (keyword rules)
+
+#### Public listing `/public/[orgSlug]/animals`
+- **SEO friendly,** fast
+- **Mode A/B** (all vs adoptable)
+- **Field visibility toggles** respected
+- **Embed:** iframe route for widget
+
+#### Sign `/sign/[token]`
+- **Mobile-first e-sign flow:** Review → sign → submit
+
+### 11. QA/Performance/A11y Minimum
+- **Virtualization** of large lists (animals, medical today) if needed
+- **Accessibility:** Focus states, keyboard nav, dialog focus trap
+- **Playwright smoke e2e:** Login → create animal → intake → walk mode → volunteer submit
