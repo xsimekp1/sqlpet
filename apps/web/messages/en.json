@@ -24,7 +24,8 @@
     "error": "Error",
     "success": "Success",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "logout": "Logout"
   },
   "language": {
     "cs": "Čeština",

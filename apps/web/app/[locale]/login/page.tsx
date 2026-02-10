@@ -1,0 +1,139 @@
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import { useAuth } from '@/app/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
+
+const formSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: 'login.emailRequired' })
+    .email({ message: 'login.emailInvalid' }),
+  password: z.string().min(1, { message: 'login.passwordRequired' }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function LoginPage() {
+  const t = useTranslations();
+  const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    setIsLoading(true);
+    try {
+      await login(data.email, data.password);
+      toast.success(t('common.success'));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t('login.error');
+      toast.error(errorMessage);
+      form.setError('root', {
+        message: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card className="border-slate-200 dark:border-slate-700 shadow-xl">
+      <CardHeader className="space-y-1">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-2xl font-bold">
+            {t('login.title')}
+          </CardTitle>
+          <LanguageSwitcher />
+        </div>
+        <CardDescription>
+          PawShelter - Shelter Management System
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('login.email')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="admin@example.com"
+                      disabled={isLoading}
+                      autoComplete="email"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('login.password')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="••••••••"
+                      disabled={isLoading}
+                      autoComplete="current-password"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {form.formState.errors.root && (
+              <div className="text-sm text-red-500">
+                {form.formState.errors.root.message}
+              </div>
+            )}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? t('common.loading') : t('login.submit')}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}

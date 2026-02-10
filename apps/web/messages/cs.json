@@ -24,7 +24,8 @@
     "error": "Chyba",
     "success": "Úspěch",
     "cancel": "Zrušit",
-    "save": "Uložit"
+    "save": "Uložit",
+    "logout": "Odhlásit se"
   },
   "language": {
     "cs": "Čeština",
