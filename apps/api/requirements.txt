@@ -12,3 +12,7 @@ pydantic-settings
 argon2-cffi
 PyJWT
 python-dotenv
+
+pytest
+pytest-asyncio
+httpx
