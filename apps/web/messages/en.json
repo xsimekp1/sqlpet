@@ -1,0 +1,33 @@
+{
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign In",
+    "error": "Invalid credentials",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
+    "passwordRequired": "Password is required"
+  },
+  "selectOrg": {
+    "title": "Select Organization",
+    "noMemberships": "You are not a member of any organization",
+    "role": "Role",
+    "select": "Select"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "language": {
+    "cs": "Čeština",
+    "en": "English"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "login": {
+    "title": "Přihlášení",
+    "email": "E-mail",
+    "password": "Heslo",
+    "submit": "Přihlásit se",
+    "error": "Neplatné přihlašovací údaje",
+    "emailRequired": "E-mail je povinný",
+    "emailInvalid": "Neplatný formát e-mailu",
+    "passwordRequired": "Heslo je povinné"
+  },
+  "selectOrg": {
+    "title": "Vyberte organizaci",
+    "noMemberships": "Nejste členem žádné organizace",
+    "role": "Role",
+    "select": "Vybrat"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Vítejte"
+  },
+  "common": {
+    "loading": "Načítání...",
+    "error": "Chyba",
+    "success": "Úspěch",
+    "cancel": "Zrušit",
+    "save": "Uložit"
+  },
+  "language": {
+    "cs": "Čeština",
+    "en": "English"
+  }
+}
