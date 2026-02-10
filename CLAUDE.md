@@ -53,6 +53,95 @@ cd apps/api
 pytest
 ```
 
+## CLI Tools & Deployment Debugging
+
+### Railway CLI Setup
+
+**Check if logged in:**
+```bash
+railway whoami
+```
+
+**If not logged in, user must run (requires browser OAuth):**
+```bash
+railway login
+```
+Note: `railway login` opens a browser for OAuth. Claude Code cannot complete this interactively - user must run it in their terminal.
+
+**Link project to directory:**
+```bash
+cd apps/api
+railway link -p joyful-elegance -e production
+```
+
+**Check deployment logs:**
+```bash
+cd apps/api
+railway logs --tail 50
+```
+
+**Check deployment status:**
+```bash
+railway status
+```
+
+**Common issues:**
+- If `railway status` shows "Service: None", need to link service with `railway service <name>`
+- If getting 404 from Railway URL with `x-railway-fallback: true` header, app is not running (check logs for crash/build failure)
+- For monorepo: Railway **Root Directory** must be set to `apps/api` in dashboard Settings
+
+### Vercel CLI Setup
+
+**Check if logged in:**
+```bash
+vercel whoami
+```
+
+**If not logged in, user must run:**
+```bash
+vercel login
+```
+
+**Check deployments:**
+```bash
+cd apps/web
+vercel ls
+vercel logs
+```
+
+### Debugging Deployment Issues
+
+**When login fails with CORS errors:**
+1. Check if Railway API is running: `curl -I https://joyful-elegance.up.railway.app/health`
+   - Look for `x-railway-fallback: true` → means app crashed/not running
+2. Check Railway logs: `railway logs --tail 50` (if linked) or Railway Dashboard
+3. Common causes:
+   - Missing `main.py` in root (Railpack expects it)
+   - Import errors (missing files not committed to git)
+   - Database connection failures (wrong DATABASE_URL)
+   - Missing environment variables
+
+**Railway deployment checklist:**
+- Root Directory: `apps/api` (for monorepo)
+- Start Command: `uvicorn src.app.main:app --host 0.0.0.0 --port $PORT` (or use `main.py` in root)
+- Environment variables: DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+- All imported files must be committed to git (Railway pulls from GitHub)
+
+**CORS issues:**
+- Backend must have `CORSMiddleware` with Vercel domain in `allow_origins`
+- Check CORS headers in response: `curl -I -H "Origin: https://web-theta-peach-77.vercel.app" https://joyful-elegance.up.railway.app/auth/login`
+
+### Deployment Flow
+
+1. Make code changes
+2. `git commit && git push`
+3. GitHub triggers auto-deploy:
+   - Railway: Builds & deploys API (~2-5 min)
+   - Vercel: Builds & deploys frontend (~1-2 min)
+4. Check deployment status:
+   - Railway: `railway logs` or dashboard
+   - Vercel: `vercel ls` or dashboard
+
 ## Architecture Principles (from spec)
 
 - **Multi-tenant from day one:** Every table has `organization_id` (FK). API must enforce tenant isolation — users only see their org's data.
