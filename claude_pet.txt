@@ -1,0 +1,446 @@
+Jsi Claude Code (agent, který umí vytvořit celý repo projekt). Tvůj úkol: vytvořit end‑to‑end MVP moderního cloudového DMS systému pro malé útulky v ČR s ambicí globálního trhu. Cíl: aby se dal systém používat okamžitě (i v malém útulku s 1–3 zaměstnanci + desítky dobrovolníků), byl extrémně user‑friendly (oproti PetPoint), měl kompletní core featury, plus chytré automatizace/AI, a nebylo nutné později dělat velké refactory.
+
+NEPTEJ SE na doplňující otázky. Když něco není specifikované, vyber nejjednodušší rozumné defaulty a napiš je do README jako “Assumptions”.
+
+──────────────────────────────────────────────────────────────────────────────
+0) PRODUKT: VIZE A PRINCIPY
+──────────────────────────────────────────────────────────────────────────────
+Název projektu (codename): “PawShelter” (CZ: “ÚtulekOS”). Kód, proměnné, DB názvy piš anglicky, UI texty přes i18n (cs + en) od začátku.
+
+Hlavní cíle:
+- 100% webové (cloud) + PWA offline-first pro terén a “shelter walk”.
+- Multi-tenant (organizace/útulky) od začátku.
+- Role-based access (RBAC) + audit log (kdo co změnil).
+- Extrémně rychlé každodenní workflow: rychlé vyhledání zvířete, dnešní medikace, dnešní krmení, venčení, úklid, karanténa, kotce.
+- Povinné CZ “compliance ready” prvky: evidence, veřejné zveřejnění zvířat (minimálně adoptovatelná a/nebo všechna podle volby), exporty pro obce/KVS, atd.
+- Integrace: “embed / iframe” pro web útulku (aktuální nabídka z DB).
+- MVP má být “feature-complete core”: zvíře, příjem/výdej, kotce, zdravotní, krmení, chování, úkoly, kalendář, dobrovolníci, dočasná péče (foster), adopce, dokumenty, smlouvy, reporting, import/export, veřejný web.
+- AI/automatizace: primárně šetřit čas (auto-vyplnění, generování bio, chytré upozornění, mapování importů). AI musí být “optional” (bez klíče to funguje bez AI).
+
+Inspirace/benchmark:
+- PetPoint (feature coverage, reporting, medical, kennel cards, intake/outcome, animal control).
+- ShelterLuv (user-friendly).
+- PawPlacer (modern UI, taskboards, form builder, doc manager, AI uploader, public profiles).
+- Typické pain pointy: user-friendly UI, rychlé denní seznamy léků, snadná evidence zdravotních úkonů, dostupnost pěstounů, mobilní zápisy dobrovolníků přes QR, inventory low-stock, jednoduché reporty.
+
+──────────────────────────────────────────────────────────────────────────────
+1) TECH STACK & REPO STRUKTURA (PŘESNĚ)
+──────────────────────────────────────────────────────────────────────────────
+Monorepo:
+
+/apps/api           -> Python FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2
+/apps/web           -> Next.js 14+ (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Query
+/apps/worker        -> Celery worker + Celery Beat (scheduled jobs), Redis broker
+/packages/shared    -> shared types (OpenAPI client generation nebo Zod schemas), i18n keys
+/infra              -> docker-compose, env examples, optional scripts
+/docs               -> product docs + ADRs + API docs notes
+/seed               -> seed data scripts
+
+Infrastructure:
+- Postgres 16+
+- Redis (Celery)
+- Object storage: S3 compatible (MinIO in docker compose) + local dev fallback
+- Email: SMTP (optional), in dev log to console
+
+Auth:
+- JWT access + refresh (httpOnly cookies pro web).
+- Password hashing Argon2.
+- Multi-tenant membership (uživatel může být ve více útulcích).
+- RBAC: role templates + per-permission overrides.
+
+Search:
+- Postgres full-text + pg_trgm pro rychlé fuzzy vyhledávání (jména, čip, A#, kennel, tagy).
+
+Offline/PWA:
+- Web app jako PWA: offline cache pro “kennel map + daily lists”; offline queue pro zápisy (walk log, krmení, poznámky), sync při online.
+
+PDF:
+- Generování kennel cards, smluv, potvrzení: server-side HTML->PDF (Playwright nebo WeasyPrint) nebo reportlab (vyber jednodušší, ale robustní).
+
+Payments:
+- MVP: evidovat platby ručně + placeholder integrace Stripe (feature-flag).
+
+Integrace:
+- Public listing embed (iframe/js snippet).
+- Petfinder/similar: jen scaffolding (interface + job), ne plná integrace.
+
+──────────────────────────────────────────────────────────────────────────────
+2) DATOVÝ MODEL (DB) – POVINNÉ TABULKY A VZTAHY
+──────────────────────────────────────────────────────────────────────────────
+Použij UUID pro PK. Všude multi-tenant column: organization_id (FK). Vynucuj v API, že uživatel vidí jen své org.
+
+Core tabulky:
+- organizations(id, name, slug, timezone, locale_default, units_default(metric/imperial), address, kvs_registration_number nullable, settings jsonb, created_at)
+- users(id, email, password_hash, name, phone nullable, is_superadmin bool, created_at)
+- memberships(id, user_id, organization_id, role_id, status(active/invited/disabled), created_at)
+- roles(id, organization_id, name, description, is_template bool)
+- permissions(id, key, description)  // global list of permission keys
+- role_permissions(role_id, permission_id, allowed bool)
+- audit_logs(id, organization_id, actor_user_id, action, entity_type, entity_id, before jsonb, after jsonb, ip, user_agent, created_at)
+
+People/CRM:
+- people(id, organization_id, type enum(adopter,foster,volunteer,donor,owner,vet_contact,staff_external), first_name, last_name, email, phone, address, notes, gdpr_consent flags, created_at)
+- households(id, organization_id, name, address)
+- household_members(household_id, person_id, role text)
+- communications(id, organization_id, person_id, channel(email,phone,chat,in_person), subject, body, created_at, created_by)
+
+Animals:
+- animals(id, organization_id, public_code unique e.g. “A-2026-000123”, name, species enum(dog,cat,other), sex enum(male,female,unknown), altered_status enum(intact,neutered,spayed,unknown), birth_date_estimated date nullable, age_group enum(baby,young,adult,senior,unknown), color text, coat text, size_estimated enum(xs,s,m,l,xl,unknown), weight_current_kg numeric nullable, weight_estimated_kg numeric nullable, status enum(intake,available,hold,quarantine,fostered,adopted,transferred,returned_to_owner,deceased,euthanized,escaped), status_reason text nullable, intake_date date nullable, outcome_date date nullable, description text, public_visibility bool default false, featured bool default false, created_at)
+- animal_identifiers(id, organization_id, animal_id, type enum(microchip,tattoo,collar_tag,other), value, registry text nullable, issued_at date nullable)
+- breeds(id, species, name) + seed common breeds; allow custom
+- animal_breeds(animal_id, breed_id, percent int nullable) // pro mix plemen
+- animal_relationships(id, organization_id, from_animal_id, to_animal_id, type enum(friend,neutral,conflict,parent,offspring,sibling,unknown), confidence enum(low,med,high), notes, created_at)
+- animal_photos(id, organization_id, animal_id, url, is_primary bool, caption, created_at)
+- animal_files(id, organization_id, animal_id, file_id)
+
+Intake/Outcome:
+- intakes(id, organization_id, animal_id, intake_type enum(stray,owner_surrender,transfer_in,humane_seizure,found_by_municipality,other), intake_datetime, found_location_text nullable, found_lat nullable, found_lng nullable, found_date nullable, brought_by_person_id nullable, municipality_id nullable, case_id nullable, hold_until date nullable, notes)
+- outcomes(id, organization_id, animal_id, outcome_type enum(adoption,return_to_owner,transfer_out,euthanasia,deceased,escaped,other), outcome_datetime, person_id nullable, organization_to_id nullable, fee_amount numeric nullable, notes)
+
+Kennel/Facility:
+- facilities(id, organization_id, name, address nullable)
+- kennel_zones(id, organization_id, facility_id, name, color nullable, is_quarantine_zone bool default false)
+- kennels(id, organization_id, facility_id, zone_id, name, type enum(kennel,cage,room,foster_virtual,other), capacity int default 1, map_x int nullable, map_y int nullable, map_w int nullable, map_h int nullable, notes)
+- animal_stays(id, organization_id, animal_id, kennel_id, start_datetime, end_datetime nullable, reason enum(intake,move,medical,isolation,behavior,foster,other))
+- shelter_inventories(id, organization_id, facility_id, performed_by_user_id, performed_at, results jsonb, missing_count int, notes) // “nose count”
+- cleaning_logs(id, organization_id, kennel_id, performed_by_user_id, performed_at, notes)
+
+Medical:
+- vets(id, organization_id, name, phone, email, address, notes)
+- medical_visits(id, organization_id, animal_id, vet_id nullable, visit_datetime, reason, notes, cost numeric nullable)
+- diagnoses(id, organization_id, animal_id, diagnosis_code nullable, diagnosis_text, diagnosed_at, resolved_at nullable)
+- medications_catalog(id, organization_id, name, form enum(tablet,liquid,injection,topical,other), strength text nullable, default_unit text nullable, is_controlled bool default false)
+- medication_orders(id, organization_id, animal_id, medication_id, dose text, frequency text, start_date, end_date nullable, instructions, prescribed_by_vet_id nullable, status enum(active,paused,completed,cancelled))
+- medication_administrations(id, organization_id, order_id, administered_at, administered_by_user_id nullable, dose_given text nullable, notes, status enum(given,missed,refused,vomited))
+- vaccinations_catalog(id, organization_id, name, species, series_total int nullable, series_interval_days int nullable)
+- vaccination_events(id, organization_id, animal_id, vaccine_id, administered_at, administered_by_user_id nullable, next_due_date nullable, batch_number nullable, cost numeric nullable)
+- procedures(id, organization_id, animal_id, name, performed_at, performed_by text nullable, cost numeric nullable, notes)
+- medical_alerts(id, organization_id, animal_id, severity enum(info,warning,critical), title, body, active bool, created_at)
+
+Feeding:
+- foods(id, organization_id, name, brand nullable, type enum(dry,wet,raw,medical,other), kcal_per_100g nullable)
+- feeding_plans(id, organization_id, animal_id, food_id nullable, amount_g numeric nullable, amount_text text nullable, times_per_day int nullable, schedule_json jsonb nullable (např. konkrétní časy), start_date, end_date nullable, notes, is_active bool)
+- feeding_logs(id, organization_id, animal_id, fed_at, fed_by_user_id nullable, amount_text, notes)
+
+Behavior/Enrichment & Walks:
+- behavior_profiles(id, organization_id, animal_id, assessment_date, sociability_people enum(low,med,high,unknown), sociability_dogs enum(low,med,high,unknown), sociability_cats enum(low,med,high,unknown), handling_tolerance enum(low,med,high,unknown), bite_history bool, notes)
+- walk_logs(id, organization_id, animal_id, walked_at, duration_min int nullable, walked_by_person_id nullable (volunteer), walked_by_user_id nullable, notes, mood enum(calm,excited,reactive,unknown))
+- enrichment_logs(id, organization_id, animal_id, activity_type enum(puzzle,toy,training,playgroup,other), performed_at, performed_by_user_id nullable, notes)
+- keyword_rules(id, organization_id, name, pattern text, severity enum(info,warning,critical), auto_notify_roles jsonb, response_tips jsonb)
+- alerts(id, organization_id, source enum(walk,behavior,medical,inventory,system), animal_id nullable, person_id nullable, severity enum(info,warning,critical), title, body, created_at, acknowledged_at nullable, acknowledged_by_user_id nullable)
+
+Tasks/Boards/Calendar:
+- tasks(id, organization_id, title, description, status enum(todo,in_progress,done,archived), priority enum(low,med,high,urgent), due_at nullable, assigned_user_id nullable, related_entity_type nullable, related_entity_id nullable, recurrence_rule text nullable (RRULE), created_by_user_id, created_at)
+- task_boards(id, organization_id, name, description, created_at)
+- task_board_columns(id, organization_id, board_id, name, sort int)
+- task_board_items(id, organization_id, board_id, column_id, task_id, sort int)
+- events(id, organization_id, title, description, starts_at, ends_at nullable, location nullable, event_type enum(appointment,transport,adoption_event,meeting,other), animal_id nullable, person_id nullable, assigned_user_id nullable)
+
+Documents:
+- files(id, organization_id, storage_provider enum(local,s3), path, filename, mime, size_bytes, uploaded_by_user_id, created_at)
+- folders(id, organization_id, parent_id nullable, name, created_at)
+- folder_files(folder_id, file_id)
+- entity_files(id, organization_id, entity_type, entity_id, file_id)
+
+Forms (Custom Form Builder):
+- form_templates(id, organization_id, name, type enum(intake,adoption,foster,volunteer,custom), json_schema jsonb, ui_schema jsonb, is_active bool)
+- form_submissions(id, organization_id, template_id, submitted_by_person_id nullable, submitted_by_user_id nullable, related_entity_type nullable, related_entity_id nullable, answers jsonb, created_at)
+
+Contracts & E-sign:
+- contract_templates(id, organization_id, name, type enum(adoption,foster,volunteer,other), html_template text, is_active bool)
+- contracts(id, organization_id, template_id, person_id, animal_id nullable, status enum(draft,sent,signed,void), sent_at nullable, signed_at nullable, signed_payload jsonb nullable, pdf_file_id nullable, public_sign_token unique nullable)
+
+Inventory (MVP jednoduché, ale funkční):
+- inventory_items(id, organization_id, name, category enum(medication,vaccine,food,supply,other), unit text, reorder_threshold numeric nullable)
+- inventory_lots(id, organization_id, item_id, lot_number nullable, expires_at nullable, quantity numeric, cost_per_unit numeric nullable)
+- inventory_transactions(id, organization_id, item_id, lot_id nullable, type enum(in,out,adjust), quantity numeric, reason, related_entity_type nullable, related_entity_id nullable, created_at, created_by_user_id)
+
+AI & Automation:
+- ai_settings(id, organization_id, provider enum(none,openai,anthropic,local), api_key_encrypted nullable, model, enabled_features jsonb)
+- ai_jobs(id, organization_id, type enum(generate_bio,summarize_history,translate_profile,map_csv,triage_note), status enum(queued,running,done,failed), input jsonb, output jsonb, created_at, completed_at)
+
+Reporting:
+- saved_reports(id, organization_id, name, description, query_json jsonb, schedule_cron nullable, email_recipients jsonb, last_run_at nullable)
+
+Pozn.: Všechny tabulky musí mít created_at/updated_at (a u citlivých soft delete: deleted_at).
+
+──────────────────────────────────────────────────────────────────────────────
+3) RBAC – ROLE A PERMISSION KEYS (MVP)
+──────────────────────────────────────────────────────────────────────────────
+Vytvoř permission keys (stringy) a template role sety:
+- admin: full
+- manager: manage animals/people/medical/tasks/reports
+- vet_staff: medical read/write, animals read, no finance
+- caretaker: animals read/write basic, tasks, feeding, walks, kennel move
+- volunteer: pouze mobile forms + walk logs + view limited animal cards (no PII)
+- foster: pouze foster portal pro své svěřence (limited)
+- readonly/auditor: read-only + exports
+
+Permission keys příklady:
+org.manage, users.manage, animals.read, animals.write, intakes.write, outcomes.write,
+kennels.manage, medical.read, medical.write, inventory.read, inventory.write,
+people.read, people.write, forms.manage, contracts.manage, reports.run, reports.schedule,
+public.manage, ai.use, payments.write, audits.read.
+
+Implementuj:
+- UI pro správu rolí a “user templates”.
+- Audit log automaticky pro create/update/delete klíčových entit.
+
+──────────────────────────────────────────────────────────────────────────────
+4) UX/UI – OBRAZOVKY A HLAVNÍ WORKFLOWS (MVP musí fungovat)
+──────────────────────────────────────────────────────────────────────────────
+Design zásady:
+- Minimal click path pro denní práci.
+- Všude globální search (animals + people + tasks + events).
+- “Today” dashboard: co musím udělat dnes (meds, feeding, tasks, appointments).
+- Velké dotykové prvky pro mobil “shelter walk”.
+
+Web app (Next.js) routes:
+
+A) Auth / Org:
+- /login, /select-org, /settings/org, /settings/users-roles
+
+B) Dashboard:
+- /dashboard
+  Widgets:
+  - Global Search
+  - Today: Meds due, Vaccines due, Feeding due, Tasks due, Alerts
+  - Occupancy: capacity by zone
+  - Quick actions: New intake, Move animal, Log walk, Log feeding, Add medical
+
+C) Animals:
+- /animals (list + filters: species, status, zone, kennel, age, sex, breed, tags)
+- /animals/new (quick create)
+- /animals/[id] (profile tabs):
+  - Overview (photo, status, location, quick actions)
+  - Intake/Outcome timeline
+  - Medical (visits, diagnoses, meds, vaccines; “daily meds list” view)
+  - Feeding (plan + logs)
+  - Behavior (profile + notes + compatibility)
+  - Tasks (linked tasks)
+  - Documents (files)
+  - Public Profile (what will be visible + preview)
+  - Print kennel card (PDF + QR)
+
+D) Intake workflow (wizard):
+- /intake/new
+  Steps:
+  1) Identify animal (existing? scan microchip? create new)
+  2) Intake details (type, found location/date, brought by, municipality/case, hold until)
+  3) Assign kennel (use “find available kennel”)
+  4) Auto-create initial tasks (health check, deworm, vaccine series, photo)
+  5) Save + show kennel card print
+
+E) Kennels / Map:
+- /kennels/map  (visual map of kennels; drag-drop edit in admin mode)
+  - Show occupancy, color-coded alerts, quarantine zone
+  - Click kennel -> list animals + quick actions
+  - Mobile mode: “walk inventory” start, then confirm each kennel
+- /kennels/manage (CRUD zones/kennels, capacity)
+- /inventory/walk (nose count): guided flow, offline capable
+
+F) Medical:
+- /medical/today (daily list: meds administrations due, vaccines due, procedures, critical alerts)
+- /medical/catalog (meds, vaccines)
+- /medical/visits
+Medical UX must be user-friendly: one screen “Add medical entry” with templates/bundles (e.g. vaccine bundle) a automatické plánování další dávky v sérii.
+
+G) Feeding:
+- /feeding/today (list by kennel/zone)
+- /feeding/plans
+
+H) Tasks & Boards:
+- /tasks (list)
+- /boards (kanban; drag-drop; assign; due dates; archive)
+- /calendar (unified calendar; filters by animal, staff, type; list view)
+
+I) People:
+- /people (adopters/fosters/volunteers/donors/owners)
+- /people/[id] (profile: applications, placements, history, comms, docs)
+
+J) Adoption:
+- /adoptions/pipeline (stages: inquiry -> application -> meet&greet -> approved -> contract -> completed)
+- /adoptions/new (select animal + person; fee; contract)
+- Contract signing: public link /sign/[token] (mobile-friendly e-sign)
+
+K) Foster:
+- /fosters/network (list fosters + capacity/availability)
+- Foster availability (pěstoun vyplní přes portal): typ zvířete, max size, medical constraints, date range
+- Placements: assign animal -> foster; tasks auto (check-in)
+- Convert foster->adopter in 1 click
+
+L) Volunteer Hub (MVP must):
+- /volunteer/submit (mobile simplified forms) + QR code per kennel/animal
+  - “Log walk”
+  - “Report health issue”
+  - “Report behavior issue”
+  - “Add new photos”
+  - Each submission triggers keyword rules; critical triggers show “find staff immediately” + create alert.
+
+M) Public profile / Website integration:
+- /public/[orgSlug]  (optional public landing: about + adoptable animals + donate methods)
+- /public/[orgSlug]/animals (list)
+- /public/[orgSlug]/animals/[id] (public animal profile)
+- Embed widget (iframe/js): show adoptable + lost/found as configured; real-time from DB.
+- Must allow per-field visibility toggles (what public sees).
+
+N) Reporting:
+- /reports (saved reports + run)
+- Default reports:
+  - Intake/outcome counts by period
+  - Length of stay
+  - Animals in care by status
+  - Daily meds list
+  - Inventory low stock
+  - Foster capacity list
+  - Municipality costs summary (if used)
+- Export CSV/XLSX.
+
+──────────────────────────────────────────────────────────────────────────────
+5) CHYTRÉ FUNKCE / AI / AUTOMATIZACE (MVP)
+──────────────────────────────────────────────────────────────────────────────
+A) Automatické odhady bez AI (heuristiky):
+- Auto-fill weight_estimated_kg podle species + sex + breed (pokud čisté plemeno) nebo weighted average pro mix (percent).
+- Growth estimate (“finální velikost”) pro štěně: jednoduchý model:
+  - input: current age (weeks), current weight, breed size class
+  - output: predicted adult weight range (min/max), confidence
+  - implement as deterministic function + store to animal profile (computed fields).
+
+B) AI (optional, feature-flag):
+- Generate adoption bio from structured fields + recent notes (cs/en).
+- Summarize animal timeline (intake->today) for staff (“quick briefing”).
+- Translate public profile (cs<->en).
+- CSV AI mapping: user uploads CSV, system navrhne mapování sloupců, normalizuje formáty.
+- Triage of volunteer notes: classify severity + suggest protocol tips (customizable per shelter).
+Implement AI provider interface:
+- If no key: disable AI buttons with tooltip.
+- Store prompts/templates per org in settings (so shelters can customize tone/protocol).
+- Log ai_jobs + outputs.
+
+C) Keywords & Alerts:
+- Keyword rules: detect words like “bite/kousl”, “bleeding/krvácí”, “cannot stand/nemůže vstát”, “labored breathing” -> critical alert + push to /alerts + optional email.
+- Implement rule engine (regex patterns) + severity mapping.
+
+D) Scheduling:
+- Vaccine series: after vaccination_event with series config, auto-create next_due_date + task.
+- Recurring tasks: cleaning, feeding reminders, volunteer shifts.
+
+──────────────────────────────────────────────────────────────────────────────
+6) CZ-SPECIFICKÉ USE CASES (MVP zahrnout datově + UI)
+──────────────────────────────────────────────────────────────────────────────
+- Evidence přijatých a vydaných zvířat, včetně nových chovatelů (export/report).
+- Evidence úniků zvířat (escaped outcome + separate log).
+- Veřejné zveřejnění seznamu zvířat s fotkou, datem a místem nálezu: udělej to jako konfigurovatelné:
+  - režim A: zveřejňovat “všechna v útulku”
+  - režim B: zveřejňovat “jen adoptovatelná”
+  - vždy musí být možné vynutit povinné položky pro CZ režim.
+- Obec/municipality: možnost evidovat “případ” (case) a náklady, aby šlo reportovat obci (MVP jednoduché: case_id, municipality jako “people type=external agency” nebo zvláštní tabulka).
+- Odchyt: možnost evidovat, kdo odchyt provedl + číslo osvědčení (stačí pole “catcher_certificate_id” u user/person + v intake).
+
+──────────────────────────────────────────────────────────────────────────────
+7) API – MINIMÁLNÍ ENDPOINTY (MVP)
+──────────────────────────────────────────────────────────────────────────────
+FastAPI:
+- /auth/login, /auth/refresh, /auth/logout, /auth/me
+- /orgs (list user orgs), /orgs/{id}/settings
+- /users, /roles, /permissions
+- /animals CRUD + /animals/search + /animals/{id}/timeline
+- /intakes CRUD, /outcomes CRUD
+- /kennels CRUD + /kennels/map + /kennels/available?species=&capacity=
+- /stays (move animal)
+- /medical/* (visits, diagnoses, meds orders/admins, vaccines)
+- /feeding/plans, /feeding/logs, /feeding/today
+- /behavior/*, /walks/*, /alerts/*
+- /tasks/*, /boards/*, /calendar/*
+- /people/*, /applications/*, /placements/*
+- /forms/*, /submissions/*
+- /contracts/*, /sign/{token}
+- /files/* (upload, list, link to entity)
+- /inventory/* (items, lots, txns, lowstock)
+- /reports/run, /reports/saved
+- /public/{orgSlug}/animals endpoints for public listing
+- /webhooks/integrations/* (stub)
+
+OpenAPI schema must be complete. Generate typed client for web app.
+
+──────────────────────────────────────────────────────────────────────────────
+8) MOBILNÍ TERÉN / PWA (MVP MUST)
+──────────────────────────────────────────────────────────────────────────────
+- PWA installable.
+- Offline queue for:
+  - walk log
+  - feeding log
+  - volunteer report submission
+  - inventory walk confirmations
+- QR code:
+  - Each kennel card contains QR to animal page (or volunteer submit page with animal prefilled).
+  - QR scanning page uses camera (web).
+- “Shelter Walk Mode”:
+  - show kennel map -> tap kennel -> mark feeding/walk/cleaning done quickly.
+  - big buttons, minimal typing, voice-to-text optional (browser).
+
+──────────────────────────────────────────────────────────────────────────────
+9) IMPORT/EXPORT & DATA OWNERSHIP
+──────────────────────────────────────────────────────────────────────────────
+- CSV import wizard:
+  - upload file
+  - map columns -> fields
+  - preview
+  - import
+- AI mapping optional.
+- Export:
+  - full org export (animals, people, medical, tasks) to ZIP (JSON/CSV) for “data belongs to you”.
+- Public listing export for web.
+
+──────────────────────────────────────────────────────────────────────────────
+10) TESTING, QUALITY, SECURITY, GDPR
+──────────────────────────────────────────────────────────────────────────────
+Backend tests:
+- pytest: model constraints, RBAC checks, key endpoints, tenant isolation.
+Frontend:
+- basic e2e Playwright smoke: login, create animal, intake, mark med given, publish public profile.
+Security:
+- rate limit login + public endpoints
+- input validation
+- file upload virus scan stub (optional)
+GDPR:
+- person anonymization endpoint: removes PII but keeps historical references (e.g. adoption record).
+- consent flags + data export per person.
+
+──────────────────────────────────────────────────────────────────────────────
+11) SEED DATA (DEMO)
+──────────────────────────────────────────────────────────────────────────────
+- Create demo org “Útulek Demo” + 2 facilities + zones + kennels with map coordinates.
+- Seed 10 animals with various statuses, one in quarantine, one in foster, mix breeds, relationships friend/conflict.
+- Seed 5 volunteers + 3 fosters + 3 adopters.
+- Seed medication orders so /medical/today shows something.
+
+──────────────────────────────────────────────────────────────────────────────
+12) DEFINITION OF DONE (Co musí repo splnit)
+──────────────────────────────────────────────────────────────────────────────
+- `docker-compose up` spustí postgres+redis+minio+api+worker+web.
+- Web UI: login -> dashboard -> vytvořit intake -> přiřadit kotec -> tisk kennel card PDF -> vytvořit med order -> /medical/today ukáže dávky -> označit jako given -> odečte inventory (pokud item existuje).
+- Volunteer: otevřít QR submit page -> log walk -> keyword detection -> vytvoří alert.
+- Foster: nastavit availability -> umístit zvíře -> zvíře se přepne do fostered + stay.
+- Public: zapnout public profile -> stránka ukáže zvířata + embed snippet funguje.
+- Reports: alespoň 6 default reportů + export CSV.
+- Audit log: změny animal status, medical entries, kennel moves jsou logované.
+- i18n: UI minimálně cs/en.
+
+──────────────────────────────────────────────────────────────────────────────
+13) DŮLEŽITÉ IMPLEMENTAČNÍ POZNÁMKY
+──────────────────────────────────────────────────────────────────────────────
+- Vytvoř “domain services” (intakeService, medicalService, kennelService) místo toho, aby logika byla roztroušená.
+- Všechny “status changes” přes jednu funkci, která zapíše audit + timeline event.
+- Timeline: vytvoř univerzální “events stream” pro animal (intake, move, med, note, photo, outcome).
+- Ušetři kliky: quick actions, inline edits.
+- Admin může editovat dropdown values (aspoň: statuses, zones, vaccine catalog, task templates) – implementuj přes lookup tables nebo settings.
+- Dokumenty: folder struktura, entity linking.
+- Contract templates: simple placeholder syntax {{person.first_name}}, {{animal.name}}, {{date}}.
+
+Dodatečné cool (implementuj aspoň základní skeleton, i když UI může být simple):
+- Flyer template designer (MVP: 1 default template + export PDF; editor může být později).
+- Transport manager (MVP: create transport event with animals + driver + cost, no route optimization).
+- Simple donation methods config (list of methods and links, no processing).
+
+Teď vygeneruj celý repo se všemi soubory, migracemi, seed script, a README. Udrž kód čistý, typovaný, s komentáři jen tam, kde je to nutné.
