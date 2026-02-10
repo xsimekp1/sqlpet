@@ -5,8 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.app.api.routes.health import router as health_router
 from src.app.api.routes.auth import router as auth_router
-# TODO: M3 - Uncomment when animals module is ready
-# from src.app.api.routes.animals import router as animals_router, breed_router
+from src.app.api.routes.animals import router as animals_router, breed_router
 from src.app.db.session import async_engine
 
 
@@ -39,6 +38,5 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(auth_router)
-# TODO: M3 - Uncomment when animals module is ready
-# app.include_router(animals_router)
-# app.include_router(breed_router)
+app.include_router(animals_router)
+app.include_router(breed_router)

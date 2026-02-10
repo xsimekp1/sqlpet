@@ -118,6 +118,8 @@ async def seed_role_templates(db: AsyncSession, perm_map: dict[str, uuid.UUID]) 
 
 
 async def main():
+    from src.app.db.seed_breeds import seed_breeds
+
     async with AsyncSessionLocal() as db:
         print("Seeding permissions...")
         perm_map = await seed_permissions(db)
@@ -126,6 +128,10 @@ async def main():
         print("Seeding role templates...")
         await seed_role_templates(db, perm_map)
         print(f"  {len(ROLE_TEMPLATES)} role templates ready.")
+
+        print("Seeding breeds...")
+        breed_count = await seed_breeds(db)
+        print(f"  {breed_count} new breeds inserted.")
 
         await db.commit()
         print("Done.")

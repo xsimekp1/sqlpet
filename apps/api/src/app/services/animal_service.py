@@ -1,0 +1,303 @@
+import uuid
+from datetime import date, datetime, timezone
+
+from sqlalchemy import func, select, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.app.models.animal import Animal, AnimalStatus, Species, Sex
+from src.app.models.animal_breed import AnimalBreed
+from src.app.models.animal_identifier import AnimalIdentifier
+from src.app.schemas.animal import AnimalCreate, AnimalUpdate
+from src.app.services.audit_service import AuditService
+
+
+def _animal_to_dict(animal: Animal) -> dict:
+    """Serialize animal scalar fields to dict for audit logging."""
+    return {
+        "id": str(animal.id),
+        "name": animal.name,
+        "species": animal.species.value if animal.species else None,
+        "sex": animal.sex.value if animal.sex else None,
+        "status": animal.status.value if animal.status else None,
+        "altered_status": animal.altered_status.value if animal.altered_status else None,
+        "age_group": animal.age_group.value if animal.age_group else None,
+        "size_estimated": animal.size_estimated.value if animal.size_estimated else None,
+        "color": animal.color,
+        "coat": animal.coat,
+        "weight_current_kg": float(animal.weight_current_kg) if animal.weight_current_kg else None,
+        "weight_estimated_kg": float(animal.weight_estimated_kg) if animal.weight_estimated_kg else None,
+        "status_reason": animal.status_reason,
+        "intake_date": str(animal.intake_date) if animal.intake_date else None,
+        "outcome_date": str(animal.outcome_date) if animal.outcome_date else None,
+        "description": animal.description,
+        "public_visibility": animal.public_visibility,
+        "featured": animal.featured,
+        "public_code": animal.public_code,
+    }
+
+
+class AnimalService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.audit = AuditService(db)
+
+    async def _generate_public_code(self, organization_id: uuid.UUID) -> str:
+        year = datetime.now(timezone.utc).year
+        prefix = f"A-{year}-"
+        result = await self.db.execute(
+            select(func.max(Animal.public_code))
+            .where(
+                Animal.organization_id == organization_id,
+                Animal.public_code.like(f"{prefix}%"),
+            )
+        )
+        max_code = result.scalar_one_or_none()
+        if max_code:
+            try:
+                seq = int(max_code.split("-")[-1]) + 1
+            except (ValueError, IndexError):
+                seq = 1
+        else:
+            seq = 1
+        return f"{prefix}{seq:06d}"
+
+    async def create_animal(
+        self,
+        organization_id: uuid.UUID,
+        data: AnimalCreate,
+        actor_id: uuid.UUID,
+        ip: str | None = None,
+        user_agent: str | None = None,
+    ) -> Animal:
+        public_code = await self._generate_public_code(organization_id)
+
+        #With use_enum_values=True, Pydantic already converted to strings
+        animal = Animal(
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            public_code=public_code,
+            name=data.name,
+            species=data.species,
+            sex=data.sex,
+            status=data.status,
+            altered_status=data.altered_status,
+            birth_date_estimated=data.birth_date_estimated,
+            age_group=data.age_group,
+            color=data.color,
+            coat=data.coat,
+            size_estimated=data.size_estimated,
+            weight_current_kg=data.weight_current_kg,
+            weight_estimated_kg=data.weight_estimated_kg,
+            status_reason=data.status_reason,
+            intake_date=data.intake_date,
+            outcome_date=data.outcome_date,
+            description=data.description,
+            public_visibility=data.public_visibility,
+            featured=data.featured,
+        )
+        self.db.add(animal)
+        await self.db.flush()
+
+        # Add breeds
+        if data.breeds:
+            for entry in data.breeds:
+                ab = AnimalBreed(
+                    animal_id=animal.id,
+                    breed_id=entry.breed_id,
+                    percent=entry.percent,
+                )
+                self.db.add(ab)
+            await self.db.flush()
+
+        # Add identifiers
+        if data.identifiers:
+            for ident in data.identifiers:
+                ai = AnimalIdentifier(
+                    id=uuid.uuid4(),
+                    organization_id=organization_id,
+                    animal_id=animal.id,
+                    type=ident.type,
+                    value=ident.value,
+                    registry=ident.registry,
+                    issued_at=ident.issued_at,
+                )
+                self.db.add(ai)
+            await self.db.flush()
+
+        # Audit log
+        await self.audit.log_action(
+            organization_id=organization_id,
+            actor_user_id=actor_id,
+            action="create",
+            entity_type="animal",
+            entity_id=animal.id,
+            after=_animal_to_dict(animal),
+            ip=ip,
+            user_agent=user_agent,
+        )
+
+        # Reload with relationships
+        await self.db.refresh(animal)
+        return animal
+
+    async def get_animal(
+        self,
+        organization_id: uuid.UUID,
+        animal_id: uuid.UUID,
+    ) -> Animal | None:
+        result = await self.db.execute(
+            select(Animal).where(
+                Animal.id == animal_id,
+                Animal.organization_id == organization_id,
+                Animal.deleted_at.is_(None),
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def list_animals(
+        self,
+        organization_id: uuid.UUID,
+        page: int = 1,
+        page_size: int = 20,
+        species: str | None = None,
+        status: str | None = None,
+        sex: str | None = None,
+        search: str | None = None,
+    ) -> tuple[list[Animal], int]:
+        base = select(Animal).where(
+            Animal.organization_id == organization_id,
+            Animal.deleted_at.is_(None),
+        )
+
+        if species:
+            base = base.where(Animal.species == species)
+        if status:
+            base = base.where(Animal.status == status)
+        if sex:
+            base = base.where(Animal.sex == sex)
+        if search:
+            base = base.where(Animal.name.ilike(f"%{search}%"))
+
+        # Count total
+        count_q = select(func.count()).select_from(base.subquery())
+        total_result = await self.db.execute(count_q)
+        total = total_result.scalar_one()
+
+        # Paginated items
+        items_q = (
+            base
+            .order_by(Animal.created_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+        result = await self.db.execute(items_q)
+        items = list(result.scalars().all())
+
+        return items, total
+
+    async def update_animal(
+        self,
+        organization_id: uuid.UUID,
+        animal_id: uuid.UUID,
+        data: AnimalUpdate,
+        actor_id: uuid.UUID,
+        ip: str | None = None,
+        user_agent: str | None = None,
+    ) -> Animal | None:
+        animal = await self.get_animal(organization_id, animal_id)
+        if animal is None:
+            return None
+
+        before = _animal_to_dict(animal)
+
+        # PATCH semantics: only update fields that were sent
+        update_data = data.model_dump(exclude_unset=True)
+
+        # Handle breeds replacement
+        breeds_data = update_data.pop("breeds", None)
+        if breeds_data is not None:
+            # Delete existing
+            for ab in list(animal.animal_breeds):
+                await self.db.delete(ab)
+            await self.db.flush()
+            # Insert new
+            for entry in breeds_data:
+                ab = AnimalBreed(
+                    animal_id=animal.id,
+                    breed_id=entry["breed_id"],
+                    percent=entry.get("percent"),
+                )
+                self.db.add(ab)
+
+        # Handle identifiers replacement
+        identifiers_data = update_data.pop("identifiers", None)
+        if identifiers_data is not None:
+            # Delete existing
+            for ident in list(animal.identifiers):
+                await self.db.delete(ident)
+            await self.db.flush()
+            # Insert new
+            for ident in identifiers_data:
+                ai = AnimalIdentifier(
+                    id=uuid.uuid4(),
+                    organization_id=organization_id,
+                    animal_id=animal.id,
+                    type=ident["type"],
+                    value=ident["value"],
+                    registry=ident.get("registry"),
+                    issued_at=ident.get("issued_at"),
+                )
+                self.db.add(ai)
+
+        # Update scalar fields
+        for field, value in update_data.items():
+            setattr(animal, field, value)
+
+        await self.db.flush()
+
+        after = _animal_to_dict(animal)
+
+        # Audit log
+        await self.audit.log_action(
+            organization_id=organization_id,
+            actor_user_id=actor_id,
+            action="update",
+            entity_type="animal",
+            entity_id=animal.id,
+            before=before,
+            after=after,
+            ip=ip,
+            user_agent=user_agent,
+        )
+
+        await self.db.refresh(animal)
+        return animal
+
+    async def delete_animal(
+        self,
+        organization_id: uuid.UUID,
+        animal_id: uuid.UUID,
+        actor_id: uuid.UUID,
+        ip: str | None = None,
+        user_agent: str | None = None,
+    ) -> bool:
+        animal = await self.get_animal(organization_id, animal_id)
+        if animal is None:
+            return False
+
+        before = _animal_to_dict(animal)
+        animal.deleted_at = datetime.now(timezone.utc)
+        await self.db.flush()
+
+        await self.audit.log_action(
+            organization_id=organization_id,
+            actor_user_id=actor_id,
+            action="delete",
+            entity_type="animal",
+            entity_id=animal.id,
+            before=before,
+            ip=ip,
+            user_agent=user_agent,
+        )
+
+        return True

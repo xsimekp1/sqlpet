@@ -1,0 +1,552 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.5, pytest-9.0.2, pluggy-1.6.0 -- C:\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\EliteBook\Projects\sqlpet\apps\api
+plugins: asyncio-1.3.0, anyio-4.12.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/test_animal_crud_api.py::test_create_animal_basic FAILED           [100%]
+
+================================== FAILURES ===================================
+__________________________ test_create_animal_basic ___________________________
+
+self = <sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_cursor object at 0x0000019287154400>
+operation = 'INSERT INTO animals (organization_id, public_code, name, species, sex, status, altered_status, birth_date_estimated, ...$19::BOOLEAN, $20::BOOLEAN, $21::UUID, $22::TIMESTAMP WITH TIME ZONE) RETURNING animals.created_at, animals.updated_at'
+parameters = (UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'A-2026-000001', 'Rex', 'DOG', 'UNKNOWN', 'INTAKE', ...)
+
+    async def _prepare_and_execute(self, operation, parameters):
+        adapt_connection = self._adapt_connection
+    
+        async with adapt_connection._execute_mutex:
+            if not adapt_connection._started:
+                await adapt_connection._start_transaction()
+    
+            if parameters is None:
+                parameters = ()
+    
+            try:
+                prepared_stmt, attributes = await adapt_connection._prepare(
+                    operation, self._invalidate_schema_cache_asof
+                )
+    
+                if attributes:
+                    self.description = [
+                        (
+                            attr.name,
+                            attr.type.oid,
+                            None,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                        for attr in attributes
+                    ]
+                else:
+                    self.description = None
+    
+                if self.server_side:
+                    self._cursor = await prepared_stmt.cursor(*parameters)
+                    self.rowcount = -1
+                else:
+>                   self._rows = deque(await prepared_stmt.fetch(*parameters))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+C:\Python311\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:550: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Roaming\Python\Python311\site-packages\asyncpg\prepared_stmt.py:177: in fetch
+    data = await self.__bind_execute(args, 0, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Roaming\Python\Python311\site-packages\asyncpg\prepared_stmt.py:268: in __bind_execute
+    data, status, _ = await self.__do_execute(
+..\..\..\..\AppData\Roaming\Python\Python311\site-packages\asyncpg\prepared_stmt.py:257: in __do_execute
+    return await executor(protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+>   ???
+E   asyncpg.exceptions.InvalidTextRepresentationError: invalid input value for enum altered_status_enum: "UNKNOWN"
+
+asyncpg/protocol/protocol.pyx:205: InvalidTextRepresentationError
+
+The above exception was the direct cause of the following exception:
+
+self = <sqlalchemy.engine.base.Connection object at 0x00000192870FB750>
+dialect = <sqlalchemy.dialects.postgresql.asyncpg.PGDialect_asyncpg object at 0x00000192862929D0>
+context = <sqlalchemy.dialects.postgresql.asyncpg.PGExecutionContext_asyncpg object at 0x00000192871EFD50>
+statement = <sqlalchemy.dialects.postgresql.asyncpg.PGCompiler_asyncpg object at 0x00000192871EFD90>
+parameters = [(UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'A-2026-000001', 'Rex', 'DOG', 'UNKNOWN', 'INTAKE', ...)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+C:\Python311\Lib\site-packages\sqlalchemy\engine\base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Python311\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+C:\Python311\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:585: in execute
+    self._adapt_connection.await_(
+C:\Python311\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python311\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+C:\Python311\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:563: in _prepare_and_execute
+    self._handle_exception(error)
+C:\Python311\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:513: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x00000192871847C0>>
+error = InvalidTextRepresentationError('invalid input value for enum altered_status_enum: "UNKNOWN"')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.Error: <class 'asyncpg.exceptions.InvalidTextRepresentationError'>: invalid input value for enum altered_status_enum: "UNKNOWN"
+
+C:\Python311\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:797: Error
+
+The above exception was the direct cause of the following exception:
+
+client = <httpx.AsyncClient object at 0x000001928706B690>
+auth_headers = {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYzQwYTY5OC02NWI4LTQ1N2YtOTI4Ny01YzhiNWEzYjY3ZTgiLCJleHAiOjE3NzA3Mzc0ODksImlzcyI6InNxbHBldCIsInR5cCI6ImFjY2VzcyJ9.Rtl8s7nIeEMTJP4dEuE3-0usJ8JLmSM2bJzfP6PJ3Do'}
+test_org_with_write_permission = (<src.app.models.organization.Organization object at 0x0000019287125FD0>, <src.app.models.membership.Membership object at 0x00000192871A5A10>, <src.app.models.role.Role object at 0x00000192870237D0>)
+
+    async def test_create_animal_basic(client, auth_headers, test_org_with_write_permission):
+        org, _, _ = test_org_with_write_permission
+>       resp = await client.post(
+            f"/orgs/{org.id}/animals",
+            json={"name": "Rex", "species": "dog"},
+            headers=auth_headers,
+        )
+
+tests\test_animal_crud_api.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Python311\Lib\site-packages\httpx\_client.py:1859: in post
+    return await self.request(
+C:\Python311\Lib\site-packages\httpx\_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python311\Lib\site-packages\httpx\_client.py:1629: in send
+    response = await self._send_handling_auth(
+C:\Python311\Lib\site-packages\httpx\_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+C:\Python311\Lib\site-packages\httpx\_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python311\Lib\site-packages\httpx\_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python311\Lib\site-packages\httpx\_transports\asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+..\..\..\..\AppData\Roaming\Python\Python311\site-packages\fastapi\applications.py:1135: in __call__
+    await super().__call__(scope, receive, send)
+C:\Python311\Lib\site-packages\starlette\applications.py:107: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Python311\Lib\site-packages\starlette\middleware\errors.py:186: in __call__
+    raise exc
+C:\Python311\Lib\site-packages\starlette\middleware\errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+C:\Python311\Lib\site-packages\starlette\middleware\cors.py:85: in __call__
+    await self.app(scope, receive, send)
+C:\Python311\Lib\site-packages\starlette\middleware\exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+C:\Python311\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Python311\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\..\AppData\Roaming\Python\Python311\site-packages\fastapi\middleware\asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+C:\Python311\Lib\site-packages\starlette\routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+C:\Python311\Lib\site-packages\starlette\routing.py:736: in app
+    await route.handle(scope, receive, send)
+C:\Python311\Lib\site-packages\starlette\routing.py:290: in handle
+    await self.app(scope, receive, send)
+..\..\..\..\AppData\Roaming\Python\Python311\site-packages\fastapi\routing.py:115: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+C:\Python311\Lib\site-packages\starlette\_exception_handler.py:53: in wrapped_app
+    raise exc
+C:\Python311\Lib\site-packages\starlette\_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+..\..\..\..\AppData\Roaming\Python\Python311\site-packages\fastapi\routing.py:101: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Roaming\Python\Python311\site-packages\fastapi\routing.py:355: in app
+    raw_response = await run_endpoint_function(
+..\..\..\..\AppData\Roaming\Python\Python311\site-packages\fastapi\routing.py:243: in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\app\api\routes\animals.py:61: in create_animal
+    animal = await svc.create_animal(
+src\app\services\animal_service.py:98: in create_animal
+    await self.db.flush()
+C:\Python311\Lib\site-packages\sqlalchemy\ext\asyncio\session.py:787: in flush
+    await greenlet_spawn(self.sync_session.flush, objects=objects)
+C:\Python311\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:203: in greenlet_spawn
+    result = context.switch(value)
+             ^^^^^^^^^^^^^^^^^^^^^
+C:\Python311\Lib\site-packages\sqlalchemy\orm\session.py:4331: in flush
+    self._flush(objects)
+C:\Python311\Lib\site-packages\sqlalchemy\orm\session.py:4466: in _flush
+    with util.safe_reraise():
+C:\Python311\Lib\site-packages\sqlalchemy\util\langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+C:\Python311\Lib\site-packages\sqlalchemy\orm\session.py:4427: in _flush
+    flush_context.execute()
+C:\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py:466: in execute
+    rec.execute(self)
+C:\Python311\Lib\site-packages\sqlalchemy\orm\unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+C:\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py:93: in save_obj
+    _emit_insert_statements(
+C:\Python311\Lib\site-packages\sqlalchemy\orm\persistence.py:1233: in _emit_insert_statements
+    result = connection.execute(
+C:\Python311\Lib\site-packages\sqlalchemy\engine\base.py:1419: in execute
+    return meth(
+C:\Python311\Lib\site-packages\sqlalchemy\sql\elements.py:527: in _execute_on_connection
+    return connection._execute_clauseelement(
+C:\Python311\Lib\site-packages\sqlalchemy\engine\base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+C:\Python311\Lib\site-packages\sqlalchemy\engine\base.py:1846: in _execute_context
+    return self._exec_single_context(
+C:\Python311\Lib\site-packages\sqlalchemy\engine\base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+C:\Python311\Lib\site-packages\sqlalchemy\engine\base.py:2363: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+C:\Python311\Lib\site-packages\sqlalchemy\engine\base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+C:\Python311\Lib\site-packages\sqlalchemy\engine\default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+C:\Python311\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:585: in execute
+    self._adapt_connection.await_(
+C:\Python311\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Python311\Lib\site-packages\sqlalchemy\util\_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+C:\Python311\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:563: in _prepare_and_execute
+    self._handle_exception(error)
+C:\Python311\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:513: in _handle_exception
+    self._adapt_connection._handle_exception(error)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <AdaptedConnection <asyncpg.connection.Connection object at 0x00000192871847C0>>
+error = InvalidTextRepresentationError('invalid input value for enum altered_status_enum: "UNKNOWN"')
+
+    def _handle_exception(self, error):
+        if self._connection.is_closed():
+            self._transaction = None
+            self._started = False
+    
+        if not isinstance(error, AsyncAdapt_asyncpg_dbapi.Error):
+            exception_mapping = self.dbapi._asyncpg_error_translate
+    
+            for super_ in type(error).__mro__:
+                if super_ in exception_mapping:
+                    translated_error = exception_mapping[super_](
+                        "%s: %s" % (type(error), error)
+                    )
+                    translated_error.pgcode = translated_error.sqlstate = (
+                        getattr(error, "sqlstate", None)
+                    )
+>                   raise translated_error from error
+E                   sqlalchemy.exc.DBAPIError: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.InvalidTextRepresentationError'>: invalid input value for enum altered_status_enum: "UNKNOWN"
+E                   [SQL: INSERT INTO animals (organization_id, public_code, name, species, sex, status, altered_status, birth_date_estimated, age_group, color, coat, size_estimated, weight_current_kg, weight_estimated_kg, status_reason, intake_date, outcome_date, description, public_visibility, featured, id, deleted_at) VALUES ($1::UUID, $2::VARCHAR, $3::VARCHAR, $4::species_enum, $5::sex_enum, $6::animal_status_enum, $7::altered_status_enum, $8::DATE, $9::age_group_enum, $10::VARCHAR, $11::VARCHAR, $12::size_estimated_enum, $13::NUMERIC(6, 2), $14::NUMERIC(6, 2), $15::VARCHAR, $16::DATE, $17::DATE, $18::VARCHAR, $19::BOOLEAN, $20::BOOLEAN, $21::UUID, $22::TIMESTAMP WITH TIME ZONE) RETURNING animals.created_at, animals.updated_at]
+E                   [parameters: (UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'A-2026-000001', 'Rex', 'DOG', 'UNKNOWN', 'INTAKE', 'UNKNOWN', None, 'UNKNOWN', None, None, 'UNKNOWN', None, None, None, None, None, None, False, False, UUID('7384e7d3-8337-4ade-bc98-66db983680b9'), None)]
+E                   (Background on this error at: https://sqlalche.me/e/20/dbapi)
+
+C:\Python311\Lib\site-packages\sqlalchemy\dialects\postgresql\asyncpg.py:797: DBAPIError
+---------------------------- Captured stdout setup ----------------------------
+2026-02-10 16:16:28,805 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2026-02-10 16:16:28,806 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 16:16:28,862 INFO sqlalchemy.engine.Engine select current_schema()
+2026-02-10 16:16:28,862 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 16:16:28,921 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2026-02-10 16:16:28,921 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-02-10 16:16:28,965 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 16:16:28,975 INFO sqlalchemy.engine.Engine INSERT INTO users (email, password_hash, name, phone, is_superadmin, id) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::BOOLEAN, $6::UUID) RETURNING users.created_at, users.updated_at
+2026-02-10 16:16:28,976 INFO sqlalchemy.engine.Engine [generated in 0.00108s] ('test-bc40a698@example.com', '$argon2id$v=19$m=65536,t=3,p=4$MCnZA/4+CXuW0jRMSCo1eQ$G2eGCBq5ag1kSVbFISVDkgEXgQumw9ssjrdV2XTWy/w', 'Test User', None, False, UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'))
+2026-02-10 16:16:29,022 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 16:16:29,108 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 16:16:29,110 INFO sqlalchemy.engine.Engine INSERT INTO organizations (name, slug, timezone, id) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::UUID) RETURNING organizations.created_at, organizations.updated_at
+2026-02-10 16:16:29,110 INFO sqlalchemy.engine.Engine [generated in 0.00037s] ('Write Test Org', 'write-org-955e5799', 'Europe/Prague', UUID('955e5799-455b-4595-8be0-aba14e2f9754'))
+2026-02-10 16:16:29,168 INFO sqlalchemy.engine.Engine INSERT INTO roles (organization_id, name, description, is_template, id) VALUES ($1::UUID, $2::VARCHAR, $3::VARCHAR, $4::BOOLEAN, $5::UUID) RETURNING roles.created_at, roles.updated_at
+2026-02-10 16:16:29,169 INFO sqlalchemy.engine.Engine [generated in 0.00065s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'test_writer_role', '', False, UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'))
+2026-02-10 16:16:29,215 INFO sqlalchemy.engine.Engine SELECT permissions.key, permissions.description, permissions.id, permissions.created_at, permissions.updated_at 
+FROM permissions 
+WHERE permissions.key = $1::VARCHAR
+2026-02-10 16:16:29,215 INFO sqlalchemy.engine.Engine [generated in 0.00187s] ('animals.read',)
+2026-02-10 16:16:29,257 INFO sqlalchemy.engine.Engine INSERT INTO role_permissions (role_id, permission_id, allowed) VALUES ($1::UUID, $2::UUID, $3::BOOLEAN)
+2026-02-10 16:16:29,257 INFO sqlalchemy.engine.Engine [generated in 0.00050s] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'), UUID('3172e59e-1e58-42ea-9f85-8c7557478d50'), True)
+2026-02-10 16:16:29,294 INFO sqlalchemy.engine.Engine SELECT permissions.key, permissions.description, permissions.id, permissions.created_at, permissions.updated_at 
+FROM permissions 
+WHERE permissions.key = $1::VARCHAR
+2026-02-10 16:16:29,295 INFO sqlalchemy.engine.Engine [cached since 0.08115s ago] ('animals.write',)
+2026-02-10 16:16:29,312 INFO sqlalchemy.engine.Engine INSERT INTO role_permissions (role_id, permission_id, allowed) VALUES ($1::UUID, $2::UUID, $3::BOOLEAN)
+2026-02-10 16:16:29,313 INFO sqlalchemy.engine.Engine [cached since 0.05608s ago] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'), UUID('2730d1ed-2f55-47f8-b310-a5651c050c22'), True)
+2026-02-10 16:16:29,336 INFO sqlalchemy.engine.Engine INSERT INTO memberships (user_id, organization_id, role_id, status, id) VALUES ($1::UUID, $2::UUID, $3::UUID, $4::membership_status_enum, $5::UUID) RETURNING memberships.created_at, memberships.updated_at
+2026-02-10 16:16:29,337 INFO sqlalchemy.engine.Engine [generated in 0.00065s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'), UUID('955e5799-455b-4595-8be0-aba14e2f9754'), UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'), 'ACTIVE', UUID('dbb8221a-e798-4a12-981d-12c84de9f0db'))
+2026-02-10 16:16:29,461 INFO sqlalchemy.engine.Engine COMMIT
+----------------------------- Captured log setup ------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:1846 select pg_catalog.version()
+INFO     sqlalchemy.engine.Engine:base.py:1846 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1846 select current_schema()
+INFO     sqlalchemy.engine.Engine:base.py:1846 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:1846 show standard_conforming_strings
+INFO     sqlalchemy.engine.Engine:base.py:1846 [raw sql] ()
+INFO     sqlalchemy.engine.Engine:base.py:2710 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1846 INSERT INTO users (email, password_hash, name, phone, is_superadmin, id) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::BOOLEAN, $6::UUID) RETURNING users.created_at, users.updated_at
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00108s] ('test-bc40a698@example.com', '$argon2id$v=19$m=65536,t=3,p=4$MCnZA/4+CXuW0jRMSCo1eQ$G2eGCBq5ag1kSVbFISVDkgEXgQumw9ssjrdV2XTWy/w', 'Test User', None, False, UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'))
+INFO     sqlalchemy.engine.Engine:base.py:2716 COMMIT
+INFO     sqlalchemy.engine.Engine:base.py:2710 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1846 INSERT INTO organizations (name, slug, timezone, id) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::UUID) RETURNING organizations.created_at, organizations.updated_at
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00037s] ('Write Test Org', 'write-org-955e5799', 'Europe/Prague', UUID('955e5799-455b-4595-8be0-aba14e2f9754'))
+INFO     sqlalchemy.engine.Engine:base.py:1846 INSERT INTO roles (organization_id, name, description, is_template, id) VALUES ($1::UUID, $2::VARCHAR, $3::VARCHAR, $4::BOOLEAN, $5::UUID) RETURNING roles.created_at, roles.updated_at
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00065s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'test_writer_role', '', False, UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'))
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT permissions.key, permissions.description, permissions.id, permissions.created_at, permissions.updated_at 
+FROM permissions 
+WHERE permissions.key = $1::VARCHAR
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00187s] ('animals.read',)
+INFO     sqlalchemy.engine.Engine:base.py:1846 INSERT INTO role_permissions (role_id, permission_id, allowed) VALUES ($1::UUID, $2::UUID, $3::BOOLEAN)
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00050s] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'), UUID('3172e59e-1e58-42ea-9f85-8c7557478d50'), True)
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT permissions.key, permissions.description, permissions.id, permissions.created_at, permissions.updated_at 
+FROM permissions 
+WHERE permissions.key = $1::VARCHAR
+INFO     sqlalchemy.engine.Engine:base.py:1846 [cached since 0.08115s ago] ('animals.write',)
+INFO     sqlalchemy.engine.Engine:base.py:1846 INSERT INTO role_permissions (role_id, permission_id, allowed) VALUES ($1::UUID, $2::UUID, $3::BOOLEAN)
+INFO     sqlalchemy.engine.Engine:base.py:1846 [cached since 0.05608s ago] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'), UUID('2730d1ed-2f55-47f8-b310-a5651c050c22'), True)
+INFO     sqlalchemy.engine.Engine:base.py:1846 INSERT INTO memberships (user_id, organization_id, role_id, status, id) VALUES ($1::UUID, $2::UUID, $3::UUID, $4::membership_status_enum, $5::UUID) RETURNING memberships.created_at, memberships.updated_at
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00065s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'), UUID('955e5799-455b-4595-8be0-aba14e2f9754'), UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'), 'ACTIVE', UUID('dbb8221a-e798-4a12-981d-12c84de9f0db'))
+INFO     sqlalchemy.engine.Engine:base.py:2716 COMMIT
+---------------------------- Captured stdout call -----------------------------
+2026-02-10 16:16:29,553 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 16:16:29,556 INFO sqlalchemy.engine.Engine SELECT users.email, users.password_hash, users.name, users.phone, users.is_superadmin, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = $1::UUID
+2026-02-10 16:16:29,557 INFO sqlalchemy.engine.Engine [generated in 0.00061s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'),)
+2026-02-10 16:16:29,607 INFO sqlalchemy.engine.Engine SELECT users.is_superadmin 
+FROM users 
+WHERE users.id = $1::UUID
+2026-02-10 16:16:29,607 INFO sqlalchemy.engine.Engine [generated in 0.00068s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'),)
+2026-02-10 16:16:29,647 INFO sqlalchemy.engine.Engine SELECT memberships.role_id 
+FROM memberships 
+WHERE memberships.user_id = $1::UUID AND memberships.organization_id = $2::UUID AND memberships.status = $3::membership_status_enum
+2026-02-10 16:16:29,648 INFO sqlalchemy.engine.Engine [generated in 0.00063s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'), UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'ACTIVE')
+2026-02-10 16:16:29,694 INFO sqlalchemy.engine.Engine SELECT role_permissions.allowed 
+FROM role_permissions 
+WHERE role_permissions.role_id = $1::UUID AND role_permissions.permission_id IN (SELECT permissions.id 
+FROM permissions 
+WHERE permissions.key = $2::VARCHAR)
+2026-02-10 16:16:29,694 INFO sqlalchemy.engine.Engine [generated in 0.00045s] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'), 'animals.write')
+2026-02-10 16:16:29,739 INFO sqlalchemy.engine.Engine SELECT max(animals.public_code) AS max_1 
+FROM animals 
+WHERE animals.organization_id = $1::UUID AND animals.public_code LIKE $2::VARCHAR
+2026-02-10 16:16:29,740 INFO sqlalchemy.engine.Engine [generated in 0.00047s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'A-2026-%')
+2026-02-10 16:16:29,775 INFO sqlalchemy.engine.Engine INSERT INTO animals (organization_id, public_code, name, species, sex, status, altered_status, birth_date_estimated, age_group, color, coat, size_estimated, weight_current_kg, weight_estimated_kg, status_reason, intake_date, outcome_date, description, public_visibility, featured, id, deleted_at) VALUES ($1::UUID, $2::VARCHAR, $3::VARCHAR, $4::species_enum, $5::sex_enum, $6::animal_status_enum, $7::altered_status_enum, $8::DATE, $9::age_group_enum, $10::VARCHAR, $11::VARCHAR, $12::size_estimated_enum, $13::NUMERIC(6, 2), $14::NUMERIC(6, 2), $15::VARCHAR, $16::DATE, $17::DATE, $18::VARCHAR, $19::BOOLEAN, $20::BOOLEAN, $21::UUID, $22::TIMESTAMP WITH TIME ZONE) RETURNING animals.created_at, animals.updated_at
+2026-02-10 16:16:29,776 INFO sqlalchemy.engine.Engine [generated in 0.00084s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'A-2026-000001', 'Rex', 'DOG', 'UNKNOWN', 'INTAKE', 'UNKNOWN', None, 'UNKNOWN', None, None, 'UNKNOWN', None, None, None, None, None, None, False, False, UUID('7384e7d3-8337-4ade-bc98-66db983680b9'), None)
+2026-02-10 16:16:29,901 INFO sqlalchemy.engine.Engine ROLLBACK
+------------------------------ Captured log call ------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:2710 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT users.email, users.password_hash, users.name, users.phone, users.is_superadmin, users.id, users.created_at, users.updated_at 
+FROM users 
+WHERE users.id = $1::UUID
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00061s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'),)
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT users.is_superadmin 
+FROM users 
+WHERE users.id = $1::UUID
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00068s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'),)
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT memberships.role_id 
+FROM memberships 
+WHERE memberships.user_id = $1::UUID AND memberships.organization_id = $2::UUID AND memberships.status = $3::membership_status_enum
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00063s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'), UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'ACTIVE')
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT role_permissions.allowed 
+FROM role_permissions 
+WHERE role_permissions.role_id = $1::UUID AND role_permissions.permission_id IN (SELECT permissions.id 
+FROM permissions 
+WHERE permissions.key = $2::VARCHAR)
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00045s] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'), 'animals.write')
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT max(animals.public_code) AS max_1 
+FROM animals 
+WHERE animals.organization_id = $1::UUID AND animals.public_code LIKE $2::VARCHAR
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00047s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'A-2026-%')
+INFO     sqlalchemy.engine.Engine:base.py:1846 INSERT INTO animals (organization_id, public_code, name, species, sex, status, altered_status, birth_date_estimated, age_group, color, coat, size_estimated, weight_current_kg, weight_estimated_kg, status_reason, intake_date, outcome_date, description, public_visibility, featured, id, deleted_at) VALUES ($1::UUID, $2::VARCHAR, $3::VARCHAR, $4::species_enum, $5::sex_enum, $6::animal_status_enum, $7::altered_status_enum, $8::DATE, $9::age_group_enum, $10::VARCHAR, $11::VARCHAR, $12::size_estimated_enum, $13::NUMERIC(6, 2), $14::NUMERIC(6, 2), $15::VARCHAR, $16::DATE, $17::DATE, $18::VARCHAR, $19::BOOLEAN, $20::BOOLEAN, $21::UUID, $22::TIMESTAMP WITH TIME ZONE) RETURNING animals.created_at, animals.updated_at
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00084s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'), 'A-2026-000001', 'Rex', 'DOG', 'UNKNOWN', 'INTAKE', 'UNKNOWN', None, 'UNKNOWN', None, None, 'UNKNOWN', None, None, None, None, None, None, False, False, UUID('7384e7d3-8337-4ade-bc98-66db983680b9'), None)
+INFO     sqlalchemy.engine.Engine:base.py:2713 ROLLBACK
+-------------------------- Captured stdout teardown ---------------------------
+2026-02-10 16:16:32,888 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 16:16:32,891 INFO sqlalchemy.engine.Engine SELECT animals.id 
+FROM animals 
+WHERE animals.organization_id = $1::UUID
+2026-02-10 16:16:32,891 INFO sqlalchemy.engine.Engine [generated in 0.00087s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'),)
+2026-02-10 16:16:32,939 INFO sqlalchemy.engine.Engine DELETE FROM role_permissions WHERE role_permissions.role_id = $1::UUID
+2026-02-10 16:16:32,940 INFO sqlalchemy.engine.Engine [generated in 0.00068s] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'),)
+2026-02-10 16:16:32,976 INFO sqlalchemy.engine.Engine DELETE FROM memberships WHERE memberships.id = $1::UUID
+2026-02-10 16:16:32,976 INFO sqlalchemy.engine.Engine [generated in 0.00037s] (UUID('dbb8221a-e798-4a12-981d-12c84de9f0db'),)
+2026-02-10 16:16:33,009 INFO sqlalchemy.engine.Engine DELETE FROM roles WHERE roles.id = $1::UUID
+2026-02-10 16:16:33,009 INFO sqlalchemy.engine.Engine [generated in 0.00059s] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'),)
+2026-02-10 16:16:33,042 INFO sqlalchemy.engine.Engine DELETE FROM organizations WHERE organizations.id = $1::UUID
+2026-02-10 16:16:33,042 INFO sqlalchemy.engine.Engine [generated in 0.00054s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'),)
+2026-02-10 16:16:33,080 INFO sqlalchemy.engine.Engine COMMIT
+2026-02-10 16:16:33,171 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-02-10 16:16:33,172 INFO sqlalchemy.engine.Engine DELETE FROM users WHERE users.id = $1::UUID
+2026-02-10 16:16:33,172 INFO sqlalchemy.engine.Engine [generated in 0.00031s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'),)
+2026-02-10 16:16:33,217 INFO sqlalchemy.engine.Engine COMMIT
+---------------------------- Captured log teardown ----------------------------
+INFO     sqlalchemy.engine.Engine:base.py:2710 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1846 SELECT animals.id 
+FROM animals 
+WHERE animals.organization_id = $1::UUID
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00087s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'),)
+INFO     sqlalchemy.engine.Engine:base.py:1846 DELETE FROM role_permissions WHERE role_permissions.role_id = $1::UUID
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00068s] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'),)
+INFO     sqlalchemy.engine.Engine:base.py:1846 DELETE FROM memberships WHERE memberships.id = $1::UUID
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00037s] (UUID('dbb8221a-e798-4a12-981d-12c84de9f0db'),)
+INFO     sqlalchemy.engine.Engine:base.py:1846 DELETE FROM roles WHERE roles.id = $1::UUID
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00059s] (UUID('19fa4ecf-7e37-4af9-a33c-ec275330665c'),)
+INFO     sqlalchemy.engine.Engine:base.py:1846 DELETE FROM organizations WHERE organizations.id = $1::UUID
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00054s] (UUID('955e5799-455b-4595-8be0-aba14e2f9754'),)
+INFO     sqlalchemy.engine.Engine:base.py:2716 COMMIT
+INFO     sqlalchemy.engine.Engine:base.py:2710 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1846 DELETE FROM users WHERE users.id = $1::UUID
+INFO     sqlalchemy.engine.Engine:base.py:1846 [generated in 0.00031s] (UUID('bc40a698-65b8-457f-9287-5c8b5a3b67e8'),)
+INFO     sqlalchemy.engine.Engine:base.py:2716 COMMIT
+=========================== short test summary info ===========================
+FAILED tests/test_animal_crud_api.py::test_create_animal_basic - sqlalchemy.e...
+============================== 1 failed in 5.02s ==============================
