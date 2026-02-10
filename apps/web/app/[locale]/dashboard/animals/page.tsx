@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,32 +13,32 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import ApiClient, { Animal } from '@/app/lib/api';
+import { toast } from 'sonner';
 
 export default function AnimalsPage() {
   const t = useTranslations();
   const [search, setSearch] = useState('');
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // TODO: M3 - Fetch real animals from API
-  const animals = [
-    {
-      id: '1',
-      name: 'Max',
-      species: 'DOG',
-      breed: 'Zlatý retrívr',
-      sex: 'MALE',
-      status: 'AVAILABLE',
-      intake_date: '2024-01-15',
-    },
-    {
-      id: '2',
-      name: 'Luna',
-      species: 'CAT',
-      breed: 'Domácí kočka',
-      sex: 'FEMALE',
-      status: 'AVAILABLE',
-      intake_date: '2024-02-01',
-    },
-  ];
+  // Fetch animals from API
+  useEffect(() => {
+    const fetchAnimals = async () => {
+      try {
+        setLoading(true);
+        const data = await ApiClient.getAnimals();
+        setAnimals(data);
+      } catch (error) {
+        toast.error('Failed to load animals');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnimals();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -83,41 +83,49 @@ export default function AnimalsPage() {
       </Card>
 
       {/* Animals Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {animals.map((animal) => (
-          <Link key={animal.id} href={`/dashboard/animals/${animal.id}`}>
-            <Card className="hover:bg-accent transition-colors cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  {animal.name}
-                  <span className="text-xs font-normal text-muted-foreground">
-                    #{animal.id}
-                  </span>
-                </CardTitle>
-                <CardDescription>
-                  {animal.breed} • {animal.sex === 'MALE' ? '♂' : '♀'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Species:</span>
-                    <span className="font-medium">{animal.species}</span>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {animals.map((animal) => (
+            <Link key={animal.id} href={`/dashboard/animals/${animal.id}`}>
+              <Card className="hover:bg-accent transition-colors cursor-pointer">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    {animal.name}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      #{animal.public_code}
+                    </span>
+                  </CardTitle>
+                  <CardDescription>
+                    {animal.species} • {animal.sex === 'MALE' ? '♂' : animal.sex === 'FEMALE' ? '♀' : '?'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1 text-sm">
+                    {animal.color && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Color:</span>
+                        <span className="font-medium">{animal.color}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span className="font-medium text-green-600">{animal.status}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Intake:</span>
+                      <span>{new Date(animal.intake_date).toLocaleDateString()}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Status:</span>
-                    <span className="font-medium text-green-600">{animal.status}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Intake:</span>
-                    <span>{new Date(animal.intake_date).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {animals.length === 0 && (
         <Card>

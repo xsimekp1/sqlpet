@@ -37,6 +37,32 @@ export interface ApiError {
   detail: string;
 }
 
+// Animal types
+export interface Animal {
+  id: string;
+  organization_id: string;
+  public_code: string;
+  name: string;
+  species: 'DOG' | 'CAT' | 'RABBIT' | 'OTHER';
+  sex: 'MALE' | 'FEMALE' | 'UNKNOWN';
+  color: string | null;
+  estimated_age_years: number | null;
+  intake_date: string;
+  status: 'AVAILABLE' | 'ADOPTED' | 'FOSTERED' | 'TRANSFERRED' | 'DECEASED' | 'ESCAPED';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateAnimalRequest {
+  name: string;
+  species: 'DOG' | 'CAT' | 'RABBIT' | 'OTHER';
+  sex: 'MALE' | 'FEMALE' | 'UNKNOWN';
+  color?: string | null;
+  estimated_age_years?: number | null;
+  intake_date: string;
+  status?: string;
+}
+
 class ApiClient {
   /**
    * Get authorization headers with Bearer token from localStorage
@@ -150,6 +176,133 @@ class ApiClient {
     } catch (error) {
       // Ignore errors on logout, we'll clear local state anyway
       console.error('Logout error:', error);
+    }
+  }
+
+  /**
+   * Get all animals for current organization
+   * M3: Animals CRUD
+   */
+  static async getAnimals(): Promise<Animal[]> {
+    try {
+      const response = await axios.get<Animal[]>(
+        `${API_URL}/animals`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to fetch animals'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Get single animal by ID
+   * M3: Animals CRUD
+   */
+  static async getAnimal(id: string): Promise<Animal> {
+    try {
+      const response = await axios.get<Animal>(
+        `${API_URL}/animals/${id}`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to fetch animal'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Create new animal
+   * M3: Animals CRUD
+   */
+  static async createAnimal(data: CreateAnimalRequest): Promise<Animal> {
+    try {
+      const response = await axios.post<Animal>(
+        `${API_URL}/animals`,
+        data,
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to create animal'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Update existing animal
+   * M3: Animals CRUD
+   */
+  static async updateAnimal(id: string, data: Partial<CreateAnimalRequest>): Promise<Animal> {
+    try {
+      const response = await axios.put<Animal>(
+        `${API_URL}/animals/${id}`,
+        data,
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to update animal'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Delete animal
+   * M3: Animals CRUD
+   */
+  static async deleteAnimal(id: string): Promise<void> {
+    try {
+      await axios.delete(
+        `${API_URL}/animals/${id}`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to delete animal'
+        );
+      }
+      throw new Error('An unexpected error occurred');
     }
   }
 }

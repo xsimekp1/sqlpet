@@ -27,21 +27,30 @@ export function MedicalTodayWidget({ editMode, onRemove, dragHandleProps }: Medi
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
+      className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/20 dark:to-pink-950/20 border-red-200/50 dark:border-red-800/30"
     >
-      <div className="space-y-3">
-        <div className="flex items-baseline gap-2">
-          <p className="text-3xl font-bold">{medicationsDue}</p>
-          <p className="text-sm text-muted-foreground">{t('medicationsDue')}</p>
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900/30">
+            <HeartPulse className="h-6 w-6 text-red-600 dark:text-red-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-4xl font-bold text-red-700 dark:text-red-400">{medicationsDue}</p>
+            <p className="text-sm text-muted-foreground">{t('medicationsDue')}</p>
+          </div>
         </div>
 
         {overdue > 0 && (
-          <div className="text-sm text-destructive font-medium">
-            {overdue} overdue
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
+            <div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
+            <span className="text-sm text-destructive font-medium">
+              {overdue} overdue
+            </span>
           </div>
         )}
 
         <Link href="/dashboard/medical">
-          <Button variant="link" size="sm" className="px-0">
+          <Button variant="link" size="sm" className="px-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
             {t('viewAll')} <ArrowRight className="ml-1 h-3 w-3" />
           </Button>
         </Link>

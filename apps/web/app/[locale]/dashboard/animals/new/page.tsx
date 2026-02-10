@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import ApiClient from '@/app/lib/api';
 import {
   Card,
   CardContent,
@@ -34,19 +35,20 @@ export default function NewAnimalPage() {
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
+    const ageValue = formData.get('estimated_age_years') as string;
+
     const data = {
-      name: formData.get('name'),
-      species: formData.get('species'),
-      sex: formData.get('sex'),
-      color: formData.get('color'),
-      estimated_age_years: parseInt(formData.get('estimated_age_years') as string) || null,
-      intake_date: formData.get('intake_date'),
+      name: formData.get('name') as string,
+      species: formData.get('species') as 'DOG' | 'CAT' | 'RABBIT' | 'OTHER',
+      sex: formData.get('sex') as 'MALE' | 'FEMALE' | 'UNKNOWN',
+      color: (formData.get('color') as string) || null,
+      estimated_age_years: ageValue ? parseInt(ageValue) : null,
+      intake_date: formData.get('intake_date') as string,
       status: 'AVAILABLE',
     };
 
     try {
-      // TODO: M3 - Call API to create animal
-      console.log('Creating animal:', data);
+      await ApiClient.createAnimal(data);
       toast.success('Animal created successfully!');
       router.push('/dashboard/animals');
     } catch (error) {
