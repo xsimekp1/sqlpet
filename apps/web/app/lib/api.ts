@@ -58,20 +58,16 @@ class ApiClient {
 
   /**
    * Login with email and password
-   * Backend expects OAuth2 form format (application/x-www-form-urlencoded)
+   * Backend expects JSON with email and password fields
    */
   static async login(email: string, password: string): Promise<LoginResponse> {
     try {
-      const formData = new URLSearchParams();
-      formData.append('username', email); // OAuth2 expects 'username' field
-      formData.append('password', password);
-
       const response = await axios.post<LoginResponse>(
         `${API_URL}/auth/login`,
-        formData,
+        { email, password },
         {
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
           },
         }
       );
