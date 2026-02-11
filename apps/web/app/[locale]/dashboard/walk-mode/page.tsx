@@ -94,23 +94,25 @@ export default function WalkModePage() {
   }
 
   const TaskButton = ({ 
-    task, 
+    taskKey, 
+    taskValue, 
     label, 
     icon: Icon 
   }: { 
-    task: boolean
+    taskKey: keyof KennelTask['tasks']
+    taskValue: boolean
     label: string
     icon: any 
   }) => (
     <Button
-      variant={task ? "default" : "outline"}
+      variant={taskValue ? "default" : "outline"}
       size="lg"
       className="h-20 flex-col gap-2"
-      onClick={() => updateTask(currentKennel.id, task as keyof KennelTask['tasks'], !task)}
+      onClick={() => updateTask(currentKennel.id, taskKey, !taskValue)}
     >
       <Icon className="h-6 w-6" />
       <span>{label}</span>
-      {task && <CheckCircle className="h-4 w-4 text-green-600" />}
+      {taskValue && <CheckCircle className="h-4 w-4 text-green-600" />}
     </Button>
   )
 
@@ -185,22 +187,26 @@ export default function WalkModePage() {
             
             <div className="grid grid-cols-2 gap-3">
               <TaskButton
-                task={currentKennel.tasks.fed}
+                taskKey="fed"
+                taskValue={currentKennel.tasks.fed}
                 label={t('tasks.fed')}
                 icon={Clock}
               />
               <TaskButton
-                task={currentKennel.tasks.walked}
+                taskKey="walked"
+                taskValue={currentKennel.tasks.walked}
                 label={t('tasks.walked')}
                 icon={Footprints}
               />
               <TaskButton
-                task={currentKennel.tasks.cleaned}
+                taskKey="cleaned"
+                taskValue={currentKennel.tasks.cleaned}
                 label={t('tasks.cleaned')}
                 icon={CheckCircle}
               />
               <TaskButton
-                task={currentKennel.tasks.waterChecked}
+                taskKey="waterChecked"
+                taskValue={currentKennel.tasks.waterChecked}
                 label={t('tasks.waterChecked')}
                 icon={Clock}
               />
