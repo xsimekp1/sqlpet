@@ -49,7 +49,7 @@ async def lifespan(app: FastAPI):
     await async_engine.dispose()
 
 
-app = FastAPI(title="SQLpet API", lifespan=lifespan)
+app = FastAPI(title="SQLpet API")  # Temporarily disable lifespan to test
 
 # CORS configuration
 # For production, explicitly list allowed origins for security
