@@ -69,14 +69,17 @@ class ApiClient {
    */
   private static getAuthHeaders(): Record<string, string> {
     if (typeof window === 'undefined') {
+      console.warn('getAuthHeaders: running on server, no localStorage');
       return {};
     }
 
     const token = localStorage.getItem('token');
     if (!token) {
+      console.warn('getAuthHeaders: no token in localStorage');
       return {};
     }
 
+    console.log('getAuthHeaders: token found, length:', token.length);
     return {
       'Authorization': `Bearer ${token}`,
     };
