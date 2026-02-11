@@ -86,12 +86,14 @@ async def list_animals(
     status_filter: str | None = Query(None, alias="status"),
     sex: str | None = Query(None),
     search: str | None = Query(None),
-    current_user: User = Depends(get_current_user),  # Remove permission check temporarily
+    current_user: User = Depends(
+        get_current_user
+    ),  # Remove permission check temporarily
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-"""List animals with pagination and filters."""
-    
+    """List animals with pagination and filters."""
+
     try:
         svc = AnimalService(db)
         items, total = await svc.list_animals(
@@ -111,6 +113,7 @@ async def list_animals(
         )
     except Exception as e:
         import traceback
+
         print(f"ERROR in animals endpoint: {e}")
         print(f"ERROR traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
