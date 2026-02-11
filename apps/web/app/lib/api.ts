@@ -444,10 +444,15 @@ class ApiClient {
    */
   static async getAnimal(id: string): Promise<Animal> {
     try {
+      const organizationId = this.getOrganizationId();
+
       const response = await axios.get<Animal>(
         `${API_URL}/animals/${id}`,
         {
-          headers: this.getAuthHeaders(),
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+          },
         }
       );
       return response.data;
@@ -468,12 +473,19 @@ class ApiClient {
    */
   static async createAnimal(data: CreateAnimalRequest): Promise<Animal> {
     try {
+      const organizationId = this.getOrganizationId();
+
+      if (!organizationId) {
+        throw new Error('No organization selected. Please select an organization first.');
+      }
+
       const response = await axios.post<Animal>(
         `${API_URL}/animals`,
         data,
         {
           headers: {
             ...this.getAuthHeaders(),
+            'x-organization-id': organizationId,
             'Content-Type': 'application/json',
           },
         }
@@ -496,12 +508,15 @@ class ApiClient {
    */
   static async updateAnimal(id: string, data: Partial<CreateAnimalRequest>): Promise<Animal> {
     try {
+      const organizationId = this.getOrganizationId();
+
       const response = await axios.put<Animal>(
         `${API_URL}/animals/${id}`,
         data,
         {
           headers: {
             ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
             'Content-Type': 'application/json',
           },
         }
@@ -524,10 +539,15 @@ class ApiClient {
    */
   static async deleteAnimal(id: string): Promise<void> {
     try {
+      const organizationId = this.getOrganizationId();
+
       await axios.delete(
         `${API_URL}/animals/${id}`,
         {
-          headers: this.getAuthHeaders(),
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+          },
         }
       );
     } catch (error) {
