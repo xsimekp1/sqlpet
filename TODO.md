@@ -1,11 +1,43 @@
-# TODO list - SQLpet development
+# TODO - SQLpet / PawShelter Project
 
-## Current issues (FIXING)
-- ✅ Fix kennels model: enum types (_enum suffix removed)
-- ✅ Fix UUID annotations: Mapped[str] → Mapped[uuid.UUID]
-- ✅ Add kennels migration
-- ✅ Add basic tasks endpoint (404 error)
-- ❌ Railway deployment: wait for fix to apply, test /kennels and /tasks endpoints
+## High Priority EPICS
+
+### EPIC 0: Infrastructure stabilization and reproducible build
+- Establish Alembic as single source of migrations
+- Fix CORS + cookies (JWT refresh in httpOnly) 
+- Create seed demo org + data script
+- Set up Docker compose (dev parity)
+- Add basic monitoring (/health endpoint)
+
+### EPIC 1: Canonical Intake/Outcome + Timeline Events
+- Add DB tables: intakes, outcomes, animal_events
+- Create intakeService.createIntakeFlow() domain service
+- Implement timeline endpoint GET /animals/{id}/timeline
+- Create Intake wizard frontend (/dashboard/intake/new)
+- Add Timeline tab to animal detail
+
+### EPIC 2: Single source of truth for moves (stays) + map DnD prep
+- Fix animal_stays model as canonical stays table
+- Create kennelService.moveAnimal() as single move path
+- Implement move endpoints: POST /stays/move, POST /kennels/{id}/eject
+- Create reusable Move dialog component
+- Implement Map view MVP (/kennels/map)
+- Add collision prevention for map DnD
+
+### EPIC 3: Daily Ops - choose primary module (medical or walk)
+- Option A: Implement /medical/today (medications focus)
+- Option B: Implement /walk (caretakers/volunteers focus)
+
+### EPIC 4: Gradual module addition (RBAC, People, Public, Reports)
+- Implement RBAC + Audit Log (required for production)
+- Create People/CRM + Adoption pipeline
+- Implement Public listing + embed widget
+- Create Reports (6 default reports + CSV export)
+- PWA hardening (offline cache, robust sync)
+
+## Current Status - Completed
+✅ Fix enum types and merge migration heads
+✅ Fix backend import and CORS issues for /kennels endpoint
 
 ## Upcoming features
 
