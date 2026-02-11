@@ -2,8 +2,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from alembic.config import Config
-from alembic import command
 
 from src.app.api.routes.health import router as health_router
 from src.app.api.routes.auth import router as auth_router
@@ -16,33 +14,18 @@ from src.app.db.session import async_engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Run database migrations on startup (sync operation in executor)
-    import asyncio
-    try:
-        alembic_cfg = Config("alembic.ini")
-        # Run sync alembic in executor to avoid blocking async event loop
-        await asyncio.to_thread(command.upgrade, alembic_cfg, "head")
-        print("Database migrations completed successfully")
-    except Exception as e:
-        print(f"Failed to run migrations: {e}")
-        # Don't fail startup, but log the error
-
-    # Seed permissions and role templates (idempotent)
+    # Seed permissions and role templates on startup
     try:
         from src.app.db.seed_data import seed_permissions, seed_role_templates, ROLE_TEMPLATES
         from src.app.db.session import AsyncSessionLocal
 
         async with AsyncSessionLocal() as db:
-            print("Seeding permissions and role templates...")
             perm_map = await seed_permissions(db)
             await seed_role_templates(db, perm_map)
             await db.commit()
-            print(f"Seeded {len(perm_map)} permissions and {len(ROLE_TEMPLATES)} role templates")
+        print(f"✓ Seeded {len(perm_map)} permissions and {len(ROLE_TEMPLATES)} role templates")
     except Exception as e:
-        print(f"Failed to seed data: {e}")
-        import traceback
-        traceback.print_exc()
-        # Don't fail startup, but log the error
+        print(f"✗ Failed to seed data: {e}")
 
     yield
     await async_engine.dispose()
