@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.database import get_db
+from src.app.api.dependencies.db import get_db
 from src.app.api.dependencies.auth import get_current_user
 from src.app.core.config import settings
 from src.app.core.security import (
@@ -29,7 +29,9 @@ from src.app.services.auth_service import AuthService
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
     svc = AuthService(db)
     try:

@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.database import get_db
+from src.app.api.dependencies.db import get_db
 from src.app.core.security import decode_token
 from src.app.models.user import User
 from src.app.models.membership import Membership, MembershipStatus

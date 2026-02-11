@@ -4,8 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.auth import get_current_user, get_current_organization_id, require_permission
-from src.app.api.dependencies.database import get_db
+from src.app.api.dependencies.auth import (
+    get_current_user,
+    get_current_organization_id,
+    require_permission,
+)
+from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Species
 from src.app.models.breed import Breed
 from src.app.models.user import User
@@ -117,7 +121,9 @@ async def get_animal(
     svc = AnimalService(db)
     animal = await svc.get_animal(organization_id, animal_id)
     if animal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
     return _build_animal_response(animal)
 
 
@@ -143,7 +149,9 @@ async def update_animal(
         user_agent=request.headers.get("user-agent"),
     )
     if animal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
     await db.commit()
     await db.refresh(animal)
     return _build_animal_response(animal)
@@ -169,7 +177,9 @@ async def delete_animal(
         user_agent=request.headers.get("user-agent"),
     )
     if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
     await db.commit()
 
 
