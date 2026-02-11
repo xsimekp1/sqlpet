@@ -450,8 +450,8 @@ export default function KennelsPage() {
                         <span className="text-gray-500">Empty</span>
                       ) : kennel.animals_preview && kennel.animals_preview.length === 1 ? (
                         <div className="flex items-center gap-2">
-                          <AnimalAvatar animal={kennel.animals_preview[0]} />
-                          <span className="text-sm">{kennel.animals_preview[0].name}</span>
+                          <AnimalAvatar animal={kennel.animals_preview[0]!} />
+                          <span className="text-sm">{kennel.animals_preview[0]!.name}</span>
                         </div>
                       ) : (
                         <Badge className={getOccupancyStatusColor(kennel.occupied_count, kennel.capacity)}>
