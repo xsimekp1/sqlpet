@@ -252,11 +252,11 @@ class ApiClient {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const response = await axios.post<LoginResponse>(
         `${API_URL}/auth/select-organization`,
-        { organization_id: organizationId },
+        {},
         {
+          params: { organization_id: organizationId },
           headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
           },
         }
       );
