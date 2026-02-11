@@ -125,9 +125,18 @@ class ApiClient {
     }
 
     console.log('getAuthHeaders: token found, length:', token.length);
-    return {
+    
+    const headers: Record<string, string> = {
       'Authorization': `Bearer ${token}`,
     };
+    
+    // Add organization ID if available
+    const orgId = this.getOrganizationId();
+    if (orgId) {
+      headers['x-organization-id'] = orgId;
+    }
+    
+    return headers;
   }
 
   /**

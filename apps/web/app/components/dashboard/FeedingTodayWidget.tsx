@@ -1,6 +1,6 @@
 'use client'
 
-import { Apple, ArrowRight } from 'lucide-react'
+import { Bone, ArrowRight } from 'lucide-react'
 import { WidgetCard } from './WidgetCard'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
@@ -26,7 +26,7 @@ export function FeedingTodayWidget({ editMode, onRemove, dragHandleProps }: Feed
     <WidgetCard
       id="feeding-today"
       title={t('feedingToday')}
-      icon={Apple}
+      icon={Bone}
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
@@ -35,7 +35,7 @@ export function FeedingTodayWidget({ editMode, onRemove, dragHandleProps }: Feed
       <div className="space-y-4">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/30">
-            <Apple className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <Bone className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>
           <div className="flex-1">
             <p className="text-4xl font-bold text-green-700 dark:text-green-400">{animalsPending}</p>

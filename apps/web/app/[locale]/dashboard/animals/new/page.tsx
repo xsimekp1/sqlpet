@@ -27,7 +27,7 @@ import { toast } from 'sonner';
 
 export default function NewAnimalPage() {
   const router = useRouter();
-  const t = useTranslations();
+  const t = useTranslations('animals.new');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,10 +49,10 @@ export default function NewAnimalPage() {
 
     try {
       await ApiClient.createAnimal(data);
-      toast.success('Animal created successfully!');
+      toast.success(t('success'));
       router.push('/dashboard/animals');
     } catch (error) {
-      toast.error('Failed to create animal');
+      toast.error(t('error'));
       console.error(error);
     } finally {
       setLoading(false);
@@ -69,30 +69,30 @@ export default function NewAnimalPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Add New Animal</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground mt-1">
-            Register a new animal in the shelter
+            {t('subtitle')}
           </p>
         </div>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>
-              Fill in the animal's basic details
-            </CardDescription>
-          </CardHeader>
+         <Card>
+           <CardHeader>
+             <CardTitle>{t('basicInfo')}</CardTitle>
+             <CardDescription>
+               {t('basicInfoDesc')}
+             </CardDescription>
+           </CardHeader>
           <CardContent className="space-y-4">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{t('name')}</Label>
               <Input
                 id="name"
                 name="name"
-                placeholder="e.g. Max, Luna"
+                placeholder={t('namePlaceholder')}
                 required
               />
             </div>
@@ -100,10 +100,10 @@ export default function NewAnimalPage() {
             {/* Species & Sex */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="species">Species *</Label>
+                <Label htmlFor="species">{t('species')}</Label>
                 <Select name="species" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select species" />
+                    <SelectValue placeholder={t('speciesPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="DOG">Dog</SelectItem>
@@ -115,10 +115,10 @@ export default function NewAnimalPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="sex">Sex *</Label>
+                <Label htmlFor="sex">{t('sex')}</Label>
                 <Select name="sex" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select sex" />
+                    <SelectValue placeholder={t('sexPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MALE">Male</SelectItem>
@@ -132,30 +132,30 @@ export default function NewAnimalPage() {
             {/* Color & Age */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="color">Color</Label>
+                <Label htmlFor="color">{t('color')}</Label>
                 <Input
                   id="color"
                   name="color"
-                  placeholder="e.g. Brown, Black"
+                  placeholder={t('colorPlaceholder')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="estimated_age_years">Estimated Age (years)</Label>
+                <Label htmlFor="estimated_age_years">{t('estimatedAge')}</Label>
                 <Input
                   id="estimated_age_years"
                   name="estimated_age_years"
                   type="number"
                   min="0"
                   max="30"
-                  placeholder="e.g. 2"
+                  placeholder={t('estimatedAgePlaceholder')}
                 />
               </div>
             </div>
 
             {/* Intake Date */}
             <div className="space-y-2">
-              <Label htmlFor="intake_date">Intake Date *</Label>
+              <Label htmlFor="intake_date">{t('intakeDate')}</Label>
               <Input
                 id="intake_date"
                 name="intake_date"
@@ -168,11 +168,11 @@ export default function NewAnimalPage() {
             {/* Buttons */}
             <div className="flex gap-2 pt-4">
               <Button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Animal'}
+                {loading ? t('creating') : t('create')}
               </Button>
               <Link href="/dashboard/animals">
                 <Button type="button" variant="outline">
-                  Cancel
+                  {t('cancel')}
                 </Button>
               </Link>
             </div>

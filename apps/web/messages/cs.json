@@ -235,5 +235,29 @@
     "errors": {
       "fetchFailed": "Nepodařilo se načíst kotce"
     }
+  },
+  "animals": {
+    "new": {
+      "title": "Přidat nové zvíře",
+      "subtitle": "Zaregistrovat nové zvíře v útulku",
+      "basicInfo": "Základní informace",
+      "basicInfoDesc": "Vyplňte základní údaje o zvířeti",
+      "name": "Jméno *",
+      "namePlaceholder": "např. Max, Luna",
+      "species": "Druh *",
+      "speciesPlaceholder": "Vyberte druh",
+      "sex": "Pohlaví *",
+      "sexPlaceholder": "Vyberte pohlaví",
+      "color": "Barva",
+      "colorPlaceholder": "např. Hnědá, Černá",
+      "estimatedAge": "Odhadovaný věk (roky)",
+      "estimatedAgePlaceholder": "např. 2",
+      "intakeDate": "Datum příjmu *",
+      "create": "Vytvořit zvíře",
+      "creating": "Vytváření...",
+      "cancel": "Zrušit",
+      "success": "Zvíře bylo úspěšně vytvořeno!",
+      "error": "Nepodařilo se vytvořit zvíře"
+    }
   }
 }

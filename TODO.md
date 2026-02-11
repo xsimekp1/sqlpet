@@ -28,9 +28,49 @@
 - Option A: Implement /medical/today (medications focus)
 - Option B: Implement /walk (caretakers/volunteers focus)
 
-### EPIC 4: Gradual module addition (RBAC, People, Public, Reports)
-- Implement RBAC + Audit Log (required for production)
-- Create People/CRM + Adoption pipeline
+### EPIC 4: People/CRM + Staff Admin (Lidé)
+**Cíl**: Mít jednu centrální sekci "Lidé", kde budu spravovat:
+- staff uživatele (login do systému) + jejich role a oprávnění
+- kontakty (adoptéři, dárci, nálezci, původní majitelé, veterináři, dobrovolníci, pěstouni…)
+- základní historii interakcí (komunikace, dokumenty, návštěvy, adopce/foster)
+
+**Klíčová designová rozhodnutí**:
+- Oddělit "Users" vs "People" (users = mají login, people = kontakty)
+- Jedna osoba může mít více typů (multi-role pomocí people_roles tabulky)
+- Centralizovaná správa kontaktů s vazbami na zvířata
+
+**Datový model (MVP)**:
+- people (id, organization_id, first_name, last_name, email, phone, address, notes, gdpr_consent)
+- people_roles (person_id, role enum/text: adopter, foster, volunteer, donor, owner, finder, vet_contact, staff_external)
+- households (volitelné MVP pro adopce/foster)
+- communications (MVP light: person_id, channel, subject, body, created_at, created_by)
+- entity links (intakes.brought_by_person_id, outcomes.person_id, medical_visits.vet_id, walk_logs.walked_by_person_id)
+
+**UI / Routes (MVP)**:
+- /dashboard/people (List) - filtry: All, Volunteers, Fosters, Adopters, Donors, Vets, Owners/Finders, Staff
+- /dashboard/people/new - minimální form (name, phone/email) + role selector
+- /dashboard/people/[id] (Detail) - tabs: Overview, Related (animals), Communications, Documents
+- /dashboard/settings/users-roles (Admin) - Users list, Invite user, Role editor
+
+**Workflows (MVP)**:
+1) Intake: "brought by" finder/owner with inline contact creation
+2) Outcome: adoption/return to owner with person selection
+3) Volunteer walk logs linked to person
+4) Foster profile with capacity/preferences metadata
+5) Deduplication check for email/phone
+6) Quick actions from person detail (Create adoption, Create intake, Mark as volunteer)
+
+**Acceptance Criteria**:
+- Lze vytvořit person a přiřadit mu více rolí
+- People list má filtry a search
+- Person detail ukáže role + základní info + související intake/outcome vazby
+- Admin sekce umožní spravovat staff účty odděleně od people kontaktů
+- V intake/outcome formu jde vybrat/rychle vytvořit kontakt
+- Deduplikační varování na stejný email/phone
+
+---
+
+### EPIC 5: Gradual module addition (Public, Reports, PWA)
 - Implement Public listing + embed widget
 - Create Reports (6 default reports + CSV export)
 - PWA hardening (offline cache, robust sync)

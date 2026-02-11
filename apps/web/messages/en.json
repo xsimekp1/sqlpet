@@ -235,5 +235,29 @@
     "errors": {
       "fetchFailed": "Failed to load kennels"
     }
+  },
+  "animals": {
+    "new": {
+      "title": "Add New Animal",
+      "subtitle": "Register a new animal in the shelter",
+      "basicInfo": "Basic Information",
+      "basicInfoDesc": "Fill in the animal's basic details",
+      "name": "Name *",
+      "namePlaceholder": "e.g. Max, Luna",
+      "species": "Species *",
+      "speciesPlaceholder": "Select species",
+      "sex": "Sex *",
+      "sexPlaceholder": "Select sex",
+      "color": "Color",
+      "colorPlaceholder": "e.g. Brown, Black",
+      "estimatedAge": "Estimated Age (years)",
+      "estimatedAgePlaceholder": "e.g. 2",
+      "intakeDate": "Intake Date *",
+      "create": "Create Animal",
+      "creating": "Creating...",
+      "cancel": "Cancel",
+      "success": "Animal created successfully!",
+      "error": "Failed to create animal"
+    }
   }
 }
