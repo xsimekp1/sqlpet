@@ -25,6 +25,21 @@ async def lifespan(app: FastAPI):
         print(f"Failed to run migrations: {e}")
         # Don't fail startup, but log the error
 
+    # Seed permissions and role templates (idempotent)
+    try:
+        from src.app.db.seed_data import seed_permissions, seed_role_templates, ROLE_TEMPLATES
+        from src.app.db.session import AsyncSessionLocal
+
+        async with AsyncSessionLocal() as db:
+            print("Seeding permissions and role templates...")
+            perm_map = await seed_permissions(db)
+            await seed_role_templates(db, perm_map)
+            await db.commit()
+            print(f"Seeded {len(perm_map)} permissions and {len(ROLE_TEMPLATES)} role templates")
+    except Exception as e:
+        print(f"Failed to seed data: {e}")
+        # Don't fail startup, but log the error
+
     yield
     await async_engine.dispose()
 
