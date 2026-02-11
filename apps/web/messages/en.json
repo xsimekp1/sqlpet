@@ -185,5 +185,52 @@
       "medicationDue": "Medication Due",
       "tasksToday": "Tasks Today"
     }
+  },
+  "kennels": {
+    "title": "Kennels",
+    "description": "Manage shelter kennels and zones",
+    "search": "Search kennels...",
+    "filters": {
+      "zone": "Zone",
+      "status": "Status", 
+      "type": "Type",
+      "size": "Size",
+      "occupancy": "Occupancy"
+    },
+    "quickActions": {
+      "addKennel": "Add Kennel",
+      "manageZones": "Manage Zones",
+      "walkMode": "Walk Mode"
+    },
+    "view": {
+      "table": "Table",
+      "grid": "Grid"
+    },
+    "occupancy": {
+      "empty": "Empty",
+      "partial": "Partial",
+      "full": "Full", 
+      "over": "Over"
+    },
+    "status": {
+      "available": "Available",
+      "maintenance": "Maintenance",
+      "closed": "Closed"
+    },
+    "type": {
+      "indoor": "Indoor",
+      "outdoor": "Outdoor",
+      "isolation": "Isolation",
+      "quarantine": "Quarantine"
+    },
+    "actions": {
+      "edit": "Edit",
+      "moveAnimals": "Move Animals",
+      "setMaintenance": "Set Maintenance"
+    },
+    "noResults": {
+      "noFilter": "No kennels found",
+      "withFilter": "No kennels match your filters"
+    }
   }
 }

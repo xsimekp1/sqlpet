@@ -185,5 +185,52 @@
       "medicationDue": "Léky k podání",
       "tasksToday": "Úkolů dnes"
     }
+  },
+  "kennels": {
+    "title": "Kotce",
+    "description": "Správa krců a zón útulku",
+    "search": "Hledat kotce...",
+    "filters": {
+      "zone": "Zóna",
+      "status": "Stav",
+      "type": "Typ",
+      "size": "Velikost",
+      "occupancy": "Obsazenost"
+    },
+    "quickActions": {
+      "addKennel": "Přidat kotec",
+      "manageZones": "Spravovat zóny",
+      "walkMode": "Režim obchůzky"
+    },
+    "view": {
+      "table": "Tabulka",
+      "grid": "Karty"
+    },
+    "occupancy": {
+      "empty": "Prázdný",
+      "partial": "Částečně",
+      "full": "Plný",
+      "over": "Přesah"
+    },
+    "status": {
+      "available": "Dostupný",
+      "maintenance": "Údržba",
+      "closed": "Uzavřený"
+    },
+    "type": {
+      "indoor": "Vnitřní",
+      "outdoor": "Venkovní",
+      "isolation": "Izolace",
+      "quarantine": "Karanténa"
+    },
+    "actions": {
+      "edit": "Upravit",
+      "moveAnimals": "Přesunout zvířata",
+      "setMaintenance": "Nastavit údržbu"
+    },
+    "noResults": {
+      "noFilter": "Žádné kotce nenalezeny",
+      "withFilter": "Žádné kotce neodpovídají filtrům"
+    }
   }
 }
