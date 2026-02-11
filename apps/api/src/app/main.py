@@ -7,6 +7,7 @@ from src.app.api.routes.health import router as health_router
 from src.app.api.routes.auth import router as auth_router
 from src.app.api.routes.animals import router as animals_router, breed_router
 from src.app.api.routes.kennels import router as kennels_router
+from src.app.api.routes.stays import router as stays_router
 from src.app.db.session import async_engine
 
 
@@ -42,3 +43,4 @@ app.include_router(auth_router)
 app.include_router(animals_router)
 app.include_router(breed_router)
 app.include_router(kennels_router)
+app.include_router(stays_router)
