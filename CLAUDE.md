@@ -173,6 +173,7 @@ Docker-compose currently has PostgreSQL only (missing Redis, MinIO, API/worker/w
 
 - All code and variable names in English
 - UI text always through i18n (Czech + English)
+- **Enum values are ALWAYS lowercase** (dog, cat, male, female, available, intake, etc.) - both in database and API
 - Contract templates use `{{placeholder}}` syntax (e.g. `{{person.first_name}}`, `{{animal.name}}`)
 - Public animal listings are configurable: mode A (all in shelter) vs mode B (adoptable only)
 - **TODO comments for future work:** When implementing a feature that will be completed in a future milestone, add a TODO comment with the milestone number (e.g. `// TODO: M3+ - Fetch real data from API`). This helps track implementation hooks and makes it easy to find what needs to be built next.
