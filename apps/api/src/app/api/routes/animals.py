@@ -51,10 +51,10 @@ router = APIRouter(prefix="/animals", tags=["animals"])
     status_code=status.HTTP_201_CREATED,
 )
 async def create_animal(
-    organization_id: uuid.UUID,
     data: AnimalCreate,
     request: Request,
     current_user: User = Depends(require_permission("animals.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
     svc = AnimalService(db)
@@ -109,9 +109,9 @@ async def list_animals(
     response_model=AnimalResponse,
 )
 async def get_animal(
-    organization_id: uuid.UUID,
     animal_id: uuid.UUID,
     current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
     svc = AnimalService(db)
@@ -126,11 +126,11 @@ async def get_animal(
     response_model=AnimalResponse,
 )
 async def update_animal(
-    organization_id: uuid.UUID,
     animal_id: uuid.UUID,
     data: AnimalUpdate,
     request: Request,
     current_user: User = Depends(require_permission("animals.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
     svc = AnimalService(db)
@@ -154,10 +154,10 @@ async def update_animal(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_animal(
-    organization_id: uuid.UUID,
     animal_id: uuid.UUID,
     request: Request,
     current_user: User = Depends(require_permission("animals.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
     svc = AnimalService(db)
