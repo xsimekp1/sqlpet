@@ -412,12 +412,12 @@ class ApiClient {
     try {
       // Get current organization from localStorage
       const organizationId = this.getOrganizationId();
-      
+
       if (!organizationId) {
         throw new Error('No organization selected. Please select an organization first.');
       }
 
-      const response = await axios.get<Animal[]>(
+      const response = await axios.get<{ items: Animal[], total: number, page: number, page_size: number }>(
         `${API_URL}/animals`,
         {
           headers: {
@@ -426,7 +426,7 @@ class ApiClient {
           },
         }
       );
-      return response.data;
+      return response.data.items;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
