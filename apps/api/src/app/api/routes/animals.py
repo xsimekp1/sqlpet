@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.auth import get_current_user, require_permission
+from src.app.api.dependencies.auth import get_current_user, get_current_organization_id, require_permission
 from src.app.api.dependencies.database import get_db
 from src.app.models.animal import Species
 from src.app.models.breed import Breed
@@ -76,7 +76,6 @@ async def create_animal(
     response_model=AnimalListResponse,
 )
 async def list_animals(
-    organization_id: uuid.UUID,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     species: str | None = Query(None),
@@ -84,6 +83,7 @@ async def list_animals(
     sex: str | None = Query(None),
     search: str | None = Query(None),
     current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
     svc = AnimalService(db)

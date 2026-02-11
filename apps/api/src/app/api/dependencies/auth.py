@@ -15,6 +15,30 @@ from src.app.services.permission_service import PermissionService
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=True)
 
 
+async def get_current_organization_id(
+    token: str = Depends(oauth2_scheme),
+) -> uuid.UUID:
+    """
+    Extract organization_id from JWT token.
+    For M3: organization_id is stored in 'org_id' claim.
+    TODO M4: Validate user has active membership in this organization.
+    """
+    payload = decode_token(token)
+    org_id_str = payload.get("org_id")
+    if org_id_str is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No organization selected. Please select an organization first.",
+        )
+    try:
+        return uuid.UUID(org_id_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid organization ID in token",
+        )
+
+
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
