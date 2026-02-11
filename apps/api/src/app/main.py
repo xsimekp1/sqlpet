@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from alembic.config import Config
+from alembic import command
 
 from src.app.api.routes.health import router as health_router
 from src.app.api.routes.auth import router as auth_router
@@ -14,6 +16,15 @@ from src.app.db.session import async_engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Run database migrations on startup
+    try:
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        print("Database migrations completed successfully")
+    except Exception as e:
+        print(f"Failed to run migrations: {e}")
+        # Don't fail startup, but log the error
+
     yield
     await async_engine.dispose()
 
