@@ -29,57 +29,13 @@ async def lifespan(app: FastAPI):
     try:
         from src.app.db.seed_data import seed_permissions, seed_role_templates, ROLE_TEMPLATES
         from src.app.db.session import AsyncSessionLocal
-        from src.app.models.role import Role
-        from src.app.models.role_permission import RolePermission
-        from sqlalchemy import select
 
         async with AsyncSessionLocal() as db:
             print("Seeding permissions and role templates...")
             perm_map = await seed_permissions(db)
             await seed_role_templates(db, perm_map)
-            print(f"Seeded {len(perm_map)} permissions and {len(ROLE_TEMPLATES)} role templates")
-
-            # Fix existing organization roles by copying permissions from templates
-            print("Fixing existing organization roles...")
-            result = await db.execute(select(Role).where(Role.is_template.is_(True)))
-            templates = {r.name: r for r in result.scalars().all()}
-
-            result = await db.execute(select(Role).where(Role.is_template.is_(False)))
-            org_roles = result.scalars().all()
-
-            for org_role in org_roles:
-                template = templates.get(org_role.name)
-                if not template:
-                    continue
-
-                # Get template permissions
-                result = await db.execute(
-                    select(RolePermission).where(RolePermission.role_id == template.id)
-                )
-                template_perms = result.scalars().all()
-
-                # Get existing permissions
-                result = await db.execute(
-                    select(RolePermission).where(RolePermission.role_id == org_role.id)
-                )
-                existing_perms = {rp.permission_id for rp in result.scalars().all()}
-
-                # Copy missing permissions
-                added_count = 0
-                for template_perm in template_perms:
-                    if template_perm.permission_id not in existing_perms:
-                        db.add(RolePermission(
-                            role_id=org_role.id,
-                            permission_id=template_perm.permission_id,
-                            allowed=template_perm.allowed
-                        ))
-                        added_count += 1
-
-                if added_count > 0:
-                    print(f"  Fixed role '{org_role.name}': added {added_count} permissions")
-
             await db.commit()
-            print("Startup seed and fix completed successfully")
+            print(f"Seeded {len(perm_map)} permissions and {len(ROLE_TEMPLATES)} role templates")
     except Exception as e:
         print(f"Failed to seed data: {e}")
         import traceback
