@@ -491,23 +491,37 @@ class ApiClient {
         throw new Error('No organization selected. Please select an organization first.');
       }
 
-      const headers = {
-        ...this.getAuthHeaders(),
-        'x-organization-id': organizationId,
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'x-organization-id': organizationId,
       };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
 
       console.log('[API] createAnimal - headers:', headers);
       console.log('[API] createAnimal - making POST request to:', `${API_URL}/animals`);
 
-      const response = await axios.post<Animal>(
-        `${API_URL}/animals`,
-        data,
-        { headers }
-      );
+      // Use fetch instead of axios
+      const response = await fetch(`${API_URL}/animals`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(data),
+      });
 
-      console.log('[API] createAnimal - success:', response.data);
-      return response.data;
+      console.log('[API] createAnimal - response status:', response.status);
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Failed to create animal' }));
+        throw new Error(error.detail || 'Failed to create animal');
+      }
+
+      const result = await response.json();
+      console.log('[API] createAnimal - success:', result);
+      return result;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
