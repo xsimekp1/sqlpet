@@ -26,11 +26,15 @@ async def get_current_organization_id(
     TODO M4: Validate user has active membership in this organization.
     """
     payload = decode_token(token)
+    print(f"[ORG DEBUG] Token payload: {payload}")
+    print(f"[ORG DEBUG] x-organization-id header: {x_organization_id}")
 
     # Try header first, fallback to JWT claim
     org_id_str = x_organization_id or payload.get("org_id")
+    print(f"[ORG DEBUG] Resolved org_id: {org_id_str}")
 
     if org_id_str is None:
+        print(f"[ORG DEBUG] No org_id found in token or header!")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No organization selected. Please select an organization first.",
@@ -38,6 +42,7 @@ async def get_current_organization_id(
     try:
         return uuid.UUID(org_id_str)
     except ValueError:
+        print(f"[ORG DEBUG] Invalid org_id format: {org_id_str}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid organization ID",
@@ -48,14 +53,26 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    payload = decode_token(token)
+    print(f"[AUTH DEBUG] Token received: {token[:20]}...{token[-20:]}")
+    try:
+        payload = decode_token(token)
+        print(f"[AUTH DEBUG] Token payload: {payload}")
+    except Exception as e:
+        print(f"[AUTH DEBUG] Token decode failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token decode error: {str(e)}",
+        )
+
     if payload.get("typ") != "access":
+        print(f"[AUTH DEBUG] Invalid token type: {payload.get('typ')}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token type",
         )
     user_id_str = payload.get("sub")
     if user_id_str is None:
+        print(f"[AUTH DEBUG] No 'sub' in token payload")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
@@ -63,6 +80,7 @@ async def get_current_user(
     try:
         user_id = uuid.UUID(user_id_str)
     except ValueError:
+        print(f"[AUTH DEBUG] Invalid user_id format: {user_id_str}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
