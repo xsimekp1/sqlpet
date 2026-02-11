@@ -34,115 +34,58 @@ async def list_kennels(
 ):
     """List kennels with occupancy and animal previews."""
 
-    # Subquery for occupancy count
-    occ_sq = (
-        select(
-            KennelStay.kennel_id.label("kennel_id"),
-            func.count().label("occupied_count"),
+    # DEBUG LOGGING - simple version first
+    try:
+        print(f"DEBUG: Kennels endpoint called")
+        print(f"DEBUG: User ID: {current_user.id}")
+        print(f"DEBUG: Org ID: {organization_id}")
+
+        # Simple test query first
+        zones_query = (
+            select(Zone).where(Zone.organization_id == organization_id).limit(1)
         )
-        .where(
-            KennelStay.organization_id == organization_id, KennelStay.end_at.is_(None)
+        zones_result = await session.execute(zones_query)
+        zone_count = len(zones_result.scalars().all())
+
+        print(f"DEBUG: Found {zone_count} zones for org {organization_id}")
+
+        # Try simple kennel query
+        kennels_query = (
+            select(Kennel).where(Kennel.organization_id == organization_id).limit(5)
         )
-        .group_by(KennelStay.kennel_id)
-        .subquery()
-    )
+        kennels_result = await session.execute(kennels_query)
+        kennels = kennels_result.scalars().all()
 
-    # Main query
-    query = (
-        select(Kennel, Zone, func.coalesce(occ_sq.c.occupied_count, 0))
-        .join(Zone, Kennel.zone_id == Zone.id)
-        .outerjoin(occ_sq, occ_sq.c.kennel_id == Kennel.id)
-        .where(Kennel.organization_id == organization_id)
-    )
+        print(f"DEBUG: Found {len(kennels)} kennels")
 
-    if zone_id:
-        query = query.where(Kennel.zone_id == zone_id)
-
-    if status:
-        query = query.where(Kennel.status == status)
-
-    if type:
-        query = query.where(Kennel.type == type)
-
-    if size_category:
-        query = query.where(Kennel.size_category == size_category)
-
-    if search:
-        query = query.where(
-            (Kennel.name.ilike(f"%{search}%"))
-            | (Kennel.code.ilike(f"%{search}%"))
-            | (Zone.name.ilike(f"%{search}%"))
-        )
-
-    query = query.order_by(Kennel.code.asc())
-    result = await session.execute(query)
-    kennels_data = result.all()
-
-    # Extract kennel IDs for animal query
-    kennel_ids = [str(k.id) for k, _, _ in kennels_data]
-
-    # Get animal previews (limit to 16 per kennel for performance)
-    if kennel_ids:
-        animal_query = (
-            select(
-                Animal.id,
-                Animal.name,
-                Animal.current_kennel_id,
-                Animal.primary_photo_url,
-                Animal.species,
-            )
-            .where(
-                Animal.organization_id == organization_id,
-                Animal.current_kennel_id.in_(kennel_ids),
-            )
-            .order_by(Animal.name.asc())
-        )
-        animal_result = await session.execute(animal_query)
-        animals = animal_result.all()
-    else:
-        animals = []
-
-    # Group animals by kennel
-    animals_by_kennel: dict[str, List[dict]] = {}
-    for animal_id, name, kennel_id, photo_url, species in animals:
-        kennel_key = str(kennel_id)
-        if kennel_key not in animals_by_kennel:
-            animals_by_kennel[kennel_key] = []
-        animals_by_kennel[kennel_key].append(
+        # Return simple response
+        return [
             {
-                "id": str(animal_id),
-                "name": name,
-                "photo_url": photo_url,
-                "species": species,
+                "id": str(k.id),
+                "code": k.code,
+                "name": k.name,
+                "zone_id": str(k.zone_id),
+                "status": k.status,
+                "type": k.type,
+                "size_category": k.size_category,
+                "capacity": k.capacity,
+                "occupied_count": 0,
+                "animals_preview": [],
+                "alerts": [],
+                "map_x": k.map_x,
+                "map_y": k.map_y,
+                "map_w": k.map_w,
+                "map_h": k.map_h,
             }
-        )
+            for k in kennels
+        ]
 
-    # Build response
-    return [
-        {
-            "id": str(k.id),
-            "code": k.code,
-            "name": k.name,
-            "zone_id": str(k.zone_id),
-            "zone_name": zone.name,
-            "status": k.status,
-            "type": k.type,
-            "size_category": k.size_category,
-            "capacity": k.capacity,
-            "capacity_rules": k.capacity_rules,
-            "primary_photo_path": k.primary_photo_path,
-            "occupied_count": int(occupied_count),
-            "animals_preview": animals_by_kennel.get(str(k.id), [])[:16],
-            "alerts": _calculate_alerts(k, int(occupied_count)),
-            "map_x": k.map_x,
-            "map_y": k.map_y,
-            "map_w": k.map_w,
-            "map_h": k.map_h,
-            "map_rotation": k.map_rotation,
-            "map_meta": k.map_meta,
-        }
-        for k, zone, occupied_count in kennels_data
-    ]
+    except Exception as e:
+        import traceback
+
+        print(f"ERROR in kennels endpoint: {e}")
+        print(f"ERROR traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 class UpdateKennelLayoutRequest(BaseModel):
