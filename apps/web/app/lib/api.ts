@@ -58,9 +58,10 @@ export interface CreateAnimalRequest {
   species: 'dog' | 'cat' | 'rabbit' | 'bird' | 'other';
   sex: 'male' | 'female' | 'unknown';
   color?: string | null;
-  estimated_age_years?: number | null;
   intake_date: string;
   status?: string;
+  // Note: Backend uses birth_date_estimated and age_group instead of estimated_age_years
+  // For now, omit age fields - will be added in future milestone
 }
 
 // Kennel types

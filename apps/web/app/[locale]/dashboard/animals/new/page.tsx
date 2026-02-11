@@ -35,14 +35,12 @@ export default function NewAnimalPage() {
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const ageValue = formData.get('estimated_age_years') as string;
 
     const data = {
       name: formData.get('name') as string,
       species: formData.get('species') as 'dog' | 'cat' | 'rabbit' | 'other',
       sex: formData.get('sex') as 'male' | 'female' | 'unknown',
       color: (formData.get('color') as string) || null,
-      estimated_age_years: ageValue ? parseInt(ageValue) : null,
       intake_date: formData.get('intake_date') as string,
       status: 'available',
     };
@@ -140,7 +138,8 @@ export default function NewAnimalPage() {
                 />
               </div>
 
-              <div className="space-y-2">
+              {/* TODO: M3+ - Add age fields (birth_date_estimated, age_group) to match backend schema */}
+              {/* <div className="space-y-2">
                 <Label htmlFor="estimated_age_years">{t('estimatedAge')}</Label>
                 <Input
                   id="estimated_age_years"
@@ -150,7 +149,7 @@ export default function NewAnimalPage() {
                   max="30"
                   placeholder={t('estimatedAgePlaceholder')}
                 />
-              </div>
+              </div> */}
             </div>
 
             {/* Intake Date */}
