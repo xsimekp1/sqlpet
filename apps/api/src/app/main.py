@@ -16,10 +16,12 @@ from src.app.db.session import async_engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Run database migrations on startup
+    # Run database migrations on startup (sync operation in executor)
+    import asyncio
     try:
         alembic_cfg = Config("alembic.ini")
-        command.upgrade(alembic_cfg, "head")
+        # Run sync alembic in executor to avoid blocking async event loop
+        await asyncio.to_thread(command.upgrade, alembic_cfg, "head")
         print("Database migrations completed successfully")
     except Exception as e:
         print(f"Failed to run migrations: {e}")
@@ -36,20 +38,17 @@ async def lifespan(app: FastAPI):
             await seed_role_templates(db, perm_map)
             await db.commit()
             print(f"Seeded {len(perm_map)} permissions and {len(ROLE_TEMPLATES)} role templates")
-        print("DB session closed, about to yield...")
     except Exception as e:
         print(f"Failed to seed data: {e}")
         import traceback
         traceback.print_exc()
         # Don't fail startup, but log the error
 
-    print("YIELDING - app should start now")
     yield
-    print("App shutting down, disposing engine")
     await async_engine.dispose()
 
 
-app = FastAPI(title="SQLpet API")  # Temporarily disable lifespan to test
+app = FastAPI(title="SQLpet API", lifespan=lifespan)
 
 # CORS configuration
 # For production, explicitly list allowed origins for security
