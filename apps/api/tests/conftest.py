@@ -67,6 +67,11 @@ async def auth_headers(test_user: User) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
+def make_org_headers(auth_headers: dict[str, str], org_id: uuid.UUID) -> dict[str, str]:
+    """Helper to add x-organization-id to auth headers"""
+    return {**auth_headers, "x-organization-id": str(org_id)}
+
+
 @pytest.fixture()
 async def test_org_with_membership(db_session: AsyncSession, test_user: User):
     org_id = uuid.uuid4()

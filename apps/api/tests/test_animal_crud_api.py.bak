@@ -24,7 +24,6 @@ pytestmark = pytest.mark.anyio
 async def test_create_animal_basic(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
     headers = {**auth_headers, "x-organization-id": str(org.id)}
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     resp = await client.post(
         "/animals",
         json={"name": "Rex", "species": "dog"},
@@ -41,9 +40,8 @@ async def test_create_animal_basic(client, auth_headers, test_org_with_write_per
 
 async def test_create_animal_full_fields(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={
             "name": "Bella",
             "species": "cat",
@@ -61,7 +59,7 @@ async def test_create_animal_full_fields(client, auth_headers, test_org_with_wri
             "public_visibility": True,
             "featured": True,
         },
-        headers=headers,
+        headers=auth_headers,
     )
     assert resp.status_code == 201
     body = resp.json()
@@ -78,7 +76,6 @@ async def test_create_animal_full_fields(client, auth_headers, test_org_with_wri
 
 async def test_create_animal_with_breeds(client, auth_headers, test_org_with_write_permission, db_session):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     # Get a breed from DB
     result = await db_session.execute(
         select(Breed).where(Breed.species == Species.DOG).limit(1)
@@ -88,13 +85,13 @@ async def test_create_animal_with_breeds(client, auth_headers, test_org_with_wri
         pytest.skip("No breeds seeded")
 
     resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={
             "name": "Buddy",
             "species": "dog",
             "breeds": [{"breed_id": str(breed.id), "percent": 100}],
         },
-        headers=headers,
+        headers=auth_headers,
     )
     assert resp.status_code == 201
     body = resp.json()
@@ -105,9 +102,8 @@ async def test_create_animal_with_breeds(client, auth_headers, test_org_with_wri
 
 async def test_create_animal_with_identifiers(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={
             "name": "Chip",
             "species": "dog",
@@ -115,7 +111,7 @@ async def test_create_animal_with_identifiers(client, auth_headers, test_org_wit
                 {"type": "microchip", "value": "123456789012345", "registry": "CZ National"},
             ],
         },
-        headers=headers,
+        headers=auth_headers,
     )
     assert resp.status_code == 201
     body = resp.json()
@@ -127,11 +123,10 @@ async def test_create_animal_with_identifiers(client, auth_headers, test_org_wit
 
 async def test_create_animal_generates_public_code(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "CodeTest", "species": "dog"},
-        headers=headers,
+        headers=auth_headers,
     )
     assert resp.status_code == 201
     body = resp.json()
@@ -157,9 +152,9 @@ async def test_create_animal_forbidden(client, auth_headers, test_org_with_membe
     """Read-only user cannot create animals."""
     org, _, _ = test_org_with_membership
     resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "Test", "species": "dog"},
-        headers=headers,
+        headers=auth_headers,
     )
     assert resp.status_code == 403
 
@@ -168,8 +163,7 @@ async def test_create_animal_forbidden(client, auth_headers, test_org_with_membe
 
 async def test_list_animals_empty(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
-    resp = await client.get("/animals", headers=headers)
+    resp = await client.get(f"/orgs/{org.id}/animals", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["total"] == 0
@@ -178,15 +172,14 @@ async def test_list_animals_empty(client, auth_headers, test_org_with_write_perm
 
 async def test_list_animals_with_data(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     # Create 3 animals
     for name in ("A1", "A2", "A3"):
         await client.post(
-            "/animals",
+            f"/orgs/{org.id}/animals",
             json={"name": name, "species": "dog"},
-            headers=headers,
+            headers=auth_headers,
         )
-    resp = await client.get("/animals", headers=headers)
+    resp = await client.get(f"/orgs/{org.id}/animals", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["total"] == 3
@@ -195,11 +188,10 @@ async def test_list_animals_with_data(client, auth_headers, test_org_with_write_
 
 async def test_list_animals_filter_species(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
-    await client.post("/animals", json={"name": "Dog1", "species": "dog"}, headers=headers)
-    await client.post("/animals", json={"name": "Cat1", "species": "cat"}, headers=headers)
+    await client.post(f"/orgs/{org.id}/animals", json={"name": "Dog1", "species": "dog"}, headers=auth_headers)
+    await client.post(f"/orgs/{org.id}/animals", json={"name": "Cat1", "species": "cat"}, headers=auth_headers)
 
-    resp = await client.get("/animals?species=cat", headers=headers)
+    resp = await client.get(f"/orgs/{org.id}/animals?species=cat", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["total"] == 1
@@ -208,19 +200,18 @@ async def test_list_animals_filter_species(client, auth_headers, test_org_with_w
 
 async def test_list_animals_filter_status(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "Avail1", "species": "dog", "status": "available"},
-        headers=headers,
+        headers=auth_headers,
     )
     await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "Intake1", "species": "dog", "status": "intake"},
-        headers=headers,
+        headers=auth_headers,
     )
 
-    resp = await client.get("/animals?status=available", headers=headers)
+    resp = await client.get(f"/orgs/{org.id}/animals?status=available", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["total"] == 1
@@ -229,11 +220,10 @@ async def test_list_animals_filter_status(client, auth_headers, test_org_with_wr
 
 async def test_list_animals_search(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
-    await client.post("/animals", json={"name": "Maxík", "species": "dog"}, headers=headers)
-    await client.post("/animals", json={"name": "Bella", "species": "cat"}, headers=headers)
+    await client.post(f"/orgs/{org.id}/animals", json={"name": "Maxík", "species": "dog"}, headers=auth_headers)
+    await client.post(f"/orgs/{org.id}/animals", json={"name": "Bella", "species": "cat"}, headers=auth_headers)
 
-    resp = await client.get("/animals?search=max", headers=headers)
+    resp = await client.get(f"/orgs/{org.id}/animals?search=max", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["total"] == 1
@@ -242,15 +232,14 @@ async def test_list_animals_search(client, auth_headers, test_org_with_write_per
 
 async def test_list_animals_pagination(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     for i in range(5):
         await client.post(
-            "/animals",
+            f"/orgs/{org.id}/animals",
             json={"name": f"Page{i}", "species": "dog"},
-            headers=headers,
+            headers=auth_headers,
         )
 
-    resp = await client.get("/animals?page=1&page_size=2", headers=headers)
+    resp = await client.get(f"/orgs/{org.id}/animals?page=1&page_size=2", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert body["total"] == 5
@@ -340,41 +329,38 @@ async def test_list_animals_multi_tenant_isolation(client, db_session):
 
 async def test_get_animal(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     create_resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "GetMe", "species": "cat"},
-        headers=headers,
+        headers=auth_headers,
     )
     animal_id = create_resp.json()["id"]
 
-    resp = await client.get("/animals/{animal_id}", headers=headers)
+    resp = await client.get(f"/orgs/{org.id}/animals/{animal_id}", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["name"] == "GetMe"
 
 
 async def test_get_animal_not_found(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     fake_id = uuid.uuid4()
-    resp = await client.get("/animals/{fake_id}", headers=headers)
+    resp = await client.get(f"/orgs/{org.id}/animals/{fake_id}", headers=auth_headers)
     assert resp.status_code == 404
 
 
 async def test_update_animal(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     create_resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "OldName", "species": "dog"},
-        headers=headers,
+        headers=auth_headers,
     )
     animal_id = create_resp.json()["id"]
 
     resp = await client.patch(
-        "/animals/{animal_id}",
+        f"/orgs/{org.id}/animals/{animal_id}",
         json={"name": "NewName"},
-        headers=headers,
+        headers=auth_headers,
     )
     assert resp.status_code == 200
     assert resp.json()["name"] == "NewName"
@@ -382,19 +368,18 @@ async def test_update_animal(client, auth_headers, test_org_with_write_permissio
 
 async def test_update_animal_partial(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     create_resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "Partial", "species": "dog", "color": "brown"},
-        headers=headers,
+        headers=auth_headers,
     )
     animal_id = create_resp.json()["id"]
 
     # Update only description — color should remain unchanged
     resp = await client.patch(
-        "/animals/{animal_id}",
+        f"/orgs/{org.id}/animals/{animal_id}",
         json={"description": "Good boy"},
-        headers=headers,
+        headers=auth_headers,
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -405,33 +390,31 @@ async def test_update_animal_partial(client, auth_headers, test_org_with_write_p
 
 async def test_delete_animal(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     create_resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "ToDelete", "species": "dog"},
-        headers=headers,
+        headers=auth_headers,
     )
     animal_id = create_resp.json()["id"]
 
-    resp = await client.delete("/animals/{animal_id}", headers=headers)
+    resp = await client.delete(f"/orgs/{org.id}/animals/{animal_id}", headers=auth_headers)
     assert resp.status_code == 204
 
     # GET should now return 404
-    resp = await client.get("/animals/{animal_id}", headers=headers)
+    resp = await client.get(f"/orgs/{org.id}/animals/{animal_id}", headers=auth_headers)
     assert resp.status_code == 404
 
 
 async def test_delete_animal_soft(client, auth_headers, test_org_with_write_permission, db_session):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     create_resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "SoftDel", "species": "cat"},
-        headers=headers,
+        headers=auth_headers,
     )
     animal_id = create_resp.json()["id"]
 
-    await client.delete("/animals/{animal_id}", headers=headers)
+    await client.delete(f"/orgs/{org.id}/animals/{animal_id}", headers=auth_headers)
 
     # Verify in DB: deleted_at is set, record still exists
     result = await db_session.execute(
@@ -446,11 +429,10 @@ async def test_delete_animal_soft(client, auth_headers, test_org_with_write_perm
 
 async def test_create_animal_audit_log(client, auth_headers, test_org_with_write_permission, db_session):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     create_resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "AuditTest", "species": "dog"},
-        headers=headers,
+        headers=auth_headers,
     )
     assert create_resp.status_code == 201
     animal_id = create_resp.json()["id"]
@@ -470,18 +452,17 @@ async def test_create_animal_audit_log(client, auth_headers, test_org_with_write
 
 async def test_update_animal_audit_log(client, auth_headers, test_org_with_write_permission, db_session):
     org, _, _ = test_org_with_write_permission
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     create_resp = await client.post(
-        "/animals",
+        f"/orgs/{org.id}/animals",
         json={"name": "AuditBefore", "species": "dog"},
-        headers=headers,
+        headers=auth_headers,
     )
     animal_id = create_resp.json()["id"]
 
     await client.patch(
-        "/animals/{animal_id}",
+        f"/orgs/{org.id}/animals/{animal_id}",
         json={"name": "AuditAfter"},
-        headers=headers,
+        headers=auth_headers,
     )
 
     result = await db_session.execute(
@@ -500,7 +481,7 @@ async def test_update_animal_audit_log(client, auth_headers, test_org_with_write
 # ---- Breeds ----
 
 async def test_list_breeds(client, auth_headers):
-    resp = await client.get("/breeds", headers=headers)
+    resp = await client.get("/breeds", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert isinstance(body, list)
@@ -511,7 +492,7 @@ async def test_list_breeds(client, auth_headers):
 
 
 async def test_list_breeds_filter_species(client, auth_headers):
-    resp = await client.get("/breeds?species=cat", headers=headers)
+    resp = await client.get("/breeds?species=cat", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert len(body) > 0
