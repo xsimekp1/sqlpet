@@ -31,8 +31,8 @@ class AnimalIdentifier(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         nullable=False,
         index=True,
     )
-    type: Mapped[IdentifierType] = mapped_column(
-        Enum(IdentifierType, name="identifier_type_enum", create_constraint=False, native_enum=True),
+    type: Mapped[str] = mapped_column(
+        String(50),
         nullable=False,
     )
     value: Mapped[str] = mapped_column(String(255), nullable=False)

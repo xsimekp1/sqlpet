@@ -80,7 +80,7 @@ async def get_current_user(
 
 def require_permission(permission_key: str) -> Callable:
     async def _check(
-        organization_id: uuid.UUID,
+        organization_id: uuid.UUID = Depends(get_current_organization_id),
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db),
     ) -> User:

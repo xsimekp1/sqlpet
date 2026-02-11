@@ -16,12 +16,12 @@ def _animal_to_dict(animal: Animal) -> dict:
     return {
         "id": str(animal.id),
         "name": animal.name,
-        "species": animal.species.value if animal.species else None,
-        "sex": animal.sex.value if animal.sex else None,
-        "status": animal.status.value if animal.status else None,
-        "altered_status": animal.altered_status.value if animal.altered_status else None,
-        "age_group": animal.age_group.value if animal.age_group else None,
-        "size_estimated": animal.size_estimated.value if animal.size_estimated else None,
+        "species": animal.species,
+        "sex": animal.sex,
+        "status": animal.status,
+        "altered_status": animal.altered_status,
+        "age_group": animal.age_group,
+        "size_estimated": animal.size_estimated,
         "color": animal.color,
         "coat": animal.coat,
         "weight_current_kg": float(animal.weight_current_kg) if animal.weight_current_kg else None,
@@ -112,11 +112,13 @@ class AnimalService:
         # Add identifiers
         if data.identifiers:
             for ident in data.identifiers:
+                # Convert enum to string value if needed
+                type_val = ident.type.value if hasattr(ident.type, 'value') else ident.type
                 ai = AnimalIdentifier(
                     id=uuid.uuid4(),
                     organization_id=organization_id,
                     animal_id=animal.id,
-                    type=ident.type,
+                    type=type_val,
                     value=ident.value,
                     registry=ident.registry,
                     issued_at=ident.issued_at,
@@ -238,11 +240,14 @@ class AnimalService:
             await self.db.flush()
             # Insert new
             for ident in identifiers_data:
+                # Convert enum to string value if needed
+                type_val = ident["type"]
+                type_val = type_val.value if hasattr(type_val, 'value') else type_val
                 ai = AnimalIdentifier(
                     id=uuid.uuid4(),
                     organization_id=organization_id,
                     animal_id=animal.id,
-                    type=ident["type"],
+                    type=type_val,
                     value=ident["value"],
                     registry=ident.get("registry"),
                     issued_at=ident.get("issued_at"),

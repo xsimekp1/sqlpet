@@ -24,12 +24,13 @@ pytestmark = pytest.mark.anyio
 async def test_create_animal_basic(client, auth_headers, test_org_with_write_permission):
     org, _, _ = test_org_with_write_permission
     headers = {**auth_headers, "x-organization-id": str(org.id)}
-    headers = {**auth_headers, "x-organization-id": str(org.id)}
     resp = await client.post(
         "/animals",
         json={"name": "Rex", "species": "dog"},
         headers=headers,
     )
+    if resp.status_code != 201:
+        print(f"ERROR: {resp.status_code} - {resp.json()}")
     assert resp.status_code == 201
     body = resp.json()
     assert body["name"] == "Rex"
@@ -145,9 +146,8 @@ async def test_create_animal_generates_public_code(client, auth_headers, test_or
 
 
 async def test_create_animal_unauthorized(client):
-    fake_org_id = uuid.uuid4()
     resp = await client.post(
-        f"/orgs/{fake_org_id}/animals",
+        "/animals",
         json={"name": "Test", "species": "dog"},
     )
     assert resp.status_code == 401
@@ -156,6 +156,7 @@ async def test_create_animal_unauthorized(client):
 async def test_create_animal_forbidden(client, auth_headers, test_org_with_membership):
     """Read-only user cannot create animals."""
     org, _, _ = test_org_with_membership
+    headers = {**auth_headers, "x-organization-id": str(org.id)}
     resp = await client.post(
         "/animals",
         json={"name": "Test", "species": "dog"},
@@ -301,24 +302,25 @@ async def test_list_animals_multi_tenant_isolation(client, db_session):
     db_session.add(Membership(id=m2_id, user_id=user2_id, organization_id=org2_id, role_id=role2_id, status=MembershipStatus.ACTIVE))
     await db_session.commit()
 
-    headers1 = {"Authorization": f"Bearer {create_access_token({'sub': str(user1_id)})}" }
-    headers2 = {"Authorization": f"Bearer {create_access_token({'sub': str(user2_id)})}" }
+    headers1 = {"Authorization": f"Bearer {create_access_token({'sub': str(user1_id)})}", "x-organization-id": str(org1_id)}
+    headers2 = {"Authorization": f"Bearer {create_access_token({'sub': str(user2_id)})}", "x-organization-id": str(org2_id)}
 
     # User1 creates animal in org1
     resp = await client.post(
-        f"/orgs/{org1_id}/animals",
+        "/animals",
         json={"name": "Org1Dog", "species": "dog"},
         headers=headers1,
     )
     assert resp.status_code == 201
 
     # User2 should see 0 animals in org2
-    resp = await client.get(f"/orgs/{org2_id}/animals", headers=headers2)
+    resp = await client.get("/animals", headers=headers2)
     assert resp.status_code == 200
     assert resp.json()["total"] == 0
 
     # User2 cannot access org1 animals (no membership)
-    resp = await client.get(f"/orgs/{org1_id}/animals", headers=headers2)
+    headers2_with_org1 = {"Authorization": f"Bearer {create_access_token({'sub': str(user2_id)})}", "x-organization-id": str(org1_id)}
+    resp = await client.get("/animals", headers=headers2_with_org1)
     assert resp.status_code == 403
 
     # Cleanup
@@ -348,7 +350,7 @@ async def test_get_animal(client, auth_headers, test_org_with_write_permission):
     )
     animal_id = create_resp.json()["id"]
 
-    resp = await client.get("/animals/{animal_id}", headers=headers)
+    resp = await client.get(f"/animals/{animal_id}", headers=headers)
     assert resp.status_code == 200
     assert resp.json()["name"] == "GetMe"
 
@@ -357,7 +359,7 @@ async def test_get_animal_not_found(client, auth_headers, test_org_with_write_pe
     org, _, _ = test_org_with_write_permission
     headers = {**auth_headers, "x-organization-id": str(org.id)}
     fake_id = uuid.uuid4()
-    resp = await client.get("/animals/{fake_id}", headers=headers)
+    resp = await client.get(f"/animals/{fake_id}", headers=headers)
     assert resp.status_code == 404
 
 
@@ -372,7 +374,7 @@ async def test_update_animal(client, auth_headers, test_org_with_write_permissio
     animal_id = create_resp.json()["id"]
 
     resp = await client.patch(
-        "/animals/{animal_id}",
+        f"/animals/{animal_id}",
         json={"name": "NewName"},
         headers=headers,
     )
@@ -392,7 +394,7 @@ async def test_update_animal_partial(client, auth_headers, test_org_with_write_p
 
     # Update only description — color should remain unchanged
     resp = await client.patch(
-        "/animals/{animal_id}",
+        f"/animals/{animal_id}",
         json={"description": "Good boy"},
         headers=headers,
     )
@@ -413,11 +415,11 @@ async def test_delete_animal(client, auth_headers, test_org_with_write_permissio
     )
     animal_id = create_resp.json()["id"]
 
-    resp = await client.delete("/animals/{animal_id}", headers=headers)
+    resp = await client.delete(f"/animals/{animal_id}", headers=headers)
     assert resp.status_code == 204
 
     # GET should now return 404
-    resp = await client.get("/animals/{animal_id}", headers=headers)
+    resp = await client.get(f"/animals/{animal_id}", headers=headers)
     assert resp.status_code == 404
 
 
@@ -431,7 +433,7 @@ async def test_delete_animal_soft(client, auth_headers, test_org_with_write_perm
     )
     animal_id = create_resp.json()["id"]
 
-    await client.delete("/animals/{animal_id}", headers=headers)
+    await client.delete(f"/animals/{animal_id}", headers=headers)
 
     # Verify in DB: deleted_at is set, record still exists
     result = await db_session.execute(
@@ -479,7 +481,7 @@ async def test_update_animal_audit_log(client, auth_headers, test_org_with_write
     animal_id = create_resp.json()["id"]
 
     await client.patch(
-        "/animals/{animal_id}",
+        f"/animals/{animal_id}",
         json={"name": "AuditAfter"},
         headers=headers,
     )
@@ -500,7 +502,7 @@ async def test_update_animal_audit_log(client, auth_headers, test_org_with_write
 # ---- Breeds ----
 
 async def test_list_breeds(client, auth_headers):
-    resp = await client.get("/breeds", headers=headers)
+    resp = await client.get("/breeds", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert isinstance(body, list)
@@ -511,7 +513,7 @@ async def test_list_breeds(client, auth_headers):
 
 
 async def test_list_breeds_filter_species(client, auth_headers):
-    resp = await client.get("/breeds?species=cat", headers=headers)
+    resp = await client.get("/breeds?species=cat", headers=auth_headers)
     assert resp.status_code == 200
     body = resp.json()
     assert len(body) > 0
