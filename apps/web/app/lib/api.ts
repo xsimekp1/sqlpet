@@ -198,15 +198,24 @@ class ApiClient {
    * Helper to get organization ID from selectedOrg in localStorage
    */
   private static getOrganizationId(): string | null {
-    const selectedOrgData = typeof window !== 'undefined' 
-      ? localStorage.getItem('selectedOrg') 
+    const selectedOrgData = typeof window !== 'undefined'
+      ? localStorage.getItem('selectedOrg')
       : null;
-    
-    if (!selectedOrgData) return null;
-    
+
+    console.log('[API] getOrganizationId - selectedOrgData:', selectedOrgData);
+
+    if (!selectedOrgData) {
+      console.log('[API] getOrganizationId - NO selectedOrg in localStorage!');
+      return null;
+    }
+
     try {
-      return JSON.parse(selectedOrgData).id;
-    } catch {
+      const parsed = JSON.parse(selectedOrgData);
+      console.log('[API] getOrganizationId - parsed:', parsed);
+      console.log('[API] getOrganizationId - returning id:', parsed.id);
+      return parsed.id;
+    } catch (e) {
+      console.error('[API] getOrganizationId - parse error:', e);
       return null;
     }
   }
@@ -473,23 +482,31 @@ class ApiClient {
    */
   static async createAnimal(data: CreateAnimalRequest): Promise<Animal> {
     try {
+      console.log('[API] createAnimal - starting');
       const organizationId = this.getOrganizationId();
+      console.log('[API] createAnimal - organizationId:', organizationId);
 
       if (!organizationId) {
+        console.error('[API] createAnimal - NO ORGANIZATION ID!');
         throw new Error('No organization selected. Please select an organization first.');
       }
+
+      const headers = {
+        ...this.getAuthHeaders(),
+        'x-organization-id': organizationId,
+        'Content-Type': 'application/json',
+      };
+
+      console.log('[API] createAnimal - headers:', headers);
+      console.log('[API] createAnimal - making POST request to:', `${API_URL}/animals`);
 
       const response = await axios.post<Animal>(
         `${API_URL}/animals`,
         data,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId,
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers }
       );
+
+      console.log('[API] createAnimal - success:', response.data);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
