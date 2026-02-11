@@ -183,6 +183,84 @@ class ApiClient {
   }
 
   /**
+   * Get all kennels for current organization
+   * M4+: Kennels Management
+   */
+  static async getKennels(): Promise<any[]> {
+    try {
+      const response = await axios.get<any[]>(
+        `${API_URL}/kennels`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to fetch kennels'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Get single kennel by ID
+   * M4+: Kennels Management
+   */
+  static async getKennel(id: string): Promise<any> {
+    try {
+      const response = await axios.get<any>(
+        `${API_URL}/kennels/${id}`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to fetch kennel'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Move animal between kennels
+   * M4+: Kennels Management
+   */
+  static async moveAnimal(animalId: string, targetKennelId: string | null): Promise<any> {
+    try {
+      const params = new URLSearchParams({
+        animal_id: animalId,
+        target_kennel_id: targetKennelId || '',
+      });
+      
+      const response = await axios.post<any>(
+        `${API_URL}/kennels/move?${params.toString()}`,
+        {},
+        {
+          headers: this.getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to move animal'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
    * Get all animals for current organization
    * M3: Animals CRUD
    */
