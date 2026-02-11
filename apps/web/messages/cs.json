@@ -72,5 +72,56 @@
   "language": {
     "cs": "Čeština",
     "en": "English"
+  },
+  "alerts": {
+    "title": "Upozornění",
+    "description": "Máte {count, plural, =0 {žádná nová upozornění} =1 {# nové upozornění} other {# nová upozornění}}",
+    "acknowledge": "Potvrdit",
+    "acknowledgeAll": "Potvrdit vše",
+    "noAlerts": {
+      "title": "Vše v pořádku",
+      "description": "Žádná nová upozornění"
+    },
+    "types": {
+      "critical": "Kritické",
+      "warning": "Varování",
+      "info": "Informace"
+    }
+  },
+  "walkMode": {
+    "title": "Režim obchůzky",
+    "description": "Kotec {current} z {total}",
+    "progress": "Průběh",
+    "status": {
+      "complete": "Dokončeno",
+      "inProgress": "Probíhá"
+    },
+    "tasks": {
+      "fed": "Nakrmeno",
+      "walked": "Procházka",
+      "cleaned": "Uklizeno",
+      "waterChecked": "Voda zkontrolována"
+    },
+    "quickActions": {
+      "title": "Rychlé akce",
+      "description": "Označit všechny úkoly jako hotové nebo přidat poznámky",
+      "markComplete": "Označit vše jako hotové"
+    },
+    "navigation": {
+      "previous": "Předchozí",
+      "next": "Další"
+    },
+    "notes": {
+      "title": "Poznámky",
+      "placeholder": "Přidejte poznámky o tomto kotci..."
+    },
+    "overview": {
+      "title": "Všechny kotce"
+    },
+    "completed": {
+      "title": "Obchůzka dokončena!",
+      "description": "Všechny kotce byly zkontrolovány",
+      "startNew": "Spustit novou obchůzku"
+    }
   }
 }
