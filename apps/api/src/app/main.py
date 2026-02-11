@@ -48,7 +48,17 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,  # Use explicit origins for production
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    # Explicitly allow custom headers
+    allow_headers=[
+        "authorization",
+        "content-type",
+        "x-organization-id",
+        "accept",
+        "accept-language",
+        "accept-encoding",
+        "origin",
+    ],
+    expose_headers=["*"],
 )
 
 app.include_router(health_router)
