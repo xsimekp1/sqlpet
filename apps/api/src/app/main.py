@@ -36,13 +36,16 @@ async def lifespan(app: FastAPI):
             await seed_role_templates(db, perm_map)
             await db.commit()
             print(f"Seeded {len(perm_map)} permissions and {len(ROLE_TEMPLATES)} role templates")
+        print("DB session closed, about to yield...")
     except Exception as e:
         print(f"Failed to seed data: {e}")
         import traceback
         traceback.print_exc()
         # Don't fail startup, but log the error
 
+    print("YIELDING - app should start now")
     yield
+    print("App shutting down, disposing engine")
     await async_engine.dispose()
 
 
