@@ -7,4 +7,5 @@ venv/
 .env.*
 .vscode/
 .idea/
-node_modules/.claude/settings.local.json
+node_modules/
+.claude/
