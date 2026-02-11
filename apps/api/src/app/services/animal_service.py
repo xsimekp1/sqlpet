@@ -44,19 +44,24 @@ class AnimalService:
     async def _generate_public_code(self, organization_id: uuid.UUID) -> str:
         year = datetime.now(timezone.utc).year
         prefix = f"A-{year}-"
+        # Get all codes, sort them properly, and take the highest
         result = await self.db.execute(
-            select(func.max(Animal.public_code))
+            select(Animal.public_code)
             .where(
                 Animal.organization_id == organization_id,
                 Animal.public_code.like(f"{prefix}%"),
             )
         )
-        max_code = result.scalar_one_or_none()
-        if max_code:
-            try:
-                seq = int(max_code.split("-")[-1]) + 1
-            except (ValueError, IndexError):
-                seq = 1
+        codes = result.scalars().all()
+        if codes:
+            # Parse all numbers and find the max
+            nums = []
+            for code in codes:
+                try:
+                    nums.append(int(code.split("-")[-1]))
+                except (ValueError, IndexError):
+                    pass
+            seq = max(nums) + 1 if nums else 1
         else:
             seq = 1
         return f"{prefix}{seq:06d}"
