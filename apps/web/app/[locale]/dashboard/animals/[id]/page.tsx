@@ -61,17 +61,17 @@ export default function AnimalDetailPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'AVAILABLE':
+      case 'available':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'ADOPTED':
+      case 'adopted':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'FOSTERED':
+      case 'fostered':
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-      case 'TRANSFERRED':
+      case 'transferred':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'DECEASED':
+      case 'deceased':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-      case 'ESCAPED':
+      case 'escaped':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -175,7 +175,7 @@ export default function AnimalDetailPage() {
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Sex</p>
                 <p className="font-medium">
-                  {animal.sex === 'MALE' ? '♂ Male' : animal.sex === 'FEMALE' ? '♀ Female' : '? Unknown'}
+                  {animal.sex === 'male' ? '♂ Male' : animal.sex === 'female' ? '♀ Female' : '? Unknown'}
                 </p>
               </div>
               {animal.color && (

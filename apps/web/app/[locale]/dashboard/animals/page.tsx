@@ -100,7 +100,7 @@ export default function AnimalsPage() {
                     </span>
                   </CardTitle>
                   <CardDescription>
-                    {animal.species} • {animal.sex === 'MALE' ? '♂' : animal.sex === 'FEMALE' ? '♀' : '?'}
+                    {animal.species} • {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -39,12 +39,12 @@ export default function NewAnimalPage() {
 
     const data = {
       name: formData.get('name') as string,
-      species: formData.get('species') as 'DOG' | 'CAT' | 'RABBIT' | 'OTHER',
-      sex: formData.get('sex') as 'MALE' | 'FEMALE' | 'UNKNOWN',
+      species: formData.get('species') as 'dog' | 'cat' | 'rabbit' | 'other',
+      sex: formData.get('sex') as 'male' | 'female' | 'unknown',
       color: (formData.get('color') as string) || null,
       estimated_age_years: ageValue ? parseInt(ageValue) : null,
       intake_date: formData.get('intake_date') as string,
-      status: 'AVAILABLE',
+      status: 'available',
     };
 
     try {
@@ -106,10 +106,10 @@ export default function NewAnimalPage() {
                     <SelectValue placeholder={t('speciesPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DOG">Dog</SelectItem>
-                    <SelectItem value="CAT">Cat</SelectItem>
-                    <SelectItem value="RABBIT">Rabbit</SelectItem>
-                    <SelectItem value="OTHER">Other</SelectItem>
+                    <SelectItem value="dog">Dog</SelectItem>
+                    <SelectItem value="cat">Cat</SelectItem>
+                    <SelectItem value="rabbit">Rabbit</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -121,9 +121,9 @@ export default function NewAnimalPage() {
                     <SelectValue placeholder={t('sexPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MALE">Male</SelectItem>
-                    <SelectItem value="FEMALE">Female</SelectItem>
-                    <SelectItem value="UNKNOWN">Unknown</SelectItem>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="unknown">Unknown</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -43,20 +43,20 @@ export interface Animal {
   organization_id: string;
   public_code: string;
   name: string;
-  species: 'DOG' | 'CAT' | 'RABBIT' | 'OTHER';
-  sex: 'MALE' | 'FEMALE' | 'UNKNOWN';
+  species: 'dog' | 'cat' | 'rabbit' | 'bird' | 'other';
+  sex: 'male' | 'female' | 'unknown';
   color: string | null;
   estimated_age_years: number | null;
   intake_date: string;
-  status: 'AVAILABLE' | 'ADOPTED' | 'FOSTERED' | 'TRANSFERRED' | 'DECEASED' | 'ESCAPED';
+  status: 'intake' | 'available' | 'reserved' | 'adopted' | 'fostered' | 'returned' | 'deceased' | 'transferred' | 'hold' | 'quarantine' | 'returned_to_owner' | 'euthanized' | 'escaped';
   created_at: string;
   updated_at: string;
 }
 
 export interface CreateAnimalRequest {
   name: string;
-  species: 'DOG' | 'CAT' | 'RABBIT' | 'OTHER';
-  sex: 'MALE' | 'FEMALE' | 'UNKNOWN';
+  species: 'dog' | 'cat' | 'rabbit' | 'bird' | 'other';
+  sex: 'male' | 'female' | 'unknown';
   color?: string | null;
   estimated_age_years?: number | null;
   intake_date: string;
