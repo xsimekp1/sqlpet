@@ -10,6 +10,7 @@ from src.app.api.dependencies.db import get_db
 from src.app.models.kennel import Kennel, KennelStay, Zone
 from src.app.models.user import User
 from src.app.models.animal import Animal
+from pydantic import BaseModel, Field
 from src.app.services.kennel_service import (
     move_animal,
     CapacityError,
@@ -133,9 +134,88 @@ async def list_kennels(
             "occupied_count": int(occupied_count),
             "animals_preview": animals_by_kennel.get(str(k.id), [])[:16],
             "alerts": _calculate_alerts(k, int(occupied_count)),
+            "map_x": k.map_x,
+            "map_y": k.map_y,
+            "map_w": k.map_w,
+            "map_h": k.map_h,
+            "map_rotation": k.map_rotation,
+            "map_meta": k.map_meta,
         }
         for k, zone, occupied_count in kennels_data
     ]
+
+
+class UpdateKennelLayoutRequest(BaseModel):
+    """Request model for updating kennel layout"""
+
+    map_x: int
+    map_y: int
+    map_w: int
+    map_h: int
+    map_rotation: int | None = None
+
+
+class CreateKennelRequest(BaseModel):
+    """Request model for creating a kennel"""
+
+    code: str = Field(..., description="Kennel code (unique)")
+    name: str = Field(..., description="Kennel display name")
+    zone_id: str = Field(..., description="Zone ID")
+    type: str = Field(..., description="Kennel type")
+    size_category: str = Field(..., description="Size category")
+    capacity: int = Field(..., ge=1, description="Maximum capacity")
+    notes: str | None = Field(None, description="Optional notes")
+
+
+class UpdateKennelRequest(BaseModel):
+    """Request model for updating a kennel"""
+
+    name: str | None = Field(None, description="Kennel display name")
+    zone_id: str | None = Field(None, description="Zone ID")
+    type: str | None = Field(None, description="Kennel type")
+    size_category: str | None = Field(None, description="Size category")
+    capacity: int | None = Field(None, ge=1, description="Maximum capacity")
+    status: str | None = Field(None, description="Operational status")
+    notes: str | None = Field(None, description="Optional notes")
+
+
+@router.patch("/{kennel_id}/layout")
+async def update_kennel_layout(
+    kennel_id: str,
+    request: UpdateKennelLayoutRequest,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Update kennel layout (position and size)."""
+
+    # TODO: Add kennels.manage permission check
+
+    # Get kennel
+    kennel_q = select(Kennel).where(
+        Kennel.id == kennel_id, Kennel.organization_id == organization_id
+    )
+    kennel = (await session.execute(kennel_q)).scalar_one_or_none()
+    if not kennel:
+        raise HTTPException(status_code=404, detail="Kennel not found")
+
+    # Update layout properties
+    kennel.map_x = request.map_x
+    kennel.map_y = request.map_y
+    kennel.map_w = request.map_w
+    kennel.map_h = request.map_h
+    kennel.map_rotation = request.map_rotation
+
+    await session.commit()
+
+    return {
+        "id": str(kennel.id),
+        "map_x": kennel.map_x,
+        "map_y": kennel.map_y,
+        "map_w": kennel.map_w,
+        "map_h": kennel.map_h,
+        "map_rotation": kennel.map_rotation,
+    }
 
 
 def _calculate_alerts(kennel: Kennel, occupied_count: int) -> List[str]:
@@ -212,4 +292,10 @@ async def get_kennel(
         "occupied_count": 0,
         "animals": [],
         "notes": kennel.notes,
+        "map_x": kennel.map_x,
+        "map_y": kennel.map_y,
+        "map_w": kennel.map_w,
+        "map_h": kennel.map_h,
+        "map_rotation": kennel.map_rotation,
+        "map_meta": kennel.map_meta,
     }

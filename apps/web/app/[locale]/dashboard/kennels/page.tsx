@@ -494,11 +494,11 @@ export default function KennelsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-muted-foreground mb-4">
-              {search || Object.values(filters).some(v => v) ? 'No kennels match your filters' : 'No kennels found'}
+              {t(`noResults.${search || Object.values(filters).some(v => v) ? 'withFilter' : 'noFilter'}`)}
             </p>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Add your first kennel
+              {t('quickActions.addKennel')}
             </Button>
           </CardContent>
         </Card>

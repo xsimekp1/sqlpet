@@ -144,6 +144,14 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     primary_photo_path: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Map layout properties
+    map_x: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    map_y: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    map_w: Mapped[int] = mapped_column(Integer, nullable=False, default=160)
+    map_h: Mapped[int] = mapped_column(Integer, nullable=False, default=120)
+    map_rotation: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    map_meta: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
     # Relationships
     zone = relationship("Zone", back_populates="kennels")
     stays = relationship(
