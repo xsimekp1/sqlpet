@@ -63,6 +63,51 @@ export interface CreateAnimalRequest {
   status?: string;
 }
 
+// Kennel types
+export interface Kennel {
+  id: string;
+  code: string;
+  name: string;
+  zone_id: string;
+  zone_name: string;
+  status: 'available' | 'maintenance' | 'closed';
+  type: 'indoor' | 'outdoor' | 'isolation' | 'quarantine';
+  size_category: 'small' | 'medium' | 'large' | 'xlarge';
+  capacity: number;
+  capacity_rules?: { by_species?: Record<string, number> };
+  primary_photo_path?: string;
+  occupied_count: number;
+  animals_preview: KennelAnimal[];
+  alerts: string[];
+}
+
+export interface KennelAnimal {
+  id: string;
+  name: string;
+  photo_url?: string | null;
+  species: string;
+}
+
+export interface MoveAnimalRequest {
+  animal_id: string;
+  target_kennel_id?: string | null;
+  reason?: string;
+  notes?: string | null;
+  allow_overflow?: boolean;
+}
+
+export interface KennelStay {
+  id: string;
+  animal_id: string;
+  animal_name: string;
+  animal_species: string;
+  start_at: string;
+  end_at?: string | null;
+  reason?: string | null;
+  notes?: string | null;
+  moved_by?: string | null;
+}
+
 class ApiClient {
   /**
    * Get authorization headers with Bearer token from localStorage
@@ -186,23 +231,34 @@ class ApiClient {
    * Get all kennels for current organization
    * M4+: Kennels Management
    */
-  static async getKennels(): Promise<any[]> {
+  static async getKennels(params?: {
+    zone_id?: string;
+    status?: string;
+    type?: string;
+    size_category?: string;
+    q?: string;
+  }): Promise<Kennel[]> {
     try {
       // Get current organization from localStorage
       const organizationId = typeof window !== 'undefined' 
         ? localStorage.getItem('currentOrganizationId') 
         : null;
       
-      console.log('getKennels: organizationId =', organizationId);
-      
       if (!organizationId) {
         throw new Error('No organization selected. Please select an organization first.');
       }
 
-      console.log('getKennels: making request to', `${API_URL}/kennels`);
+      const searchParams = new URLSearchParams();
+      if (params?.zone_id) searchParams.append('zone_id', params.zone_id);
+      if (params?.status) searchParams.append('status', params.status);
+      if (params?.type) searchParams.append('type', params.type);
+      if (params?.size_category) searchParams.append('size_category', params.size_category);
+      if (params?.q) searchParams.append('q', params.q);
       
-      const response = await axios.get<any[]>(
-        `${API_URL}/kennels`,
+      const url = `${API_URL}/kennels${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      
+      const response = await axios.get<Kennel[]>(
+        url,
         {
           headers: {
             ...this.getAuthHeaders(),
@@ -210,13 +266,10 @@ class ApiClient {
           },
         }
       );
-      console.log('getKennels: success, data =', response.data);
       return response.data;
     } catch (error) {
-      console.log('getKennels: error =', error);
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        console.log('getKennels: axios error =', axiosError.response?.status, axiosError.response?.data);
         throw new Error(
           axiosError.response?.data?.detail || 'Failed to fetch kennels'
         );
@@ -229,12 +282,19 @@ class ApiClient {
    * Get single kennel by ID
    * M4+: Kennels Management
    */
-  static async getKennel(id: string): Promise<any> {
+  static async getKennel(id: string): Promise<Kennel> {
     try {
-      const response = await axios.get<any>(
+      const organizationId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentOrganizationId') 
+        : null;
+      
+      const response = await axios.get<Kennel>(
         `${API_URL}/kennels/${id}`,
         {
-          headers: this.getAuthHeaders(),
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+          },
         }
       );
       return response.data;
@@ -253,18 +313,21 @@ class ApiClient {
    * Move animal between kennels
    * M4+: Kennels Management
    */
-  static async moveAnimal(animalId: string, targetKennelId: string | null): Promise<any> {
+  static async moveAnimal(request: MoveAnimalRequest): Promise<any> {
     try {
-      const params = new URLSearchParams({
-        animal_id: animalId,
-        target_kennel_id: targetKennelId || '',
-      });
+      const organizationId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentOrganizationId') 
+        : null;
       
       const response = await axios.post<any>(
-        `${API_URL}/kennels/move?${params.toString()}`,
-        {},
+        `${API_URL}/stays/move`,
+        request,
         {
-          headers: this.getAuthHeaders(),
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+            'Content-Type': 'application/json',
+          },
         }
       );
       return response.data;
@@ -280,15 +343,63 @@ class ApiClient {
   }
 
   /**
+   * Get kennel stays (history)
+   * M4+: Kennels Management
+   */
+  static async getKennelStays(kennelId: string, activeOnly: boolean = false): Promise<KennelStay[]> {
+    try {
+      const organizationId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentOrganizationId') 
+        : null;
+      
+      const params = new URLSearchParams();
+      if (activeOnly) params.append('active_only', 'true');
+      
+      const url = `${API_URL}/stays/${kennelId}/stays${params.toString() ? `?${params.toString()}` : ''}`;
+      
+      const response = await axios.get<KennelStay[]>(
+        url,
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to fetch kennel stays'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
    * Get all animals for current organization
    * M3: Animals CRUD
    */
   static async getAnimals(): Promise<Animal[]> {
     try {
+      // Get current organization from localStorage
+      const organizationId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentOrganizationId') 
+        : null;
+      
+      if (!organizationId) {
+        throw new Error('No organization selected. Please select an organization first.');
+      }
+
       const response = await axios.get<Animal[]>(
         `${API_URL}/animals`,
         {
-          headers: this.getAuthHeaders(),
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId,
+          },
         }
       );
       return response.data;

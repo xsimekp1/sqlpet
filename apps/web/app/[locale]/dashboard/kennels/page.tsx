@@ -19,31 +19,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import ApiClient from '@/app/lib/api';
+import ApiClient, { Kennel, KennelAnimal } from '@/app/lib/api';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface Kennel {
-  id: string;
-  code: string;
-  name: string;
-  zone_id: string;
-  zone_name?: string;
-  status: 'available' | 'maintenance' | 'closed';
-  type: 'indoor' | 'outdoor' | 'isolation' | 'quarantine';
-  size_category: 'small' | 'medium' | 'large' | 'xlarge';
-  capacity: number;
-  occupied_count: number;
-  animals_preview?: Array<{
-    id: string;
-    name: string;
-    photo_url?: string;
-    species: string;
-  }>;
-  primary_photo_path?: string;
-  alerts?: string[];
-}
+
 
 interface FilterState {
   zone_id: string;
@@ -72,10 +53,18 @@ export default function KennelsPage() {
     const fetchKennels = async () => {
       try {
         setLoading(true);
-        const data = await ApiClient.getKennels();
+        const params: any = {};
+        
+        if (filters.zone_id) params.zone_id = filters.zone_id;
+        if (filters.status) params.status = filters.status;
+        if (filters.type) params.type = filters.type;
+        if (filters.size_category) params.size_category = filters.size_category;
+        if (search) params.q = search;
+        
+        const data = await ApiClient.getKennels(params);
         setKennels(data);
       } catch (error) {
-        toast.error('Failed to load kennels');
+        toast.error(t('errors.fetchFailed') || 'Failed to load kennels');
         console.error(error);
       } finally {
         setLoading(false);
@@ -83,7 +72,7 @@ export default function KennelsPage() {
     };
 
     fetchKennels();
-  }, []);
+  }, [filters, search]);
 
   const getOccupancyStatusColor = (occupied: number, capacity: number) => {
     if (occupied === 0) return 'bg-gray-100 text-gray-800';
@@ -147,7 +136,7 @@ export default function KennelsPage() {
     return matchesSearch && matchesZone && matchesStatus && matchesType && matchesSize && matchesOccupancy;
   });
 
-  const AnimalAvatar = ({ animal }: { animal: Kennel['animals_preview'][0] }) => {
+  const AnimalAvatar = ({ animal }: { animal: KennelAnimal }) => {
     if (animal.photo_url) {
       return (
         <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white">

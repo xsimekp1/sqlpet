@@ -231,6 +231,9 @@
     "noResults": {
       "noFilter": "No kennels found",
       "withFilter": "No kennels match your filters"
+    },
+    "errors": {
+      "fetchFailed": "Failed to load kennels"
     }
   }
 }

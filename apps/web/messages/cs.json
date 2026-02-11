@@ -231,6 +231,9 @@
     "noResults": {
       "noFilter": "Žádné kotce nenalezeny",
       "withFilter": "Žádné kotce neodpovídají filtrům"
+    },
+    "errors": {
+      "fetchFailed": "Nepodařilo se načíst kotce"
     }
   }
 }
