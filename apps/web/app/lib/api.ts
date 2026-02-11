@@ -186,6 +186,23 @@ class ApiClient {
   }
 
   /**
+   * Helper to get organization ID from selectedOrg in localStorage
+   */
+  private static getOrganizationId(): string | null {
+    const selectedOrgData = typeof window !== 'undefined' 
+      ? localStorage.getItem('selectedOrg') 
+      : null;
+    
+    if (!selectedOrgData) return null;
+    
+    try {
+      return JSON.parse(selectedOrgData).id;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Get current user profile with memberships
    */
   static async getUserProfile(): Promise<UserProfile> {
@@ -240,9 +257,7 @@ class ApiClient {
   }): Promise<Kennel[]> {
     try {
       // Get current organization from localStorage
-      const organizationId = typeof window !== 'undefined' 
-        ? localStorage.getItem('currentOrganizationId') 
-        : null;
+      const organizationId = this.getOrganizationId();
       
       if (!organizationId) {
         throw new Error('No organization selected. Please select an organization first.');
@@ -262,13 +277,10 @@ class ApiClient {
         {
           headers: {
             ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
+            'x-organization-id': organizationId,
           },
         }
       );
-      
-      // Debug logging
-      console.log('getKennels response:', response.data);
       return response.data;
     } catch (error) {
       console.error('getKennels error:', error);
@@ -293,9 +305,7 @@ class ApiClient {
    */
   static async getKennel(id: string): Promise<Kennel> {
     try {
-      const organizationId = typeof window !== 'undefined' 
-        ? localStorage.getItem('currentOrganizationId') 
-        : null;
+      const organizationId = this.getOrganizationId();
       
       const response = await axios.get<Kennel>(
         `${API_URL}/kennels/${id}`,
@@ -324,9 +334,7 @@ class ApiClient {
    */
   static async moveAnimal(request: MoveAnimalRequest): Promise<any> {
     try {
-      const organizationId = typeof window !== 'undefined' 
-        ? localStorage.getItem('currentOrganizationId') 
-        : null;
+      const organizationId = this.getOrganizationId();
       
       const response = await axios.post<any>(
         `${API_URL}/stays/move`,
@@ -394,9 +402,7 @@ class ApiClient {
   static async getAnimals(): Promise<Animal[]> {
     try {
       // Get current organization from localStorage
-      const organizationId = typeof window !== 'undefined' 
-        ? localStorage.getItem('currentOrganizationId') 
-        : null;
+      const organizationId = this.getOrganizationId();
       
       if (!organizationId) {
         throw new Error('No organization selected. Please select an organization first.');
