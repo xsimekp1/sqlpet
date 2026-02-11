@@ -85,11 +85,11 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     species: Mapped[Species] = mapped_column(
-        Enum(Species, name="species_enum", create_constraint=False, native_enum=True),
+        Enum(Species, name="species_enum", create_constraint=False, native_enum=False, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
     )
     sex: Mapped[Sex] = mapped_column(
-        Enum(Sex, name="sex_enum", create_constraint=False, native_enum=True),
+        Enum(Sex, name="sex_enum", create_constraint=False, native_enum=False, values_callable=lambda x: [e.value for e in x]),
         default=Sex.UNKNOWN,
     )
     status: Mapped[AnimalStatus] = mapped_column(
@@ -97,7 +97,8 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
             AnimalStatus,
             name="animal_status_enum",
             create_constraint=False,
-            native_enum=True,
+            native_enum=False,
+            values_callable=lambda x: [e.value for e in x],
         ),
         default=AnimalStatus.INTAKE,
     )
@@ -106,14 +107,15 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
             AlteredStatus,
             name="altered_status_enum",
             create_constraint=False,
-            native_enum=True,
+            native_enum=False,
+            values_callable=lambda x: [e.value for e in x],
         ),
         default=AlteredStatus.UNKNOWN,
     )
     birth_date_estimated: Mapped[date | None] = mapped_column(Date, nullable=True)
     age_group: Mapped[AgeGroup] = mapped_column(
         Enum(
-            AgeGroup, name="age_group_enum", create_constraint=False, native_enum=True
+            AgeGroup, name="age_group_enum", create_constraint=False, native_enum=False, values_callable=lambda x: [e.value for e in x]
         ),
         default=AgeGroup.UNKNOWN,
     )
@@ -124,7 +126,8 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
             SizeEstimated,
             name="size_estimated_enum",
             create_constraint=False,
-            native_enum=True,
+            native_enum=False,
+            values_callable=lambda x: [e.value for e in x],
         ),
         default=SizeEstimated.UNKNOWN,
     )
