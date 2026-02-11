@@ -1,4 +1,5 @@
 import enum
+import uuid
 from datetime import datetime
 
 from sqlalchemy import (
@@ -50,7 +51,7 @@ class Zone(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         ),
     )
 
-    organization_id: Mapped[str] = mapped_column(
+    organization_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
@@ -84,13 +85,13 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         Index("ix_kennels_zone_code", "zone_id", "code"),
     )
 
-    organization_id: Mapped[str] = mapped_column(
+    organization_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    zone_id: Mapped[str] = mapped_column(
+    zone_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("zones.id", ondelete="CASCADE"),
         nullable=False,
@@ -107,7 +108,7 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     size_category: Mapped[KennelSizeCategory] = mapped_column(
         Enum(
             KennelSizeCategory,
-            name="kennel_size_category_enum",
+            name="kennel_size_category",
             create_constraint=False,
             native_enum=True,
         ),
@@ -119,7 +120,7 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     status: Mapped[KennelStatus] = mapped_column(
         Enum(
             KennelStatus,
-            name="kennel_status_enum",
+            name="kennel_status",
             create_constraint=False,
             native_enum=True,
         ),
@@ -129,7 +130,7 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     type: Mapped[KennelType] = mapped_column(
         Enum(
             KennelType,
-            name="kennel_type_enum",
+            name="kennel_type",
             create_constraint=False,
             native_enum=True,
         ),
@@ -176,19 +177,19 @@ class KennelStay(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         Index("ix_kennel_stays_animal_active", "animal_id", "end_at"),
     )
 
-    organization_id: Mapped[str] = mapped_column(
+    organization_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    kennel_id: Mapped[str] = mapped_column(
+    kennel_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("kennels.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
-    animal_id: Mapped[str] = mapped_column(
+    animal_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("animals.id", ondelete="RESTRICT"),
         nullable=False,
@@ -222,13 +223,13 @@ class KennelPhoto(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         Index("ix_kennel_photos_primary", "kennel_id", "is_primary"),
     )
 
-    organization_id: Mapped[str] = mapped_column(
+    organization_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    kennel_id: Mapped[str] = mapped_column(
+    kennel_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("kennels.id", ondelete="CASCADE"),
         nullable=False,
