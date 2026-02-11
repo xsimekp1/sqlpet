@@ -1,7 +1,7 @@
 import uuid
 from typing import Callable
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,14 +17,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=True)
 
 async def get_current_organization_id(
     token: str = Depends(oauth2_scheme),
+    x_organization_id: str | None = Header(None, alias="x-organization-id"),
 ) -> uuid.UUID:
     """
-    Extract organization_id from JWT token.
+    Extract organization_id from JWT token or header.
     For M3: organization_id is stored in 'org_id' claim.
+    M4: Also accept x-organization-id header for compatibility.
     TODO M4: Validate user has active membership in this organization.
     """
     payload = decode_token(token)
-    org_id_str = payload.get("org_id")
+
+    # Try header first, fallback to JWT claim
+    org_id_str = x_organization_id or payload.get("org_id")
+
     if org_id_str is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -35,7 +40,7 @@ async def get_current_organization_id(
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid organization ID in token",
+            detail="Invalid organization ID",
         )
 
 
