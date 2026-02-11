@@ -123,5 +123,67 @@
       "description": "All kennels have been checked",
       "startNew": "Start New Walk"
     }
+  },
+  "menu": {
+    "title": "Menu",
+    "description": "Navigate to all sections of the shelter management system",
+    "sections": {
+      "main": "Main",
+      "operations": "Operations",
+      "people": "People",
+      "system": "System"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Overview and quick actions"
+    },
+    "animals": {
+      "title": "Animals",
+      "description": "Manage animals and their records"
+    },
+    "kennels": {
+      "title": "Kennels",
+      "description": "Kennel management and occupancy"
+    },
+    "medical": {
+      "title": "Medical",
+      "description": "Medical records and treatments"
+    },
+    "feeding": {
+      "title": "Feeding",
+      "description": "Feeding schedules and logs"
+    },
+    "tasks": {
+      "title": "Tasks",
+      "description": "Daily tasks and assignments"
+    },
+    "people": {
+      "title": "People",
+      "description": "Contacts and relationships"
+    },
+    "adoptions": {
+      "title": "Adoptions",
+      "description": "Adoption pipeline and process"
+    },
+    "intake": {
+      "title": "Intake",
+      "description": "New animal intake process"
+    },
+    "reports": {
+      "title": "Reports",
+      "description": "Reports and analytics"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "System settings and configuration"
+    },
+    "quickStats": {
+      "title": "Quick Stats",
+      "description": "Current shelter overview",
+      "animals": "Animals",
+      "occupiedKennels": "Occupied Kennels",
+      "medicationDue": "Medication Due",
+      "tasksToday": "Tasks Today"
+    }
   }
 }

@@ -123,5 +123,67 @@
       "description": "Všechny kotce byly zkontrolovány",
       "startNew": "Spustit novou obchůzku"
     }
+  },
+  "menu": {
+    "title": "Menu",
+    "description": "Navigace do všech sekcí systému správy útulku",
+    "sections": {
+      "main": "Hlavní",
+      "operations": "Provoz",
+      "people": "Lidé",
+      "system": "Systém"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Přehled a rychlé akce"
+    },
+    "animals": {
+      "title": "Zvířata",
+      "description": "Správa zvířat a jejich záznamů"
+    },
+    "kennels": {
+      "title": "Kotce",
+      "description": "Správa krců a obsazenosti"
+    },
+    "medical": {
+      "title": "Lékařská péče",
+      "description": "Zdravotní záznamy a léčba"
+    },
+    "feeding": {
+      "title": "Krmení",
+      "description": "Krmicí plány a záznamy"
+    },
+    "tasks": {
+      "title": "Úkoly",
+      "description": "Denní úkoly a přidělení"
+    },
+    "people": {
+      "title": "Lidé",
+      "description": "Kontakty a vztahy"
+    },
+    "adoptions": {
+      "title": "Adopce",
+      "description": "Adopční proces a pipeline"
+    },
+    "intake": {
+      "title": "Příjem",
+      "description": "Proces příjmu nových zvířat"
+    },
+    "reports": {
+      "title": "Reporty",
+      "description": "Reporty a analytika"
+    },
+    "settings": {
+      "title": "Nastavení",
+      "description": "Systémové nastavení a konfigurace"
+    },
+    "quickStats": {
+      "title": "Rychlé statistiky",
+      "description": "Aktuální přehled útulku",
+      "animals": "Zvířat",
+      "occupiedKennels": "Obsazených krců",
+      "medicationDue": "Léky k podání",
+      "tasksToday": "Úkolů dnes"
+    }
   }
 }
