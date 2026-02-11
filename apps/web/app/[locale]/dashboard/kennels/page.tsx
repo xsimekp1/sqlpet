@@ -28,7 +28,7 @@ export default function KennelsPage() {
     const fetchKennels = async () => {
       try {
         setLoading(true);
-        const data = await ApiClient.get('/kennels');
+        const data = await ApiClient.getKennels();
         setKennels(data);
       } catch (error) {
         toast.error('Failed to load kennels');
