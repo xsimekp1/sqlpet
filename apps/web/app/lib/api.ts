@@ -262,14 +262,23 @@ class ApiClient {
         {
           headers: {
             ...this.getAuthHeaders(),
-            'x-organization-id': organizationId,
+            'x-organization-id': organizationId || '',
           },
         }
       );
+      
+      // Debug logging
+      console.log('getKennels response:', response.data);
       return response.data;
     } catch (error) {
+      console.error('getKennels error:', error);
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
+        console.error('getKennels axios error:', {
+          status: axiosError.response?.status,
+          data: axiosError.response?.data,
+          detail: axiosError.response?.data?.detail
+        });
         throw new Error(
           axiosError.response?.data?.detail || 'Failed to fetch kennels'
         );

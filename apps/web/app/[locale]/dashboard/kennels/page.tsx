@@ -341,12 +341,12 @@ export default function KennelsPage() {
               />
             </div>
             
-            <Select value={filters.zone_id} onValueChange={(value) => setFilters(prev => ({ ...prev, zone_id: value }))}>
+            <Select value={filters.zone_id || "all"} onValueChange={(value) => setFilters(prev => ({ ...prev, zone_id: value === "all" ? "" : value }))}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder={t('filters.zone')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('filters.zone')}</SelectItem>
+                <SelectItem value="all">{t('filters.zone')}</SelectItem>
                 {/* TODO: Fetch zones from API */}
                 <SelectItem value="A">Zone A</SelectItem>
                 <SelectItem value="B">Zone B</SelectItem>
@@ -354,24 +354,24 @@ export default function KennelsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+            <Select value={filters.status || "all"} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value === "all" ? "" : value }))}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder={t('filters.status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('filters.status')}</SelectItem>
+                <SelectItem value="all">{t('filters.status')}</SelectItem>
                 <SelectItem value="available">{t('status.available')}</SelectItem>
                 <SelectItem value="maintenance">{t('status.maintenance')}</SelectItem>
                 <SelectItem value="closed">{t('status.closed')}</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select value={filters.type} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value }))}>
+            <Select value={filters.type || "all"} onValueChange={(value) => setFilters(prev => ({ ...prev, type: value === "all" ? "" : value }))}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder={t('filters.type')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('filters.type')}</SelectItem>
+                <SelectItem value="all">{t('filters.type')}</SelectItem>
                 <SelectItem value="indoor">{t('type.indoor')}</SelectItem>
                 <SelectItem value="outdoor">{t('type.outdoor')}</SelectItem>
                 <SelectItem value="isolation">{t('type.isolation')}</SelectItem>
@@ -379,12 +379,12 @@ export default function KennelsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={filters.occupancy} onValueChange={(value) => setFilters(prev => ({ ...prev, occupancy: value }))}>
+            <Select value={filters.occupancy || "all"} onValueChange={(value) => setFilters(prev => ({ ...prev, occupancy: value === "all" ? "" : value }))}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder={t('filters.occupancy')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('filters.occupancy')}</SelectItem>
+                <SelectItem value="all">{t('filters.occupancy')}</SelectItem>
                 <SelectItem value="empty">{t('occupancy.empty')}</SelectItem>
                 <SelectItem value="partial">{t('occupancy.partial')}</SelectItem>
                 <SelectItem value="full">{t('occupancy.full')}</SelectItem>
