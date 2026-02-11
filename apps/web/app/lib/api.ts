@@ -188,10 +188,22 @@ class ApiClient {
    */
   static async getKennels(): Promise<any[]> {
     try {
+      // Get current organization from localStorage
+      const organizationId = typeof window !== 'undefined' 
+        ? localStorage.getItem('currentOrganizationId') 
+        : null;
+      
+      if (!organizationId) {
+        throw new Error('No organization selected. Please select an organization first.');
+      }
+
       const response = await axios.get<any[]>(
         `${API_URL}/kennels`,
         {
-          headers: this.getAuthHeaders(),
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId,
+          },
         }
       );
       return response.data;
