@@ -29,7 +29,7 @@ export default function SelectOrgPage() {
   const handleSelectOrg = async (orgId: string) => {
     setSelecting(orgId);
     try {
-      selectOrganization(orgId);
+      await selectOrganization(orgId);
     } catch (error) {
       console.error('Failed to select organization:', error);
       setSelecting(null);

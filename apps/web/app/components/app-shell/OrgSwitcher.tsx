@@ -42,9 +42,9 @@ export function OrgSwitcher() {
             return (
               <button
                 key={membership.id}
-                onClick={() => {
+                onClick={async () => {
                   if (!isCurrentOrg) {
-                    selectOrganization(membership.organization_id)
+                    await selectOrganization(membership.organization_id)
                   }
                 }}
                 className={cn(

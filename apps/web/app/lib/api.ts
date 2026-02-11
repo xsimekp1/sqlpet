@@ -245,6 +245,34 @@ class ApiClient {
   }
 
   /**
+   * Select organization and get new token with org context
+   */
+  static async selectOrganization(organizationId: string): Promise<LoginResponse> {
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const response = await axios.post<LoginResponse>(
+        `${API_URL}/auth/select-organization`,
+        { organization_id: organizationId },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to select organization'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
    * Logout (revoke token on backend)
    */
   static async logout(): Promise<void> {

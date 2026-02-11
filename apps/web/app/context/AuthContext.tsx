@@ -20,7 +20,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  selectOrganization: (orgId: string) => void;
+  selectOrganization: (orgId: string) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -101,6 +101,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Auto-select if only one membership
       if (profile.memberships.length === 1) {
         const membership = profile.memberships[0];
+
+        // Get new token with organization context
+        const orgResponse = await ApiClient.selectOrganization(membership.organization_id);
+        localStorage.setItem('token', orgResponse.access_token);
+        localStorage.setItem('refreshToken', orgResponse.refresh_token);
+        setToken(orgResponse.access_token);
+        setRefreshTokenState(orgResponse.refresh_token);
+
         const orgData = {
           id: membership.organization_id,
           name: membership.organization_name,
@@ -126,18 +134,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /**
    * Select an organization
    */
-  const selectOrganization = useCallback((orgId: string) => {
+  const selectOrganization = useCallback(async (orgId: string) => {
     const membership = memberships.find(m => m.organization_id === orgId);
     if (!membership) {
       throw new Error('Invalid organization');
     }
 
+    // Get new token from backend with organization context
+    const response = await ApiClient.selectOrganization(orgId);
+    localStorage.setItem('token', response.access_token);
+    localStorage.setItem('refreshToken', response.refresh_token);
+    setToken(response.access_token);
+    setRefreshTokenState(response.refresh_token);
+
+    // Store org info
     const orgData = {
       id: membership.organization_id,
       name: membership.organization_name,
       role: membership.role_name,
     };
-
     setSelectedOrg(orgData);
     localStorage.setItem('selectedOrg', JSON.stringify(orgData));
     router.push('/dashboard');
