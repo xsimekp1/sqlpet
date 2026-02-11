@@ -34,12 +34,7 @@ async def list_kennels(
 ):
     """List kennels with occupancy and animal previews."""
 
-    # DEBUG LOGGING - use raw SQL to avoid enum issues
     try:
-        print(f"DEBUG: Kennels endpoint called")
-        print(f"DEBUG: User ID: {current_user.id}")
-        print(f"DEBUG: Org ID: {organization_id}")
-
         # Use raw SQL to completely bypass enum issues
         kennels_query = text("""
             SELECT id, code, name, zone_id, status, type, size_category, capacity,
@@ -52,8 +47,6 @@ async def list_kennels(
             kennels_query, {"org_id": str(organization_id)}
         )
         kennels_rows = kennels_result.fetchall()
-
-        print(f"DEBUG: Found {len(kennels_rows)} kennels")
 
         # Convert to dict response with hardcoded lowercase values
         kennels = []
