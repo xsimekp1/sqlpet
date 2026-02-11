@@ -193,10 +193,14 @@ class ApiClient {
         ? localStorage.getItem('currentOrganizationId') 
         : null;
       
+      console.log('getKennels: organizationId =', organizationId);
+      
       if (!organizationId) {
         throw new Error('No organization selected. Please select an organization first.');
       }
 
+      console.log('getKennels: making request to', `${API_URL}/kennels`);
+      
       const response = await axios.get<any[]>(
         `${API_URL}/kennels`,
         {
@@ -206,10 +210,13 @@ class ApiClient {
           },
         }
       );
+      console.log('getKennels: success, data =', response.data);
       return response.data;
     } catch (error) {
+      console.log('getKennels: error =', error);
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
+        console.log('getKennels: axios error =', axiosError.response?.status, axiosError.response?.data);
         throw new Error(
           axiosError.response?.data?.detail || 'Failed to fetch kennels'
         );
