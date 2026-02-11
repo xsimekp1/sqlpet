@@ -25,6 +25,7 @@ ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Local dev
     "http://localhost:5173",  # Vite dev
     "https://web-theta-peach-77.vercel.app",  # Vercel production
+    "https://sqlpet.vercel.app",  # Vercel alternative domain
     "https://*.vercel.app",  # Vercel preview deployments
 ]
 
@@ -32,7 +33,7 @@ ALLOWED_ORIGINS = [
 # TODO: Remove wildcard in production and use only ALLOWED_ORIGINS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change to ALLOWED_ORIGINS for production
+    allow_origins=ALLOWED_ORIGINS,  # Use explicit origins for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
