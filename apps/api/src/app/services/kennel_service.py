@@ -126,9 +126,10 @@ async def move_animal(
     if active_stay:
         active_stay.end_at = _now()
 
-    # 4) Remove from kennel = just clear current_kennel_id
-    if target_kennel_id is None:
-        animal.current_kennel_id = None
+        # 4) Remove from kennel = just clear current_kennel_id
+        # TODO: Re-enable after adding column to database
+        # if target_kennel_id is None:
+        #     animal.current_kennel_id = None
         return {
             "status": "removed",
             "animal_id": str(animal_id),
@@ -169,7 +170,8 @@ async def move_animal(
     session.add(new_stay)
 
     # 8) Update cache on animal
-    animal.current_kennel_id = kennel.id
+    # TODO: Re-enable after adding column to database
+    # animal.current_kennel_id = kennel.id
 
     return {
         "status": "moved",

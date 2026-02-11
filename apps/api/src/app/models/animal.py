@@ -142,12 +142,6 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         Boolean, default=False, nullable=False
     )
     featured: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    current_kennel_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("kennels.id", ondelete="SET NULL"),
-        nullable=True,
-        index=True,
-    )
     primary_photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
@@ -163,6 +157,3 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
-
-    # Kennel relationship
-    current_kennel = relationship("Kennel", foreign_keys=[current_kennel_id])
