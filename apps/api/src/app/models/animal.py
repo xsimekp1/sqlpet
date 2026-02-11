@@ -1,4 +1,5 @@
 import enum
+import uuid
 from datetime import date
 
 from sqlalchemy import Boolean, Date, Enum, ForeignKey, Index, Numeric, String, Text
@@ -65,7 +66,12 @@ class SizeEstimated(str, enum.Enum):
 class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "animals"
     __table_args__ = (
-        Index("ix_animals_org_deleted_created", "organization_id", "deleted_at", "created_at"),
+        Index(
+            "ix_animals_org_deleted_created",
+            "organization_id",
+            "deleted_at",
+            "created_at",
+        ),
     )
 
     organization_id: Mapped[str] = mapped_column(
@@ -74,7 +80,9 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         nullable=False,
         index=True,
     )
-    public_code: Mapped[str | None] = mapped_column(String(50), unique=True, nullable=True)
+    public_code: Mapped[str | None] = mapped_column(
+        String(50), unique=True, nullable=True
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     species: Mapped[Species] = mapped_column(
         Enum(Species, name="species_enum", create_constraint=False, native_enum=True),
@@ -85,32 +93,62 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         default=Sex.UNKNOWN,
     )
     status: Mapped[AnimalStatus] = mapped_column(
-        Enum(AnimalStatus, name="animal_status_enum", create_constraint=False, native_enum=True),
+        Enum(
+            AnimalStatus,
+            name="animal_status_enum",
+            create_constraint=False,
+            native_enum=True,
+        ),
         default=AnimalStatus.INTAKE,
     )
     altered_status: Mapped[AlteredStatus] = mapped_column(
-        Enum(AlteredStatus, name="altered_status_enum", create_constraint=False, native_enum=True),
+        Enum(
+            AlteredStatus,
+            name="altered_status_enum",
+            create_constraint=False,
+            native_enum=True,
+        ),
         default=AlteredStatus.UNKNOWN,
     )
     birth_date_estimated: Mapped[date | None] = mapped_column(Date, nullable=True)
     age_group: Mapped[AgeGroup] = mapped_column(
-        Enum(AgeGroup, name="age_group_enum", create_constraint=False, native_enum=True),
+        Enum(
+            AgeGroup, name="age_group_enum", create_constraint=False, native_enum=True
+        ),
         default=AgeGroup.UNKNOWN,
     )
     color: Mapped[str | None] = mapped_column(Text, nullable=True)
     coat: Mapped[str | None] = mapped_column(Text, nullable=True)
     size_estimated: Mapped[SizeEstimated] = mapped_column(
-        Enum(SizeEstimated, name="size_estimated_enum", create_constraint=False, native_enum=True),
+        Enum(
+            SizeEstimated,
+            name="size_estimated_enum",
+            create_constraint=False,
+            native_enum=True,
+        ),
         default=SizeEstimated.UNKNOWN,
     )
-    weight_current_kg: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
-    weight_estimated_kg: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    weight_current_kg: Mapped[float | None] = mapped_column(
+        Numeric(6, 2), nullable=True
+    )
+    weight_estimated_kg: Mapped[float | None] = mapped_column(
+        Numeric(6, 2), nullable=True
+    )
     status_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     intake_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     outcome_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    public_visibility: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    public_visibility: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
     featured: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    current_kennel_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("kennels.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    primary_photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     animal_breeds = relationship(
@@ -125,3 +163,6 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+
+    # Kennel relationship
+    current_kennel = relationship("Kennel", foreign_keys=[current_kennel_id])
