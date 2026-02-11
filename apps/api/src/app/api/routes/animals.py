@@ -42,7 +42,7 @@ def _build_animal_response(animal) -> AnimalResponse:
     return resp
 
 
-router = APIRouter(prefix="/orgs/{organization_id}/animals", tags=["animals"])
+router = APIRouter(prefix="/animals", tags=["animals"])
 
 
 @router.post(
