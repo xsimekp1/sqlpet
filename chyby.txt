@@ -1,40 +1,40 @@
-08:07:05.565 Running build in Washington, D.C., USA (East) – iad1
-08:07:05.565 Build machine configuration: 2 cores, 8 GB
-08:07:05.726 Cloning github.com/xsimekp1/sqlpet (Branch: main, Commit: d81fbfc)
-08:07:06.082 Cloning completed: 355.000ms
-08:07:07.309 Restored build cache from previous deployment (CM9k3sq5wbcoXQkwGt5eWJhQV6na)
-08:07:07.590 Running "vercel build"
-08:07:08.203 Vercel CLI 50.15.1
-08:07:08.516 Installing dependencies...
-08:07:11.462 
-08:07:11.464 added 1 package in 3s
-08:07:11.465 
-08:07:11.465 246 packages are looking for funding
-08:07:11.465   run `npm fund` for details
-08:07:11.501 Detected Next.js version: 16.1.6
-08:07:11.506 Running "npm run build"
-08:07:11.603 
-08:07:11.604 > web@0.1.0 build
-08:07:11.604 > next build
-08:07:11.604 
-08:07:12.769 ▲ Next.js 16.1.6 (Turbopack)
-08:07:12.770 - Environments: .env.production
-08:07:12.771 
-08:07:12.773 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-08:07:12.817   Creating an optimized production build ...
-08:07:34.000 ✓ Compiled successfully in 20.6s
-08:07:34.008   Running TypeScript ...
-08:07:41.353 Failed to compile.
-08:07:41.353 
-08:07:41.353 ./app/[locale]/dashboard/feeding/plans/new/page.tsx:55:30
-08:07:41.353 Type error: Property 'get' does not exist on type 'typeof ApiClient'.
-08:07:41.353 
-08:07:41.353 [0m [90m 53 |[39m   [36mconst[39m { data[33m:[39m animalsData } [33m=[39m useQuery({
-08:07:41.353  [90m 54 |[39m     queryKey[33m:[39m [[32m'animals'[39m][33m,[39m
-08:07:41.353 [31m[1m>[22m[39m[90m 55 |[39m     queryFn[33m:[39m () [33m=>[39m [33mApiClient[39m[33m.[39m[36mget[39m([32m'/animals'[39m[33m,[39m { page_size[33m:[39m [35m1000[39m })[33m,[39m
-08:07:41.353  [90m    |[39m                              [31m[1m^[22m[39m
-08:07:41.354  [90m 56 |[39m   })[33m;[39m
-08:07:41.354  [90m 57 |[39m
-08:07:41.354  [90m 58 |[39m   [90m// Fetch foods[39m[0m
-08:07:41.413 Next.js build worker exited with code: 1 and signal: null
-08:07:41.470 Error: Command "npm run build" exited with 1
+08:17:21.900 Running build in Washington, D.C., USA (East) – iad1
+08:17:21.900 Build machine configuration: 2 cores, 8 GB
+08:17:22.036 Cloning github.com/xsimekp1/sqlpet (Branch: main, Commit: 7c5ec83)
+08:17:22.333 Cloning completed: 296.000ms
+08:17:23.461 Restored build cache from previous deployment (CM9k3sq5wbcoXQkwGt5eWJhQV6na)
+08:17:23.731 Running "vercel build"
+08:17:24.280 Vercel CLI 50.15.1
+08:17:24.594 Installing dependencies...
+08:17:27.614 
+08:17:27.614 added 1 package in 3s
+08:17:27.614 
+08:17:27.615 246 packages are looking for funding
+08:17:27.615   run `npm fund` for details
+08:17:27.651 Detected Next.js version: 16.1.6
+08:17:27.657 Running "npm run build"
+08:17:27.781 
+08:17:27.781 > web@0.1.0 build
+08:17:27.781 > next build
+08:17:27.781 
+08:17:28.993 ▲ Next.js 16.1.6 (Turbopack)
+08:17:28.994 - Environments: .env.production
+08:17:28.994 
+08:17:29.002 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+08:17:29.044   Creating an optimized production build ...
+08:17:51.435 ✓ Compiled successfully in 21.8s
+08:17:51.436   Running TypeScript ...
+08:17:58.967 Failed to compile.
+08:17:58.968 
+08:17:58.968 ./app/[locale]/dashboard/feeding/plans/page.tsx:52:30
+08:17:58.969 Type error: Property 'delete' does not exist on type 'typeof ApiClient'.
+08:17:58.969 
+08:17:58.969 [0m [90m 50 |[39m   [36mconst[39m deactivatePlanMutation [33m=[39m useMutation({
+08:17:58.970  [90m 51 |[39m     mutationFn[33m:[39m [36masync[39m (planId[33m:[39m string) [33m=>[39m {
+08:17:58.970 [31m[1m>[22m[39m[90m 52 |[39m       [36mreturn[39m [36mawait[39m [33mApiClient[39m[33m.[39m[36mdelete[39m([32m`/feeding/plans/${planId}`[39m)[33m;[39m
+08:17:58.970  [90m    |[39m                              [31m[1m^[22m[39m
+08:17:58.970  [90m 53 |[39m     }[33m,[39m
+08:17:58.970  [90m 54 |[39m     onSuccess[33m:[39m () [33m=>[39m {
+08:17:58.971  [90m 55 |[39m       queryClient[33m.[39minvalidateQueries({ queryKey[33m:[39m [[32m'feeding-plans'[39m] })[33m;[39m[0m
+08:17:59.016 Next.js build worker exited with code: 1 and signal: null
+08:17:59.075 Error: Command "npm run build" exited with 1

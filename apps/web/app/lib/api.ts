@@ -239,6 +239,72 @@ class ApiClient {
   }
 
   /**
+   * Generic PUT request
+   */
+  static async put<T = any>(endpoint: string, data?: any): Promise<T> {
+    try {
+      const response = await axios.put<T>(`${API_URL}${endpoint}`, data, {
+        headers: {
+          ...this.getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || `Failed to update ${endpoint}`
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Generic PATCH request
+   */
+  static async patch<T = any>(endpoint: string, data?: any): Promise<T> {
+    try {
+      const response = await axios.patch<T>(`${API_URL}${endpoint}`, data, {
+        headers: {
+          ...this.getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || `Failed to patch ${endpoint}`
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Generic DELETE request
+   */
+  static async delete<T = any>(endpoint: string): Promise<T> {
+    try {
+      const response = await axios.delete<T>(`${API_URL}${endpoint}`, {
+        headers: this.getAuthHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || `Failed to delete ${endpoint}`
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
    * Login with email and password
    * Backend expects JSON with email and password fields
    */
