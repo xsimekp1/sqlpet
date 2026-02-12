@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { ApiClient } from '@/lib/api'
-import { useOrganizationStore } from '@/store/organizationStore'
+import { useOrganizationStore } from '@/stores/organizationStore'
 
 interface FeedingTodayWidgetProps {
   editMode?: boolean
