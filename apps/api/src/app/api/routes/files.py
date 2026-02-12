@@ -12,11 +12,11 @@ except Exception as e:
     print(f"❌ Failed to import get_current_user: {e}")
 
 try:
-    from src.app.db.session import get_async_db_session
+    from src.app.api.dependencies.db import get_db
 
-    print("✅ Imported get_async_db_session")
+    print("✅ Imported get_db")
 except Exception as e:
-    print(f"❌ Failed to import get_async_db_session: {e}")
+    print(f"❌ Failed to import get_db: {e}")
 
 try:
     from src.app.models.user import User
@@ -90,7 +90,7 @@ async def upload_file(
     organization_id: str = Query(...),
     is_public: bool = Query(default=False),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db_session),
+    db: AsyncSession = Depends(get_db),
 ):
     """Upload a file to Supabase Storage"""
 
