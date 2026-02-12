@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiClient, { Animal } from '@/app/lib/api';
 import { toast } from 'sonner';
 import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
+import { AnimalImage } from '@/app/components/animals/AnimalImage';
 
 export default function AnimalDetailPage() {
   const router = useRouter();
@@ -115,41 +116,44 @@ export default function AnimalDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/animals">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
+{/* Header */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+        <div className="flex-shrink-0">
+          <AnimalImage animal={animal} size="lg" />
+        </div>
+        <div className="flex-1 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
+            <Link href="/dashboard/animals">
+              <Button variant="ghost" size="icon" className="mr-2">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
             <h1 className="text-3xl font-bold">{animal.name}</h1>
             <Badge className={getStatusColor(animal.status)}>
               {animal.status}
             </Badge>
           </div>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mb-4">
             #{animal.public_code} • {animal.species}
           </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setMedicalDialogOpen(true)}
-          >
-            <Stethoscope className="h-4 w-4 mr-2" />
-            {t('medical.requestProcedure')}
-          </Button>
-          <Button variant="outline" size="sm">
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center sm:justify-start">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMedicalDialogOpen(true)}
+            >
+              <Stethoscope className="h-4 w-4 mr-2" />
+              {t('medical.requestProcedure')}
+            </Button>
+            <Button variant="outline" size="sm">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
         </div>
       </div>
 

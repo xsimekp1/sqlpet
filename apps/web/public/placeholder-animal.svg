@@ -1,0 +1,8 @@
+<svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="120" fill="#f3f4f6"/>
+  <circle cx="60" cy="50" r="20" fill="#9ca3af"/>
+  <rect x="40" y="70" width="40" height="30" fill="#9ca3af"/>
+  <text x="60" y="110" text-anchor="middle" font-family="Arial" font-size="10" fill="#6b7280">
+    No Photo
+  </text>
+</svg>

@@ -18,6 +18,7 @@ from src.app.schemas.tag import TagResponse
 
 # --- Breed schemas ---
 
+
 class BreedResponse(BaseModel):
     id: uuid.UUID
     species: Species
@@ -27,6 +28,7 @@ class BreedResponse(BaseModel):
 
 
 # --- AnimalBreed schemas ---
+
 
 class AnimalBreedEntry(BaseModel):
     breed_id: uuid.UUID
@@ -41,6 +43,7 @@ class AnimalBreedResponse(BaseModel):
 
 
 # --- AnimalIdentifier schemas ---
+
 
 class AnimalIdentifierCreate(BaseModel):
     type: IdentifierType
@@ -60,6 +63,7 @@ class AnimalIdentifierResponse(BaseModel):
 
 
 # --- Animal CRUD schemas ---
+
 
 class AnimalCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
@@ -129,6 +133,7 @@ class AnimalResponse(BaseModel):
     description: str | None = None
     public_visibility: bool
     featured: bool
+    primary_photo_url: str | None = None
     created_at: datetime
     updated_at: datetime
     breeds: list[AnimalBreedResponse] = []

@@ -88,6 +88,7 @@ export interface Animal {
   estimated_age_years: number | null;
   intake_date: string;
   status: 'intake' | 'available' | 'reserved' | 'adopted' | 'fostered' | 'returned' | 'deceased' | 'transferred' | 'hold' | 'quarantine' | 'returned_to_owner' | 'euthanized' | 'escaped';
+  primary_photo_url: string | null;
   created_at: string;
   updated_at: string;
 }
