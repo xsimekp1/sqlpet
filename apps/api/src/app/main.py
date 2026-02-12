@@ -93,11 +93,13 @@ app.include_router(tags_router)
 if files_router:
     app.include_router(files_router)
     print("✅ Files router included")
+    print(f"🔍 Files router type: {type(files_router)}")
 else:
     print("❌ Files router not included due to import errors")
 
 if timezones_router:
     app.include_router(timezones_router)
     print("✅ Timezones router included")
+    print(f"🔍 Timezones router type: {type(timezones_router)}")
 else:
     print("❌ Timezones router not included due to import errors")
