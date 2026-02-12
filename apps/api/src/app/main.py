@@ -17,9 +17,7 @@ from src.app.api.routes.tags import router as tags_router
 from src.app.api.routes.files import router as files_router
 from src.app.api.routes.timezones import router as timezones_router
 
-# Temporarily skip problematic routes to ensure Railway startup
-# TODO: Re-enable files router after Railway deployment is stable
-print("🔧 Skipping files router for Railway deployment")
+# Files router is now working properly after fixing import issues
 
 from src.app.db.session import async_engine
 
@@ -91,16 +89,6 @@ app.include_router(tasks_router)
 app.include_router(feeding_router)
 app.include_router(inventory_router)
 app.include_router(tags_router)
-if files_router:
-    app.include_router(files_router)
-    print("✅ Files router included")
-    print(f"🔍 Files router type: {type(files_router)}")
-else:
-    print("❌ Files router not included due to import errors")
+app.include_router(files_router)
 
-if timezones_router:
-    app.include_router(timezones_router)
-    print("✅ Timezones router included")
-    print(f"🔍 Timezones router type: {type(timezones_router)}")
-else:
-    print("❌ Timezones router not included due to import errors")
+app.include_router(timezones_router)
