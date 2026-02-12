@@ -9,7 +9,6 @@ from src.app.models.animal_breed import AnimalBreed
 from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.schemas.animal import AnimalCreate, AnimalUpdate
 from src.app.services.audit_service import AuditService
-from src.app.services.default_image_service import DefaultImageService
 
 
 def _animal_to_dict(animal: Animal) -> dict:
