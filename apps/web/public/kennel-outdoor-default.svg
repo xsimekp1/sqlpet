@@ -1,0 +1,8 @@
+<svg width="512" height="384" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="384" fill="#f0f9ff"/>
+  <rect x="50" y="50" width="200" height="284" fill="#dbeafe" rx="8"/>
+  <rect x="262" y="50" width="200" height="284" fill="#dbeafe" rx="8"/>
+  <polygon points="150,334 180,334 165,300" fill="#93c5fd"/>
+  <polygon points="362,334 392,334 377,300" fill="#93c5fd"/>
+  <text x="256" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#1e40af">Outdoor Kennel</text>
+</svg>

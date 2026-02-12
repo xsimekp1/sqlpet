@@ -169,7 +169,7 @@ export default function KennelsPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold">{kennel.code}</span>
+                <span className="text-lg font-bold">{kennel.id}</span>
                 <Badge className={getZoneColor(kennel.zone_id)}>
                   {kennel.zone_name || kennel.zone_id}
                 </Badge>

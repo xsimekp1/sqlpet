@@ -1,0 +1,1 @@
+export { KennelImage } from './KennelImage';
