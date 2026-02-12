@@ -18,8 +18,14 @@ depends_on = None
 
 
 def upgrade():
-    # Create storage_provider enum
-    op.execute("CREATE TYPE storageprovider AS ENUM ('local', 'supabase')")
+    # Create storage_provider enum (if not exists)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE storageprovider AS ENUM ('local', 'supabase');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
 
     # Create files table
     op.create_table(
