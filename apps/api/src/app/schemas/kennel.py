@@ -96,7 +96,7 @@ class MoveAnimalRequest(BaseModel):
 class MoveAnimalResponse(BaseModel):
     status: str
     animal_id: str
-to: str | None = None
+    to: str | None = None
     occupied: int | None = None
     capacity: int | None = None
 
