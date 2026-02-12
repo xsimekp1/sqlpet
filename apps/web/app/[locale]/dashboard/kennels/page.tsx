@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import ApiClient, { Kennel, KennelAnimal } from '@/app/lib/api';
+import ApiClient, { Kennel, KennelAnimal } from '@/lib/api';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';

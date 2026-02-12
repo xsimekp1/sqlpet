@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import ApiClient, { Animal } from '@/app/lib/api';
+import ApiClient, { Animal } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function AnimalsPage() {

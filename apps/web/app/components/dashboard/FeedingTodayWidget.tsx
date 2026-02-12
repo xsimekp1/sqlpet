@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { ApiClient } from '@/app/lib/api'
+import { ApiClient } from '@/lib/api'
 import { useOrganizationStore } from '@/app/store/organizationStore'
 
 interface FeedingTodayWidgetProps {
