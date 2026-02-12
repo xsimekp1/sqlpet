@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.app.api.dependencies.auth import get_current_user
 from src.app.api.dependencies.db import get_db
 from src.app.models.user import User
-from src.app.models.file import File, EntityFile, StorageProvider
+from src.app.models.file import File as FileModel, EntityFile, StorageProvider
 from src.app.models.animal import Animal
 from src.app.services.file_upload_service import file_upload_service
 from src.app.services.supabase_storage_service import supabase_storage_service
@@ -69,7 +69,7 @@ async def upload_file(
     )
 
     # Create file record
-    db_file = File(
+    db_file = FileModel(
         organization_id=organization_id,
         storage_provider=StorageProvider.SUPABASE,
         storage_path=storage_path,
@@ -106,7 +106,7 @@ async def link_file_to_entity(
     """Link a file to an entity (animal, kennel, etc.)"""
 
     # Verify file exists and belongs to user's org
-    file_obj = await db.get(File, UUID(file_id))
+    file_obj = await db.get(FileModel, UUID(file_id))
     if not file_obj:
         raise HTTPException(status_code=404, detail="File not found")
 
@@ -145,7 +145,7 @@ async def download_file(
 ):
     """Generate presigned URL for file download"""
 
-    file_obj = await db.get(File, UUID(file_id))
+    file_obj = await db.get(FileModel, UUID(file_id))
     if not file_obj:
         raise HTTPException(status_code=404, detail="File not found")
 
@@ -164,7 +164,7 @@ async def delete_file(
 ):
     """Delete a file"""
 
-    file_obj = await db.get(File, UUID(file_id))
+    file_obj = await db.get(FileModel, UUID(file_id))
     if not file_obj:
         raise HTTPException(status_code=404, detail="File not found")
 
@@ -212,7 +212,7 @@ async def upload_primary_animal_photo(
     )
 
     # Create file record
-    db_file = File(
+    db_file = FileModel(
         organization_id=animal.organization_id,
         storage_provider=StorageProvider.SUPABASE,
         storage_path=storage_path,
