@@ -1,0 +1,808 @@
+07:47:17.821 Running build in Washington, D.C., USA (East) – iad1
+07:47:17.822 Build machine configuration: 2 cores, 8 GB
+07:47:17.941 Cloning github.com/xsimekp1/sqlpet (Branch: main, Commit: 2f7f298)
+07:47:18.364 Cloning completed: 422.000ms
+07:47:18.989 Restored build cache from previous deployment (CM9k3sq5wbcoXQkwGt5eWJhQV6na)
+07:47:19.271 Running "vercel build"
+07:47:19.816 Vercel CLI 50.15.1
+07:47:20.147 Installing dependencies...
+07:47:23.229 
+07:47:23.230 added 1 package in 3s
+07:47:23.231 
+07:47:23.231 246 packages are looking for funding
+07:47:23.231   run `npm fund` for details
+07:47:23.267 Detected Next.js version: 16.1.6
+07:47:23.273 Running "npm run build"
+07:47:23.371 
+07:47:23.372 > web@0.1.0 build
+07:47:23.372 > next build
+07:47:23.372 
+07:47:24.536 ▲ Next.js 16.1.6 (Turbopack)
+07:47:24.538 - Environments: .env.production
+07:47:24.539 
+07:47:24.546 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+07:47:24.584   Creating an optimized production build ...
+07:47:46.881 
+07:47:46.882 > Build error occurred
+07:47:46.889 Error: Turbopack build failed with 30 errors:
+07:47:46.889 ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx:11:1
+07:47:46.889 Module not found: Can't resolve '@/components/ui/textarea'
+07:47:46.889 [0m [90m  9 |[39m [36mimport[39m { [33mInput[39m } [36mfrom[39m [32m'@/components/ui/input'[39m[33m;[39m
+07:47:46.890  [90m 10 |[39m [36mimport[39m { [33mLabel[39m } [36mfrom[39m [32m'@/components/ui/label'[39m[33m;[39m
+07:47:46.890 [31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mTextarea[39m } [36mfrom[39m [32m'@/components/ui/textarea'[39m[33m;[39m
+07:47:46.890  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.890  [90m 12 |[39m [36mimport[39m {
+07:47:46.890  [90m 13 |[39m   [33mSelect[39m[33m,[39m
+07:47:46.891  [90m 14 |[39m   [33mSelectContent[39m[33m,[39m[0m
+07:47:46.891 
+07:47:46.891 Import map: aliased to relative './components/ui/textarea' inside of [project]/apps/web
+07:47:46.891 
+07:47:46.891 
+07:47:46.891 Import traces:
+07:47:46.891   Client Component Browser:
+07:47:46.891     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Client Component Browser]
+07:47:46.891     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Server Component]
+07:47:46.891 
+07:47:46.891   Client Component SSR:
+07:47:46.891     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Client Component SSR]
+07:47:46.891     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Server Component]
+07:47:46.891 
+07:47:46.891 https://nextjs.org/docs/messages/module-not-found
+07:47:46.891 
+07:47:46.891 
+07:47:46.891 ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx:10:1
+07:47:46.892 Module not found: Can't resolve '@/components/ui/textarea'
+07:47:46.892 [0m [90m  8 |[39m [36mimport[39m { [33mInput[39m } [36mfrom[39m [32m'@/components/ui/input'[39m[33m;[39m
+07:47:46.892  [90m  9 |[39m [36mimport[39m { [33mLabel[39m } [36mfrom[39m [32m'@/components/ui/label'[39m[33m;[39m
+07:47:46.892 [31m[1m>[22m[39m[90m 10 |[39m [36mimport[39m { [33mTextarea[39m } [36mfrom[39m [32m'@/components/ui/textarea'[39m[33m;[39m
+07:47:46.893  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.895  [90m 11 |[39m [36mimport[39m {
+07:47:46.895  [90m 12 |[39m   [33mSelect[39m[33m,[39m
+07:47:46.895  [90m 13 |[39m   [33mSelectContent[39m[33m,[39m[0m
+07:47:46.895 
+07:47:46.896 Import map: aliased to relative './components/ui/textarea' inside of [project]/apps/web
+07:47:46.896 
+07:47:46.896 
+07:47:46.896 Import traces:
+07:47:46.896   Client Component Browser:
+07:47:46.896     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Client Component Browser]
+07:47:46.896     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Server Component]
+07:47:46.896 
+07:47:46.896   Client Component SSR:
+07:47:46.896     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Client Component SSR]
+07:47:46.896     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Server Component]
+07:47:46.897 
+07:47:46.897 https://nextjs.org/docs/messages/module-not-found
+07:47:46.897 
+07:47:46.897 
+07:47:46.897 ./apps/web/app/components/animals/RequestMedicalProcedureDialog.tsx:34:1
+07:47:46.897 Module not found: Can't resolve '@/components/ui/textarea'
+07:47:46.897 [0m [90m 32 |[39m } [36mfrom[39m [32m'@/components/ui/select'[39m[33m;[39m
+07:47:46.897  [90m 33 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+07:47:46.897 [31m[1m>[22m[39m[90m 34 |[39m [36mimport[39m { [33mTextarea[39m } [36mfrom[39m [32m'@/components/ui/textarea'[39m[33m;[39m
+07:47:46.898  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.898  [90m 35 |[39m [36mimport[39m [33mApiClient[39m[33m,[39m { [33mAnimal[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.898  [90m 36 |[39m
+07:47:46.898  [90m 37 |[39m [36minterface[39m [33mRequestMedicalProcedureDialogProps[39m {[0m
+07:47:46.898 
+07:47:46.898 Import map: aliased to relative './components/ui/textarea' inside of [project]/apps/web
+07:47:46.898 
+07:47:46.898 
+07:47:46.898 Import traces:
+07:47:46.899   Client Component Browser:
+07:47:46.899     ./apps/web/app/components/animals/RequestMedicalProcedureDialog.tsx [Client Component Browser]
+07:47:46.899     ./apps/web/app/[locale]/dashboard/animals/[id]/page.tsx [Client Component Browser]
+07:47:46.899     ./apps/web/app/[locale]/dashboard/animals/[id]/page.tsx [Server Component]
+07:47:46.899 
+07:47:46.899   Client Component SSR:
+07:47:46.899     ./apps/web/app/components/animals/RequestMedicalProcedureDialog.tsx [Client Component SSR]
+07:47:46.899     ./apps/web/app/[locale]/dashboard/animals/[id]/page.tsx [Client Component SSR]
+07:47:46.899     ./apps/web/app/[locale]/dashboard/animals/[id]/page.tsx [Server Component]
+07:47:46.900 
+07:47:46.900 https://nextjs.org/docs/messages/module-not-found
+07:47:46.900 
+07:47:46.900 
+07:47:46.900 ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx:19:1
+07:47:46.900 Module not found: Can't resolve '@/hooks/use-toast'
+07:47:46.900 [0m [90m 17 |[39m   [33mSelectValue[39m[33m,[39m
+07:47:46.900  [90m 18 |[39m } [36mfrom[39m [32m'@/components/ui/select'[39m[33m;[39m
+07:47:46.900 [31m[1m>[22m[39m[90m 19 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/hooks/use-toast'[39m[33m;[39m
+07:47:46.901  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.901  [90m 20 |[39m [36mimport[39m { [33mArrowLeft[39m[33m,[39m [33mPlus[39m[33m,[39m [33mTrash2[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+07:47:46.901  [90m 21 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[33m;[39m
+07:47:46.901  [90m 22 |[39m [36mimport[39m { useForm } [36mfrom[39m [32m'react-hook-form'[39m[33m;[39m[0m
+07:47:46.901 
+07:47:46.901 Import map: aliased to relative './hooks/use-toast' inside of [project]/apps/web
+07:47:46.901 
+07:47:46.901 
+07:47:46.901 Import traces:
+07:47:46.901   Client Component Browser:
+07:47:46.902     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Client Component Browser]
+07:47:46.902     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Server Component]
+07:47:46.902 
+07:47:46.902   Client Component SSR:
+07:47:46.902     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Client Component SSR]
+07:47:46.902     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Server Component]
+07:47:46.902 
+07:47:46.902 https://nextjs.org/docs/messages/module-not-found
+07:47:46.902 
+07:47:46.903 
+07:47:46.903 ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx:24:1
+07:47:46.903 Module not found: Can't resolve '@/hooks/use-toast'
+07:47:46.903 [0m [90m 22 |[39m   [33mSelectValue[39m[33m,[39m
+07:47:46.903  [90m 23 |[39m } [36mfrom[39m [32m'@/components/ui/select'[39m[33m;[39m
+07:47:46.903 [31m[1m>[22m[39m[90m 24 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/hooks/use-toast'[39m[33m;[39m
+07:47:46.903  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.903  [90m 25 |[39m [36mimport[39m { [33mPlus[39m[33m,[39m [33mCheckCircle2[39m[33m,[39m [33mXCircle[39m[33m,[39m [33mAlertCircle[39m[33m,[39m [33mCalendar[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+07:47:46.907  [90m 26 |[39m [36mimport[39m { format } [36mfrom[39m [32m'date-fns'[39m[33m;[39m
+07:47:46.908  [90m 27 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[33m;[39m[0m
+07:47:46.908 
+07:47:46.908 Import map: aliased to relative './hooks/use-toast' inside of [project]/apps/web
+07:47:46.908 
+07:47:46.908 
+07:47:46.908 Import traces:
+07:47:46.908   Client Component Browser:
+07:47:46.908     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Client Component Browser]
+07:47:46.908     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Server Component]
+07:47:46.909 
+07:47:46.909   Client Component SSR:
+07:47:46.909     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Client Component SSR]
+07:47:46.909     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Server Component]
+07:47:46.909 
+07:47:46.909 https://nextjs.org/docs/messages/module-not-found
+07:47:46.909 
+07:47:46.909 
+07:47:46.909 ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx:30:1
+07:47:46.909 Module not found: Can't resolve '@/hooks/use-toast'
+07:47:46.909 [0m [90m 28 |[39m   [33mDialogTrigger[39m[33m,[39m
+07:47:46.909  [90m 29 |[39m } [36mfrom[39m [32m'@/components/ui/dialog'[39m[33m;[39m
+07:47:46.909 [31m[1m>[22m[39m[90m 30 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/hooks/use-toast'[39m[33m;[39m
+07:47:46.910  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.910  [90m 31 |[39m [36mimport[39m { [33mArrowLeft[39m[33m,[39m [33mPlus[39m[33m,[39m [33mPackage[39m[33m,[39m [33mTrendingUp[39m[33m,[39m [33mTrendingDown[39m[33m,[39m [33mCalendar[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+07:47:46.910  [90m 32 |[39m [36mimport[39m { format } [36mfrom[39m [32m'date-fns'[39m[33m;[39m
+07:47:46.910  [90m 33 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[33m;[39m[0m
+07:47:46.910 
+07:47:46.910 Import map: aliased to relative './hooks/use-toast' inside of [project]/apps/web
+07:47:46.910 
+07:47:46.910 
+07:47:46.910 Import traces:
+07:47:46.910   Client Component Browser:
+07:47:46.910     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Client Component Browser]
+07:47:46.910     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Server Component]
+07:47:46.910 
+07:47:46.911   Client Component SSR:
+07:47:46.911     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Client Component SSR]
+07:47:46.911     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Server Component]
+07:47:46.911 
+07:47:46.911 https://nextjs.org/docs/messages/module-not-found
+07:47:46.911 
+07:47:46.911 
+07:47:46.911 ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx:17:1
+07:47:46.911 Module not found: Can't resolve '@/hooks/use-toast'
+07:47:46.911 [0m [90m 15 |[39m   [33mSelectValue[39m[33m,[39m
+07:47:46.911  [90m 16 |[39m } [36mfrom[39m [32m'@/components/ui/select'[39m[33m;[39m
+07:47:46.911 [31m[1m>[22m[39m[90m 17 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/hooks/use-toast'[39m[33m;[39m
+07:47:46.911  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.912  [90m 18 |[39m [36mimport[39m { [33mArrowLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+07:47:46.912  [90m 19 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[33m;[39m
+07:47:46.912  [90m 20 |[39m [36mimport[39m { useForm } [36mfrom[39m [32m'react-hook-form'[39m[33m;[39m[0m
+07:47:46.912 
+07:47:46.912 Import map: aliased to relative './hooks/use-toast' inside of [project]/apps/web
+07:47:46.912 
+07:47:46.912 
+07:47:46.912 Import traces:
+07:47:46.912   Client Component Browser:
+07:47:46.912     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Client Component Browser]
+07:47:46.912     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Server Component]
+07:47:46.912 
+07:47:46.912   Client Component SSR:
+07:47:46.912     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Client Component SSR]
+07:47:46.913     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Server Component]
+07:47:46.913 
+07:47:46.913 https://nextjs.org/docs/messages/module-not-found
+07:47:46.913 
+07:47:46.913 
+07:47:46.913 ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx:23:1
+07:47:46.913 Module not found: Can't resolve '@/hooks/use-toast'
+07:47:46.919 [0m [90m 21 |[39m   [33mCardTitle[39m[33m,[39m
+07:47:46.919  [90m 22 |[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[33m;[39m
+07:47:46.919 [31m[1m>[22m[39m[90m 23 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/hooks/use-toast'[39m[33m;[39m
+07:47:46.919  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.919  [90m 24 |[39m [36mimport[39m { [33mArrowLeft[39m[33m,[39m [33mMail[39m[33m,[39m [33mPhone[39m[33m,[39m [33mShield[39m[33m,[39m [33mCalendar[39m[33m,[39m [33mCheckCircle2[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+07:47:46.919  [90m 25 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[33m;[39m
+07:47:46.919  [90m 26 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m[0m
+07:47:46.919 
+07:47:46.920 Import map: aliased to relative './hooks/use-toast' inside of [project]/apps/web
+07:47:46.920 
+07:47:46.920 
+07:47:46.920 Import traces:
+07:47:46.920   Client Component Browser:
+07:47:46.920     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Client Component Browser]
+07:47:46.920     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Server Component]
+07:47:46.920 
+07:47:46.920   Client Component SSR:
+07:47:46.920     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Client Component SSR]
+07:47:46.920     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Server Component]
+07:47:46.920 
+07:47:46.920 https://nextjs.org/docs/messages/module-not-found
+07:47:46.920 
+07:47:46.920 
+07:47:46.921 ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx:18:1
+07:47:46.921 Module not found: Can't resolve '@/hooks/use-toast'
+07:47:46.921 [0m [90m 16 |[39m   [33mSelectValue[39m[33m,[39m
+07:47:46.921  [90m 17 |[39m } [36mfrom[39m [32m'@/components/ui/select'[39m[33m;[39m
+07:47:46.921 [31m[1m>[22m[39m[90m 18 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/hooks/use-toast'[39m[33m;[39m
+07:47:46.921  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.921  [90m 19 |[39m [36mimport[39m { [33mArrowLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+07:47:46.921  [90m 20 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[33m;[39m
+07:47:46.921  [90m 21 |[39m [36mimport[39m { useForm } [36mfrom[39m [32m'react-hook-form'[39m[33m;[39m[0m
+07:47:46.921 
+07:47:46.921 Import map: aliased to relative './hooks/use-toast' inside of [project]/apps/web
+07:47:46.921 
+07:47:46.922 
+07:47:46.922 Import traces:
+07:47:46.922   Client Component Browser:
+07:47:46.922     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Client Component Browser]
+07:47:46.922     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Server Component]
+07:47:46.922 
+07:47:46.922   Client Component SSR:
+07:47:46.922     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Client Component SSR]
+07:47:46.922     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Server Component]
+07:47:46.922 
+07:47:46.922 https://nextjs.org/docs/messages/module-not-found
+07:47:46.923 
+07:47:46.923 
+07:47:46.923 ./apps/web/app/[locale]/dashboard/tasks/page.tsx:24:1
+07:47:46.923 Module not found: Can't resolve '@/hooks/use-toast'
+07:47:46.923 [0m [90m 22 |[39m   [33mSelectValue[39m[33m,[39m
+07:47:46.923  [90m 23 |[39m } [36mfrom[39m [32m'@/components/ui/select'[39m[33m;[39m
+07:47:46.923 [31m[1m>[22m[39m[90m 24 |[39m [36mimport[39m { useToast } [36mfrom[39m [32m'@/hooks/use-toast'[39m[33m;[39m
+07:47:46.923  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.923  [90m 25 |[39m [36mimport[39m { [33mCheckCircle2[39m[33m,[39m [33mCircle[39m[33m,[39m [33mClock[39m[33m,[39m [33mXCircle[39m[33m,[39m [33mAlertCircle[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+07:47:46.923  [90m 26 |[39m [36mimport[39m { format } [36mfrom[39m [32m'date-fns'[39m[33m;[39m
+07:47:46.923  [90m 27 |[39m [36mimport[39m { useSearchParams } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m[0m
+07:47:46.924 
+07:47:46.924 Import map: aliased to relative './hooks/use-toast' inside of [project]/apps/web
+07:47:46.924 
+07:47:46.924 
+07:47:46.924 Import traces:
+07:47:46.924   Client Component Browser:
+07:47:46.924     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Client Component Browser]
+07:47:46.924     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Server Component]
+07:47:46.924 
+07:47:46.924   Client Component SSR:
+07:47:46.924     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Client Component SSR]
+07:47:46.924     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Server Component]
+07:47:46.924 
+07:47:46.924 https://nextjs.org/docs/messages/module-not-found
+07:47:46.924 
+07:47:46.925 
+07:47:46.925 ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx:5:1
+07:47:46.925 Export ApiClient doesn't exist in target module
+07:47:46.925 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.925  [90m 4 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.925 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.925  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.925  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.925  [90m 7 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.925  [90m 8 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.925 
+07:47:46.925 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.925 Did you mean to import default?
+07:47:46.925 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.925 
+07:47:46.926 Import traces:
+07:47:46.926   Client Component Browser:
+07:47:46.926     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Client Component Browser]
+07:47:46.926     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Server Component]
+07:47:46.926 
+07:47:46.926   Client Component SSR:
+07:47:46.926     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Client Component SSR]
+07:47:46.927     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Server Component]
+07:47:46.927 
+07:47:46.927 
+07:47:46.927 ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx:5:1
+07:47:46.927 Export ApiClient doesn't exist in target module
+07:47:46.927 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.927  [90m 4 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.928 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.928  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.928  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.928  [90m 7 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.928  [90m 8 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.928 
+07:47:46.928 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.928 Did you mean to import default?
+07:47:46.928 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.928 
+07:47:46.928 Import traces:
+07:47:46.928   Client Component Browser:
+07:47:46.928     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Client Component Browser]
+07:47:46.928     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Server Component]
+07:47:46.929 
+07:47:46.929   Client Component SSR:
+07:47:46.929     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Client Component SSR]
+07:47:46.929     ./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx [Server Component]
+07:47:46.929 
+07:47:46.929 
+07:47:46.929 ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx:5:1
+07:47:46.929 Export ApiClient doesn't exist in target module
+07:47:46.929 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.929  [90m 4 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.929 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.929  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.929  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.930  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+07:47:46.930  [90m 8 |[39m [36mimport[39m {[0m
+07:47:46.930 
+07:47:46.930 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.930 Did you mean to import default?
+07:47:46.930 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.930 
+07:47:46.930 Import traces:
+07:47:46.930   Client Component Browser:
+07:47:46.930     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Client Component Browser]
+07:47:46.930     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Server Component]
+07:47:46.930 
+07:47:46.930   Client Component SSR:
+07:47:46.930     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Client Component SSR]
+07:47:46.931     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Server Component]
+07:47:46.931 
+07:47:46.931 
+07:47:46.931 ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx:5:1
+07:47:46.931 Export ApiClient doesn't exist in target module
+07:47:46.931 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.931  [90m 4 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.931 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.931  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.931  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.931  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+07:47:46.931  [90m 8 |[39m [36mimport[39m {[0m
+07:47:46.931 
+07:47:46.932 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.932 Did you mean to import default?
+07:47:46.932 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.932 
+07:47:46.932 Import traces:
+07:47:46.932   Client Component Browser:
+07:47:46.932     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Client Component Browser]
+07:47:46.932     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Server Component]
+07:47:46.932 
+07:47:46.932   Client Component SSR:
+07:47:46.932     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Client Component SSR]
+07:47:46.932     ./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx [Server Component]
+07:47:46.932 
+07:47:46.932 
+07:47:46.933 ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx:5:1
+07:47:46.933 Export ApiClient doesn't exist in target module
+07:47:46.933 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.933  [90m 4 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.933 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.933  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.933  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.933  [90m 7 |[39m [36mimport[39m { useParams } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.933  [90m 8 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.933 
+07:47:46.933 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.933 Did you mean to import default?
+07:47:46.933 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.934 
+07:47:46.934 Import traces:
+07:47:46.934   Client Component Browser:
+07:47:46.934     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Client Component Browser]
+07:47:46.934     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Server Component]
+07:47:46.934 
+07:47:46.934   Client Component SSR:
+07:47:46.934     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Client Component SSR]
+07:47:46.934     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Server Component]
+07:47:46.934 
+07:47:46.934 
+07:47:46.934 ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx:5:1
+07:47:46.934 Export ApiClient doesn't exist in target module
+07:47:46.934 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.935  [90m 4 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.935 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.935  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.935  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.935  [90m 7 |[39m [36mimport[39m { useParams } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.935  [90m 8 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.935 
+07:47:46.935 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.935 Did you mean to import default?
+07:47:46.935 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.935 
+07:47:46.935 Import traces:
+07:47:46.936   Client Component Browser:
+07:47:46.936     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Client Component Browser]
+07:47:46.936     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Server Component]
+07:47:46.936 
+07:47:46.936   Client Component SSR:
+07:47:46.936     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Client Component SSR]
+07:47:46.936     ./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx [Server Component]
+07:47:46.936 
+07:47:46.936 
+07:47:46.936 ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx:4:1
+07:47:46.936 Export ApiClient doesn't exist in target module
+07:47:46.936 [0m [90m 2 |[39m
+07:47:46.936  [90m 3 |[39m [36mimport[39m { useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.936 [31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.937  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.937  [90m 5 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.937  [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.937  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.937 
+07:47:46.937 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.937 Did you mean to import default?
+07:47:46.937 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.937 
+07:47:46.937 Import traces:
+07:47:46.937   Client Component Browser:
+07:47:46.938     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Client Component Browser]
+07:47:46.938     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Server Component]
+07:47:46.938 
+07:47:46.938   Client Component SSR:
+07:47:46.938     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Client Component SSR]
+07:47:46.938     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Server Component]
+07:47:46.938 
+07:47:46.938 
+07:47:46.938 ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx:4:1
+07:47:46.938 Export ApiClient doesn't exist in target module
+07:47:46.938 [0m [90m 2 |[39m
+07:47:46.938  [90m 3 |[39m [36mimport[39m { useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.938 [31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.939  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.939  [90m 5 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.939  [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.939  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.939 
+07:47:46.939 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.939 Did you mean to import default?
+07:47:46.939 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.939 
+07:47:46.939 Import traces:
+07:47:46.939   Client Component Browser:
+07:47:46.939     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Client Component Browser]
+07:47:46.940     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Server Component]
+07:47:46.940 
+07:47:46.940   Client Component SSR:
+07:47:46.940     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Client Component SSR]
+07:47:46.940     ./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx [Server Component]
+07:47:46.940 
+07:47:46.940 
+07:47:46.940 ./apps/web/app/[locale]/dashboard/inventory/page.tsx:5:1
+07:47:46.940 Export ApiClient doesn't exist in target module
+07:47:46.940 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.940  [90m 4 |[39m [36mimport[39m { useQuery } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.941 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.941  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.941  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.941  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+07:47:46.941  [90m 8 |[39m [36mimport[39m {[0m
+07:47:46.941 
+07:47:46.941 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.941 Did you mean to import default?
+07:47:46.941 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.941 
+07:47:46.941 Import traces:
+07:47:46.942   Client Component Browser:
+07:47:46.942     ./apps/web/app/[locale]/dashboard/inventory/page.tsx [Client Component Browser]
+07:47:46.942     ./apps/web/app/[locale]/dashboard/inventory/page.tsx [Server Component]
+07:47:46.942 
+07:47:46.942   Client Component SSR:
+07:47:46.942     ./apps/web/app/[locale]/dashboard/inventory/page.tsx [Client Component SSR]
+07:47:46.942     ./apps/web/app/[locale]/dashboard/inventory/page.tsx [Server Component]
+07:47:46.942 
+07:47:46.942 
+07:47:46.942 ./apps/web/app/[locale]/dashboard/inventory/page.tsx:5:1
+07:47:46.942 Export ApiClient doesn't exist in target module
+07:47:46.943 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.943  [90m 4 |[39m [36mimport[39m { useQuery } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.943 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.943  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.943  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.943  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+07:47:46.943  [90m 8 |[39m [36mimport[39m {[0m
+07:47:46.943 
+07:47:46.943 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.943 Did you mean to import default?
+07:47:46.943 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.944 
+07:47:46.944 Import traces:
+07:47:46.944   Client Component Browser:
+07:47:46.944     ./apps/web/app/[locale]/dashboard/inventory/page.tsx [Client Component Browser]
+07:47:46.944     ./apps/web/app/[locale]/dashboard/inventory/page.tsx [Server Component]
+07:47:46.944 
+07:47:46.944   Client Component SSR:
+07:47:46.945     ./apps/web/app/[locale]/dashboard/inventory/page.tsx [Client Component SSR]
+07:47:46.945     ./apps/web/app/[locale]/dashboard/inventory/page.tsx [Server Component]
+07:47:46.945 
+07:47:46.946 
+07:47:46.946 ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx:4:1
+07:47:46.946 Export ApiClient doesn't exist in target module
+07:47:46.946 [0m [90m 2 |[39m
+07:47:46.946  [90m 3 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.946 [31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.946  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.946  [90m 5 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.946  [90m 6 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.946  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.946 
+07:47:46.947 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.947 Did you mean to import default?
+07:47:46.947 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.947 
+07:47:46.947 Import traces:
+07:47:46.947   Client Component Browser:
+07:47:46.947     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Client Component Browser]
+07:47:46.947     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Server Component]
+07:47:46.947 
+07:47:46.947   Client Component SSR:
+07:47:46.947     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Client Component SSR]
+07:47:46.947     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Server Component]
+07:47:46.948 
+07:47:46.948 
+07:47:46.948 ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx:4:1
+07:47:46.948 Export ApiClient doesn't exist in target module
+07:47:46.948 [0m [90m 2 |[39m
+07:47:46.948  [90m 3 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.948 [31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.948  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.948  [90m 5 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.948  [90m 6 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.948  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.949 
+07:47:46.949 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.949 Did you mean to import default?
+07:47:46.949 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.949 
+07:47:46.949 Import traces:
+07:47:46.949   Client Component Browser:
+07:47:46.949     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Client Component Browser]
+07:47:46.949     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Server Component]
+07:47:46.949 
+07:47:46.949   Client Component SSR:
+07:47:46.949     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Client Component SSR]
+07:47:46.950     ./apps/web/app/[locale]/dashboard/people/[id]/page.tsx [Server Component]
+07:47:46.950 
+07:47:46.950 
+07:47:46.950 ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx:4:1
+07:47:46.950 Export ApiClient doesn't exist in target module
+07:47:46.950 [0m [90m 2 |[39m
+07:47:46.950  [90m 3 |[39m [36mimport[39m { useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.950 [31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.950  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.950  [90m 5 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.950  [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.950  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.950 
+07:47:46.951 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.951 Did you mean to import default?
+07:47:46.951 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.951 
+07:47:46.951 Import traces:
+07:47:46.951   Client Component Browser:
+07:47:46.951     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Client Component Browser]
+07:47:46.951     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Server Component]
+07:47:46.951 
+07:47:46.951   Client Component SSR:
+07:47:46.951     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Client Component SSR]
+07:47:46.951     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Server Component]
+07:47:46.952 
+07:47:46.952 
+07:47:46.952 ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx:4:1
+07:47:46.952 Export ApiClient doesn't exist in target module
+07:47:46.952 [0m [90m 2 |[39m
+07:47:46.952  [90m 3 |[39m [36mimport[39m { useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.952 [31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.952  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.952  [90m 5 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.952  [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m[33m;[39m
+07:47:46.952  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m[0m
+07:47:46.953 
+07:47:46.953 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.953 Did you mean to import default?
+07:47:46.953 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.953 
+07:47:46.953 Import traces:
+07:47:46.953   Client Component Browser:
+07:47:46.953     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Client Component Browser]
+07:47:46.953     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Server Component]
+07:47:46.953 
+07:47:46.953   Client Component SSR:
+07:47:46.953     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Client Component SSR]
+07:47:46.953     ./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx [Server Component]
+07:47:46.953 
+07:47:46.953 
+07:47:46.954 ./apps/web/app/[locale]/dashboard/people/page.tsx:5:1
+07:47:46.954 Export ApiClient doesn't exist in target module
+07:47:46.954 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.954  [90m 4 |[39m [36mimport[39m { useQuery } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.954 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.954  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.954  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.954  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+07:47:46.954  [90m 8 |[39m [36mimport[39m {[0m
+07:47:46.954 
+07:47:46.954 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.955 Did you mean to import default?
+07:47:46.955 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.955 
+07:47:46.955 Import traces:
+07:47:46.955   Client Component Browser:
+07:47:46.955     ./apps/web/app/[locale]/dashboard/people/page.tsx [Client Component Browser]
+07:47:46.955     ./apps/web/app/[locale]/dashboard/people/page.tsx [Server Component]
+07:47:46.955 
+07:47:46.955   Client Component SSR:
+07:47:46.955     ./apps/web/app/[locale]/dashboard/people/page.tsx [Client Component SSR]
+07:47:46.955     ./apps/web/app/[locale]/dashboard/people/page.tsx [Server Component]
+07:47:46.955 
+07:47:46.955 
+07:47:46.955 ./apps/web/app/[locale]/dashboard/people/page.tsx:5:1
+07:47:46.955 Export ApiClient doesn't exist in target module
+07:47:46.955 [0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.956  [90m 4 |[39m [36mimport[39m { useQuery } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.956 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.956  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.956  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.956  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+07:47:46.956  [90m 8 |[39m [36mimport[39m {[0m
+07:47:46.956 
+07:47:46.956 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.956 Did you mean to import default?
+07:47:46.956 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.956 
+07:47:46.956 Import traces:
+07:47:46.957   Client Component Browser:
+07:47:46.957     ./apps/web/app/[locale]/dashboard/people/page.tsx [Client Component Browser]
+07:47:46.957     ./apps/web/app/[locale]/dashboard/people/page.tsx [Server Component]
+07:47:46.957 
+07:47:46.957   Client Component SSR:
+07:47:46.957     ./apps/web/app/[locale]/dashboard/people/page.tsx [Client Component SSR]
+07:47:46.957     ./apps/web/app/[locale]/dashboard/people/page.tsx [Server Component]
+07:47:46.957 
+07:47:46.957 
+07:47:46.957 ./apps/web/app/[locale]/dashboard/tasks/page.tsx:5:1
+07:47:46.957 Export ApiClient doesn't exist in target module
+07:47:46.957 [0m [90m 3 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.957  [90m 4 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.958 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m[33m,[39m [33mTask[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.958  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.958  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.959  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+07:47:46.959  [90m 8 |[39m [36mimport[39m {[0m
+07:47:46.959 
+07:47:46.959 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.959 Did you mean to import default?
+07:47:46.959 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.959 
+07:47:46.959 Import traces:
+07:47:46.959   Client Component Browser:
+07:47:46.959     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Client Component Browser]
+07:47:46.959     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Server Component]
+07:47:46.959 
+07:47:46.959   Client Component SSR:
+07:47:46.959     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Client Component SSR]
+07:47:46.960     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Server Component]
+07:47:46.960 
+07:47:46.960 
+07:47:46.960 ./apps/web/app/[locale]/dashboard/tasks/page.tsx:5:1
+07:47:46.960 Export ApiClient doesn't exist in target module
+07:47:46.960 [0m [90m 3 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m[33m;[39m
+07:47:46.960  [90m 4 |[39m [36mimport[39m { useQuery[33m,[39m useMutation[33m,[39m useQueryClient } [36mfrom[39m [32m'@tanstack/react-query'[39m[33m;[39m
+07:47:46.960 [31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mApiClient[39m[33m,[39m [33mTask[39m } [36mfrom[39m [32m'@/app/lib/api'[39m[33m;[39m
+07:47:46.960  [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.960  [90m 6 |[39m [36mimport[39m { useTranslations } [36mfrom[39m [32m'next-intl'[39m[33m;[39m
+07:47:46.960  [90m 7 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[33m;[39m
+07:47:46.960  [90m 8 |[39m [36mimport[39m {[0m
+07:47:46.960 
+07:47:46.960 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.960 Did you mean to import default?
+07:47:46.961 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.961 
+07:47:46.961 Import traces:
+07:47:46.961   Client Component Browser:
+07:47:46.961     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Client Component Browser]
+07:47:46.961     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Server Component]
+07:47:46.961 
+07:47:46.961   Client Component SSR:
+07:47:46.961     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Client Component SSR]
+07:47:46.961     ./apps/web/app/[locale]/dashboard/tasks/page.tsx [Server Component]
+07:47:46.961 
+07:47:46.961 
+07:47:46.961 ./apps/web/app/components/dashboard/FeedingTodayWidget.tsx:9:1
+07:47:46.961 Export ApiClient doesn't exist in target module
+07:47:46.961 [0m [90m  7 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+07:47:46.961  [90m  8 |[39m [36mimport[39m { useQuery } [36mfrom[39m [32m'@tanstack/react-query'[39m
+07:47:46.962 [31m[1m>[22m[39m[90m  9 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m
+07:47:46.962  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.962  [90m 10 |[39m [36mimport[39m { useOrganizationStore } [36mfrom[39m [32m'@/app/stores/organizationStore'[39m
+07:47:46.963  [90m 11 |[39m
+07:47:46.963  [90m 12 |[39m [36minterface[39m [33mFeedingTodayWidgetProps[39m {[0m
+07:47:46.963 
+07:47:46.963 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-client] (ecmascript).
+07:47:46.963 Did you mean to import default?
+07:47:46.963 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.963 
+07:47:46.963 Import traces:
+07:47:46.963   Client Component Browser:
+07:47:46.963     ./apps/web/app/components/dashboard/FeedingTodayWidget.tsx [Client Component Browser]
+07:47:46.963     ./apps/web/app/components/dashboard/DashboardGrid.tsx [Client Component Browser]
+07:47:46.963     ./apps/web/app/[locale]/dashboard/page.tsx [Client Component Browser]
+07:47:46.964     ./apps/web/app/[locale]/dashboard/page.tsx [Server Component]
+07:47:46.964 
+07:47:46.964   Client Component SSR:
+07:47:46.964     ./apps/web/app/components/dashboard/FeedingTodayWidget.tsx [Client Component SSR]
+07:47:46.964     ./apps/web/app/components/dashboard/DashboardGrid.tsx [Client Component SSR]
+07:47:46.964     ./apps/web/app/[locale]/dashboard/page.tsx [Client Component SSR]
+07:47:46.964     ./apps/web/app/[locale]/dashboard/page.tsx [Server Component]
+07:47:46.964 
+07:47:46.964 
+07:47:46.964 ./apps/web/app/components/dashboard/FeedingTodayWidget.tsx:9:1
+07:47:46.964 Export ApiClient doesn't exist in target module
+07:47:46.964 [0m [90m  7 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+07:47:46.964  [90m  8 |[39m [36mimport[39m { useQuery } [36mfrom[39m [32m'@tanstack/react-query'[39m
+07:47:46.964 [31m[1m>[22m[39m[90m  9 |[39m [36mimport[39m { [33mApiClient[39m } [36mfrom[39m [32m'@/app/lib/api'[39m
+07:47:46.964  [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+07:47:46.964  [90m 10 |[39m [36mimport[39m { useOrganizationStore } [36mfrom[39m [32m'@/app/stores/organizationStore'[39m
+07:47:46.964  [90m 11 |[39m
+07:47:46.964  [90m 12 |[39m [36minterface[39m [33mFeedingTodayWidgetProps[39m {[0m
+07:47:46.964 
+07:47:46.965 The export ApiClient was not found in module [project]/apps/web/app/lib/api.ts [app-ssr] (ecmascript).
+07:47:46.965 Did you mean to import default?
+07:47:46.965 All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+07:47:46.965 
+07:47:46.965 Import traces:
+07:47:46.965   Client Component Browser:
+07:47:46.965     ./apps/web/app/components/dashboard/FeedingTodayWidget.tsx [Client Component Browser]
+07:47:46.965     ./apps/web/app/components/dashboard/DashboardGrid.tsx [Client Component Browser]
+07:47:46.965     ./apps/web/app/[locale]/dashboard/page.tsx [Client Component Browser]
+07:47:46.965     ./apps/web/app/[locale]/dashboard/page.tsx [Server Component]
+07:47:46.965 
+07:47:46.965   Client Component SSR:
+07:47:46.965     ./apps/web/app/components/dashboard/FeedingTodayWidget.tsx [Client Component SSR]
+07:47:46.965     ./apps/web/app/components/dashboard/DashboardGrid.tsx [Client Component SSR]
+07:47:46.965     ./apps/web/app/[locale]/dashboard/page.tsx [Client Component SSR]
+07:47:46.966     ./apps/web/app/[locale]/dashboard/page.tsx [Server Component]
+07:47:46.966 
+07:47:46.966 
+07:47:46.967     at <unknown> (./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx:11:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.967     at <unknown> (./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx:10:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.967     at <unknown> (./apps/web/app/components/animals/RequestMedicalProcedureDialog.tsx:34:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.967     at <unknown> (./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx:19:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.967     at <unknown> (./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx:24:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.967     at <unknown> (./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx:30:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.967     at <unknown> (./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx:17:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.967     at <unknown> (./apps/web/app/[locale]/dashboard/people/[id]/page.tsx:23:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.967     at <unknown> (./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx:18:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.967     at <unknown> (./apps/web/app/[locale]/dashboard/tasks/page.tsx:24:1)
+07:47:46.967     at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/feeding/plans/new/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/feeding/plans/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/inventory/items/[id]/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx:4:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/inventory/items/new/page.tsx:4:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/inventory/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/inventory/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/people/[id]/page.tsx:4:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/people/[id]/page.tsx:4:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx:4:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/people/contacts/new/page.tsx:4:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/people/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/people/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/tasks/page.tsx:5:1)
+07:47:46.968     at <unknown> (./apps/web/app/[locale]/dashboard/tasks/page.tsx:5:1)
+07:47:46.969     at <unknown> (./apps/web/app/components/dashboard/FeedingTodayWidget.tsx:9:1)
+07:47:46.969     at <unknown> (./apps/web/app/components/dashboard/FeedingTodayWidget.tsx:9:1)
+07:47:47.030 Error: Command "npm run build" exited with 1
