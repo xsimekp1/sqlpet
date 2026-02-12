@@ -34,6 +34,24 @@ interface FilterState {
   occupancy: string;
 }
 
+// Generate short kennel codes like BO1, KE3, etc.
+const generateKennelCode = (kennel: Kennel): string => {
+  // Try to use existing short code if available
+  if (kennel.code && kennel.code.length <= 10) {
+    return kennel.code;
+  }
+  
+  // Generate code from first letters of name + number
+  const nameWords = kennel.name.trim().split(/\s+/);
+  const firstLetters = nameWords.map(word => word[0].toUpperCase()).slice(0, 2).join('');
+  
+  // If we have 2+ letters, use them, otherwise use kennel type prefix
+  const prefix = firstLetters.length >= 2 ? firstLetters : kennel.type.toUpperCase().substring(0, 2);
+  
+  // Use zone as fallback or just random
+  return prefix + '1';
+};
+
 export default function KennelsPage() {
   const t = useTranslations('kennels');
   const [search, setSearch] = useState('');
@@ -120,6 +138,7 @@ export default function KennelsPage() {
   const filteredKennels = kennels.filter(kennel => {
     const matchesSearch = !search || 
       kennel.code.toLowerCase().includes(search.toLowerCase()) ||
+      generateKennelCode(kennel).toLowerCase().includes(search.toLowerCase()) ||
       kennel.name.toLowerCase().includes(search.toLowerCase()) ||
       kennel.animals_preview?.some(animal => 
         animal.name.toLowerCase().includes(search.toLowerCase())
@@ -169,7 +188,8 @@ export default function KennelsPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold">{kennel.id}</span>
+                <span className="text-lg font-bold">{generateKennelCode(kennel)}</span>
+                <span className="text-sm text-muted-foreground ml-1">{kennel.name}</span>
                 <Badge className={getZoneColor(kennel.zone_id)}>
                   {kennel.zone_name || kennel.zone_id}
                 </Badge>
