@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiClient, { Animal } from '@/app/lib/api';
 import { toast } from 'sonner';
 import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
-import { AnimalImage } from '@/app/components/animals/AnimalImage';
+import { AnimalImage, EditableAnimalName } from '@/app/components/animals';
 
 export default function AnimalDetailPage() {
   const router = useRouter();
@@ -44,8 +44,12 @@ export default function AnimalDetailPage() {
       }
     };
 
-    fetchAnimal();
+fetchAnimal();
   }, [animalId]);
+
+  const handleAnimalUpdate = (updatedAnimal: Animal) => {
+    setAnimal(updatedAnimal);
+  };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this animal?')) {
@@ -128,7 +132,12 @@ export default function AnimalDetailPage() {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold">{animal.name}</h1>
+            <div className="flex-1 min-w-0">
+              <EditableAnimalName 
+                animal={animal} 
+                onAnimalUpdate={handleAnimalUpdate} 
+              />
+            </div>
             <Badge className={getStatusColor(animal.status)}>
               {animal.status}
             </Badge>

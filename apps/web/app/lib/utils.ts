@@ -10,8 +10,7 @@ export function getAnimalImageUrl(animal: Animal): string {
     case 'dog':
       return '/dog-default.png';
     case 'cat':
-      // TODO: Přidat cat-default.png v budoucnu
-      return '/placeholder-animal.svg';
+      return '/cat_default.png';
     case 'rabbit':
       return '/placeholder-animal.svg';
     case 'bird':
