@@ -180,21 +180,6 @@ class ApiClient {
   }
 
   /**
-   * Get organization ID from selected org in localStorage
-   */
-  private static getOrganizationId(): string | null {
-    if (typeof window === 'undefined') return null;
-    const selectedOrg = localStorage.getItem('selectedOrg');
-    if (!selectedOrg) return null;
-    try {
-      const org = JSON.parse(selectedOrg);
-      return org.id;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
    * Generic GET request
    */
   static async get<T = any>(endpoint: string, params?: Record<string, any>): Promise<T> {
