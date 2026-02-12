@@ -237,13 +237,13 @@ class DefaultImageService:
 
         return imported_images
 
-async def assign_default_image_to_animal(
-        self, 
+    async def assign_default_image_to_animal(
+        self,
         organization_id: uuid.UUID,
         animal_id: uuid.UUID,
         species: str,
         breed_ids: List[uuid.UUID] = None,
-        color: Optional[str] = None
+        color: Optional[str] = None,
     ) -> Optional[str]:
         """
         Assign default image URL to animal and return the image URL
