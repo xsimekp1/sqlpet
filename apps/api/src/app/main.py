@@ -12,13 +12,14 @@ from src.app.api.routes.tasks import router as tasks_router
 from src.app.api.routes.feeding import router as feeding_router
 from src.app.api.routes.inventory import router as inventory_router
 from src.app.api.routes.tags import router as tags_router
-from src.app.api.routes.files import router as files_router
+
+# Temporarily disabled files router due to Railway IndentationError
+# from src.app.api.routes.files import router as files_router
 from src.app.api.routes.timezones import router as timezones_router
 
-    print("✅ Files router imported successfully")
-except Exception as e:
-    print(f"❌ Failed to import files router: {e}")
-files_router = None
+# Temporarily skip problematic routes to ensure Railway startup
+# TODO: Re-enable files router after Railway deployment is stable
+print("🔧 Skipping files router for Railway deployment")
 
 from src.app.db.session import async_engine
 
