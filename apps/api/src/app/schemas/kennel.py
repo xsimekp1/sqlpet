@@ -107,7 +107,7 @@ class MoveAnimalResponse(BaseModel):
 class ZoneCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     code: str = Field(..., min_length=1, max_length=32)
-    color: Optional[str] = Field(None, regex=r"^#[0-9A-Fa-f]{6}$")  # hex color
+    color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")  # hex color
     description: str | None = None
 
 
