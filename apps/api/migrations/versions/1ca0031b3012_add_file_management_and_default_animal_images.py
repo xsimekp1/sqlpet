@@ -42,7 +42,7 @@ def upgrade():
         sa.Column("organization_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column(
             "storage_provider",
-            sa.Enum("local", "supabase", name="storageprovider"),
+            postgresql.ENUM('local', 'supabase', name='storageprovider', create_type=False),
             nullable=False,
         ),
         sa.Column("storage_path", sa.Text(), nullable=False),
