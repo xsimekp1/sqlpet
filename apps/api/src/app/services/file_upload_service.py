@@ -1,7 +1,11 @@
 from typing import BinaryIO, Tuple
 from fastapi import HTTPException, UploadFile
 from ..core.config import settings
-import magic
+
+try:
+    import magic
+except ImportError:
+    magic = None
 
 
 class FileUploadService:
@@ -10,7 +14,11 @@ class FileUploadService:
         """Validate file type and size"""
 
         # Check file size
-        if hasattr(file, "size") and file.size > settings.max_file_size_bytes:
+        if (
+            hasattr(file, "size")
+            and settings.max_file_size_bytes
+            and file.size > settings.max_file_size_bytes
+        ):
             raise HTTPException(
                 status_code=413,
                 detail=f"File too large. Maximum size is {settings.MAX_FILE_SIZE_MB}MB",
@@ -32,8 +40,9 @@ class FileUploadService:
         file.seek(0)  # Reset file position
 
         try:
-            mime_type = magic.from_buffer(file_content, mime=True)
-            return mime_type
+            if magic:
+                mime_type = magic.from_buffer(file_content, mime=True)
+                return mime_type
         except Exception:
             # Fallback to content-type header
             return getattr(file, "content_type", "application/octet-stream")

@@ -22,3 +22,4 @@ supabase
 python-multipart
 aiofiles
 Pillow
+python-magic
