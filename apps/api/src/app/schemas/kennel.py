@@ -1,5 +1,7 @@
 from typing import Any, Optional, Dict, Union
 from enum import Enum
+from pydantic import BaseModel, Field
+from uuid import UUID
 
 
 class KennelType(str, Enum):
