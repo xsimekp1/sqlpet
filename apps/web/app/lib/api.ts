@@ -877,4 +877,5 @@ class ApiClient {
   }
 }
 
+export { ApiClient };
 export default ApiClient;
