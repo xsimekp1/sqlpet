@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft } from 'lucide-react';
@@ -25,10 +25,40 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 
+interface Breed {
+  id: string;
+  name: string;
+  species: string;
+}
+
 export default function NewAnimalPage() {
   const router = useRouter();
   const t = useTranslations('animals.new');
   const [loading, setLoading] = useState(false);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [selectedSpecies, setSelectedSpecies] = useState<string>('');
+  const [selectedBreed, setSelectedBreed] = useState<string>('');
+
+  // Fetch breeds when species changes
+  useEffect(() => {
+    if (!selectedSpecies) {
+      setBreeds([]);
+      setSelectedBreed('');
+      return;
+    }
+
+    const fetchBreeds = async () => {
+      try {
+        const data = await ApiClient.getBreeds(selectedSpecies);
+        setBreeds(data);
+      } catch (error) {
+        console.error('Failed to fetch breeds:', error);
+        setBreeds([]);
+      }
+    };
+
+    fetchBreeds();
+  }, [selectedSpecies]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,7 +66,7 @@ export default function NewAnimalPage() {
 
     const formData = new FormData(e.currentTarget);
 
-    const data = {
+    const data: any = {
       name: formData.get('name') as string,
       species: formData.get('species') as 'dog' | 'cat' | 'rabbit' | 'other',
       sex: formData.get('sex') as 'male' | 'female' | 'unknown',
@@ -44,6 +74,11 @@ export default function NewAnimalPage() {
       intake_date: formData.get('intake_date') as string,
       status: 'available',
     };
+
+    // Add breed if selected
+    if (selectedBreed) {
+      data.breeds = [{ breed_id: selectedBreed }];
+    }
 
     try {
       await ApiClient.createAnimal(data);
@@ -99,7 +134,7 @@ export default function NewAnimalPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="species">{t('species')}</Label>
-                <Select name="species" required>
+                <Select name="species" required onValueChange={setSelectedSpecies}>
                   <SelectTrigger>
                     <SelectValue placeholder={t('speciesPlaceholder')} />
                   </SelectTrigger>
@@ -126,6 +161,29 @@ export default function NewAnimalPage() {
                 </Select>
               </div>
             </div>
+
+            {/* Breed (only shown after species selected) */}
+            {selectedSpecies && (
+              <div className="space-y-2">
+                <Label htmlFor="breed">{t('breed')}</Label>
+                <Select value={selectedBreed} onValueChange={setSelectedBreed}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('breedPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {breeds.length === 0 ? (
+                      <SelectItem value="none" disabled>{t('breedLoading')}</SelectItem>
+                    ) : (
+                      breeds.map(breed => (
+                        <SelectItem key={breed.id} value={breed.id}>
+                          {breed.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Color & Age */}
             <div className="grid grid-cols-2 gap-4">

@@ -604,7 +604,7 @@ class ApiClient {
    * Get all animals for current organization
    * M3: Animals CRUD
    */
-  static async getAnimals(): Promise<Animal[]> {
+  static async getAnimals(params?: { status?: string; species?: string; search?: string }): Promise<{ items: Animal[]; total: number }> {
     try {
       // Get current organization from localStorage
       const organizationId = this.getOrganizationId();
@@ -613,8 +613,15 @@ class ApiClient {
         throw new Error('No organization selected. Please select an organization first.');
       }
 
+      // Build query string
+      const queryParams = new URLSearchParams();
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.species) queryParams.append('species', params.species);
+      if (params?.search) queryParams.append('search', params.search);
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
       const response = await axios.get<{ items: Animal[], total: number, page: number, page_size: number }>(
-        `${API_URL}/animals`,
+        `${API_URL}/animals${queryString}`,
         {
           headers: {
             ...this.getAuthHeaders(),
@@ -622,7 +629,7 @@ class ApiClient {
           },
         }
       );
-      return response.data.items;
+      return { items: response.data.items, total: response.data.total };
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
@@ -773,6 +780,30 @@ class ApiClient {
         const axiosError = error as AxiosError<ApiError>;
         throw new Error(
           axiosError.response?.data?.detail || 'Failed to delete animal'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Get breeds for a species
+   */
+  static async getBreeds(species?: string): Promise<Array<{ id: string; name: string; species: string }>> {
+    try {
+      const params = species ? `?species=${species}` : '';
+      const response = await axios.get(
+        `${API_URL}/breeds${params}`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to fetch breeds'
         );
       }
       throw new Error('An unexpected error occurred');

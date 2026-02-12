@@ -28,7 +28,7 @@ export default function AnimalsPage() {
       try {
         setLoading(true);
         const data = await ApiClient.getAnimals();
-        setAnimals(data);
+        setAnimals(data.items);
       } catch (error) {
         toast.error('Failed to load animals');
         console.error(error);
