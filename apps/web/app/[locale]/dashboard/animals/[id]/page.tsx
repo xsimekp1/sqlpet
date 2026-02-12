@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiClient, { Animal } from '@/app/lib/api';
 import { toast } from 'sonner';
 import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
-import { AnimalImage, EditableAnimalName } from '@/app/components/animals';
+import { AnimalImage, EditableAnimalName, EditableAnimalDetails } from '@/app/components/animals';
 
 export default function AnimalDetailPage() {
   const router = useRouter();
@@ -176,58 +176,17 @@ fetchAnimal();
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          {/* Basic Information */}
+{/* Basic Information */}
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Core details about this animal</CardDescription>
+              <CardDescription>Core details about this animal (click edit buttons to modify)</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{animal.name}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Public Code</p>
-                <p className="font-medium">#{animal.public_code}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Species</p>
-                <p className="font-medium">{animal.species}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Sex</p>
-                <p className="font-medium">
-                  {animal.sex === 'male' ? '♂ Male' : animal.sex === 'female' ? '♀ Female' : '? Unknown'}
-                </p>
-              </div>
-              {animal.color && (
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Color</p>
-                  <p className="font-medium">{animal.color}</p>
-                </div>
-              )}
-              {animal.estimated_age_years !== null && (
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Estimated Age</p>
-                  <p className="font-medium">
-                    {animal.estimated_age_years} {animal.estimated_age_years === 1 ? 'year' : 'years'}
-                  </p>
-                </div>
-              )}
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Intake Date</p>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <p className="font-medium">{new Date(animal.intake_date).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Status</p>
-                <Badge className={getStatusColor(animal.status)}>
-                  {animal.status}
-                </Badge>
-              </div>
+            <CardContent>
+              <EditableAnimalDetails 
+                animal={animal} 
+                onAnimalUpdate={handleAnimalUpdate} 
+              />
             </CardContent>
           </Card>
 
