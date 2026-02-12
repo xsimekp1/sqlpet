@@ -237,17 +237,20 @@ class DefaultImageService:
 
         return imported_images
 
-    async def assign_default_image_to_animal(
-        self,
+async def assign_default_image_to_animal(
+        self, 
         organization_id: uuid.UUID,
         animal_id: uuid.UUID,
         species: str,
         breed_ids: List[uuid.UUID] = None,
-        color: Optional[str] = None,
+        color: Optional[str] = None
     ) -> Optional[str]:
         """
         Assign default image URL to animal and return the image URL
         """
+        
+        # Normalize color if it might be a breed name
+        color, breed_ids = await self._normalize_breed_and_color(color, breed_ids, species)
 
         # Try each breed in order (primary breed first)
         for breed_id in breed_ids or [None]:
@@ -259,6 +262,44 @@ class DefaultImageService:
                 return default_image.public_url
 
         return None
+
+    async def _normalize_breed_and_color(self, color: Optional[str], breed_ids: List[uuid.UUID], species: str) -> Tuple[Optional[str], List[uuid.UUID]]:
+        """
+        Handle case where user accidentally puts breed name in color field
+        e.g., species: "dog", breed_ids: null, color: "labrador" -> should become breed_ids: [labrador_uuid], color: "black"
+        """
+        if not color or breed_ids:
+            return color, breed_ids
+        
+        # Common breeds that users might accidentally put in color field
+        breed_names_as_colors = {
+            'labrador', 'husky', 'poodle', 'german-shepherd', 
+            'chihuahua', 'daschhund', 'malamut', 'pitbull',
+            'golden', 'retriever', 'collie', 'beagle'
+        }
+        
+        color_lower = color.lower()
+        if color_lower in breed_names_as_colors:
+            # User likely put breed name in color field
+            print(f"🔍 Detected possible breed/color swap: color='{color}' might be breed name")
+            
+            # Try to find breed by name
+            from src.app.models.breed import Breed
+            from sqlalchemy import select
+            
+            result = await self.db.execute(
+                select(Breed).where(
+                    Breed.name == color_lower,
+                    Breed.species == species
+                )
+            )
+            breed = result.scalar_one_or_none()
+            
+            if breed:
+                print(f"✅ Found breed: {breed.name} -> ID: {breed.id}")
+                return "black", [breed.id]  # Use default color black for mis-specified breed
+        
+        return color, breed_ids
 
     async def create_placeholder_svg(self, species: str) -> str:
         """
