@@ -219,7 +219,7 @@ export default function KennelsPage() {
             <CardDescription className="font-medium">{kennel.name}</CardDescription>
             <div className="flex items-center gap-2">
               <Badge variant={getStatusColor(kennel.status)}>
-                {t(`kennels.status.${kennel.status}` as keyof typeof t('kennels'))}
+                {t(`kennels.status.${kennel.status}`)}
               </Badge>
               <Badge className={getTypeColor(kennel.type)} variant="outline">
                 {t(`kennels.type.${kennel.type}`)}
