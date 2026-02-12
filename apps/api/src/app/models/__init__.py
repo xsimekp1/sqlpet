@@ -10,6 +10,7 @@ from src.app.models.animal import (
     SizeEstimated,
 )
 from src.app.models.breed import Breed
+from src.app.models.breed_i18n import BreedI18n
 from src.app.models.animal_breed import AnimalBreed
 from src.app.models.animal_identifier import AnimalIdentifier, IdentifierType
 from src.app.models.user import User
@@ -53,6 +54,7 @@ __all__ = [
     "AgeGroup",
     "SizeEstimated",
     "Breed",
+    "BreedI18n",
     "AnimalBreed",
     "AnimalIdentifier",
     "IdentifierType",

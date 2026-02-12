@@ -1,5 +1,5 @@
 from sqlalchemy import Enum, String, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
 from src.app.models.animal import Species
@@ -17,3 +17,6 @@ class Breed(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # Relationships
+    translations = relationship("BreedI18n", back_populates="breed", cascade="all, delete-orphan")

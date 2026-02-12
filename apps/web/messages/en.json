@@ -559,5 +559,22 @@
       "error": "Error",
       "errorDesc": "Failed to request medical procedure"
     }
+  },
+  "colors": {
+    "black": "Black",
+    "white": "White",
+    "brown": "Brown",
+    "golden": "Golden",
+    "grey": "Grey",
+    "gray": "Gray",
+    "tan": "Tan",
+    "fawn": "Fawn",
+    "blue": "Blue",
+    "black-tan-white": "Black-Tan-White",
+    "black-white": "Black & White",
+    "blue-tan": "Blue & Tan",
+    "red": "Red",
+    "cream": "Cream",
+    "orange": "Orange"
   }
 }

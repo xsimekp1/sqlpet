@@ -576,5 +576,22 @@
       "error": "Chyba",
       "errorDesc": "Nepodařilo se požádat o lékařský úkon"
     }
+  },
+  "colors": {
+    "black": "Černá",
+    "white": "Bílá",
+    "brown": "Hnědá",
+    "golden": "Zlatá",
+    "grey": "Šedá",
+    "gray": "Šedá",
+    "tan": "Světle hnědá",
+    "fawn": "Světle béžová",
+    "blue": "Modrá",
+    "black-tan-white": "Černá-hnědá-bílá",
+    "black-white": "Černobílá",
+    "blue-tan": "Modro-hnědá",
+    "red": "Rezavá",
+    "cream": "Krémová",
+    "orange": "Oranžová"
   }
 }

@@ -54,6 +54,13 @@ async def main():
             service = DefaultImageService(db)
 
             try:
+                # Clear existing default images first (to allow re-import)
+                from src.app.models.file import DefaultAnimalImage
+                print("🗑️  Clearing existing default images...")
+                await db.execute("DELETE FROM default_animal_images WHERE source = 'uploaded'")
+                await db.commit()
+                print("✅ Cleared existing default images\n")
+
                 # Import all images
                 imported = await service.import_images_from_directory(str(images_dir))
 
