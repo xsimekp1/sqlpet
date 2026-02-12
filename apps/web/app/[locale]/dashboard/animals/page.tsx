@@ -148,7 +148,7 @@ export default function AnimalsPage() {
                   <CardDescription className="flex items-center gap-1.5">
                     {animal.species} • {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
                     {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
-                      <Scissors className="inline h-3 w-3 text-primary" title={animal.altered_status === 'spayed' ? t('animals.alteredStatus.spayed') : t('animals.alteredStatus.neutered')} />
+                      <Scissors className="inline h-3 w-3 text-primary" aria-label={animal.altered_status === 'spayed' ? t('animals.alteredStatus.spayed') : t('animals.alteredStatus.neutered')} />
                     )}
                   </CardDescription>
                 </CardHeader>
@@ -229,9 +229,9 @@ export default function AnimalsPage() {
                     </td>
                     <td className="px-4 py-3">
                       {animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? (
-                        <Scissors className="h-4 w-4 text-primary" title={animal.altered_status === 'spayed' ? t('animals.alteredStatus.spayed') : t('animals.alteredStatus.neutered')} />
+                        <Scissors className="h-4 w-4 text-primary" aria-label={animal.altered_status === 'spayed' ? t('animals.alteredStatus.spayed') : t('animals.alteredStatus.neutered')} />
                       ) : animal.altered_status === 'intact' ? (
-                        <Scissors className="h-4 w-4 text-muted-foreground/30" title={t('animals.alteredStatus.intact')} />
+                        <Scissors className="h-4 w-4 text-muted-foreground/30" aria-label={t('animals.alteredStatus.intact')} />
                       ) : null}
                     </td>
                     <td className="px-4 py-3">

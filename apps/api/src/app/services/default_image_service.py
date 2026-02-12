@@ -237,102 +237,99 @@ class DefaultImageService:
 
         return imported_images
 
+    async def assign_default_image_to_animal(
+        self,
+        organization_id: uuid.UUID,
+        animal_id: uuid.UUID,
+        species: str,
+        breed_ids: List[uuid.UUID] = None,
+        color: Optional[str] = None,
+    ) -> Optional[str]:
+        """
+        Assign default image URL to animal and return the image URL
+        """
 
-async def assign_default_image_to_animal(
-    self,
-    organization_id: uuid.UUID,
-    animal_id: uuid.UUID,
-    species: str,
-    breed_ids: List[uuid.UUID] = None,
-    color: Optional[str] = None,
-) -> Optional[str]:
-    """
-    Assign default image URL to animal and return the image URL
-    """
+        # Normalize color if it might be a breed name
+        color, breed_ids = await self._normalize_breed_and_color(color, breed_ids, species)
 
-    # Normalize color if it might be a breed name
-    color, breed_ids = await self._normalize_breed_and_color(color, breed_ids, species)
+        # Try each breed in order (primary breed first)
+        for breed_id in breed_ids or [None]:
+            default_image = await self.get_default_image_for_animal(
+                species=species, breed_id=breed_id, color=color
+            )
 
-    # Try each breed in order (primary breed first)
-    for breed_id in breed_ids or [None]:
-        default_image = await self.get_default_image_for_animal(
-            species=species, breed_id=breed_id, color=color
-        )
+            if default_image:
+                return default_image.public_url
 
-        if default_image:
-            return default_image.public_url
+        return None
 
-    return None
+    async def _normalize_breed_and_color(
+        self, color: Optional[str], breed_ids: List[uuid.UUID], species: str
+    ) -> Tuple[Optional[str], List[uuid.UUID]]:
+        """
+        Handle case where user accidentally puts breed name in color field
+        e.g., species: "dog", breed_ids: null, color: "labrador" -> should become breed_ids: [labrador_uuid], color: "black"
+        """
+        if not color or breed_ids:
+            return color, breed_ids
 
+        # Common breeds that users might accidentally put in color field
+        breed_names_as_colors = {
+            "labrador",
+            "husky",
+            "poodle",
+            "german-shepherd",
+            "chihuahua",
+            "daschhund",
+            "malamut",
+            "pitbull",
+            "golden",
+            "retriever",
+            "collie",
+            "beagle",
+        }
 
-async def _normalize_breed_and_color(
-    self, color: Optional[str], breed_ids: List[uuid.UUID], species: str
-) -> Tuple[Optional[str], List[uuid.UUID]]:
-    """
-    Handle case where user accidentally puts breed name in color field
-    e.g., species: "dog", breed_ids: null, color: "labrador" -> should become breed_ids: [labrador_uuid], color: "black"
-    """
-    if not color or breed_ids:
+        color_lower = color.lower()
+        if color_lower in breed_names_as_colors:
+            # User likely put breed name in color field
+            print(
+                f"🔍 Detected possible breed/color swap: color='{color}' might be breed name"
+            )
+
+            # Try to find breed by name
+            from src.app.models.breed import Breed
+            from sqlalchemy import select
+
+            result = await self.db.execute(
+                select(Breed).where(Breed.name == color_lower, Breed.species == species)
+            )
+            breed = result.scalar_one_or_none()
+
+            if breed:
+                print(f"✅ Found breed: {breed.name} -> ID: {breed.id}")
+                return "black", [
+                    breed.id
+                ]  # Use default color black for mis-specified breed
+
         return color, breed_ids
 
-    # Common breeds that users might accidentally put in color field
-    breed_names_as_colors = {
-        "labrador",
-        "husky",
-        "poodle",
-        "german-shepherd",
-        "chihuahua",
-        "daschhund",
-        "malamut",
-        "pitbull",
-        "golden",
-        "retriever",
-        "collie",
-        "beagle",
-    }
+    async def create_placeholder_svg(self, species: str) -> str:
+        """
+        Create a simple SVG placeholder for when no image is found
+        """
+        svg_template = f"""
+                <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="200" height="200" fill="#f0f0f0"/>
+                    <circle cx="100" cy="80" r="30" fill="#888"/>
+                    <rect x="70" y="110" width="60" height="40" fill="#888"/>
+                    <text x="100" y="170" text-anchor="middle" font-family="Arial" font-size="12" fill="#666">
+                        {species.title()}
+                    </text>
+                </svg>
+                """
 
-    color_lower = color.lower()
-    if color_lower in breed_names_as_colors:
-        # User likely put breed name in color field
-        print(
-            f"🔍 Detected possible breed/color swap: color='{color}' might be breed name"
-        )
+        # For now return a data URL - in future could upload to Supabase
+        import base64
 
-        # Try to find breed by name
-        from src.app.models.breed import Breed
-        from sqlalchemy import select
-
-        result = await self.db.execute(
-            select(Breed).where(Breed.name == color_lower, Breed.species == species)
-        )
-        breed = result.scalar_one_or_none()
-
-        if breed:
-            print(f"✅ Found breed: {breed.name} -> ID: {breed.id}")
-            return "black", [
-                breed.id
-            ]  # Use default color black for mis-specified breed
-
-    return color, breed_ids
-
-
-async def create_placeholder_svg(self, species: str) -> str:
-    """
-    Create a simple SVG placeholder for when no image is found
-    """
-    svg_template = f"""
-            <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-                <rect width="200" height="200" fill="#f0f0f0"/>
-                <circle cx="100" cy="80" r="30" fill="#888"/>
-                <rect x="70" y="110" width="60" height="40" fill="#888"/>
-                <text x="100" y="170" text-anchor="middle" font-family="Arial" font-size="12" fill="#666">
-                    {species.title()}
-                </text>
-            </svg>
-            """
-
-    # For now return a data URL - in future could upload to Supabase
-    import base64
-
-    svg_base64 = base64.b64encode(svg_template.encode()).decode()
-    return f"data:image/svg+xml;base64,{svg_base64}"
+        svg_base64 = base64.b64encode(svg_template.encode()).decode()
+        return f"data:image/svg+xml;base64,{svg_base64}"

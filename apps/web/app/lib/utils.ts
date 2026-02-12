@@ -4,7 +4,10 @@ export function getAnimalImageUrl(animal: Animal): string {
   if (animal.primary_photo_url) {
     return animal.primary_photo_url;
   }
-  
+  if (animal.default_image_url) {
+    return animal.default_image_url;
+  }
+
   // Default obrázky podle druhu
   switch (animal.species) {
     case 'dog':

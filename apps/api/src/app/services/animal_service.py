@@ -9,7 +9,6 @@ from src.app.models.animal_breed import AnimalBreed
 from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.schemas.animal import AnimalCreate, AnimalUpdate
 from src.app.services.audit_service import AuditService
-from src.app.services.default_image_service import DefaultImageService
 
 
 def _animal_to_dict(animal: Animal) -> dict:
@@ -45,7 +44,6 @@ class AnimalService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.audit = AuditService(db)
-        self.default_image_service = DefaultImageService(db)
 
     async def _generate_public_code(self, organization_id: uuid.UUID) -> str:
         year = datetime.now(timezone.utc).year
@@ -138,41 +136,6 @@ class AnimalService:
                 )
                 self.db.add(ai)
             await self.db.flush()
-
-        # Assign default image automatically
-        try:
-            # Get breed IDs for image lookup
-            breed_ids = []
-            if data.breeds:
-                breed_ids = [entry.breed_id for entry in data.breeds]
-
-            # Find default image using hierarchical search
-            default_image_url = (
-                await self.default_image_service.assign_default_image_to_animal(
-                    organization_id=organization_id,
-                    animal_id=animal.id,
-                    species=data.species,
-                    breed_ids=breed_ids,
-                    color=data.color or None,
-                )
-            )
-
-            if default_image_url:
-                animal.primary_photo_url = default_image_url
-            else:
-                # Create fallback placeholder if no default image found
-                placeholder_url = (
-                    await self.default_image_service.create_placeholder_svg(
-                        data.species
-                    )
-                )
-                animal.primary_photo_url = placeholder_url
-                print(f"🎨 Using placeholder image for animal {animal.name}")
-        except Exception as e:
-            print(
-                f"⚠️  Failed to assign default image to animal {animal.name}: {str(e)}"
-            )
-            # Don't fail the whole operation if image assignment fails
 
         # Audit log
         await self.audit.log_action(

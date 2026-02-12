@@ -4,62 +4,60 @@ Tests for:
 - GET /kennels/{id}  -- real data from SQL JOIN
 - GET /animals/{id}  -- current_kennel_* fields populated from active stay
 - GET /animals       -- current_kennel_* fields in list response
-- _calculate_alerts_from_data helper
+- _calculate_alerts_from_data helper (pure unit tests)
 """
 import uuid
 from datetime import datetime, timezone
 
 import pytest
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, text
 
 from src.app.models.animal import Animal, Species
 from src.app.models.animal_breed import AnimalBreed
 from src.app.models.animal_identifier import AnimalIdentifier
-from src.app.models.kennel import Kennel, KennelStay, Zone
+from src.app.models.kennel import Kennel, Zone
 from src.app.models.organization import Organization
-from src.app.models.user import User
 from src.app.models.role import Role
 from src.app.models.permission import Permission
 from src.app.models.role_permission import RolePermission
 from src.app.models.membership import Membership, MembershipStatus
-from src.app.core.security import hash_password, create_access_token
+from src.app.core.security import create_access_token
 from src.app.api.routes.kennels import _calculate_alerts_from_data
 
-pytestmark = pytest.mark.anyio
-
 
 # ---------------------------------------------------------------------------
-# Unit tests — pure logic, no DB needed
+# Unit tests — pure synchronous logic, no DB, no anyio needed
 # ---------------------------------------------------------------------------
 
+@pytest.mark.anyio
 class TestCalculateAlertsFromData:
-    def test_no_alerts_when_empty(self):
+    async def test_no_alerts_when_empty(self):
         assert _calculate_alerts_from_data("available", "indoor", 0, 4) == []
 
-    def test_no_alerts_when_partial(self):
+    async def test_no_alerts_when_partial(self):
         assert _calculate_alerts_from_data("available", "indoor", 2, 4) == []
 
-    def test_overcapacity_alert(self):
+    async def test_overcapacity_alert(self):
         alerts = _calculate_alerts_from_data("available", "indoor", 5, 4)
         assert "overcapacity" in alerts
 
-    def test_animals_in_maintenance_alert(self):
+    async def test_animals_in_maintenance_alert(self):
         alerts = _calculate_alerts_from_data("maintenance", "indoor", 1, 4)
         assert "animals_in_maintenance" in alerts
 
-    def test_no_maintenance_alert_when_empty(self):
+    async def test_no_maintenance_alert_when_empty(self):
         alerts = _calculate_alerts_from_data("maintenance", "indoor", 0, 4)
         assert "animals_in_maintenance" not in alerts
 
-    def test_quarantine_mix_alert_with_multiple(self):
+    async def test_quarantine_mix_alert_with_multiple(self):
         alerts = _calculate_alerts_from_data("available", "quarantine", 2, 4)
         assert "quarantine_mix" in alerts
 
-    def test_no_quarantine_mix_with_single(self):
+    async def test_no_quarantine_mix_with_single(self):
         alerts = _calculate_alerts_from_data("available", "quarantine", 1, 4)
         assert "quarantine_mix" not in alerts
 
-    def test_multiple_alerts(self):
+    async def test_multiple_alerts(self):
         alerts = _calculate_alerts_from_data("maintenance", "quarantine", 6, 4)
         assert "overcapacity" in alerts
         assert "animals_in_maintenance" in alerts
@@ -72,7 +70,7 @@ class TestCalculateAlertsFromData:
 
 @pytest.fixture()
 async def kennel_test_env(db_session, test_user):
-    """Creates org + role (animals.read) + zone + kennel + animal + active stay."""
+    """Creates org + role (animals.read/write) + zone + kennel + animal + active stay."""
     org_id = uuid.uuid4()
     role_id = uuid.uuid4()
     zone_id = uuid.uuid4()
@@ -117,30 +115,37 @@ async def kennel_test_env(db_session, test_user):
     await db_session.flush()
 
     animal = Animal(
-        id=animal_id, organization_id=org_id,
-        name="Hafik", species=Species.DOG,
+        id=animal_id, organization_id=org_id, name="Hafik", species=Species.DOG,
     )
     db_session.add(animal)
     await db_session.flush()
 
-    stay = KennelStay(
-        id=stay_id, organization_id=org_id, kennel_id=kennel_id, animal_id=animal_id,
-        start_at=datetime.now(timezone.utc), end_at=None,
+    # Raw SQL insert: kennel_stays has no updated_at column in this migration
+    await db_session.execute(
+        text("""
+            INSERT INTO kennel_stays (id, organization_id, kennel_id, animal_id, start_at)
+            VALUES (:id, :org_id, :kennel_id, :animal_id, :start_at)
+        """),
+        {
+            "id": str(stay_id), "org_id": str(org_id),
+            "kennel_id": str(kennel_id), "animal_id": str(animal_id),
+            "start_at": datetime.now(timezone.utc),
+        },
     )
-    db_session.add(stay)
     await db_session.commit()
 
-    yield {
-        "org": org, "zone": zone, "kennel": kennel,
-        "animal": animal, "stay": stay,
-        "headers": {
-            "Authorization": f"Bearer {create_access_token({'sub': str(test_user.id)})}",
-            "x-organization-id": str(org_id),
-        },
+    headers = {
+        "Authorization": f"Bearer {create_access_token({'sub': str(test_user.id)})}",
+        "x-organization-id": str(org_id),
     }
 
-    # Cleanup
-    await db_session.execute(delete(KennelStay).where(KennelStay.id == stay_id))
+    yield {
+        "org": org, "zone": zone, "kennel": kennel, "animal": animal,
+        "stay_id": stay_id, "headers": headers,
+    }
+
+    # Cleanup (raw SQL for stay to avoid ORM RETURNING issues)
+    await db_session.execute(text("DELETE FROM kennel_stays WHERE id = :id"), {"id": str(stay_id)})
     await db_session.execute(delete(AnimalBreed).where(AnimalBreed.animal_id == animal_id))
     await db_session.execute(delete(AnimalIdentifier).where(AnimalIdentifier.animal_id == animal_id))
     await db_session.execute(delete(Animal).where(Animal.id == animal_id))
@@ -157,24 +162,24 @@ async def kennel_test_env(db_session, test_user):
 # GET /kennels — real SQL JOIN tests
 # ---------------------------------------------------------------------------
 
+@pytest.mark.anyio
 async def test_list_kennels_returns_real_occupied_count(client, kennel_test_env):
     """GET /kennels must return occupied_count=1 for a kennel with one active stay."""
     env = kennel_test_env
     resp = await client.get("/kennels", headers=env["headers"])
     assert resp.status_code == 200
-    data = resp.json()
-    kennel_data = next((k for k in data if k["id"] == str(env["kennel"].id)), None)
+    kennel_data = next((k for k in resp.json() if k["id"] == str(env["kennel"].id)), None)
     assert kennel_data is not None, "Kennel not found in response"
     assert kennel_data["occupied_count"] == 1
 
 
+@pytest.mark.anyio
 async def test_list_kennels_returns_animals_preview(client, kennel_test_env):
     """GET /kennels must include animal name in animals_preview for active stays."""
     env = kennel_test_env
     resp = await client.get("/kennels", headers=env["headers"])
     assert resp.status_code == 200
-    data = resp.json()
-    kennel_data = next((k for k in data if k["id"] == str(env["kennel"].id)), None)
+    kennel_data = next((k for k in resp.json() if k["id"] == str(env["kennel"].id)), None)
     assert kennel_data is not None
     preview = kennel_data["animals_preview"]
     assert len(preview) == 1
@@ -182,46 +187,46 @@ async def test_list_kennels_returns_animals_preview(client, kennel_test_env):
     assert preview[0]["id"] == str(env["animal"].id)
 
 
+@pytest.mark.anyio
 async def test_list_kennels_returns_real_status_type_size(client, kennel_test_env):
     """GET /kennels must return actual status/type/size_category, not hardcoded values."""
     env = kennel_test_env
     resp = await client.get("/kennels", headers=env["headers"])
     assert resp.status_code == 200
-    data = resp.json()
-    kennel_data = next((k for k in data if k["id"] == str(env["kennel"].id)), None)
+    kennel_data = next((k for k in resp.json() if k["id"] == str(env["kennel"].id)), None)
     assert kennel_data is not None
     assert kennel_data["status"] == "available"
     assert kennel_data["type"] == "indoor"
     assert kennel_data["size_category"] == "medium"
 
 
+@pytest.mark.anyio
 async def test_list_kennels_returns_zone_name(client, kennel_test_env):
     """GET /kennels must JOIN zone and return zone_name."""
     env = kennel_test_env
     resp = await client.get("/kennels", headers=env["headers"])
     assert resp.status_code == 200
-    data = resp.json()
-    kennel_data = next((k for k in data if k["id"] == str(env["kennel"].id)), None)
+    kennel_data = next((k for k in resp.json() if k["id"] == str(env["kennel"].id)), None)
     assert kennel_data is not None
     assert kennel_data["zone_name"] == "Zone A"
 
 
+@pytest.mark.anyio
 async def test_list_kennels_filter_by_status(client, kennel_test_env):
-    """GET /kennels?status=available should return the kennel; status=maintenance should not."""
+    """GET /kennels?status=available returns kennel; status=maintenance does not."""
     env = kennel_test_env
     resp = await client.get("/kennels?status=available", headers=env["headers"])
     assert resp.status_code == 200
-    ids = [k["id"] for k in resp.json()]
-    assert str(env["kennel"].id) in ids
+    assert any(k["id"] == str(env["kennel"].id) for k in resp.json())
 
     resp2 = await client.get("/kennels?status=maintenance", headers=env["headers"])
     assert resp2.status_code == 200
-    ids2 = [k["id"] for k in resp2.json()]
-    assert str(env["kennel"].id) not in ids2
+    assert not any(k["id"] == str(env["kennel"].id) for k in resp2.json())
 
 
+@pytest.mark.anyio
 async def test_list_kennels_filter_by_type(client, kennel_test_env):
-    """GET /kennels?type=indoor should return; type=outdoor should not."""
+    """GET /kennels?type=indoor returns; type=outdoor does not."""
     env = kennel_test_env
     resp = await client.get("/kennels?type=indoor", headers=env["headers"])
     assert resp.status_code == 200
@@ -232,8 +237,9 @@ async def test_list_kennels_filter_by_type(client, kennel_test_env):
     assert not any(k["id"] == str(env["kennel"].id) for k in resp2.json())
 
 
+@pytest.mark.anyio
 async def test_list_kennels_search(client, kennel_test_env):
-    """GET /kennels?q=Kennel should find by name; q=nonexistent should not."""
+    """GET /kennels?q=Kennel finds by name; q=nonexistent does not."""
     env = kennel_test_env
     resp = await client.get("/kennels?q=Kennel+1", headers=env["headers"])
     assert resp.status_code == 200
@@ -248,6 +254,7 @@ async def test_list_kennels_search(client, kennel_test_env):
 # GET /kennels/{id} — real data test
 # ---------------------------------------------------------------------------
 
+@pytest.mark.anyio
 async def test_get_kennel_returns_real_data(client, kennel_test_env):
     """GET /kennels/{id} must return real status, zone_name, occupied_count, animals_preview."""
     env = kennel_test_env
@@ -263,6 +270,7 @@ async def test_get_kennel_returns_real_data(client, kennel_test_env):
     assert data["animals_preview"][0]["name"] == "Hafik"
 
 
+@pytest.mark.anyio
 async def test_get_kennel_not_found(client, kennel_test_env):
     """GET /kennels/{unknown_id} should return 404."""
     env = kennel_test_env
@@ -274,6 +282,7 @@ async def test_get_kennel_not_found(client, kennel_test_env):
 # GET /animals/{id} — current_kennel_* fields
 # ---------------------------------------------------------------------------
 
+@pytest.mark.anyio
 async def test_get_animal_has_current_kennel(client, kennel_test_env):
     """GET /animals/{id} must include current_kennel_id/name/code when animal has active stay."""
     env = kennel_test_env
@@ -285,12 +294,12 @@ async def test_get_animal_has_current_kennel(client, kennel_test_env):
     assert data["current_kennel_code"] == "K1"
 
 
+@pytest.mark.anyio
 async def test_get_animal_no_kennel_fields_null(client, kennel_test_env, db_session):
     """Animal without a stay should have current_kennel_* = null."""
     env = kennel_test_env
-    org = env["org"]
     animal_id = uuid.uuid4()
-    animal = Animal(id=animal_id, organization_id=org.id, name="Unhoused", species=Species.CAT)
+    animal = Animal(id=animal_id, organization_id=env["org"].id, name="Unhoused", species=Species.CAT)
     db_session.add(animal)
     await db_session.commit()
 
@@ -310,6 +319,7 @@ async def test_get_animal_no_kennel_fields_null(client, kennel_test_env, db_sess
 # GET /animals list — current_kennel_* in list response
 # ---------------------------------------------------------------------------
 
+@pytest.mark.anyio
 async def test_list_animals_includes_current_kennel(client, kennel_test_env):
     """GET /animals list must include current_kennel_* for each animal."""
     env = kennel_test_env

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import { Animal } from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from 'lucide-react';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -16,6 +17,18 @@ import { Input } from '@/components/ui/input';
 import { Edit, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import ApiClient from '@/app/lib/api';
+
+interface Breed {
+  id: string;
+  name: string;
+  species: string;
+  display_name: string;
+}
+
+interface ColorImage {
+  color: string;
+  image_url: string;
+}
 
 interface EditableAnimalDetailsProps {
   animal: Animal;
@@ -41,18 +54,67 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const getColorLabel = (color: string): string => {
+  // Simple color label mapping without i18n dependency
+  const labels: Record<string, string> = {
+    black: 'Black',
+    brown: 'Brown',
+    white: 'White',
+    golden: 'Golden',
+    grey: 'Grey',
+    gray: 'Gray',
+    fawn: 'Fawn',
+    black_white: 'Black & White',
+    blue_tan: 'Blue & Tan',
+    'black-tan-white': 'Tricolor',
+    black_tan_white: 'Tricolor',
+    tan: 'Tan',
+    red: 'Red',
+    cream: 'Cream',
+    brindle: 'Brindle',
+  };
+  return labels[color] || color;
+};
+
 export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimalDetailsProps) {
+  const locale = useLocale();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [colorImages, setColorImages] = useState<ColorImage[]>([]);
+  const [loadingColors, setLoadingColors] = useState(false);
+
   const [editedData, setEditedData] = useState({
     sex: animal.sex,
+    breed_id: animal.breeds?.[0]?.breed_id || '',
     color: animal.color || '',
     estimated_age_years: animal.estimated_age_years || 0,
   });
 
+  // Fetch breeds on mount
+  useEffect(() => {
+    ApiClient.getBreeds(animal.species, locale)
+      .then(setBreeds)
+      .catch(() => setBreeds([]));
+  }, [animal.species, locale]);
+
+  // Fetch colors when breed changes
+  useEffect(() => {
+    if (!editedData.breed_id) {
+      setColorImages([]);
+      return;
+    }
+    setLoadingColors(true);
+    ApiClient.getBreedColorImages(editedData.breed_id)
+      .then(setColorImages)
+      .catch(() => setColorImages([]))
+      .finally(() => setLoadingColors(false));
+  }, [editedData.breed_id]);
+
   const startEdit = () => {
     setEditedData({
       sex: animal.sex,
+      breed_id: animal.breeds?.[0]?.breed_id || '',
       color: animal.color || '',
       estimated_age_years: animal.estimated_age_years || 0,
     });
@@ -62,6 +124,7 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
   const cancelEdit = () => {
     setEditedData({
       sex: animal.sex,
+      breed_id: animal.breeds?.[0]?.breed_id || '',
       color: animal.color || '',
       estimated_age_years: animal.estimated_age_years || 0,
     });
@@ -71,11 +134,13 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
   const saveEdit = async () => {
     setIsSaving(true);
     try {
-      // Prepare only changed fields
       const updateData: any = {};
-      
+
       if (editedData.sex !== animal.sex) {
         updateData.sex = editedData.sex;
+      }
+      if (editedData.breed_id !== (animal.breeds?.[0]?.breed_id || '')) {
+        updateData.breeds = editedData.breed_id ? [{ breed_id: editedData.breed_id }] : [];
       }
       if (editedData.color !== (animal.color || '')) {
         updateData.color = editedData.color || null;
@@ -129,16 +194,60 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
           </Select>
         </div>
 
-        {/* Color */}
+        {/* Breed */}
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">Color</p>
-          <Input
-            value={editedData.color}
-            onChange={(e) => setEditedData(prev => ({ ...prev, color: e.target.value || '' }))}
-            disabled={isSaving}
-            placeholder="Zadejte barvu"
-          />
+          <p className="text-sm text-muted-foreground">Breed</p>
+          <Select
+            value={editedData.breed_id || 'none'}
+            onValueChange={(value) => setEditedData(prev => ({ ...prev, breed_id: value === 'none' ? '' : value, color: '' }))}
+          >
+            <SelectTrigger disabled={isSaving}>
+              <SelectValue placeholder="Vyberte plemeno" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— bez plemene —</SelectItem>
+              {breeds.map((breed) => (
+                <SelectItem key={breed.id} value={breed.id}>
+                  {breed.display_name || breed.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* Color */}
+        {editedData.breed_id && (
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Color</p>
+            {loadingColors ? (
+              <p className="text-sm text-muted-foreground">Načítání barev...</p>
+            ) : colorImages.length > 0 ? (
+              <Select
+                value={editedData.color || 'none'}
+                onValueChange={(value) => setEditedData(prev => ({ ...prev, color: value === 'none' ? '' : value }))}
+              >
+                <SelectTrigger disabled={isSaving}>
+                  <SelectValue placeholder="Vyberte barvu" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— bez barvy —</SelectItem>
+                  {colorImages.map((ci) => (
+                    <SelectItem key={ci.color} value={ci.color}>
+                      {getColorLabel(ci.color)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                value={editedData.color}
+                onChange={(e) => setEditedData(prev => ({ ...prev, color: e.target.value || '' }))}
+                disabled={isSaving}
+                placeholder="Zadejte barvu"
+              />
+            )}
+          </div>
+        )}
 
         {/* Estimated Age */}
         <div className="space-y-1">
@@ -257,15 +366,25 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
         </div>
       </div>
 
-      {/* Breed - read-only */}
-      {animal.breeds && animal.breeds.length > 0 && (
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">Breed</p>
-          <p className="font-medium">
-            {animal.breeds.map(b => b.breed_name).join(', ')}
-          </p>
-        </div>
-      )}
+      {/* Breed - editable */}
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground flex items-center gap-2">
+          Breed
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={startEdit}
+            className="h-6 w-6 p-0"
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+        </p>
+        <p className="font-medium">
+          {animal.breeds && animal.breeds.length > 0
+            ? animal.breeds.map(b => b.breed_name).join(', ')
+            : <span className="text-muted-foreground">—</span>}
+        </p>
+      </div>
 
       {/* Status - static */}
       <div className="space-y-1">

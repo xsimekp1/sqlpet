@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.api.dependencies.auth import (
@@ -11,7 +11,6 @@ from src.app.api.dependencies.auth import (
 )
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Species
-from src.app.models.kennel import KennelStay, Kennel as KennelModel
 from src.app.models.breed import Breed
 from src.app.models.breed_i18n import BreedI18n
 from src.app.models.file import DefaultAnimalImage
@@ -55,17 +54,20 @@ async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
     )
     resp.default_image_url = default_img.public_url if default_img else None
     stay_result = await db.execute(
-        select(KennelStay, KennelModel.name, KennelModel.code)
-        .join(KennelModel, KennelModel.id == KennelStay.kennel_id)
-        .where(KennelStay.animal_id == animal.id, KennelStay.end_at.is_(None))
-        .limit(1)
+        text("""
+            SELECT ks.kennel_id::text, k.name, k.code
+            FROM kennel_stays ks
+            JOIN kennels k ON k.id = ks.kennel_id
+            WHERE ks.animal_id = :animal_id AND ks.end_at IS NULL
+            LIMIT 1
+        """),
+        {"animal_id": str(animal.id)},
     )
     stay_row = stay_result.first()
     if stay_row:
-        stay, kennel_name, kennel_code = stay_row
-        resp.current_kennel_id = str(stay.kennel_id)
-        resp.current_kennel_name = kennel_name
-        resp.current_kennel_code = kennel_code
+        resp.current_kennel_id = stay_row[0]
+        resp.current_kennel_name = stay_row[1]
+        resp.current_kennel_code = stay_row[2]
     return resp
 
 
