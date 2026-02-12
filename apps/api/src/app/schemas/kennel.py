@@ -1,8 +1,4 @@
 from typing import Any, Optional, Dict, Union
-from uuid import UUID
-from enum import Enum
-
-from pydantic import BaseModel, Field, validator
 
 
 class KennelType(str, Enum):
@@ -100,8 +96,7 @@ class MoveAnimalRequest(BaseModel):
 class MoveAnimalResponse(BaseModel):
     status: str
     animal_id: str
-    from: Optional[str] = None
-    to: str | None = None
+to: str | None = None
     occupied: int | None = None
     capacity: int | None = None
 
