@@ -321,15 +321,15 @@ async def create_placeholder_svg(self, species: str) -> str:
     Create a simple SVG placeholder for when no image is found
     """
     svg_template = f"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-            <rect width="200" height="200" fill="#f0f0f0"/>
-            <circle cx="100" cy="80" r="30" fill="#888"/>
-            <rect x="70" y="110" width="60" height="40" fill="#888"/>
-            <text x="100" y="170" text-anchor="middle" font-family="Arial" font-size="12" fill="#666">
-                {species.title()}
-            </text>
-        </svg>
-        """
+            <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                <rect width="200" height="200" fill="#f0f0f0"/>
+                <circle cx="100" cy="80" r="30" fill="#888"/>
+                <rect x="70" y="110" width="60" height="40" fill="#888"/>
+                <text x="100" y="170" text-anchor="middle" font-family="Arial" font-size="12" fill="#666">
+                    {species.title()}
+                </text>
+            </svg>
+            """
 
     # For now return a data URL - in future could upload to Supabase
     import base64

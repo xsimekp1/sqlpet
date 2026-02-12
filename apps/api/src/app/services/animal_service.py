@@ -9,6 +9,7 @@ from src.app.models.animal_breed import AnimalBreed
 from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.schemas.animal import AnimalCreate, AnimalUpdate
 from src.app.services.audit_service import AuditService
+from src.app.services.default_image_service import DefaultImageService
 
 
 def _animal_to_dict(animal: Animal) -> dict:
@@ -62,7 +63,8 @@ class AnimalService:
             nums = []
             for code in codes:
                 try:
-                    nums.append(int(code.split("-")[-1]))
+                    if code:
+                        nums.append(int(code.split("-")[-1]))
                 except (ValueError, IndexError):
                     pass
             seq = max(nums) + 1 if nums else 1
@@ -157,9 +159,6 @@ class AnimalService:
 
             if default_image_url:
                 animal.primary_photo_url = default_image_url
-                print(
-                    f"🖼️  Assigned default image to animal {animal.name}: {default_image_url}"
-                )
             else:
                 # Create fallback placeholder if no default image found
                 placeholder_url = (
