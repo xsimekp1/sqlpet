@@ -1,9 +1,71 @@
-Starting Container
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ~~~^
-        app,
-  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1406, in main
-        ^^^^
+
+
+joyful-elegance
+
+production
+Architecture
+Observability
+Logs
+Settings
+
+10 days or $4.03 left
+
+
+
+
+
+
+
+
+
+
+sqlpet
+Deployments
+Variables
+Metrics
+Settings
+sqlpet-production.up.railway.app
+3.13.12python@3.13.12
+us-east4-eqdc4a
+1 Replica
+
+
+
+History
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sqlpet
+/
+68436fc7
+Crashed
+
+Feb 12, 2026, 1:26 PM GMT+1
+sqlpet-production.up.railway.app
+Get Help
+Details
+Build Logs
+Deploy Logs
+HTTP Logs
+Network Flow Logs
+Filter and search logs
+
     rv = self.invoke(ctx)
     ...<46 lines>...
   File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1269, in invoke
@@ -121,3 +183,112 @@ Traceback (most recent call last):
     from src.app.main import app
   File "/app/src/app/main.py", line 94, in <module>
     if files_router:
+       ^^^^^^^^^^^^
+NameError: name 'files_router' is not defined. Did you mean: 'breed_router'?
+🔧 Skipping files router for Railway deployment
+Traceback (most recent call last):
+  File "/app/.venv/bin/uvicorn", line 7, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1485, in __call__
+    return self.main(*args, **kwargs)
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1406, in main
+    rv = self.invoke(ctx)
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1269, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 824, in invoke
+    return callback(*args, **kwargs)
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 424, in main
+    run(
+    ~~~^
+        app,
+        ^^^^
+    ...<46 lines>...
+        h11_max_incomplete_event_size=h11_max_incomplete_event_size,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/config.py", line 439, in load
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 594, in run
+    self.loaded_app = import_from_string(self.app)
+    server.run()
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    ~~~~~~~~~~^^
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+  File "/mise/installs/python/3.13.12/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/mise/installs/python/3.13.12/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/server.py", line 78, in _serve
+    config.load()
+    ~~~~~~~~~~~^^
+    module = importlib.import_module(module_str)
+  File "/mise/installs/python/3.13.12/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/app/main.py", line 6, in <module>
+    from src.app.main import app
+  File "/app/src/app/main.py", line 94, in <module>
+    if files_router:
+       ^^^^^^^^^^^^
+NameError: name 'files_router' is not defined. Did you mean: 'breed_router'?
+🔧 Skipping files router for Railway deployment
+Traceback (most recent call last):
+    ^
+  File "/app/.venv/bin/uvicorn", line 7, in <module>
+    ~~~^
+    sys.exit(main())
+        app,
+             ~~~~^^
+        ^^^^
+    ...<46 lines>...
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1485, in __call__
+        h11_max_incomplete_event_size=h11_max_incomplete_event_size,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    return self.main(*args, **kwargs)
+    )
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1406, in main
+    rv = self.invoke(ctx)
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1269, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 824, in invoke
+    return callback(*args, **kwargs)
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 424, in main
+    run(
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 594, in run
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    server.run()
+    ~~~~~~~~~~^^
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+  File "/mise/installs/python/3.13.12/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/mise/installs/python/3.13.12/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/server.py", line 78, in _serve
+    config.load()
+
+
