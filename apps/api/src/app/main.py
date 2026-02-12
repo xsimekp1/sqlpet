@@ -12,6 +12,7 @@ from src.app.api.routes.tasks import router as tasks_router
 from src.app.api.routes.feeding import router as feeding_router
 from src.app.api.routes.inventory import router as inventory_router
 from src.app.api.routes.tags import router as tags_router
+from src.app.api.routes.files import router as files_router
 from src.app.db.session import async_engine
 
 
@@ -19,14 +20,20 @@ from src.app.db.session import async_engine
 async def lifespan(app: FastAPI):
     # Seed permissions and role templates on startup
     try:
-        from src.app.db.seed_data import seed_permissions, seed_role_templates, ROLE_TEMPLATES
+        from src.app.db.seed_data import (
+            seed_permissions,
+            seed_role_templates,
+            ROLE_TEMPLATES,
+        )
         from src.app.db.session import AsyncSessionLocal
 
         async with AsyncSessionLocal() as db:
             perm_map = await seed_permissions(db)
             await seed_role_templates(db, perm_map)
             await db.commit()
-        print(f"✓ Seeded {len(perm_map)} permissions and {len(ROLE_TEMPLATES)} role templates")
+        print(
+            f"✓ Seeded {len(perm_map)} permissions and {len(ROLE_TEMPLATES)} role templates"
+        )
     except Exception as e:
         print(f"✗ Failed to seed data: {e}")
 
@@ -76,3 +83,4 @@ app.include_router(tasks_router)
 app.include_router(feeding_router)
 app.include_router(inventory_router)
 app.include_router(tags_router)
+app.include_router(files_router)

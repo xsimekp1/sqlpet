@@ -1,3 +1,4 @@
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,13 +12,35 @@ class Settings(BaseSettings):
     APP_NAME: str = "SQLpet API"
     ENV: str = "dev"
 
-    DATABASE_URL_ASYNC: str
-    DATABASE_URL_SYNC: str
+    DATABASE_URL_ASYNC: str = "postgresql+asyncpg://pet:pet@localhost:5432/petdb"
+    DATABASE_URL_SYNC: str = "postgresql://pet:pet@localhost:5432/petdb"
 
     JWT_SECRET: str = "dev-secret-change-me"
     JWT_ISSUER: str = "sqlpet"
     JWT_ACCESS_TTL_MIN: int = 15
     JWT_REFRESH_TTL_DAYS: int = 30
+
+    # Supabase Configuration
+    SUPABASE_URL: str = "https://placeholder.supabase.co"
+    SUPABASE_KEY: str = "placeholder-key"
+    SUPABASE_SERVICE_KEY: str = "placeholder-service-key"
+
+    # File Upload Settings
+    MAX_FILE_SIZE_MB: int = 50
+    ALLOWED_FILE_TYPES: List[str] = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "application/pdf",
+        "text/plain",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ]
+
+    @property
+    def max_file_size_bytes(self) -> int:
+        return self.MAX_FILE_SIZE_MB * 1024 * 1024
 
 
 settings = Settings()

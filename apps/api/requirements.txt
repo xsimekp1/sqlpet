@@ -16,3 +16,9 @@ python-dotenv
 pytest
 pytest-asyncio
 httpx
+
+# Supabase Storage
+supabase
+python-multipart
+aiofiles
+Pillow

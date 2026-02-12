@@ -9,6 +9,7 @@ from src.app.models.animal_breed import AnimalBreed
 from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.schemas.animal import AnimalCreate, AnimalUpdate
 from src.app.services.audit_service import AuditService
+from src.app.services.default_image_service import DefaultImageService
 
 
 def _animal_to_dict(animal: Animal) -> dict:
@@ -24,8 +25,12 @@ def _animal_to_dict(animal: Animal) -> dict:
         "size_estimated": animal.size_estimated,
         "color": animal.color,
         "coat": animal.coat,
-        "weight_current_kg": float(animal.weight_current_kg) if animal.weight_current_kg else None,
-        "weight_estimated_kg": float(animal.weight_estimated_kg) if animal.weight_estimated_kg else None,
+        "weight_current_kg": float(animal.weight_current_kg)
+        if animal.weight_current_kg
+        else None,
+        "weight_estimated_kg": float(animal.weight_estimated_kg)
+        if animal.weight_estimated_kg
+        else None,
         "status_reason": animal.status_reason,
         "intake_date": str(animal.intake_date) if animal.intake_date else None,
         "outcome_date": str(animal.outcome_date) if animal.outcome_date else None,
@@ -40,14 +45,14 @@ class AnimalService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.audit = AuditService(db)
+        self.default_image_service = DefaultImageService(db)
 
     async def _generate_public_code(self, organization_id: uuid.UUID) -> str:
         year = datetime.now(timezone.utc).year
         prefix = f"A-{year}-"
         # Get all codes, sort them properly, and take the highest
         result = await self.db.execute(
-            select(Animal.public_code)
-            .where(
+            select(Animal.public_code).where(
                 Animal.organization_id == organization_id,
                 Animal.public_code.like(f"{prefix}%"),
             )
@@ -76,7 +81,7 @@ class AnimalService:
     ) -> Animal:
         public_code = await self._generate_public_code(organization_id)
 
-        #With use_enum_values=True, Pydantic already converted to strings
+        # With use_enum_values=True, Pydantic already converted to strings
         animal = Animal(
             id=uuid.uuid4(),
             organization_id=organization_id,
@@ -118,7 +123,9 @@ class AnimalService:
         if data.identifiers:
             for ident in data.identifiers:
                 # Convert enum to string value if needed
-                type_val = ident.type.value if hasattr(ident.type, 'value') else ident.type
+                type_val = (
+                    ident.type.value if hasattr(ident.type, "value") else ident.type
+                )
                 ai = AnimalIdentifier(
                     id=uuid.uuid4(),
                     organization_id=organization_id,
@@ -130,6 +137,44 @@ class AnimalService:
                 )
                 self.db.add(ai)
             await self.db.flush()
+
+        # Assign default image automatically
+        try:
+            # Get breed IDs for image lookup
+            breed_ids = []
+            if data.breeds:
+                breed_ids = [entry.breed_id for entry in data.breeds]
+
+            # Find default image using hierarchical search
+            default_image_url = (
+                await self.default_image_service.assign_default_image_to_animal(
+                    organization_id=organization_id,
+                    animal_id=animal.id,
+                    species=data.species,
+                    breed_ids=breed_ids,
+                    color=data.color or None,
+                )
+            )
+
+            if default_image_url:
+                animal.primary_photo_url = default_image_url
+                print(
+                    f"🖼️  Assigned default image to animal {animal.name}: {default_image_url}"
+                )
+            else:
+                # Create fallback placeholder if no default image found
+                placeholder_url = (
+                    await self.default_image_service.create_placeholder_svg(
+                        data.species
+                    )
+                )
+                animal.primary_photo_url = placeholder_url
+                print(f"🎨 Using placeholder image for animal {animal.name}")
+        except Exception as e:
+            print(
+                f"⚠️  Failed to assign default image to animal {animal.name}: {str(e)}"
+            )
+            # Don't fail the whole operation if image assignment fails
 
         # Audit log
         await self.audit.log_action(
@@ -192,8 +237,7 @@ class AnimalService:
 
         # Paginated items
         items_q = (
-            base
-            .order_by(Animal.created_at.desc())
+            base.order_by(Animal.created_at.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
@@ -247,7 +291,7 @@ class AnimalService:
             for ident in identifiers_data:
                 # Convert enum to string value if needed
                 type_val = ident["type"]
-                type_val = type_val.value if hasattr(type_val, 'value') else type_val
+                type_val = type_val.value if hasattr(type_val, "value") else type_val
                 ai = AnimalIdentifier(
                     id=uuid.uuid4(),
                     organization_id=organization_id,

@@ -34,6 +34,13 @@ from src.app.models.feeding_log import FeedingLog
 from src.app.models.inventory_item import InventoryItem, InventoryCategory
 from src.app.models.inventory_lot import InventoryLot
 from src.app.models.inventory_transaction import InventoryTransaction, TransactionType
+from src.app.models.file import (
+    File,
+    EntityFile,
+    DefaultAnimalImage,
+    AnimalPhoto,
+    StorageProvider,
+)
 
 __all__ = [
     "Base",
@@ -76,4 +83,9 @@ __all__ = [
     "InventoryLot",
     "InventoryTransaction",
     "TransactionType",
+    "File",
+    "EntityFile",
+    "DefaultAnimalImage",
+    "AnimalPhoto",
+    "StorageProvider",
 ]
