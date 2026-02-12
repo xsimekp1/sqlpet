@@ -160,3 +160,9 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+    tags = relationship(
+        "Tag",
+        secondary="animal_tags",
+        back_populates="animals",
+        lazy="selectin",
+    )

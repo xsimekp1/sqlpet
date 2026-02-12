@@ -259,5 +259,305 @@
       "success": "Animal created successfully!",
       "error": "Failed to create animal"
     }
+  },
+  "tasks": {
+    "title": "Tasks",
+    "description": "Manage and complete tasks for your organization",
+    "createTask": "Create Task",
+    "editTask": "Edit Task",
+    "noTasks": "No tasks found. Create your first task to get started.",
+    "filters": {
+      "status": "Status",
+      "type": "Type",
+      "allStatus": "All Status",
+      "allTypes": "All Types"
+    },
+    "status": {
+      "pending": "Pending",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "type": {
+      "general": "General",
+      "feeding": "Feeding",
+      "medical": "Medical",
+      "cleaning": "Cleaning",
+      "maintenance": "Maintenance",
+      "administrative": "Administrative"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "actions": {
+      "complete": "Complete",
+      "assign": "Assign",
+      "cancel": "Cancel",
+      "edit": "Edit"
+    },
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "type": "Type",
+      "priority": "Priority",
+      "status": "Status",
+      "dueDate": "Due Date",
+      "assignedTo": "Assigned To",
+      "createdBy": "Created By"
+    },
+    "messages": {
+      "taskCompleted": "Task completed",
+      "taskCompletedDesc": "The task has been marked as completed",
+      "feedingTaskCompleted": "Feeding task completed",
+      "feedingTaskCompletedDesc": "Feeding log created and inventory deducted automatically",
+      "taskCancelled": "Task cancelled",
+      "taskCancelledDesc": "The task has been cancelled",
+      "error": "Error",
+      "errorDesc": "Failed to complete the task"
+    },
+    "summary": {
+      "showing": "Showing {count} task(s)",
+      "pending": "Pending",
+      "completed": "Completed"
+    },
+    "empty": {
+      "title": "No tasks found",
+      "description": "Create your first task to get started."
+    }
+  },
+  "feeding": {
+    "title": "Feeding",
+    "description": "Manage feeding plans and logs",
+    "today": "Feeding Today",
+    "plans": "Feeding Plans",
+    "logs": "Feeding Logs",
+    "foods": "Foods",
+    "createPlan": "Create Feeding Plan",
+    "editPlan": "Edit Feeding Plan",
+    "createFood": "Create Food",
+    "editFood": "Edit Food",
+    "noPlan": "No active feeding plan",
+    "noPlans": "No feeding plans found",
+    "noFoods": "No foods found",
+    "noLogs": "No feeding logs found",
+    "fedAt": "Fed at",
+    "fedBy": "Fed by",
+    "amount": "Amount",
+    "amountGrams": "Amount (grams)",
+    "amountText": "Amount (text)",
+    "schedule": "Schedule",
+    "timesPerDay": "Times per day",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "markAsFed": "Mark as fed",
+    "needsFeeding": "Needs feeding",
+    "alreadyFed": "Already fed today",
+    "food": "Food",
+    "foodName": "Food name",
+    "brand": "Brand",
+    "notes": "Notes",
+    "history": "Feeding history",
+    "active": "Active",
+    "inactive": "Inactive",
+    "fields": {
+      "animal": "Animal",
+      "food": "Food",
+      "amountGrams": "Amount (g)",
+      "amountText": "Amount (description)",
+      "timesPerDay": "Times per day",
+      "schedule": "Schedule times",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "notes": "Notes",
+      "isActive": "Active"
+    },
+    "foodType": {
+      "dry": "Dry",
+      "wet": "Wet",
+      "raw": "Raw",
+      "medical": "Medical",
+      "other": "Other"
+    },
+    "actions": {
+      "createPlan": "Create Plan",
+      "editPlan": "Edit Plan",
+      "deactivate": "Deactivate",
+      "viewHistory": "View History",
+      "generateTasks": "Generate Tasks",
+      "logFeeding": "Log Feeding"
+    },
+    "messages": {
+      "planCreated": "Feeding plan created",
+      "planCreatedDesc": "The feeding plan has been created successfully",
+      "planUpdated": "Feeding plan updated",
+      "planUpdatedDesc": "The feeding plan has been updated successfully",
+      "planDeactivated": "Feeding plan deactivated",
+      "planDeactivatedDesc": "The feeding plan has been deactivated",
+      "feedingLogged": "Feeding logged",
+      "feedingLoggedDesc": "The feeding has been logged successfully",
+      "tasksGenerated": "Tasks generated",
+      "tasksGeneratedDesc": "Feeding tasks have been generated from active plans",
+      "error": "Error",
+      "errorDesc": "Failed to complete the operation"
+    },
+    "summary": {
+      "showing": "Showing {count} plan(s)",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "people": {
+    "title": "People",
+    "description": "Manage contacts and relationships",
+    "members": "Team Members",
+    "contacts": "Contacts",
+    "donors": "Donors",
+    "veterinarians": "Veterinarians",
+    "volunteers": "Volunteers",
+    "fosters": "Foster Families",
+    "others": "Other Contacts",
+    "addPerson": "Add Contact",
+    "addMember": "Invite User",
+    "noPeople": "No contacts found",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "type": "Type",
+      "role": "Role",
+      "status": "Status",
+      "organization": "Organization",
+      "address": "Address",
+      "profession": "Profession / Specialty",
+      "bankAccount": "Bank Account / IBAN",
+      "taxId": "Tax ID / Business Registration",
+      "notes": "Notes"
+    },
+    "types": {
+      "user": "User Account",
+      "donor": "Donor",
+      "veterinarian": "Veterinarian",
+      "volunteer": "Volunteer",
+      "foster": "Foster Family",
+      "supplier": "Supplier",
+      "partner": "Partner Organization",
+      "other": "Other"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "editContact": "Edit Contact",
+      "changeRole": "Change Role",
+      "sendEmail": "Send Email",
+      "callPhone": "Call"
+    },
+    "messages": {
+      "personCreated": "Contact created",
+      "personCreatedDesc": "Contact has been added successfully",
+      "personUpdated": "Contact updated",
+      "personUpdatedDesc": "Contact has been updated successfully",
+      "roleUpdated": "Role updated",
+      "roleUpdatedDesc": "User role has been updated successfully",
+      "error": "Error",
+      "errorDesc": "Failed to complete the operation"
+    },
+    "summary": {
+      "showing": "Showing {count} contact(s)",
+      "active": "Active",
+      "pending": "Pending"
+    }
+  },
+  "inventory": {
+    "title": "Inventory",
+    "description": "Manage stock, lots, and transactions",
+    "items": "Items",
+    "lots": "Lots",
+    "transactions": "Transactions",
+    "lowStock": "Low Stock",
+    "createItem": "Create Item",
+    "editItem": "Edit Item",
+    "addLot": "Add Lot",
+    "category": "Category",
+    "unit": "Unit",
+    "reorderThreshold": "Reorder threshold",
+    "totalQuantity": "Total quantity",
+    "lotNumber": "Lot number",
+    "expiresAt": "Expires at",
+    "expired": "Expired",
+    "quantity": "Quantity",
+    "transactionType": "Type",
+    "reason": "Reason",
+    "in": "In",
+    "out": "Out",
+    "adjust": "Adjust",
+    "history": "Transaction history",
+    "noStock": "Out of stock",
+    "belowThreshold": "Below reorder threshold",
+    "categories": {
+      "medication": "Medication",
+      "vaccine": "Vaccine",
+      "food": "Food",
+      "supply": "Supply",
+      "other": "Other"
+    },
+    "fields": {
+      "name": "Name",
+      "category": "Category",
+      "unit": "Unit",
+      "reorderThreshold": "Reorder threshold",
+      "lotNumber": "Lot number",
+      "expiresAt": "Expiry date",
+      "quantity": "Quantity",
+      "costPerUnit": "Cost per unit",
+      "type": "Transaction type",
+      "reason": "Reason"
+    },
+    "actions": {
+      "createItem": "Create Item",
+      "editItem": "Edit Item",
+      "addLot": "Add Lot",
+      "recordTransaction": "Record Transaction",
+      "viewHistory": "View History"
+    },
+    "messages": {
+      "itemCreated": "Item created",
+      "itemCreatedDesc": "The inventory item has been created successfully",
+      "itemUpdated": "Item updated",
+      "itemUpdatedDesc": "The inventory item has been updated successfully",
+      "lotCreated": "Lot added",
+      "lotCreatedDesc": "The inventory lot has been added successfully",
+      "transactionRecorded": "Transaction recorded",
+      "transactionRecordedDesc": "The inventory transaction has been recorded successfully",
+      "error": "Error",
+      "errorDesc": "Failed to complete the operation"
+    }
+  },
+  "medical": {
+    "requestProcedure": "Request Medical Procedure",
+    "procedureType": "Procedure Type",
+    "description": "Description",
+    "priority": "Priority",
+    "assignTo": "Assign To",
+    "dueDate": "Due Date",
+    "createTask": "Create Task",
+    "types": {
+      "checkup": "Check-up / Routine Exam",
+      "vaccination": "Vaccination",
+      "surgery": "Surgery",
+      "dental": "Dental Care",
+      "bloodwork": "Blood Work / Lab Tests",
+      "xray": "X-Ray / Imaging",
+      "treatment": "Treatment / Therapy",
+      "emergency": "Emergency Care",
+      "other": "Other"
+    },
+    "messages": {
+      "procedureRequested": "Medical procedure requested",
+      "procedureRequestedDesc": "A medical task has been created successfully",
+      "error": "Error",
+      "errorDesc": "Failed to request medical procedure"
+    }
   }
 }

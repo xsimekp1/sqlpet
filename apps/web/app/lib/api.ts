@@ -37,6 +37,45 @@ export interface ApiError {
   detail: string;
 }
 
+// Task types
+export interface Task {
+  id: string;
+  organization_id: string;
+  created_by_id: string;
+  assigned_to_id: string | null;
+  title: string;
+  description: string | null;
+  type: 'general' | 'feeding' | 'medical' | 'cleaning' | 'maintenance' | 'administrative';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  due_at: string | null;
+  completed_at: string | null;
+  task_metadata: Record<string, any> | null;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTaskRequest {
+  title: string;
+  description?: string;
+  type?: string;
+  priority?: string;
+  assigned_to_id?: string;
+  due_at?: string;
+  task_metadata?: Record<string, any>;
+  related_entity_type?: string;
+  related_entity_id?: string;
+}
+
+export interface TaskListResponse {
+  items: Task[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 // Animal types
 export interface Animal {
   id: string;
@@ -615,6 +654,222 @@ class ApiClient {
         const axiosError = error as AxiosError<ApiError>;
         throw new Error(
           axiosError.response?.data?.detail || 'Failed to delete animal'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  // ========================================
+  // TASK METHODS
+  // ========================================
+
+  /**
+   * Get all tasks for organization with filters
+   */
+  static async getTasks(params?: {
+    status?: string;
+    type?: string;
+    assigned_to_id?: string;
+    due_date?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<TaskListResponse> {
+    try {
+      const organizationId = this.getOrganizationId();
+
+      const response = await axios.get<TaskListResponse>(
+        `${API_URL}/tasks`,
+        {
+          params,
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to fetch tasks'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Get single task by ID
+   */
+  static async getTask(id: string): Promise<Task> {
+    try {
+      const organizationId = this.getOrganizationId();
+
+      const response = await axios.get<Task>(
+        `${API_URL}/tasks/${id}`,
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to fetch task'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Create new task
+   */
+  static async createTask(data: CreateTaskRequest): Promise<Task> {
+    try {
+      const organizationId = this.getOrganizationId();
+
+      const response = await axios.post<Task>(
+        `${API_URL}/tasks`,
+        data,
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to create task'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Complete a task
+   */
+  static async completeTask(id: string, data?: { notes?: string; completion_data?: any }): Promise<Task> {
+    try {
+      const organizationId = this.getOrganizationId();
+
+      const response = await axios.post<Task>(
+        `${API_URL}/tasks/${id}/complete`,
+        data || {},
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to complete task'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Complete a feeding task (special endpoint)
+   */
+  static async completeFeedingTask(taskId: string, notes?: string): Promise<any> {
+    try {
+      const organizationId = this.getOrganizationId();
+
+      const response = await axios.post(
+        `${API_URL}/feeding/tasks/${taskId}/complete`,
+        { notes },
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to complete feeding task'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Update task
+   */
+  static async updateTask(id: string, data: Partial<CreateTaskRequest>): Promise<Task> {
+    try {
+      const organizationId = this.getOrganizationId();
+
+      const response = await axios.put<Task>(
+        `${API_URL}/tasks/${id}`,
+        data,
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to update task'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Cancel task
+   */
+  static async cancelTask(id: string, reason?: string): Promise<void> {
+    try {
+      const organizationId = this.getOrganizationId();
+
+      await axios.delete(
+        `${API_URL}/tasks/${id}`,
+        {
+          params: { reason },
+          headers: {
+            ...this.getAuthHeaders(),
+            'x-organization-id': organizationId || '',
+          },
+        }
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to cancel task'
         );
       }
       throw new Error('An unexpected error occurred');

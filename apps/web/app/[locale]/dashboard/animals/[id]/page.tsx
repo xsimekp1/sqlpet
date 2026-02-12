@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, Edit, Trash2, MapPin, Calendar, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, MapPin, Calendar, Loader2, Stethoscope } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiClient, { Animal } from '@/app/lib/api';
 import { toast } from 'sonner';
+import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
 
 export default function AnimalDetailPage() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function AnimalDetailPage() {
   const t = useTranslations();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
+  const [medicalDialogOpen, setMedicalDialogOpen] = useState(false);
 
   const animalId = params.id as string;
 
@@ -132,6 +134,14 @@ export default function AnimalDetailPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setMedicalDialogOpen(true)}
+          >
+            <Stethoscope className="h-4 w-4 mr-2" />
+            {t('medical.requestProcedure')}
+          </Button>
           <Button variant="outline" size="sm">
             <Edit className="h-4 w-4 mr-2" />
             Edit
@@ -278,6 +288,15 @@ export default function AnimalDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Medical Request Dialog */}
+      {animal && (
+        <RequestMedicalProcedureDialog
+          animal={animal}
+          open={medicalDialogOpen}
+          onOpenChange={setMedicalDialogOpen}
+        />
+      )}
     </div>
   );
 }

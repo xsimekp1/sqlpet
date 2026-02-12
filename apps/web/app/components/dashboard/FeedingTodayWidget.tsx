@@ -5,6 +5,9 @@ import { WidgetCard } from './WidgetCard'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { useQuery } from '@tanstack/react-query'
+import { ApiClient } from '@/app/lib/api'
+import { useOrganizationStore } from '@/app/store/organizationStore'
 
 interface FeedingTodayWidgetProps {
   editMode?: boolean
@@ -14,13 +17,40 @@ interface FeedingTodayWidgetProps {
 
 export function FeedingTodayWidget({ editMode, onRemove, dragHandleProps }: FeedingTodayWidgetProps) {
   const t = useTranslations('dashboard')
+  const { selectedOrg } = useOrganizationStore()
 
-  // TODO: Fetch real data from API in M3+
-  const animalsPending = 12
-  const completed = 8
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0]
+
+  // Fetch pending feeding tasks for today
+  const { data: pendingTasks } = useQuery({
+    queryKey: ['tasks', 'feeding-pending', selectedOrg?.id, today],
+    queryFn: () =>
+      ApiClient.getTasks({
+        type: 'feeding',
+        status: 'pending',
+        due_date: today,
+      }),
+    enabled: !!selectedOrg?.id,
+  })
+
+  // Fetch completed feeding tasks for today
+  const { data: completedTasks } = useQuery({
+    queryKey: ['tasks', 'feeding-completed', selectedOrg?.id, today],
+    queryFn: () =>
+      ApiClient.getTasks({
+        type: 'feeding',
+        status: 'completed',
+        due_date: today,
+      }),
+    enabled: !!selectedOrg?.id,
+  })
+
+  const animalsPending = pendingTasks?.items?.length || 0
+  const completed = completedTasks?.items?.length || 0
   const total = animalsPending + completed
 
-  const progressPercentage = (completed / total) * 100
+  const progressPercentage = total > 0 ? (completed / total) * 100 : 0
 
   return (
     <WidgetCard
@@ -59,7 +89,7 @@ export function FeedingTodayWidget({ editMode, onRemove, dragHandleProps }: Feed
           </div>
         </div>
 
-        <Link href="/dashboard/feeding">
+        <Link href="/dashboard/tasks?type=feeding">
           <Button variant="link" size="sm" className="px-0 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300">
             {t('viewAll')} <ArrowRight className="ml-1 h-3 w-3" />
           </Button>

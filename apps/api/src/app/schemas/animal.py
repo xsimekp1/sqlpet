@@ -13,6 +13,7 @@ from src.app.models.animal import (
     Species,
 )
 from src.app.models.animal_identifier import IdentifierType
+from src.app.schemas.tag import TagResponse
 
 
 # --- Breed schemas ---
@@ -132,6 +133,7 @@ class AnimalResponse(BaseModel):
     updated_at: datetime
     breeds: list[AnimalBreedResponse] = []
     identifiers: list[AnimalIdentifierResponse] = []
+    tags: list[TagResponse] = []
 
     model_config = {"from_attributes": True}
 

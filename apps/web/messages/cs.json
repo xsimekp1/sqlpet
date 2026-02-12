@@ -259,5 +259,305 @@
       "success": "Zvíře bylo úspěšně vytvořeno!",
       "error": "Nepodařilo se vytvořit zvíře"
     }
+  },
+  "tasks": {
+    "title": "Úkoly",
+    "description": "Spravujte a dokončujte úkoly pro vaši organizaci",
+    "createTask": "Vytvořit úkol",
+    "editTask": "Upravit úkol",
+    "noTasks": "Žádné úkoly nenalezeny. Vytvořte svůj první úkol.",
+    "filters": {
+      "status": "Stav",
+      "type": "Typ",
+      "allStatus": "Všechny stavy",
+      "allTypes": "Všechny typy"
+    },
+    "status": {
+      "pending": "Čekající",
+      "in_progress": "Probíhá",
+      "completed": "Dokončeno",
+      "cancelled": "Zrušeno"
+    },
+    "type": {
+      "general": "Obecný",
+      "feeding": "Krmení",
+      "medical": "Lékařský",
+      "cleaning": "Úklid",
+      "maintenance": "Údržba",
+      "administrative": "Administrativní"
+    },
+    "priority": {
+      "low": "Nízká",
+      "medium": "Střední",
+      "high": "Vysoká",
+      "urgent": "Naléhavá"
+    },
+    "actions": {
+      "complete": "Dokončit",
+      "assign": "Přiřadit",
+      "cancel": "Zrušit",
+      "edit": "Upravit"
+    },
+    "fields": {
+      "title": "Název",
+      "description": "Popis",
+      "type": "Typ",
+      "priority": "Priorita",
+      "status": "Stav",
+      "dueDate": "Termín splnění",
+      "assignedTo": "Přiřazeno",
+      "createdBy": "Vytvořil"
+    },
+    "messages": {
+      "taskCompleted": "Úkol dokončen",
+      "taskCompletedDesc": "Úkol byl označen jako dokončený",
+      "feedingTaskCompleted": "Úkol krmení dokončen",
+      "feedingTaskCompletedDesc": "Záznam o krmení vytvořen a inventář automaticky odečten",
+      "taskCancelled": "Úkol zrušen",
+      "taskCancelledDesc": "Úkol byl zrušen",
+      "error": "Chyba",
+      "errorDesc": "Nepodařilo se dokončit úkol"
+    },
+    "summary": {
+      "showing": "Zobrazeno {count} úkol(ů)",
+      "pending": "Čekající",
+      "completed": "Dokončené"
+    },
+    "empty": {
+      "title": "Žádné úkoly nenalezeny",
+      "description": "Vytvořte svůj první úkol."
+    }
+  },
+  "feeding": {
+    "title": "Krmení",
+    "description": "Spravujte plány krmení a záznamy",
+    "today": "Krmení dnes",
+    "plans": "Plány krmení",
+    "logs": "Záznamy krmení",
+    "foods": "Krmiva",
+    "createPlan": "Vytvořit plán krmení",
+    "editPlan": "Upravit plán krmení",
+    "createFood": "Vytvořit krmivo",
+    "editFood": "Upravit krmivo",
+    "noPlan": "Žádný aktivní plán krmení",
+    "noPlans": "Žádné plány krmení nenalezeny",
+    "noFoods": "Žádná krmiva nenalezena",
+    "noLogs": "Žádné záznamy krmení nenalezeny",
+    "fedAt": "Nakrmeno v",
+    "fedBy": "Nakrmil",
+    "amount": "Množství",
+    "amountGrams": "Množství (gramy)",
+    "amountText": "Množství (text)",
+    "schedule": "Rozvrh",
+    "timesPerDay": "Kolikrát denně",
+    "startDate": "Datum zahájení",
+    "endDate": "Datum ukončení",
+    "markAsFed": "Označit jako nakrmeno",
+    "needsFeeding": "Potřebuje krmení",
+    "alreadyFed": "Již nakrmeno dnes",
+    "food": "Krmivo",
+    "foodName": "Název krmiva",
+    "brand": "Značka",
+    "notes": "Poznámky",
+    "history": "Historie krmení",
+    "active": "Aktivní",
+    "inactive": "Neaktivní",
+    "fields": {
+      "animal": "Zvíře",
+      "food": "Krmivo",
+      "amountGrams": "Množství (g)",
+      "amountText": "Množství (popis)",
+      "timesPerDay": "Kolikrát denně",
+      "schedule": "Časy krmení",
+      "startDate": "Datum zahájení",
+      "endDate": "Datum ukončení",
+      "notes": "Poznámky",
+      "isActive": "Aktivní"
+    },
+    "foodType": {
+      "dry": "Suché",
+      "wet": "Mokré",
+      "raw": "Syrové",
+      "medical": "Léčebné",
+      "other": "Jiné"
+    },
+    "actions": {
+      "createPlan": "Vytvořit plán",
+      "editPlan": "Upravit plán",
+      "deactivate": "Deaktivovat",
+      "viewHistory": "Zobrazit historii",
+      "generateTasks": "Generovat úkoly",
+      "logFeeding": "Zaznamenat krmení"
+    },
+    "messages": {
+      "planCreated": "Plán krmení vytvořen",
+      "planCreatedDesc": "Plán krmení byl úspěšně vytvořen",
+      "planUpdated": "Plán krmení aktualizován",
+      "planUpdatedDesc": "Plán krmení byl úspěšně aktualizován",
+      "planDeactivated": "Plán krmení deaktivován",
+      "planDeactivatedDesc": "Plán krmení byl deaktivován",
+      "feedingLogged": "Krmení zaznamenáno",
+      "feedingLoggedDesc": "Krmení bylo úspěšně zaznamenáno",
+      "tasksGenerated": "Úkoly vygenerovány",
+      "tasksGeneratedDesc": "Úkoly krmení byly vygenerovány z aktivních plánů",
+      "error": "Chyba",
+      "errorDesc": "Nepodařilo se dokončit operaci"
+    },
+    "summary": {
+      "showing": "Zobrazeno {count} plán(ů)",
+      "active": "Aktivní",
+      "inactive": "Neaktivní"
+    }
+  },
+  "people": {
+    "title": "Lidé",
+    "description": "Spravujte kontakty a vztahy",
+    "members": "Členové týmu",
+    "contacts": "Kontakty",
+    "donors": "Dárci",
+    "veterinarians": "Veterináři",
+    "volunteers": "Dobrovolníci",
+    "fosters": "Pěstouni",
+    "others": "Ostatní kontakty",
+    "addPerson": "Přidat kontakt",
+    "addMember": "Pozvat uživatele",
+    "noPeople": "Žádné kontakty nenalezeny",
+    "fields": {
+      "name": "Jméno",
+      "email": "Email",
+      "phone": "Telefon",
+      "type": "Typ",
+      "role": "Role",
+      "status": "Stav",
+      "organization": "Organizace",
+      "address": "Adresa",
+      "profession": "Profese / Specializace",
+      "bankAccount": "Číslo účtu / IBAN",
+      "taxId": "IČO / DIČ",
+      "notes": "Poznámky"
+    },
+    "types": {
+      "user": "Uživatelský účet",
+      "donor": "Dárce",
+      "veterinarian": "Veterinář",
+      "volunteer": "Dobrovolník",
+      "foster": "Pěstounská rodina",
+      "supplier": "Dodavatel",
+      "partner": "Partnerská organizace",
+      "other": "Jiné"
+    },
+    "actions": {
+      "viewDetails": "Zobrazit detail",
+      "editContact": "Upravit kontakt",
+      "changeRole": "Změnit roli",
+      "sendEmail": "Odeslat email",
+      "callPhone": "Zavolat"
+    },
+    "messages": {
+      "personCreated": "Kontakt vytvořen",
+      "personCreatedDesc": "Kontakt byl úspěšně přidán",
+      "personUpdated": "Kontakt aktualizován",
+      "personUpdatedDesc": "Kontakt byl úspěšně aktualizován",
+      "roleUpdated": "Role aktualizována",
+      "roleUpdatedDesc": "Role uživatele byla úspěšně aktualizována",
+      "error": "Chyba",
+      "errorDesc": "Nepodařilo se dokončit operaci"
+    },
+    "summary": {
+      "showing": "Zobrazeno {count} kontakt(ů)",
+      "active": "Aktivní",
+      "pending": "Čekající"
+    }
+  },
+  "inventory": {
+    "title": "Inventář",
+    "description": "Spravujte zásoby, šarže a transakce",
+    "items": "Položky",
+    "lots": "Šarže",
+    "transactions": "Transakce",
+    "lowStock": "Nízké zásoby",
+    "createItem": "Vytvořit položku",
+    "editItem": "Upravit položku",
+    "addLot": "Přidat šarži",
+    "category": "Kategorie",
+    "unit": "Jednotka",
+    "reorderThreshold": "Limit pro objednání",
+    "totalQuantity": "Celkové množství",
+    "lotNumber": "Číslo šarže",
+    "expiresAt": "Vyprší",
+    "expired": "Vypršelo",
+    "quantity": "Množství",
+    "transactionType": "Typ",
+    "reason": "Důvod",
+    "in": "Příjem",
+    "out": "Výdej",
+    "adjust": "Úprava",
+    "history": "Historie transakcí",
+    "noStock": "Není na skladě",
+    "belowThreshold": "Pod limitem pro objednání",
+    "categories": {
+      "medication": "Léky",
+      "vaccine": "Vakcíny",
+      "food": "Krmivo",
+      "supply": "Potřeby",
+      "other": "Jiné"
+    },
+    "fields": {
+      "name": "Název",
+      "category": "Kategorie",
+      "unit": "Jednotka",
+      "reorderThreshold": "Limit pro objednání",
+      "lotNumber": "Číslo šarže",
+      "expiresAt": "Datum expirace",
+      "quantity": "Množství",
+      "costPerUnit": "Cena za jednotku",
+      "type": "Typ transakce",
+      "reason": "Důvod"
+    },
+    "actions": {
+      "createItem": "Vytvořit položku",
+      "editItem": "Upravit položku",
+      "addLot": "Přidat šarži",
+      "recordTransaction": "Zaznamenat transakci",
+      "viewHistory": "Zobrazit historii"
+    },
+    "messages": {
+      "itemCreated": "Položka vytvořena",
+      "itemCreatedDesc": "Inventární položka byla úspěšně vytvořena",
+      "itemUpdated": "Položka aktualizována",
+      "itemUpdatedDesc": "Inventární položka byla úspěšně aktualizována",
+      "lotCreated": "Šarže přidána",
+      "lotCreatedDesc": "Inventární šarže byla úspěšně přidána",
+      "transactionRecorded": "Transakce zaznamenána",
+      "transactionRecordedDesc": "Inventární transakce byla úspěšně zaznamenána",
+      "error": "Chyba",
+      "errorDesc": "Nepodařilo se dokončit operaci"
+    }
+  },
+  "medical": {
+    "requestProcedure": "Požádat o lékařský úkon",
+    "procedureType": "Typ úkonu",
+    "description": "Popis",
+    "priority": "Priorita",
+    "assignTo": "Přiřadit",
+    "dueDate": "Termín",
+    "createTask": "Vytvořit úkol",
+    "types": {
+      "checkup": "Prohlídka / Rutinní vyšetření",
+      "vaccination": "Očkování",
+      "surgery": "Chirurgický zákrok",
+      "dental": "Dentální péče",
+      "bloodwork": "Odběr krve / Laboratorní testy",
+      "xray": "Rentgen / Zobrazování",
+      "treatment": "Léčba / Terapie",
+      "emergency": "Urgentní péče",
+      "other": "Jiné"
+    },
+    "messages": {
+      "procedureRequested": "Lékařský úkon požadován",
+      "procedureRequestedDesc": "Úkol lékařského úkonu byl úspěšně vytvořen",
+      "error": "Chyba",
+      "errorDesc": "Nepodařilo se požádat o lékařský úkon"
+    }
   }
 }
