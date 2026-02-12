@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiClient, { Animal } from '@/app/lib/api';
 import { toast } from 'sonner';
 import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
-import { AnimalImage, EditableAnimalName, EditableAnimalDetails } from '@/app/components/animals';
+import { AnimalImage, EditableAnimalName, EditableAnimalDetails, AssignKennelButton } from '@/app/components/animals';
 
 export default function AnimalDetailPage() {
   const router = useRouter();
@@ -145,7 +145,18 @@ fetchAnimal();
           <p className="text-muted-foreground mb-4">
             #{animal.public_code} • {animal.species}
           </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center sm:justify-start">
+          <div className="flex flex-col sm:flex-row gap-2 justify-center sm:justify-start flex-wrap">
+            <AssignKennelButton
+              animal={animal}
+              onAssigned={(kennel) => {
+                setAnimal(prev => prev ? {
+                  ...prev,
+                  current_kennel_id: kennel?.id ?? null,
+                  current_kennel_name: kennel?.name ?? null,
+                  current_kennel_code: kennel?.code ?? null,
+                } : null);
+              }}
+            />
             <Button
               variant="outline"
               size="sm"

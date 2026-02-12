@@ -73,6 +73,7 @@ export default function RequestMedicalProcedureDialog({
   const procedureTypes = [
     { value: 'checkup', label: t('medical.types.checkup') },
     { value: 'vaccination', label: t('medical.types.vaccination') },
+    { value: 'neutering', label: t('medical.types.neutering') },
     { value: 'surgery', label: t('medical.types.surgery') },
     { value: 'dental', label: t('medical.types.dental') },
     { value: 'bloodwork', label: t('medical.types.bloodwork') },

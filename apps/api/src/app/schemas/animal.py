@@ -140,6 +140,10 @@ class AnimalResponse(BaseModel):
     public_visibility: bool
     featured: bool
     primary_photo_url: str | None = None
+    default_image_url: str | None = None
+    current_kennel_id: str | None = None
+    current_kennel_name: str | None = None
+    current_kennel_code: str | None = None
     created_at: datetime
     updated_at: datetime
     breeds: list[AnimalBreedResponse] = []

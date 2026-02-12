@@ -278,6 +278,10 @@
     }
   },
   "animals": {
+    "view": {
+      "grid": "Kartičky",
+      "table": "Tabulka"
+    },
     "new": {
       "title": "Přidat nové zvíře",
       "subtitle": "Zaregistrovat nové zvíře v útulku",
@@ -306,6 +310,13 @@
       "cancel": "Zrušit",
       "success": "Zvíře bylo úspěšně vytvořeno!",
       "error": "Nepodařilo se vytvořit zvíře"
+    },
+    "alteredStatus": {
+      "label": "Kastrace",
+      "neutered": "Kastrován",
+      "spayed": "Sterilizována",
+      "intact": "Nekastrován",
+      "unknown": "Neznámo"
     },
     "colors": {
       "black": "Černá",
@@ -610,6 +621,7 @@
     "types": {
       "checkup": "Prohlídka / Rutinní vyšetření",
       "vaccination": "Očkování",
+      "neutering": "Kastrace / Sterilizace",
       "surgery": "Chirurgický zákrok",
       "dental": "Dentální péče",
       "bloodwork": "Odběr krve / Laboratorní testy",

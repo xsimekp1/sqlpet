@@ -276,6 +276,10 @@
     }
   },
   "animals": {
+    "view": {
+      "grid": "Cards",
+      "table": "Table"
+    },
     "new": {
       "title": "Add New Animal",
       "subtitle": "Register a new animal in the shelter",
@@ -304,6 +308,13 @@
       "cancel": "Cancel",
       "success": "Animal created successfully!",
       "error": "Failed to create animal"
+    },
+    "alteredStatus": {
+      "label": "Neutered",
+      "neutered": "Neutered",
+      "spayed": "Spayed",
+      "intact": "Intact",
+      "unknown": "Unknown"
     },
     "colors": {
       "black": "Black",
@@ -608,6 +619,7 @@
     "types": {
       "checkup": "Check-up / Routine Exam",
       "vaccination": "Vaccination",
+      "neutering": "Castration / Neutering",
       "surgery": "Surgery",
       "dental": "Dental Care",
       "bloodwork": "Blood Work / Lab Tests",

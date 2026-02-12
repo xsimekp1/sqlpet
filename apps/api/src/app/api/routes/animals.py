@@ -11,6 +11,7 @@ from src.app.api.dependencies.auth import (
 )
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Species
+from src.app.models.kennel import KennelStay, Kennel as KennelModel
 from src.app.models.breed import Breed
 from src.app.models.breed_i18n import BreedI18n
 from src.app.models.file import DefaultAnimalImage
@@ -26,9 +27,10 @@ from src.app.schemas.animal import (
     BreedResponse,
 )
 from src.app.services.animal_service import AnimalService
+from src.app.services.default_image_service import DefaultImageService
 
 
-def _build_animal_response(animal) -> AnimalResponse:
+async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
     """Build AnimalResponse from ORM object with nested breeds and identifiers."""
     breeds = [
         AnimalBreedResponse(
@@ -46,6 +48,24 @@ def _build_animal_response(animal) -> AnimalResponse:
     resp = AnimalResponse.model_validate(animal)
     resp.breeds = breeds
     resp.identifiers = identifiers
+    breed_id = animal.animal_breeds[0].breed_id if animal.animal_breeds else None
+    svc = DefaultImageService(db)
+    default_img = await svc.get_default_image_for_animal(
+        species=animal.species, breed_id=breed_id, color=animal.color,
+    )
+    resp.default_image_url = default_img.public_url if default_img else None
+    stay_result = await db.execute(
+        select(KennelStay, KennelModel.name, KennelModel.code)
+        .join(KennelModel, KennelModel.id == KennelStay.kennel_id)
+        .where(KennelStay.animal_id == animal.id, KennelStay.end_at.is_(None))
+        .limit(1)
+    )
+    stay_row = stay_result.first()
+    if stay_row:
+        stay, kennel_name, kennel_code = stay_row
+        resp.current_kennel_id = str(stay.kennel_id)
+        resp.current_kennel_name = kennel_name
+        resp.current_kennel_code = kennel_code
     return resp
 
 
@@ -75,7 +95,7 @@ async def create_animal(
     await db.commit()
     # Re-fetch to ensure relationships are loaded after commit
     await db.refresh(animal)
-    return _build_animal_response(animal)
+    return await _build_animal_response(animal, db)
 
 
 @router.get(
@@ -108,8 +128,11 @@ async def list_animals(
             sex=sex,
             search=search,
         )
+        built_items = []
+        for a in items:
+            built_items.append(await _build_animal_response(a, db))
         return AnimalListResponse(
-            items=[_build_animal_response(a) for a in items],
+            items=built_items,
             total=total,
             page=page,
             page_size=page_size,
@@ -138,7 +161,7 @@ async def get_animal(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
         )
-    return _build_animal_response(animal)
+    return await _build_animal_response(animal, db)
 
 
 @router.patch(
@@ -168,7 +191,7 @@ async def update_animal(
         )
     await db.commit()
     await db.refresh(animal)
-    return _build_animal_response(animal)
+    return await _build_animal_response(animal, db)
 
 
 @router.delete(

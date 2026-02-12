@@ -91,11 +91,16 @@ export interface Animal {
   name: string;
   species: 'dog' | 'cat' | 'rabbit' | 'bird' | 'other';
   sex: 'male' | 'female' | 'unknown';
+  altered_status: 'intact' | 'neutered' | 'spayed' | 'unknown';
   color: string | null;
   estimated_age_years: number | null;
   intake_date: string;
   status: 'intake' | 'available' | 'reserved' | 'adopted' | 'fostered' | 'returned' | 'deceased' | 'transferred' | 'hold' | 'quarantine' | 'returned_to_owner' | 'euthanized' | 'escaped';
   primary_photo_url: string | null;
+  default_image_url: string | null;
+  current_kennel_id: string | null;
+  current_kennel_name: string | null;
+  current_kennel_code: string | null;
   breeds?: AnimalBreed[];
   created_at: string;
   updated_at: string;
@@ -604,7 +609,7 @@ class ApiClient {
    * Get all animals for current organization
    * M3: Animals CRUD
    */
-  static async getAnimals(params?: { status?: string; species?: string; search?: string }): Promise<{ items: Animal[]; total: number }> {
+  static async getAnimals(params?: { status?: string; species?: string; search?: string; page_size?: number }): Promise<{ items: Animal[]; total: number }> {
     try {
       // Get current organization from localStorage
       const organizationId = this.getOrganizationId();
@@ -618,6 +623,7 @@ class ApiClient {
       if (params?.status) queryParams.append('status', params.status);
       if (params?.species) queryParams.append('species', params.species);
       if (params?.search) queryParams.append('search', params.search);
+      if (params?.page_size) queryParams.append('page_size', String(params.page_size));
       const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
 
       const response = await axios.get<{ items: Animal[], total: number, page: number, page_size: number }>(
