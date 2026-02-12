@@ -720,7 +720,7 @@ class ApiClient {
     try {
       const organizationId = this.getOrganizationId();
 
-      const response = await axios.put<Animal>(
+      const response = await axios.patch<Animal>(
         `${API_URL}/animals/${id}`,
         data,
         {
