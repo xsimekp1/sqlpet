@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { ArrowLeft } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
+import { ArrowLeft, ImageOff } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,27 +30,43 @@ interface Breed {
   id: string;
   name: string;
   species: string;
+  display_name: string;
+}
+
+interface ColorImage {
+  color: string;
+  image_url: string;
 }
 
 export default function NewAnimalPage() {
   const router = useRouter();
   const t = useTranslations('animals.new');
+  const tColors = useTranslations('animals.colors');
+  const locale = useLocale();
+
   const [loading, setLoading] = useState(false);
   const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [colorImages, setColorImages] = useState<ColorImage[]>([]);
   const [selectedSpecies, setSelectedSpecies] = useState<string>('');
   const [selectedBreed, setSelectedBreed] = useState<string>('');
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [previewImageUrl, setPreviewImageUrl] = useState<string>('');
+  const [loadingColors, setLoadingColors] = useState(false);
 
   // Fetch breeds when species changes
   useEffect(() => {
     if (!selectedSpecies) {
       setBreeds([]);
       setSelectedBreed('');
+      setColorImages([]);
+      setSelectedColor('');
+      setPreviewImageUrl('');
       return;
     }
 
     const fetchBreeds = async () => {
       try {
-        const data = await ApiClient.getBreeds(selectedSpecies);
+        const data = await ApiClient.getBreeds(selectedSpecies, locale);
         setBreeds(data);
       } catch (error) {
         console.error('Failed to fetch breeds:', error);
@@ -58,7 +75,63 @@ export default function NewAnimalPage() {
     };
 
     fetchBreeds();
-  }, [selectedSpecies]);
+  }, [selectedSpecies, locale]);
+
+  // Fetch available colors when breed changes
+  useEffect(() => {
+    if (!selectedBreed) {
+      setColorImages([]);
+      setSelectedColor('');
+      setPreviewImageUrl('');
+      return;
+    }
+
+    const fetchColors = async () => {
+      setLoadingColors(true);
+      try {
+        const data = await ApiClient.getBreedColorImages(selectedBreed);
+        setColorImages(data);
+      } catch (error) {
+        console.error('Failed to fetch breed colors:', error);
+        setColorImages([]);
+      } finally {
+        setLoadingColors(false);
+      }
+    };
+
+    fetchColors();
+    setSelectedColor('');
+    setPreviewImageUrl('');
+  }, [selectedBreed]);
+
+  // Update preview image when color changes
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color);
+    const match = colorImages.find((ci) => ci.color === color);
+    setPreviewImageUrl(match?.image_url || '');
+  };
+
+  const handleSpeciesChange = (value: string) => {
+    setSelectedSpecies(value);
+    setSelectedBreed('');
+    setSelectedColor('');
+    setPreviewImageUrl('');
+  };
+
+  const handleBreedChange = (value: string) => {
+    setSelectedBreed(value);
+    setSelectedColor('');
+    setPreviewImageUrl('');
+  };
+
+  // Translate color name, fallback to raw value
+  const getColorLabel = (color: string): string => {
+    try {
+      return tColors(color as any);
+    } catch {
+      return color.replace(/_/g, ' ').replace(/-/g, ' ');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,14 +141,13 @@ export default function NewAnimalPage() {
 
     const data: any = {
       name: formData.get('name') as string,
-      species: formData.get('species') as 'dog' | 'cat' | 'rabbit' | 'other',
-      sex: formData.get('sex') as 'male' | 'female' | 'unknown',
-      color: (formData.get('color') as string) || null,
+      species: formData.get('species') as string,
+      sex: formData.get('sex') as string,
+      color: selectedColor || null,
       intake_date: formData.get('intake_date') as string,
       status: 'available',
     };
 
-    // Add breed if selected
     if (selectedBreed) {
       data.breeds = [{ breed_id: selectedBreed }];
     }
@@ -103,138 +175,183 @@ export default function NewAnimalPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground mt-1">
-            {t('subtitle')}
-          </p>
+          <p className="text-muted-foreground mt-1">{t('subtitle')}</p>
         </div>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit}>
-         <Card>
-           <CardHeader>
-             <CardTitle>{t('basicInfo')}</CardTitle>
-             <CardDescription>
-               {t('basicInfoDesc')}
-             </CardDescription>
-           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">{t('name')}</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder={t('namePlaceholder')}
-                required
-              />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main form - takes 2/3 width on large screens */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('basicInfo')}</CardTitle>
+                <CardDescription>{t('basicInfoDesc')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="name">{t('name')}</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder={t('namePlaceholder')}
+                    required
+                  />
+                </div>
 
-            {/* Species & Sex */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="species">{t('species')}</Label>
-                <Select name="species" required onValueChange={setSelectedSpecies}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('speciesPlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dog">Dog</SelectItem>
-                    <SelectItem value="cat">Cat</SelectItem>
-                    <SelectItem value="rabbit">Rabbit</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                {/* Species & Sex */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="species">{t('species')}</Label>
+                    <Select
+                      name="species"
+                      required
+                      onValueChange={handleSpeciesChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('speciesPlaceholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dog">Pes / Dog</SelectItem>
+                        <SelectItem value="cat">Kočka / Cat</SelectItem>
+                        <SelectItem value="rabbit">Králík / Rabbit</SelectItem>
+                        <SelectItem value="other">Jiné / Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="sex">{t('sex')}</Label>
-                <Select name="sex" required>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('sexPlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="unknown">Unknown</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sex">{t('sex')}</Label>
+                    <Select name="sex" required>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('sexPlaceholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Pes / Male</SelectItem>
+                        <SelectItem value="female">Fena / Female</SelectItem>
+                        <SelectItem value="unknown">Neznámé / Unknown</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-            {/* Breed (only shown after species selected) */}
-            {selectedSpecies && (
-              <div className="space-y-2">
-                <Label htmlFor="breed">{t('breed')}</Label>
-                <Select value={selectedBreed} onValueChange={setSelectedBreed}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('breedPlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {breeds.length === 0 ? (
-                      <SelectItem value="none" disabled>{t('breedLoading')}</SelectItem>
+                {/* Breed (only shown after species selected) */}
+                {selectedSpecies && (
+                  <div className="space-y-2">
+                    <Label htmlFor="breed">{t('breed')}</Label>
+                    <Select value={selectedBreed} onValueChange={handleBreedChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('breedPlaceholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {breeds.length === 0 ? (
+                          <SelectItem value="__loading" disabled>
+                            {t('breedLoading')}
+                          </SelectItem>
+                        ) : (
+                          breeds.map((breed) => (
+                            <SelectItem key={breed.id} value={breed.id}>
+                              {breed.display_name || breed.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Color (only shown after breed selected, as dropdown from images) */}
+                {selectedBreed && (
+                  <div className="space-y-2">
+                    <Label htmlFor="color">{t('color')}</Label>
+                    {loadingColors ? (
+                      <p className="text-sm text-muted-foreground">{t('colorLoading')}</p>
+                    ) : colorImages.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">{t('noColorsAvailable')}</p>
                     ) : (
-                      breeds.map(breed => (
-                        <SelectItem key={breed.id} value={breed.id}>
-                          {breed.name}
-                        </SelectItem>
-                      ))
+                      <Select value={selectedColor} onValueChange={handleColorChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('colorPlaceholder')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {colorImages.map((ci) => (
+                            <SelectItem key={ci.color} value={ci.color}>
+                              {getColorLabel(ci.color)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+                  </div>
+                )}
 
-            {/* Color & Age */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="color">{t('color')}</Label>
-                <Input
-                  id="color"
-                  name="color"
-                  placeholder={t('colorPlaceholder')}
-                />
-              </div>
+                {/* Intake Date */}
+                <div className="space-y-2">
+                  <Label htmlFor="intake_date">{t('intakeDate')}</Label>
+                  <Input
+                    id="intake_date"
+                    name="intake_date"
+                    type="date"
+                    required
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
 
-              {/* TODO: M3+ - Add age fields (birth_date_estimated, age_group) to match backend schema */}
-              {/* <div className="space-y-2">
-                <Label htmlFor="estimated_age_years">{t('estimatedAge')}</Label>
-                <Input
-                  id="estimated_age_years"
-                  name="estimated_age_years"
-                  type="number"
-                  min="0"
-                  max="30"
-                  placeholder={t('estimatedAgePlaceholder')}
-                />
-              </div> */}
-            </div>
+                {/* Buttons */}
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" disabled={loading}>
+                    {loading ? t('creating') : t('create')}
+                  </Button>
+                  <Link href="/dashboard/animals">
+                    <Button type="button" variant="outline">
+                      {t('cancel')}
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-            {/* Intake Date */}
-            <div className="space-y-2">
-              <Label htmlFor="intake_date">{t('intakeDate')}</Label>
-              <Input
-                id="intake_date"
-                name="intake_date"
-                type="date"
-                required
-                defaultValue={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-
-            {/* Buttons */}
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" disabled={loading}>
-                {loading ? t('creating') : t('create')}
-              </Button>
-              <Link href="/dashboard/animals">
-                <Button type="button" variant="outline">
-                  {t('cancel')}
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Image preview - 1/3 width on large screens */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-6">
+              <CardHeader>
+                <CardTitle className="text-base">{t('previewTitle')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {previewImageUrl ? (
+                  <div className="space-y-2">
+                    <div className="rounded-lg overflow-hidden border bg-muted aspect-square relative">
+                      <Image
+                        src={previewImageUrl}
+                        alt={`${selectedBreed} - ${selectedColor}`}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                      {t('defaultImageHint')}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border bg-muted aspect-square flex flex-col items-center justify-center text-muted-foreground gap-2">
+                    <ImageOff className="h-10 w-10 opacity-30" />
+                    <p className="text-xs text-center px-4">
+                      {selectedBreed
+                        ? t('colorPlaceholder')
+                        : selectedSpecies
+                        ? t('breedPlaceholder')
+                        : t('speciesPlaceholder')}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </form>
     </div>
   );

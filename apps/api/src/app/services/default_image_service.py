@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from src.app.core.config import settings
 from src.app.models.file import File, DefaultAnimalImage
@@ -51,7 +51,7 @@ class DefaultImageService:
         """Find breed ID by name and species"""
         result = await self.db.execute(
             select(Breed).where(
-                Breed.name.lower() == breed_name.lower(), Breed.species == species
+                func.lower(Breed.name) == breed_name.lower(), Breed.species == species
             )
         )
         breed = result.scalar_one_or_none()
@@ -225,11 +225,11 @@ class DefaultImageService:
                 )
 
                 print(
-                    f"✅ Imported: {file_path.name} -> {parsed['species']} / {parsed['breed']} / {parsed['color']}"
+                    f"IMPORTED: {file_path.name} -> {parsed['species']} / {parsed['breed']} / {parsed['color']}"
                 )
 
             except Exception as e:
-                print(f"❌ Failed to import {file_path.name}: {str(e)}")
+                print(f"FAILED to import {file_path.name}: {str(e)}")
                 continue
 
         # Commit all changes

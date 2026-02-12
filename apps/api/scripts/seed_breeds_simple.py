@@ -106,6 +106,24 @@ async def main():
     conn = await asyncpg.connect(db_url)
 
     try:
+        # Step 0: Delete breeds not in our known list (cleanup)
+        known_breeds = list(BREED_DATA.keys())
+        # Build $1,$2,...$N placeholders for the IN clause
+        placeholders = ", ".join(f"${i+1}" for i in range(len(known_breeds)))
+        deleted = await conn.fetchval(
+            f"SELECT COUNT(*) FROM breeds WHERE species = 'dog' AND name NOT IN ({placeholders})",
+            *known_breeds
+        )
+        if deleted > 0:
+            print(f"Deleting {deleted} unknown dog breeds...")
+            await conn.execute(
+                f"DELETE FROM breeds WHERE species = 'dog' AND name NOT IN ({placeholders})",
+                *known_breeds
+            )
+            print(f"CLEANED: Removed {deleted} old/unknown dog breeds")
+        else:
+            print(f"OK: No unknown breeds to clean up")
+
         created = 0
         skipped = 0
 

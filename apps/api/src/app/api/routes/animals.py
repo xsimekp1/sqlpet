@@ -12,6 +12,8 @@ from src.app.api.dependencies.auth import (
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Species
 from src.app.models.breed import Breed
+from src.app.models.breed_i18n import BreedI18n
+from src.app.models.file import DefaultAnimalImage
 from src.app.models.user import User
 from src.app.schemas.animal import (
     AnimalCreate,
@@ -20,6 +22,7 @@ from src.app.schemas.animal import (
     AnimalUpdate,
     AnimalBreedResponse,
     AnimalIdentifierResponse,
+    BreedColorImageResponse,
     BreedResponse,
 )
 from src.app.services.animal_service import AnimalService
@@ -202,11 +205,49 @@ breed_router = APIRouter(prefix="/breeds", tags=["breeds"])
 @breed_router.get("", response_model=list[BreedResponse])
 async def list_breeds(
     species: str | None = Query(None),
+    locale: str = Query(default="cs"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(Breed).order_by(Breed.species, Breed.name)
+    q = (
+        select(Breed, BreedI18n.name.label("i18n_name"))
+        .outerjoin(
+            BreedI18n,
+            (BreedI18n.breed_id == Breed.id) & (BreedI18n.locale == locale),
+        )
+        .order_by(Breed.species, Breed.name)
+    )
     if species:
         q = q.where(Breed.species == species)
     result = await db.execute(q)
-    return list(result.scalars().all())
+    rows = result.fetchall()
+    responses = []
+    for breed, i18n_name in rows:
+        resp = BreedResponse(
+            id=breed.id,
+            species=breed.species,
+            name=breed.name,
+            display_name=i18n_name or breed.name,
+        )
+        responses.append(resp)
+    return responses
+
+
+@breed_router.get("/{breed_id}/color-images", response_model=list[BreedColorImageResponse])
+async def get_breed_color_images(
+    breed_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return available color options with image URLs for a given breed."""
+    result = await db.execute(
+        select(DefaultAnimalImage.color_pattern, DefaultAnimalImage.public_url)
+        .where(
+            DefaultAnimalImage.breed_id == breed_id,
+            DefaultAnimalImage.color_pattern.is_not(None),
+            DefaultAnimalImage.is_active == True,
+        )
+        .order_by(DefaultAnimalImage.color_pattern)
+    )
+    rows = result.fetchall()
+    return [BreedColorImageResponse(color=row[0], image_url=row[1]) for row in rows]

@@ -23,8 +23,14 @@ class BreedResponse(BaseModel):
     id: uuid.UUID
     species: Species
     name: str
+    display_name: str | None = None  # Translated name from breeds_i18n
 
     model_config = {"from_attributes": True}
+
+
+class BreedColorImageResponse(BaseModel):
+    color: str
+    image_url: str
 
 
 # --- AnimalBreed schemas ---

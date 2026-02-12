@@ -787,13 +787,16 @@ class ApiClient {
   }
 
   /**
-   * Get breeds for a species
+   * Get breeds for a species with translated display names
    */
-  static async getBreeds(species?: string): Promise<Array<{ id: string; name: string; species: string }>> {
+  static async getBreeds(species?: string, locale?: string): Promise<Array<{ id: string; name: string; species: string; display_name: string }>> {
     try {
-      const params = species ? `?species=${species}` : '';
+      const params = new URLSearchParams();
+      if (species) params.set('species', species);
+      if (locale) params.set('locale', locale);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axios.get(
-        `${API_URL}/breeds${params}`,
+        `${API_URL}/breeds${queryString}`,
         {
           headers: this.getAuthHeaders(),
         }
@@ -804,6 +807,29 @@ class ApiClient {
         const axiosError = error as AxiosError<ApiError>;
         throw new Error(
           axiosError.response?.data?.detail || 'Failed to fetch breeds'
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Get available color options with image URLs for a breed
+   */
+  static async getBreedColorImages(breedId: string): Promise<Array<{ color: string; image_url: string }>> {
+    try {
+      const response = await axios.get(
+        `${API_URL}/breeds/${breedId}/color-images`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || 'Failed to fetch breed colors'
         );
       }
       throw new Error('An unexpected error occurred');
