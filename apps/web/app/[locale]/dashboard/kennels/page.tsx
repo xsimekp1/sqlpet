@@ -150,7 +150,7 @@ export default function KennelsPage() {
     const matchesSize = !filters.size_category || kennel.size_category === filters.size_category;
     
     const matchesOccupancy = !filters.occupancy || 
-      getOccupancyStatus(kennel.occupied_count, kennel.capacity) === filters.occupancy;
+      t(`kennels.occupancy.${getOccupancyStatus(kennel.occupied_count, kennel.capacity)}`) === filters.occupancy;
 
     return matchesSearch && matchesZone && matchesStatus && matchesType && matchesSize && matchesOccupancy;
   });
@@ -218,11 +218,11 @@ export default function KennelsPage() {
             </div>
             <CardDescription className="font-medium">{kennel.name}</CardDescription>
             <div className="flex items-center gap-2">
-              <Badge variant={getStatusColor(kennel.status)} className="capitalize">
-                {kennel.status}
+              <Badge variant={getStatusColor(kennel.status)}>
+                {t(`kennels.status.${kennel.status}`)}
               </Badge>
               <Badge className={getTypeColor(kennel.type)} variant="outline">
-                {kennel.type}
+                {t(`kennels.type.${kennel.type}`)}
               </Badge>
             </div>
           </CardHeader>
@@ -270,7 +270,7 @@ export default function KennelsPage() {
                 </div>
               ) : (
                 <div className="aspect-video bg-gray-100 rounded flex items-center justify-center text-gray-400">
-                  No animals
+                  {t('kennels.noResults.withFilter') || 'No animals'}
                 </div>
               )}
             </div>
@@ -278,7 +278,7 @@ export default function KennelsPage() {
             {/* Occupancy and Alerts */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Occupancy</span>
+                <span className="text-sm text-muted-foreground">{t('kennels.occupancy')}</span>
                 <span className="text-sm font-medium">
                   {kennel.occupied_count}/{kennel.capacity}
                 </span>
