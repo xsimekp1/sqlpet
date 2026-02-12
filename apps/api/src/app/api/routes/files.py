@@ -2,13 +2,13 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...api.deps import get_current_user, get_async_db_session
-from ...models.user import User
-from ...models.file import File, EntityFile
-from ...models.animal import Animal
-from ...services.file_upload_service import file_upload_service
-from ...services.supabase_storage_service import supabase_storage_service
-from ...core.config import settings
+from src.app.api.deps import get_current_user, get_async_db_session
+from src.app.models.user import User
+from src.app.models.file import File, EntityFile
+from src.app.models.animal import Animal
+from src.app.services.file_upload_service import file_upload_service
+from src.app.services.supabase_storage_service import supabase_storage_service
+from src.app.core.config import settings
 from pydantic import BaseModel
 from uuid import UUID
 import uuid
