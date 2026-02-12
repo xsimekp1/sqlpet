@@ -48,7 +48,6 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
     sex: animal.sex,
     color: animal.color || '',
     estimated_age_years: animal.estimated_age_years || 0,
-    intake_date: animal.intake_date ? new Date(animal.intake_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 
   const startEdit = () => {
@@ -56,7 +55,6 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
       sex: animal.sex,
       color: animal.color || '',
       estimated_age_years: animal.estimated_age_years || 0,
-      intake_date: animal.intake_date ? new Date(animal.intake_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setIsEditing(true);
   };
@@ -66,7 +64,6 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
       sex: animal.sex,
       color: animal.color || '',
       estimated_age_years: animal.estimated_age_years || 0,
-      intake_date: animal.intake_date ? new Date(animal.intake_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     });
     setIsEditing(false);
   };
@@ -85,9 +82,6 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
       }
       if (editedData.estimated_age_years !== animal.estimated_age_years) {
         updateData.estimated_age_years = editedData.estimated_age_years;
-      }
-      if (editedData.intake_date !== (animal.intake_date ? new Date(animal.intake_date).toISOString().split('T')[0] : '')) {
-        updateData.intake_date = editedData.intake_date;
       }
 
       if (Object.keys(updateData).length === 0) {
@@ -158,18 +152,6 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
             max="30"
           />
           <p className="text-xs text-muted-foreground">years</p>
-        </div>
-
-        {/* Intake Date */}
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">Intake Date</p>
-          <Input
-            type="date"
-            value={editedData.intake_date}
-            onChange={(e) => setEditedData(prev => ({ ...prev, intake_date: e.target.value || '' }))}
-            disabled={isSaving}
-            max={new Date().toISOString().split('T')[0]}
-          />
         </div>
 
         {/* Save/Cancel buttons */}
@@ -264,24 +246,26 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
         </div>
       )}
 
-      {/* Intake Date - editable */}
+      {/* Intake Date - read-only (from stays data) */}
       <div className="space-y-1">
-        <p className="text-sm text-muted-foreground flex items-center gap-2">
+        <p className="text-sm text-muted-foreground">
           Intake Date
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={startEdit}
-            className="h-6 w-6 p-0"
-          >
-            <Edit className="h-3 w-3" />
-          </Button>
         </p>
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <p className="font-medium">{new Date(animal.intake_date).toLocaleDateString()}</p>
         </div>
       </div>
+
+      {/* Breed - read-only */}
+      {animal.breeds && animal.breeds.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">Breed</p>
+          <p className="font-medium">
+            {animal.breeds.map(b => b.breed_name).join(', ')}
+          </p>
+        </div>
+      )}
 
       {/* Status - static */}
       <div className="space-y-1">

@@ -77,6 +77,13 @@ export interface TaskListResponse {
 }
 
 // Animal types
+export interface AnimalBreed {
+  breed_id: string;
+  breed_name: string;
+  breed_species: string;
+  percent: number | null;
+}
+
 export interface Animal {
   id: string;
   organization_id: string;
@@ -89,6 +96,7 @@ export interface Animal {
   intake_date: string;
   status: 'intake' | 'available' | 'reserved' | 'adopted' | 'fostered' | 'returned' | 'deceased' | 'transferred' | 'hold' | 'quarantine' | 'returned_to_owner' | 'euthanized' | 'escaped';
   primary_photo_url: string | null;
+  breeds?: AnimalBreed[];
   created_at: string;
   updated_at: string;
 }
