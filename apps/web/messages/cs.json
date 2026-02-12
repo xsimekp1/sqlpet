@@ -226,37 +226,22 @@
     }
   },
 "kennels": {
-      "title": "Kotce",
-          "description": "Správa kotců a zón útulku",
-      "search": "Hledat kotce...",
-      "filters": {
-        "zone": "Zóna",
-        "status": "Stav",
-        "type": "Typ",
-        "size": "Velikost",
-        "occupancy": "Obsazenost"
-      },
-      "quickActions": {
-        "addKennel": "Přidat kotec",
-        "manageZones": "Spravovat zóny",
-        "walkMode": "Režim obchůzky",
-        "title": "Rychlé akce",
-        "description": "Označit všechny úkoly jako hotové nebo přidat poznámky o tomto kotci..."
-      },
-      "view": {
-        "table": "Tabulka",
-        "grid": "Karty"
-      },
-      "occupancy": {
-        "empty": "Volný",
-        "partial": "Částečně obsazený",
-        "full": "Plně obsazený",
-        "over": "Přesahnutý"
-      },
+    "title": "Kotce",
+    "description": "Správa kotců a zón útulku",
+    "search": "Hledat kotce...",
+    "filters": {
+      "zone": "Zóna",
+      "status": "Stav",
+      "type": "Typ",
+      "size": "Velikost",
+      "occupancy": "Obsazenost"
+    },
     "quickActions": {
       "addKennel": "Přidat kotec",
       "manageZones": "Spravovat zóny",
-      "walkMode": "Režim obchůzky"
+      "walkMode": "Režim obchůzky",
+      "title": "Rychlé akce",
+      "description": "Označit všechny úkoly jako hotové nebo přidat poznámky o tomto kotci..."
     },
     "view": {
       "table": "Tabulka",
