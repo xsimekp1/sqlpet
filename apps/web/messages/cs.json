@@ -74,6 +74,44 @@
     "cs": "Čeština",
     "en": "English"
   },
+  "medical": {
+    "title": "Lékařská péče",
+    "description": "Zdravotní péče, karanténa a medikace",
+    "quarantine": {
+      "title": "Zvířata v karanténě",
+      "description": "Zvířata v karanténě vyžadující pozornost",
+      "count": "{count, plural, =0 {Žádná zvířata} =1 {# zvíře} =2 {# zvířata} other {# zvířat}}",
+      "noAnimals": "Žádná zvířata v karanténě"
+    },
+    "stock": {
+      "title": "Stavy léků na skladu",
+      "description": "Přehled zásob léků a vakcín",
+      "lowStock": "Nízký stav",
+      "outOfStock": "Není skladem",
+      "medications": "Léky",
+      "vaccines": "Vakcíny",
+      "comingSoon": "Připravujeme...",
+      "implementNote": "Integrace se skladem bude přidána v další fázi"
+    },
+    "tasks": {
+      "title": "Lékařské úkoly",
+      "description": "Úkoly související se zdravotní péčí",
+      "count": "{count, plural, =0 {Žádné úkoly} =1 {# úkol} =2 {# úkoly} other {# úkolů}}",
+      "dueToday": "Dnes",
+      "overdue": "Po termínu",
+      "comingSoon": "Připravujeme...",
+      "implementNote": "Filtrování úkolů podle typu bude přidáno v další fázi"
+    },
+    "schedule": {
+      "title": "Plán podávání léků",
+      "description": "Denní harmonogram medikace (budoucí funkce)",
+      "comingSoon": "Připravujeme...",
+      "futureFeature": "Tato funkce bude dostupná po implementaci lékařského backendu"
+    },
+    "errors": {
+      "fetchFailed": "Nepodařilo se načíst data lékařské péče"
+    }
+  },
   "alerts": {
     "title": "Upozornění",
     "description": "Máte {count, plural, =0 {žádná nová upozornění} =1 {# nové upozornění} other {# nová upozornění}}",

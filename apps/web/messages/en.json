@@ -74,6 +74,44 @@
     "cs": "Čeština",
     "en": "English"
   },
+  "medical": {
+    "title": "Medical Care",
+    "description": "Health care, quarantine, and medication",
+    "quarantine": {
+      "title": "Animals in Quarantine",
+      "description": "Animals in quarantine requiring attention",
+      "count": "{count, plural, =0 {No animals} =1 {# animal} other {# animals}}",
+      "noAnimals": "No animals in quarantine"
+    },
+    "stock": {
+      "title": "Medication Stock Levels",
+      "description": "Overview of medication and vaccine inventory",
+      "lowStock": "Low stock",
+      "outOfStock": "Out of stock",
+      "medications": "Medications",
+      "vaccines": "Vaccines",
+      "comingSoon": "Coming soon...",
+      "implementNote": "Inventory integration will be added in a future phase"
+    },
+    "tasks": {
+      "title": "Medical Tasks",
+      "description": "Health care related tasks",
+      "count": "{count, plural, =0 {No tasks} =1 {# task} other {# tasks}}",
+      "dueToday": "Due today",
+      "overdue": "Overdue",
+      "comingSoon": "Coming soon...",
+      "implementNote": "Task filtering by type will be added in a future phase"
+    },
+    "schedule": {
+      "title": "Medication Schedule",
+      "description": "Daily medication administration schedule (future feature)",
+      "comingSoon": "Coming soon...",
+      "futureFeature": "This feature will be available after medical backend implementation"
+    },
+    "errors": {
+      "fetchFailed": "Failed to fetch medical data"
+    }
+  },
   "alerts": {
     "title": "Alerts",
     "description": "You have {count, plural, =0 {no new alerts} =1 {# new alert} other {# new alerts}}",
