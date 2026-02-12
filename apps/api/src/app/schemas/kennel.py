@@ -91,7 +91,7 @@ class KennelListResponse(BaseModel):
 
 class MoveAnimalRequest(BaseModel):
     animal_id: str
-    target_kennel_id: str | None  # None = remove from kennel
+    target_kennel_id: Union[str, None]  # None = remove from kennel
     reason: str = "move"
     notes: str | None = None
     allow_overflow: bool = False
