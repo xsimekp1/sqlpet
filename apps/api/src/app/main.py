@@ -18,7 +18,8 @@ from src.app.api.routes.timezones import router as timezones_router
     print("✅ Files router imported successfully")
 except Exception as e:
     print(f"❌ Failed to import files router: {e}")
-    files_router = None
+files_router = None
+
 from src.app.db.session import async_engine
 
 
