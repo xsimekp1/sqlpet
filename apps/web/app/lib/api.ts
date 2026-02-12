@@ -180,6 +180,65 @@ class ApiClient {
   }
 
   /**
+   * Get organization ID from selected org in localStorage
+   */
+  private static getOrganizationId(): string | null {
+    if (typeof window === 'undefined') return null;
+    const selectedOrg = localStorage.getItem('selectedOrg');
+    if (!selectedOrg) return null;
+    try {
+      const org = JSON.parse(selectedOrg);
+      return org.id;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Generic GET request
+   */
+  static async get<T = any>(endpoint: string, params?: Record<string, any>): Promise<T> {
+    try {
+      const response = await axios.get<T>(`${API_URL}${endpoint}`, {
+        params,
+        headers: this.getAuthHeaders(),
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || `Failed to fetch ${endpoint}`
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Generic POST request
+   */
+  static async post<T = any>(endpoint: string, data?: any): Promise<T> {
+    try {
+      const response = await axios.post<T>(`${API_URL}${endpoint}`, data, {
+        headers: {
+          ...this.getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(
+          axiosError.response?.data?.detail || `Failed to post to ${endpoint}`
+        );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
    * Login with email and password
    * Backend expects JSON with email and password fields
    */
