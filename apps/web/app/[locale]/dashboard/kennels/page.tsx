@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { 
   Plus, Search, Loader2, Grid, Table, MapPin, Settings, 
-  Footprints, MoreHorizontal, AlertTriangle, Users, Edit
+  Footprints, MoreHorizontal, AlertTriangle, Users, Edit, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -159,10 +159,13 @@ export default function KennelsPage() {
 
   const KennelCard = ({ kennel }: { kennel: Kennel }) => {
     const occupancyPercent = (kennel.occupied_count / kennel.capacity) * 100;
+    const isFull = kennel.occupied_count >= kennel.capacity;
     
     return (
       <Link href={`/dashboard/kennels/${kennel.id}`}>
-        <Card className="hover:shadow-md transition-shadow cursor-pointer group">
+        <Card className={`hover:shadow-md transition-shadow cursor-pointer group ${
+          isFull ? 'border-2 border-red-500' : ''
+        }`}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -262,9 +265,17 @@ export default function KennelsPage() {
               </div>
               <Progress value={occupancyPercent} className="h-2" />
               <div className="flex justify-between items-center">
-                <Badge className={getOccupancyStatusColor(kennel.occupied_count, kennel.capacity)}>
-                  {t(`occupancy.${getOccupancyStatus(kennel.occupied_count, kennel.capacity)}`)}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className={getOccupancyStatusColor(kennel.occupied_count, kennel.capacity)}>
+                    {t(`occupancy.${getOccupancyStatus(kennel.occupied_count, kennel.capacity)}`)}
+                  </Badge>
+                  {isFull && (
+                    <div className="flex items-center gap-1 text-red-600">
+                      <AlertCircle className="h-3 w-3" />
+                      <span className="text-xs font-medium">FULL</span>
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-1">
                   <span className="text-xs capitalize">{kennel.size_category}</span>
                 </div>
@@ -387,7 +398,7 @@ export default function KennelsPage() {
                 <SelectItem value="all">{t('filters.occupancy')}</SelectItem>
                 <SelectItem value="empty">{t('occupancy.empty')}</SelectItem>
                 <SelectItem value="partial">{t('occupancy.partial')}</SelectItem>
-                <SelectItem value="full">{t('occupancy.full')}</SelectItem>
+                <SelectItem value="full" className="text-red-600 font-medium">{t('occupancy.full')}</SelectItem>
                 <SelectItem value="over">{t('occupancy.over')}</SelectItem>
               </SelectContent>
             </Select>

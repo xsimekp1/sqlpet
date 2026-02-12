@@ -123,7 +123,7 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
         {/* Sex */}
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Sex</p>
-          <Select value={editedData.sex} onValueChange={(value) => setEditedData(prev => ({ ...prev, sex: value }))}>
+          <Select value={editedData.sex} onValueChange={(value: 'male' | 'female' | 'unknown') => setEditedData(prev => ({ ...prev, sex: value }))}>
             <SelectTrigger disabled={isSaving}>
               <SelectValue placeholder="Vyberte pohlaví" />
             </SelectTrigger>
@@ -140,7 +140,7 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
           <p className="text-sm text-muted-foreground">Color</p>
           <Input
             value={editedData.color}
-            onChange={(e) => setEditedData(prev => ({ ...prev, color: e.target.value }))}
+            onChange={(e) => setEditedData(prev => ({ ...prev, color: e.target.value || '' }))}
             disabled={isSaving}
             placeholder="Zadejte barvu"
           />
@@ -166,7 +166,7 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
           <Input
             type="date"
             value={editedData.intake_date}
-            onChange={(e) => setEditedData(prev => ({ ...prev, intake_date: e.target.value }))}
+            onChange={(e) => setEditedData(prev => ({ ...prev, intake_date: e.target.value || '' }))}
             disabled={isSaving}
             max={new Date().toISOString().split('T')[0]}
           />
