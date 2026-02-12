@@ -2,14 +2,65 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.auth import get_current_user
-from src.app.db.session import get_async_db_session
-from src.app.models.user import User
-from src.app.models.file import File, EntityFile
-from src.app.models.animal import Animal
-from src.app.services.file_upload_service import file_upload_service
-from src.app.services.supabase_storage_service import supabase_storage_service
-from src.app.core.config import settings
+print("🔍 Starting files.py imports...")
+
+try:
+    from src.app.api.dependencies.auth import get_current_user
+
+    print("✅ Imported get_current_user")
+except Exception as e:
+    print(f"❌ Failed to import get_current_user: {e}")
+
+try:
+    from src.app.db.session import get_async_db_session
+
+    print("✅ Imported get_async_db_session")
+except Exception as e:
+    print(f"❌ Failed to import get_async_db_session: {e}")
+
+try:
+    from src.app.models.user import User
+
+    print("✅ Imported User model")
+except Exception as e:
+    print(f"❌ Failed to import User: {e}")
+
+try:
+    from src.app.models.file import File, EntityFile
+
+    print("✅ Imported File, EntityFile")
+except Exception as e:
+    print(f"❌ Failed to import File, EntityFile: {e}")
+
+try:
+    from src.app.models.animal import Animal
+
+    print("✅ Imported Animal model")
+except Exception as e:
+    print(f"❌ Failed to import Animal: {e}")
+
+try:
+    from src.app.services.file_upload_service import file_upload_service
+
+    print("✅ Imported file_upload_service")
+except Exception as e:
+    print(f"❌ Failed to import file_upload_service: {e}")
+
+try:
+    from src.app.services.supabase_storage_service import supabase_storage_service
+
+    print("✅ Imported supabase_storage_service")
+except Exception as e:
+    print(f"❌ Failed to import supabase_storage_service: {e}")
+
+try:
+    from src.app.core.config import settings
+
+    print("✅ Imported settings")
+except Exception as e:
+    print(f"❌ Failed to import settings: {e}")
+
+print("🔍 All imports in files.py completed")
 from pydantic import BaseModel
 from uuid import UUID
 import uuid

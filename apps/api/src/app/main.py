@@ -12,7 +12,14 @@ from src.app.api.routes.tasks import router as tasks_router
 from src.app.api.routes.feeding import router as feeding_router
 from src.app.api.routes.inventory import router as inventory_router
 from src.app.api.routes.tags import router as tags_router
-from src.app.api.routes.files import router as files_router
+
+try:
+    from src.app.api.routes.files import router as files_router
+
+    print("✅ Files router imported successfully")
+except Exception as e:
+    print(f"❌ Failed to import files router: {e}")
+    files_router = None
 from src.app.db.session import async_engine
 
 
@@ -83,4 +90,8 @@ app.include_router(tasks_router)
 app.include_router(feeding_router)
 app.include_router(inventory_router)
 app.include_router(tags_router)
-app.include_router(files_router)
+if files_router:
+    app.include_router(files_router)
+    print("✅ Files router included")
+else:
+    print("❌ Files router not included due to import errors")
