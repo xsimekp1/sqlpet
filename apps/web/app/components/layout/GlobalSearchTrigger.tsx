@@ -2,7 +2,7 @@
 
 import { Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useUIStore } from '@/app/stores/uiStore'
+import { useUIStore } from '@/stores/uiStore'
 import { Button } from '@/components/ui/button'
 import { useEffect } from 'react'
 

@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Mail, Phone, Shield, Calendar, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useOrganizationStore } from '@/app/store/organizationStore';
+import { useOrganizationStore } from '@/store/organizationStore';
 
 export default function PersonDetailPage() {
   const t = useTranslations('people');

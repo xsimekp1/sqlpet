@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Users, UserPlus, Mail, Phone, Shield, AlertCircle, Heart, Stethoscope, HandHeart, Home, Building } from 'lucide-react';
 import Link from 'next/link';
-import { useOrganizationStore } from '@/app/store/organizationStore';
+import { useOrganizationStore } from '@/store/organizationStore';
 
 type RoleFilter = 'all' | 'admin' | 'manager' | 'vet_staff' | 'caretaker' | 'volunteer';
 type ContactTypeFilter = 'all' | 'donor' | 'veterinarian' | 'volunteer' | 'foster' | 'supplier' | 'partner' | 'other';

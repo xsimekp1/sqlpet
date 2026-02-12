@@ -1,7 +1,7 @@
 'use client'
 
 import { LogOut, User as UserIcon, Settings } from 'lucide-react'
-import { useAuth } from '@/app/context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from 'next-intl'
 import {
   DropdownMenu,

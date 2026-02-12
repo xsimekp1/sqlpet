@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiClient, { Animal } from '@/lib/api';
 import { toast } from 'sonner';
-import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
+import RequestMedicalProcedureDialog from '@/components/animals/RequestMedicalProcedureDialog';
 
 export default function AnimalDetailPage() {
   const router = useRouter();
