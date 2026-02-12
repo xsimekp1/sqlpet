@@ -1,66 +1,23 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    UploadFile,
+    HTTPException,
+    Query,
+    File as FastAPIFile,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
-print("🔍 Starting files.py imports...")
-
-try:
-    from src.app.api.dependencies.auth import get_current_user
-
-    print("✅ Imported get_current_user")
-except Exception as e:
-    print(f"❌ Failed to import get_current_user: {e}")
-
-try:
-    from src.app.api.dependencies.db import get_db
-
-    print("✅ Imported get_db")
-except Exception as e:
-    print(f"❌ Failed to import get_db: {e}")
-
-try:
-    from src.app.models.user import User
-
-    print("✅ Imported User model")
-except Exception as e:
-    print(f"❌ Failed to import User: {e}")
-
-try:
-    from src.app.models.file import File, EntityFile
-
-    print("✅ Imported File, EntityFile")
-except Exception as e:
-    print(f"❌ Failed to import File, EntityFile: {e}")
-
-try:
-    from src.app.models.animal import Animal
-
-    print("✅ Imported Animal model")
-except Exception as e:
-    print(f"❌ Failed to import Animal: {e}")
-
-try:
-    from src.app.services.file_upload_service import file_upload_service
-
-    print("✅ Imported file_upload_service")
-except Exception as e:
-    print(f"❌ Failed to import file_upload_service: {e}")
-
-try:
-    from src.app.services.supabase_storage_service import supabase_storage_service
-
-    print("✅ Imported supabase_storage_service")
-except Exception as e:
-    print(f"❌ Failed to import supabase_storage_service: {e}")
-
-try:
-    from src.app.core.config import settings
-
-    print("✅ Imported settings")
-except Exception as e:
-    print(f"❌ Failed to import settings: {e}")
-
-print("🔍 All imports in files.py completed")
+from src.app.api.dependencies.auth import get_current_user
+from src.app.api.dependencies.db import get_db
+from src.app.models.user import User
+from src.app.models.file import File, EntityFile, StorageProvider
+from src.app.models.animal import Animal
+from src.app.services.file_upload_service import file_upload_service
+from src.app.services.supabase_storage_service import supabase_storage_service
+from src.app.core.config import settings
 from pydantic import BaseModel
 from uuid import UUID
 import uuid
@@ -86,7 +43,7 @@ class EntityFileLinkRequest(BaseModel):
 
 @router.post("/upload", response_model=FileUploadResponse)
 async def upload_file(
-    file: UploadFile = File(...),
+    file: UploadFile = FastAPIFile(...),
     organization_id: str = Query(...),
     is_public: bool = Query(default=False),
     current_user: User = Depends(get_current_user),
@@ -109,14 +66,14 @@ async def upload_file(
         filename=file.filename or "unknown",
         content_type=content_type,
         organization_id=organization_id,
-        is_public=is_public,
     )
 
     # Create file record
     db_file = File(
         organization_id=organization_id,
+        storage_provider=StorageProvider.SUPABASE,
         storage_path=storage_path,
-        original_filename=file.filename,
+        original_filename=file.filename or "unknown",
         mime_type=content_type,
         size_bytes=len(file_content),
         is_public=is_public,
@@ -144,7 +101,7 @@ async def link_file_to_entity(
     file_id: str = Query(...),
     purpose: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db_session),
+    db: AsyncSession = Depends(get_db),
 ):
     """Link a file to an entity (animal, kennel, etc.)"""
 
@@ -184,7 +141,7 @@ async def link_file_to_entity(
 async def download_file(
     file_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db_session),
+    db: AsyncSession = Depends(get_db),
 ):
     """Generate presigned URL for file download"""
 
@@ -203,7 +160,7 @@ async def download_file(
 async def delete_file(
     file_id: str,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db_session),
+    db: AsyncSession = Depends(get_db),
 ):
     """Delete a file"""
 
@@ -224,9 +181,9 @@ async def delete_file(
 @router.post("/animal/{animal_id}/upload-primary-photo")
 async def upload_primary_animal_photo(
     animal_id: str,
-    file: UploadFile = File(...),
+    file: UploadFile = FastAPIFile(...),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db_session),
+    db: AsyncSession = Depends(get_db),
 ):
     """Upload primary photo for an animal"""
 
@@ -252,14 +209,14 @@ async def upload_primary_animal_photo(
         filename=file.filename or "unknown",
         content_type=content_type,
         organization_id=str(animal.organization_id),
-        is_public=True,
     )
 
     # Create file record
     db_file = File(
         organization_id=animal.organization_id,
+        storage_provider=StorageProvider.SUPABASE,
         storage_path=storage_path,
-        original_filename=file.filename,
+        original_filename=file.filename or "unknown",
         mime_type=content_type,
         size_bytes=len(file_content),
         is_public=True,
