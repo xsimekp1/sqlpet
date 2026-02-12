@@ -9,6 +9,8 @@ from src.app.api.routes.animals import router as animals_router, breed_router
 from src.app.api.routes.kennels import router as kennels_router
 from src.app.api.routes.stays import router as stays_router
 from src.app.api.routes.tasks import router as tasks_router
+from src.app.api.routes.feeding import router as feeding_router
+from src.app.api.routes.inventory import router as inventory_router
 from src.app.db.session import async_engine
 
 
@@ -70,3 +72,5 @@ app.include_router(breed_router)
 app.include_router(kennels_router)
 app.include_router(stays_router)
 app.include_router(tasks_router)
+app.include_router(feeding_router)
+app.include_router(inventory_router)

@@ -1,0 +1,267 @@
+"""API routes for inventory management."""
+
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional, List
+
+from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
+from src.app.api.dependencies.db import get_db
+from src.app.models.user import User
+from src.app.models.inventory_item import InventoryCategory
+from src.app.models.inventory_transaction import TransactionType
+from src.app.schemas.inventory import (
+    InventoryItemCreate,
+    InventoryItemUpdate,
+    InventoryItemResponse,
+    InventoryLotCreate,
+    InventoryLotUpdate,
+    InventoryLotResponse,
+    InventoryTransactionCreate,
+    InventoryTransactionResponse,
+    InventoryStockResponse,
+)
+from src.app.services.inventory_service import InventoryService
+
+router = APIRouter(prefix="/inventory", tags=["inventory"])
+
+
+# Inventory Item endpoints
+@router.post("/items", response_model=InventoryItemResponse, status_code=status.HTTP_201_CREATED)
+async def create_inventory_item(
+    item_data: InventoryItemCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Create a new inventory item."""
+    inventory_service = InventoryService(db)
+
+    try:
+        category = InventoryCategory(item_data.category)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid category: {item_data.category}",
+        )
+
+    item = await inventory_service.create_item(
+        organization_id=organization_id,
+        name=item_data.name,
+        category=category,
+        created_by_id=current_user.id,
+        unit=item_data.unit,
+        reorder_threshold=item_data.reorder_threshold,
+    )
+    await db.commit()
+    return item
+
+
+@router.get("/items", response_model=List[InventoryStockResponse])
+async def list_inventory_items(
+    category: Optional[str] = Query(None, description="Filter by category"),
+    low_stock_only: bool = Query(False, description="Show only low stock items"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """List inventory items with stock information."""
+    inventory_service = InventoryService(db)
+
+    category_enum = None
+    if category:
+        try:
+            category_enum = InventoryCategory(category)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid category: {category}",
+            )
+
+    items = await inventory_service.get_items_with_stock(
+        organization_id=organization_id,
+        category=category_enum,
+        low_stock_only=low_stock_only,
+    )
+
+    return items
+
+
+@router.put("/items/{item_id}", response_model=InventoryItemResponse)
+async def update_inventory_item(
+    item_id: uuid.UUID,
+    item_data: InventoryItemUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Update an inventory item."""
+    inventory_service = InventoryService(db)
+
+    try:
+        updates = {k: v for k, v in item_data.dict().items() if v is not None}
+        item = await inventory_service.update_item(
+            item_id=item_id,
+            organization_id=organization_id,
+            user_id=current_user.id,
+            **updates,
+        )
+        await db.commit()
+        return item
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+
+# Inventory Lot endpoints
+@router.post("/lots", response_model=InventoryLotResponse, status_code=status.HTTP_201_CREATED)
+async def create_inventory_lot(
+    lot_data: InventoryLotCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Create a new inventory lot."""
+    inventory_service = InventoryService(db)
+
+    try:
+        lot = await inventory_service.create_lot(
+            organization_id=organization_id,
+            item_id=lot_data.item_id,
+            quantity=lot_data.quantity,
+            created_by_id=current_user.id,
+            lot_number=lot_data.lot_number,
+            expires_at=lot_data.expires_at,
+            cost_per_unit=lot_data.cost_per_unit,
+        )
+        await db.commit()
+        return lot
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+
+@router.get("/lots", response_model=List[InventoryLotResponse])
+async def list_inventory_lots(
+    item_id: Optional[uuid.UUID] = Query(None, description="Filter by item"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """List inventory lots."""
+    from sqlalchemy import select, and_
+    from src.app.models.inventory_lot import InventoryLot
+
+    conditions = [InventoryLot.organization_id == organization_id]
+    if item_id:
+        conditions.append(InventoryLot.item_id == item_id)
+
+    stmt = (
+        select(InventoryLot)
+        .where(and_(*conditions))
+        .order_by(InventoryLot.expires_at.asc().nullslast())
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+@router.put("/lots/{lot_id}", response_model=InventoryLotResponse)
+async def update_inventory_lot(
+    lot_id: uuid.UUID,
+    lot_data: InventoryLotUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Update an inventory lot."""
+    inventory_service = InventoryService(db)
+
+    try:
+        updates = {k: v for k, v in lot_data.dict().items() if v is not None}
+        lot = await inventory_service.update_lot(
+            lot_id=lot_id,
+            organization_id=organization_id,
+            user_id=current_user.id,
+            **updates,
+        )
+        await db.commit()
+        return lot
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+
+# Inventory Transaction endpoints
+@router.post("/transactions", response_model=InventoryTransactionResponse, status_code=status.HTTP_201_CREATED)
+async def create_inventory_transaction(
+    transaction_data: InventoryTransactionCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Record an inventory transaction."""
+    inventory_service = InventoryService(db)
+
+    try:
+        transaction_type = TransactionType(transaction_data.type)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid transaction type: {transaction_data.type}",
+        )
+
+    transaction = await inventory_service.record_transaction(
+        organization_id=organization_id,
+        item_id=transaction_data.item_id,
+        transaction_type=transaction_type,
+        quantity=transaction_data.quantity,
+        reason=transaction_data.reason,
+        lot_id=transaction_data.lot_id,
+        related_entity_type=transaction_data.related_entity_type,
+        related_entity_id=transaction_data.related_entity_id,
+        user_id=current_user.id,
+    )
+    await db.commit()
+    return transaction
+
+
+@router.get("/transactions", response_model=List[InventoryTransactionResponse])
+async def list_inventory_transactions(
+    item_id: Optional[uuid.UUID] = Query(None, description="Filter by item"),
+    days: int = Query(90, ge=1, le=365, description="Days of history"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """List inventory transactions."""
+    inventory_service = InventoryService(db)
+
+    transactions = await inventory_service.get_transaction_history(
+        organization_id=organization_id,
+        item_id=item_id,
+        days=days,
+    )
+    return transactions
+
+
+# Low stock alert endpoint (for MVP simplification - optional)
+@router.get("/low-stock", response_model=List[InventoryStockResponse])
+async def get_low_stock_items(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Get items below reorder threshold."""
+    inventory_service = InventoryService(db)
+
+    items = await inventory_service.get_items_with_stock(
+        organization_id=organization_id,
+        low_stock_only=True,
+    )
+    return items

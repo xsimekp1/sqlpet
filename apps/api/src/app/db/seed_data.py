@@ -31,7 +31,10 @@ PERMISSIONS = [
     ("ai.use", "Use AI features"),
     ("payments.write", "Record payments"),
     ("audits.read", "View audit logs"),
+    ("tasks.read", "View tasks"),
     ("tasks.write", "Create and manage tasks"),
+    ("feeding.read", "View feeding plans and logs"),
+    ("feeding.write", "Create and manage feeding plans"),
 ]
 
 # Role templates: name -> list of permission keys
@@ -43,24 +46,27 @@ ROLE_TEMPLATES = {
         "medical.read", "medical.write", "inventory.read", "inventory.write",
         "people.read", "people.write", "forms.manage", "contracts.manage",
         "reports.run", "reports.schedule", "public.manage",
-        "payments.write", "audits.read", "tasks.write",
+        "payments.write", "audits.read", "tasks.read", "tasks.write",
+        "feeding.read", "feeding.write",
     ],
     "vet_staff": [
-        "animals.read", "medical.read", "medical.write", "tasks.write",
+        "animals.read", "medical.read", "medical.write", "tasks.read", "tasks.write",
+        "feeding.read",
     ],
     "caretaker": [
         "animals.read", "animals.write", "kennels.manage",
-        "medical.read", "inventory.read", "inventory.write", "tasks.write",
+        "medical.read", "inventory.read", "inventory.write", "tasks.read", "tasks.write",
+        "feeding.read", "feeding.write",
     ],
     "volunteer": [
-        "animals.read", "tasks.write",
+        "animals.read", "tasks.read", "tasks.write",
     ],
     "foster": [
-        "animals.read",
+        "animals.read", "tasks.read",
     ],
     "readonly": [
         "animals.read", "medical.read", "inventory.read",
-        "people.read", "reports.run", "audits.read",
+        "people.read", "reports.run", "audits.read", "tasks.read",
     ],
 }
 

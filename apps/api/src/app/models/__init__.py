@@ -27,6 +27,13 @@ from src.app.models.kennel import (
     KennelType,
     KennelStatus,
 )
+from src.app.models.task import Task, TaskType, TaskStatus, TaskPriority
+from src.app.models.food import Food, FoodType
+from src.app.models.feeding_plan import FeedingPlan
+from src.app.models.feeding_log import FeedingLog
+from src.app.models.inventory_item import InventoryItem, InventoryCategory
+from src.app.models.inventory_lot import InventoryLot
+from src.app.models.inventory_transaction import InventoryTransaction, TransactionType
 
 __all__ = [
     "Base",
@@ -56,4 +63,17 @@ __all__ = [
     "KennelSizeCategory",
     "KennelType",
     "KennelStatus",
+    "Task",
+    "TaskType",
+    "TaskStatus",
+    "TaskPriority",
+    "Food",
+    "FoodType",
+    "FeedingPlan",
+    "FeedingLog",
+    "InventoryItem",
+    "InventoryCategory",
+    "InventoryLot",
+    "InventoryTransaction",
+    "TransactionType",
 ]
