@@ -1,10 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { useUIStore } from '@/stores/uiStore';
-import { DashboardGrid } from '@/components/dashboard/DashboardGrid';
+import { useUIStore } from '@/app/stores/uiStore';
+import { DashboardGrid } from '@/app/components/dashboard/DashboardGrid';
 import { Edit3, Check } from 'lucide-react';
 
 export default function DashboardPage() {

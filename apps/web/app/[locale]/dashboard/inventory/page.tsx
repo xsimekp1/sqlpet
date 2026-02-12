@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ApiClient } from '@/lib/api';
+import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {

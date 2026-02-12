@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ApiClient } from '@/lib/api';
+import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Users, UserPlus, Mail, Phone, Shield, AlertCircle, Heart, Stethoscope, HandHeart, Home, Building } from 'lucide-react';
 import Link from 'next/link';
-import { useOrganizationStore } from '@/stores/organizationStore';
+import { useOrganizationStore } from '@/app/stores/organizationStore';
 
 type RoleFilter = 'all' | 'admin' | 'manager' | 'vet_staff' | 'caretaker' | 'volunteer';
 type ContactTypeFilter = 'all' | 'donor' | 'veterinarian' | 'volunteer' | 'foster' | 'supplier' | 'partner' | 'other';

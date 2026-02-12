@@ -15,9 +15,9 @@ import {
   ChevronLeft
 } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
-import { useAuth } from '@/context/AuthContext'
-import { filterNavByPermissions } from '@/lib/permissions'
-import { useUIStore } from '@/stores/uiStore'
+import { useAuth } from '@/app/context/AuthContext'
+import { filterNavByPermissions } from '@/app/lib/permissions'
+import { useUIStore } from '@/app/stores/uiStore'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useTranslations } from 'next-intl'

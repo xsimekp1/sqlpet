@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ApiClient, Task } from '@/lib/api';
+import { ApiClient, Task } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {

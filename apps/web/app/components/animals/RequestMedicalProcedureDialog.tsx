@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import ApiClient, { Animal } from '@/lib/api';
+import ApiClient, { Animal } from '@/app/lib/api';
 
 interface RequestMedicalProcedureDialogProps {
   animal: Animal;

@@ -7,7 +7,7 @@ import { AlertsBell } from '../layout/AlertsBell'
 import { UserMenu } from '../layout/UserMenu'
 import { LanguageSwitcher } from '../LanguageSwitcher'
 import { Button } from '@/components/ui/button'
-import { useUIStore } from '@/stores/uiStore'
+import { useUIStore } from '@/app/stores/uiStore'
 
 export function Topbar() {
   const { toggleSidebar } = useUIStore()

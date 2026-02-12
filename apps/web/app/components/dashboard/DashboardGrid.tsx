@@ -3,7 +3,7 @@
 import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useUIStore } from '@/stores/uiStore'
+import { useUIStore } from '@/app/stores/uiStore'
 import { MedicalTodayWidget } from './MedicalTodayWidget'
 import { FeedingTodayWidget } from './FeedingTodayWidget'
 import { TasksWidget } from './TasksWidget'

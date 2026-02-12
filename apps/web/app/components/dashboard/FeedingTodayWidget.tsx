@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { ApiClient } from '@/lib/api'
-import { useOrganizationStore } from '@/stores/organizationStore'
+import { ApiClient } from '@/app/lib/api'
+import { useOrganizationStore } from '@/app/stores/organizationStore'
 
 interface FeedingTodayWidgetProps {
   editMode?: boolean
