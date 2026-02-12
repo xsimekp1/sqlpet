@@ -1,6 +1,37 @@
 Starting Container
+🔧 Skipping files router for Railway deployment
+    )
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ^
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 824, in invoke
+Traceback (most recent call last):
+    return callback(*args, **kwargs)
+  File "/app/.venv/bin/uvicorn", line 7, in <module>
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 424, in main
+    sys.exit(main())
+    run(
+             ~~~~^^
+    ~~~^
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1485, in __call__
+        app,
+    return self.main(*args, **kwargs)
+        ^^^^
+           ~~~~~~~~~^^^^^^^^^^^^^^^^^
+    ...<46 lines>...
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1406, in main
+        h11_max_incomplete_event_size=h11_max_incomplete_event_size,
+    rv = self.invoke(ctx)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1269, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+    self.loaded_app = import_from_string(self.app)
                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 594, in run
   File "/app/.venv/lib/python3.13/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    server.run()
+    ~~~~~~~~~~^^
+  File "/app/.venv/lib/python3.13/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
   File "/mise/installs/python/3.13.12/lib/python3.13/asyncio/runners.py", line 195, in run
     return runner.run(main)
            ~~~~~~~~~~^^^^^^
@@ -14,36 +45,6 @@ Starting Container
     config.load()
     ~~~~~~~~~~~^^
   File "/app/.venv/lib/python3.13/site-packages/uvicorn/config.py", line 439, in load
-    self.loaded_app = import_from_string(self.app)
-Traceback (most recent call last):
-  File "/app/.venv/bin/uvicorn", line 7, in <module>
-    sys.exit(main())
-             ~~~~^^
-  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1485, in __call__
-    return self.main(*args, **kwargs)
-           ~~~~~~~~~^^^^^^^^^^^^^^^^^
-  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1406, in main
-    rv = self.invoke(ctx)
-  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1269, in invoke
-    return ctx.invoke(self.callback, **ctx.params)
-           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 824, in invoke
-    return callback(*args, **kwargs)
-  File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 424, in main
-    run(
-    ~~~^
-        app,
-        ^^^^
-    ...<46 lines>...
-        h11_max_incomplete_event_size=h11_max_incomplete_event_size,
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 594, in run
-    server.run()
-    ~~~~~~~~~~^^
-  File "/app/.venv/lib/python3.13/site-packages/uvicorn/server.py", line 67, in run
-    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
     module = importlib.import_module(module_str)
   File "/mise/installs/python/3.13.12/lib/python3.13/importlib/__init__.py", line 88, in import_module
     return _bootstrap._gcd_import(name[level:], package, level)
@@ -56,27 +57,15 @@ Traceback (most recent call last):
   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
   File "/app/main.py", line 6, in <module>
     from src.app.main import app
-  File "/app/src/app/main.py", line 8, in <module>
-    from src.app.api.routes.animals import router as animals_router, breed_router
-  File "/app/src/app/api/routes/animals.py", line 25, in <module>
-    from src.app.services.animal_service import AnimalService
-  File "/app/src/app/services/animal_service.py", line 12, in <module>
-    from src.app.services.default_image_service import DefaultImageService
-  File "/app/src/app/services/default_image_service.py", line 266
-    async def _normalize_breed_and_color(self, color: Optional[str], breed_ids: List[uuid.UUID], species: str) -> Tuple[Optional[str], List[uuid.UUID]]:
-                                                                                                                                                        ^
-IndentationError: unindent does not match any outer indentation level
-        app,
-        ^^^^
-    ...<46 lines>...
+  File "/app/src/app/main.py", line 94, in <module>
+    if files_router:
+       ^^^^^^^^^^^^
+NameError: name 'files_router' is not defined. Did you mean: 'breed_router'?
+🔧 Skipping files router for Railway deployment
 Traceback (most recent call last):
-        h11_max_incomplete_event_size=h11_max_incomplete_event_size,
   File "/app/.venv/bin/uvicorn", line 7, in <module>
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     sys.exit(main())
-    )
              ~~~~^^
-    ^
   File "/app/.venv/lib/python3.13/site-packages/click/core.py", line 1485, in __call__
     return self.main(*args, **kwargs)
            ~~~~~~~~~^^^^^^^^^^^^^^^^^
@@ -90,6 +79,13 @@ Traceback (most recent call last):
   File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 424, in main
     run(
     ~~~^
+        app,
+        ^^^^
+    ...<46 lines>...
+        h11_max_incomplete_event_size=h11_max_incomplete_event_size,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
   File "/app/.venv/lib/python3.13/site-packages/uvicorn/main.py", line 594, in run
     server.run()
     ~~~~~~~~~~^^
@@ -121,3 +117,7 @@ Traceback (most recent call last):
   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
   File "<frozen importlib._bootstrap_external>", line 1023, in exec_module
   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/app/main.py", line 6, in <module>
+    from src.app.main import app
+  File "/app/src/app/main.py", line 94, in <module>
+    if files_router:
