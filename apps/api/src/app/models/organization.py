@@ -13,3 +13,4 @@ class Organization(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     # Relationships
     tags = relationship("Tag", back_populates="organization", lazy="selectin")
+    files = relationship("File", back_populates="organization")
