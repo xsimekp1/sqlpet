@@ -1,4 +1,4 @@
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Union
 from uuid import UUID
 from enum import Enum
 
@@ -100,7 +100,7 @@ class MoveAnimalRequest(BaseModel):
 class MoveAnimalResponse(BaseModel):
     status: str
     animal_id: str
-    from: str | None = None
+    from: Optional[str] = None
     to: str | None = None
     occupied: int | None = None
     capacity: int | None = None
@@ -109,7 +109,7 @@ class MoveAnimalResponse(BaseModel):
 class ZoneCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     code: str = Field(..., min_length=1, max_length=32)
-    color: str | None = Field(None, regex=r"^#[0-9A-Fa-f]{6}$")  # hex color
+    color: Optional[str] = Field(None, regex=r"^#[0-9A-Fa-f]{6}$")  # hex color
     description: str | None = None
 
 
