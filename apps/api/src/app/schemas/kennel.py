@@ -1,20 +1,47 @@
-from typing import Any
+from typing import Any, Optional, Dict
 from uuid import UUID
+from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
+
+
+class KennelType(str, Enum):
+    INDOOR = "indoor"
+    OUTDOOR = "outdoor"
+    ISOLATION = "isolation"
+    QUARANTINE = "quarantine"
+
+
+class KennelSizeCategory(str, Enum):
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE = "large"
+    XLARGE = "xlarge"
+
+
+class KennelStatus(str, Enum):
+    AVAILABLE = "available"
+    MAINTENANCE = "maintenance"
+    CLOSED = "closed"
 
 
 class KennelBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=200)
-    code: str = Field(..., min_length=1, max_length=32)
-    zone_id: str
-    capacity: int = Field(..., ge=1, le=50)
-    capacity_rules: dict[str, Any] | None = None
-    size_category: str = Field(default="medium")
-    status: str = Field(default="available")
-    type: str = Field(default="indoor")
-    dimensions: dict[str, Any] | None = None
-    notes: str | None = None
+    name: str = Field(..., min_length=3, max_length=200, description="Název kotce")
+    zone_id: str = Field(..., description="ID zóny, do které kotce patří")
+    type: KennelType = Field(..., description="Typ kotce")
+    size_category: KennelSizeCategory = Field(..., description="Velikostní kategorie")
+    capacity: int = Field(..., ge=1, le=50, description="Maximální kapacita kotce")
+    capacity_rules: Optional[Dict[str, int]] = Field(None, description="Kapacitní pravidla pro jednotlivé druhy zvířat")
+    primary_photo_path: Optional[str] = Field(None, description="Cesta k primární fotce kotce")
+    notes: Optional[str] = Field(None, max_length=1000, description="Poznámky ke kotci")
+
+    @validator('capacity_rules')
+    def validate_capacity_rules(cls, v):
+        if v is not None:
+            for species, capacity in v.items():
+                if not isinstance(capacity, int) or capacity < 1 or capacity > 50:
+                    raise ValueError(f"Invalid capacity for {species}: {capacity}. Must be 1-50")
+        return v
 
 
 class KennelCreate(KennelBase):

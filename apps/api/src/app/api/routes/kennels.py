@@ -12,11 +12,13 @@ from src.app.models.user import User
 from src.app.models.animal import Animal
 from pydantic import BaseModel, Field
 from src.app.services.kennel_service import (
+    create_kennel,
     move_animal,
     CapacityError,
     InvalidStateError,
     NotFoundError,
 )
+from src.app.schemas.kennel import KennelCreate
 
 router = APIRouter(prefix="/kennels", tags=["kennels"])
 
@@ -235,3 +237,49 @@ async def get_kennel(
         "map_rotation": kennel.map_rotation,
         "map_meta": kennel.map_meta,
     }
+
+
+@router.post("")
+async def create_kennel(
+    kennel_data: KennelCreate,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Create a new kennel."""
+
+    try:
+        # Create new kennel using service
+        kennel = await create_kennel(
+            db=session,
+            name=kennel_data.name,
+            zone_id=kennel_data.zone_id,
+            organization_id=organization_id,
+            kennel_type=kennel_data.type,
+            size_category=kennel_data.size_category,
+            capacity=kennel_data.capacity,
+            capacity_rules=kennel_data.capacity_rules,
+            primary_photo_path=kennel_data.primary_photo_path,
+            notes=kennel_data.notes,
+        )
+
+        return {
+            "id": str(kennel.id),
+            "code": kennel.code,
+            "name": kennel.name,
+            "zone_id": str(kennel.zone_id),
+            "status": kennel.status,
+            "type": kennel.type,
+            "size_category": kennel.size_category,
+            "capacity": kennel.capacity,
+            "occupied_count": 0,
+            "animals": [],
+            "primary_photo_path": kennel.primary_photo_path,
+            "notes": kennel.notes,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create kennel: {str(e)}"
+        )

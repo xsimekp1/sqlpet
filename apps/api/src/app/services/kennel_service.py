@@ -181,3 +181,61 @@ async def move_animal(
         "occupied": occupied + 1,
         "capacity": max_for_species,
     }
+
+
+async def create_kennel(
+    session: AsyncSession,
+    name: str,
+    zone_id: str,
+    organization_id: uuid.UUID,
+    kennel_type: str,
+    size_category: str,
+    capacity: int,
+    capacity_rules: dict[str, int] | None = None,
+    primary_photo_path: str | None = None,
+    notes: str | None = None,
+) -> Kennel:
+    """Create a new kennel"""
+
+    # Generate unique kennel code (simple prefix + number)
+    from sqlalchemy import select, func
+
+    # Get next number for this organization
+    max_code_q = select(func.max(func.cast(func.substr(Kennel.code, 1, 2), str))).where(
+        Kennel.organization_id == organization_id
+    )
+    max_code = (await session.execute(max_code_q)).scalar() or "KE"
+
+    # Get next number for this prefix
+    max_number_q = (
+        select(func.cast(func.regexp_replace(Kennel.code, r"^\D+", ""), str))
+        .where(Kennel.organization_id == organization_id)
+        .where(Kennel.code.like(f"{max_code}%"))
+    )
+    max_number = (await session.execute(max_number_q)).scalar() or 0
+    next_number = max_number + 1
+
+    kennel_code = f"{max_code}{next_number}"
+
+    # Create new kennel
+    new_kennel = Kennel(
+        organization_id=organization_id,
+        zone_id=uuid.UUID(zone_id),
+        name=name,
+        code=kennel_code,
+        type=kennel_type,
+        size_category=size_category,
+        capacity=capacity,
+        capacity_rules=capacity_rules,
+        status="available",
+        primary_photo_path=primary_photo_path,
+        notes=notes,
+        created_at=_now(),
+        updated_at=_now(),
+    )
+
+    session.add(new_kennel)
+    await session.commit()
+    await session.refresh(new_kennel)
+
+    return new_kennel
