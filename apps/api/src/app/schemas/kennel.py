@@ -1,4 +1,5 @@
 from typing import Any, Optional, Dict, Union
+from enum import Enum
 
 
 class KennelType(str, Enum):
