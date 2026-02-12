@@ -2,7 +2,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.deps import get_current_user, get_async_db_session
+from src.app.api.dependencies.auth import get_current_user
+from src.app.db.session import get_async_db_session
 from src.app.models.user import User
 from src.app.models.file import File, EntityFile
 from src.app.models.animal import Animal
