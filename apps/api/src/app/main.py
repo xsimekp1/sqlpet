@@ -13,8 +13,8 @@ from src.app.api.routes.feeding import router as feeding_router
 from src.app.api.routes.inventory import router as inventory_router
 from src.app.api.routes.tags import router as tags_router
 
-# Temporarily disabled files router due to Railway IndentationError
-# from src.app.api.routes.files import router as files_router
+# Re-enable files router after fixing IndentationError
+from src.app.api.routes.files import router as files_router
 from src.app.api.routes.timezones import router as timezones_router
 
 # Temporarily skip problematic routes to ensure Railway startup
