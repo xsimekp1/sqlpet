@@ -216,8 +216,7 @@ export default function KennelsPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <CardDescription className="font-medium">{kennel.name}</CardDescription>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-2">
               <Badge variant={getStatusColor(kennel.status)}>
                 {t(`kennels.status.${kennel.status}`)}
               </Badge>

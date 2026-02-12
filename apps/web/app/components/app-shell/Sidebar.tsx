@@ -12,7 +12,8 @@ import {
   Settings,
   Inbox,
   Heart,
-  ChevronLeft
+  ChevronLeft,
+  Package
 } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
@@ -56,6 +57,7 @@ export function Sidebar() {
         { label: 'nav.kennels', href: '/dashboard/kennels', icon: Grid3x3, permission: 'kennels.view' },
         { label: 'nav.medical', href: '/dashboard/medical', icon: HeartPulse, permission: 'medical.view' },
         { label: 'nav.feeding', href: '/dashboard/feeding', icon: Apple, permission: 'feeding.view' },
+        { label: 'nav.inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory.view' },
         { label: 'nav.tasks', href: '/dashboard/tasks', icon: CheckSquare, permission: 'tasks.view' },
       ]
     },
