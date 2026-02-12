@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     JWT_SECRET: str = "dev-secret-change-me"
     JWT_ISSUER: str = "sqlpet"
-    JWT_ACCESS_TTL_MIN: int = 15
+    JWT_ACCESS_TTL_MIN: int = 120  # 2 hours - enough for a work session
     JWT_REFRESH_TTL_DAYS: int = 30
 
     # Supabase Configuration
