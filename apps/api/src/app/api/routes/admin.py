@@ -159,7 +159,7 @@ async def upload_default_image(
 
     # Upload to Supabase
     file_url, storage_path = await supabase_storage_service.upload_file(
-        file_content=BytesIO(file_content),
+        file_content=file_content,
         filename=filename_pattern,
         content_type=content_type,
         organization_id="default",
