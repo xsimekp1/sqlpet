@@ -43,19 +43,19 @@ async def move_animal_endpoint(
     """Move an animal between kennels or remove from kennel."""
 
     try:
-        async with session.begin():
-            result = await move_animal(
-                session,
-                organization_id=organization_id,
-                actor_user_id=current_user.id,
-                animal_id=uuid.UUID(request.animal_id),
-                target_kennel_id=uuid.UUID(request.target_kennel_id)
-                if request.target_kennel_id
-                else None,
-                reason=request.reason,
-                notes=request.notes,
-                allow_overflow=request.allow_overflow,
-            )
+        result = await move_animal(
+            session,
+            organization_id=organization_id,
+            actor_user_id=current_user.id,
+            animal_id=uuid.UUID(request.animal_id),
+            target_kennel_id=uuid.UUID(request.target_kennel_id)
+            if request.target_kennel_id
+            else None,
+            reason=request.reason,
+            notes=request.notes,
+            allow_overflow=request.allow_overflow,
+        )
+        await session.commit()
         return result
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

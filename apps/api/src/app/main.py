@@ -54,19 +54,16 @@ app = FastAPI(title="SQLpet API", lifespan=lifespan)
 ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Local dev
     "http://localhost:5173",  # Vite dev
-    "https://web-theta-peach-77.vercel.app",  # Vercel production
-    "https://sqlpet.vercel.app",  # Vercel alternative domain
-    "https://*.vercel.app",  # Vercel preview deployments
+    "https://web-theta-peach-77.vercel.app",
+    "https://sqlpet.vercel.app",
 ]
 
-# In development/testing, allow all origins
-# TODO: Remove wildcard in production and use only ALLOWED_ORIGINS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,  # Use explicit origins for production
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # All Vercel preview deployments
     allow_credentials=True,
     allow_methods=["*"],
-    # Explicitly allow custom headers
     allow_headers=[
         "authorization",
         "content-type",
