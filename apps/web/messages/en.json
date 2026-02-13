@@ -114,6 +114,30 @@
     },
     "errors": {
       "fetchFailed": "Failed to fetch medical data"
+    },
+    "requestProcedure": "Request Medical Procedure",
+    "procedureType": "Procedure Type",
+    "priority": "Priority",
+    "assignTo": "Assign To",
+    "dueDate": "Due Date",
+    "createTask": "Create Task",
+    "types": {
+      "checkup": "Check-up / Routine Exam",
+      "vaccination": "Vaccination",
+      "neutering": "Castration / Neutering",
+      "surgery": "Surgery",
+      "dental": "Dental Care",
+      "bloodwork": "Blood Work / Lab Tests",
+      "xray": "X-Ray / Imaging",
+      "treatment": "Treatment / Therapy",
+      "emergency": "Emergency Care",
+      "other": "Other"
+    },
+    "messages": {
+      "procedureRequested": "Medical procedure requested",
+      "procedureRequestedDesc": "A medical task has been created successfully",
+      "error": "Error",
+      "errorDesc": "Failed to request medical procedure"
     }
   },
   "alerts": {
@@ -684,33 +708,6 @@
       "errorDesc": "Failed to complete the operation"
     }
   },
-  "medical": {
-    "requestProcedure": "Request Medical Procedure",
-    "procedureType": "Procedure Type",
-    "description": "Description",
-    "priority": "Priority",
-    "assignTo": "Assign To",
-    "dueDate": "Due Date",
-    "createTask": "Create Task",
-    "types": {
-      "checkup": "Check-up / Routine Exam",
-      "vaccination": "Vaccination",
-      "neutering": "Castration / Neutering",
-      "surgery": "Surgery",
-      "dental": "Dental Care",
-      "bloodwork": "Blood Work / Lab Tests",
-      "xray": "X-Ray / Imaging",
-      "treatment": "Treatment / Therapy",
-      "emergency": "Emergency Care",
-      "other": "Other"
-    },
-    "messages": {
-      "procedureRequested": "Medical procedure requested",
-      "procedureRequestedDesc": "A medical task has been created successfully",
-      "error": "Error",
-      "errorDesc": "Failed to request medical procedure"
-    }
-  },
   "colors": {
     "black": "Black",
     "white": "White",
@@ -721,11 +718,15 @@
     "tan": "Tan",
     "fawn": "Fawn",
     "blue": "Blue",
-    "black-tan-white": "Black-Tan-White",
+    "black-tan-white": "Tricolor",
+    "black_tan_white": "Tricolor",
     "black-white": "Black & White",
+    "black_white": "Black & White",
     "blue-tan": "Blue & Tan",
+    "blue_tan": "Blue & Tan",
     "red": "Red",
     "cream": "Cream",
+    "brindle": "Brindle",
     "orange": "Orange"
   }
 }

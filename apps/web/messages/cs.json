@@ -114,6 +114,30 @@
     },
     "errors": {
       "fetchFailed": "Nepodařilo se načíst data lékařské péče"
+    },
+    "requestProcedure": "Požádat o lékařský úkon",
+    "procedureType": "Typ úkonu",
+    "priority": "Priorita",
+    "assignTo": "Přiřadit",
+    "dueDate": "Termín",
+    "createTask": "Vytvořit úkol",
+    "types": {
+      "checkup": "Prohlídka / Rutinní vyšetření",
+      "vaccination": "Očkování",
+      "neutering": "Kastrace / Sterilizace",
+      "surgery": "Chirurgický zákrok",
+      "dental": "Dentální péče",
+      "bloodwork": "Odběr krve / Laboratorní testy",
+      "xray": "Rentgen / Zobrazování",
+      "treatment": "Léčba / Terapie",
+      "emergency": "Urgentní péče",
+      "other": "Jiné"
+    },
+    "messages": {
+      "procedureRequested": "Lékařský úkon požadován",
+      "procedureRequestedDesc": "Úkol lékařského úkonu byl úspěšně vytvořen",
+      "error": "Chyba",
+      "errorDesc": "Nepodařilo se požádat o lékařský úkon"
     }
   },
   "alerts": {
@@ -229,7 +253,7 @@
       "tasksToday": "Úkolů dnes"
     }
   },
-"kennels": {
+  "kennels": {
     "title": "Kotce",
     "description": "Správa kotců a zón útulku",
     "search": "Hledat kotce...",
@@ -403,13 +427,17 @@
       "gray": "Šedá",
       "fawn": "Plavá",
       "black_white": "Černobílá",
+      "black-white": "Černobílá",
       "blue_tan": "Modroohnivá",
+      "blue-tan": "Modroohnivá",
       "black-tan-white": "Trikolora",
       "black_tan_white": "Trikolora",
-      "tan": "Hnědavá",
+      "tan": "Světle hnědá",
       "red": "Rezavá",
       "cream": "Krémová",
-      "brindle": "Pruhovaná"
+      "brindle": "Pruhovaná",
+      "orange": "Oranžová",
+      "blue": "Modrá"
     }
   },
   "tasks": {
@@ -686,33 +714,6 @@
       "errorDesc": "Nepodařilo se dokončit operaci"
     }
   },
-  "medical": {
-    "requestProcedure": "Požádat o lékařský úkon",
-    "procedureType": "Typ úkonu",
-    "description": "Popis",
-    "priority": "Priorita",
-    "assignTo": "Přiřadit",
-    "dueDate": "Termín",
-    "createTask": "Vytvořit úkol",
-    "types": {
-      "checkup": "Prohlídka / Rutinní vyšetření",
-      "vaccination": "Očkování",
-      "neutering": "Kastrace / Sterilizace",
-      "surgery": "Chirurgický zákrok",
-      "dental": "Dentální péče",
-      "bloodwork": "Odběr krve / Laboratorní testy",
-      "xray": "Rentgen / Zobrazování",
-      "treatment": "Léčba / Terapie",
-      "emergency": "Urgentní péče",
-      "other": "Jiné"
-    },
-    "messages": {
-      "procedureRequested": "Lékařský úkon požadován",
-      "procedureRequestedDesc": "Úkol lékařského úkonu byl úspěšně vytvořen",
-      "error": "Chyba",
-      "errorDesc": "Nepodařilo se požádat o lékařský úkon"
-    }
-  },
   "colors": {
     "black": "Černá",
     "white": "Bílá",
@@ -721,13 +722,17 @@
     "grey": "Šedá",
     "gray": "Šedá",
     "tan": "Světle hnědá",
-    "fawn": "Světle béžová",
+    "fawn": "Plavá",
     "blue": "Modrá",
-    "black-tan-white": "Černá-hnědá-bílá",
+    "black-tan-white": "Trikolora",
+    "black_tan_white": "Trikolora",
     "black-white": "Černobílá",
-    "blue-tan": "Modro-hnědá",
+    "black_white": "Černobílá",
+    "blue-tan": "Modroohnivá",
+    "blue_tan": "Modroohnivá",
     "red": "Rezavá",
     "cream": "Krémová",
+    "brindle": "Pruhovaná",
     "orange": "Oranžová"
   }
 }
