@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors } from 'lucide-react';
 import Link from 'next/link';
@@ -40,9 +40,15 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const SPECIES_EMOJI: Record<string, string> = {
+  dog: '🐕', cat: '🐈', rabbit: '🐇', bird: '🐦', other: '🐾',
+};
+
 export default function AnimalsPage() {
   const t = useTranslations();
+  const tSpecies = useTranslations('animals.species');
   const [search, setSearch] = useState('');
+  const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'table'>('grid');
@@ -65,9 +71,16 @@ export default function AnimalsPage() {
     fetchAnimals();
   }, []);
 
-  const filtered = animals.filter((a) =>
-    a.name.toLowerCase().includes(search.toLowerCase())
+  const availableSpecies = useMemo(
+    () => [...new Set(animals.map((a) => a.species))].sort(),
+    [animals]
   );
+
+  const filtered = animals.filter((a) => {
+    const matchesSearch = a.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSpecies = !speciesFilter || a.species === speciesFilter;
+    return matchesSearch && matchesSpecies;
+  });
 
   return (
     <div className="space-y-6">
@@ -108,7 +121,7 @@ export default function AnimalsPage() {
           <CardTitle>Search & Filter</CardTitle>
           <CardDescription>Find animals by name, species, or breed</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -120,6 +133,22 @@ export default function AnimalsPage() {
               />
             </div>
           </div>
+          {availableSpecies.length > 1 && (
+            <div className="flex gap-1.5 flex-wrap">
+              {availableSpecies.map((sp) => (
+                <Button
+                  key={sp}
+                  variant={speciesFilter === sp ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs px-2.5 rounded-full"
+                  onClick={() => setSpeciesFilter(speciesFilter === sp ? null : sp)}
+                >
+                  {SPECIES_EMOJI[sp] || '🐾'} {tSpecies(sp as any)}
+                  <span className="ml-1.5 opacity-60">{animals.filter(a => a.species === sp).length}</span>
+                </Button>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -144,9 +173,8 @@ export default function AnimalsPage() {
                   />
                 </div>
                 <div className="p-2.5 space-y-1">
-                  <p className="font-semibold text-sm leading-tight truncate">{animal.name}</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <span className="capitalize">{animal.species}</span>
+                  <p className="font-semibold text-base leading-tight truncate">{animal.name}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <span>{animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : ''}</span>
                     {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
                       <Scissors className="h-3 w-3 text-primary shrink-0" />
