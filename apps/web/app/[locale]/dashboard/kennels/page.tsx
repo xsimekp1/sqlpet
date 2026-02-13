@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   Plus, Search, Loader2, Grid, Table, Settings,
-  Footprints, MoreHorizontal, AlertTriangle, Users, Edit, AlertCircle,
+  Footprints, MoreHorizontal, Users, Edit,
   ArrowRight
 } from 'lucide-react';
 import {
@@ -74,18 +74,18 @@ function DraggableAnimalChip({ animal }: { animal: Animal }) {
       style={style}
       {...listeners}
       {...attributes}
-      className="flex items-center gap-1.5 px-2 py-1 bg-background border rounded shadow-sm cursor-grab active:cursor-grabbing select-none hover:border-primary/50 transition-colors"
+      className="flex items-center gap-2 px-2.5 py-1.5 bg-background border rounded-lg shadow-sm cursor-grab active:cursor-grabbing select-none hover:border-primary/50 transition-colors"
     >
-      <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-muted">
+      <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-muted">
         <Image
           src={imageUrl}
           alt={animal.name}
-          width={24}
-          height={24}
+          width={32}
+          height={32}
           className="object-cover w-full h-full"
         />
       </div>
-      <span className="text-xs font-medium max-w-[80px] truncate">{animal.name}</span>
+      <span className="text-sm font-medium max-w-[100px] truncate">{animal.name}</span>
     </div>
   );
 }
@@ -99,17 +99,17 @@ function DraggableKennelAnimalChip({ animal }: { animal: Animal }) {
 function AnimalChipPreview({ animal }: { animal: Animal }) {
   const imageUrl = getAnimalImageUrl(animal);
   return (
-    <div className="flex items-center gap-1.5 px-2 py-1 bg-background border border-primary rounded shadow-lg cursor-grabbing select-none">
-      <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-muted">
+    <div className="flex items-center gap-2 px-2.5 py-1.5 bg-background border border-primary rounded-lg shadow-lg cursor-grabbing select-none">
+      <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-muted">
         <Image
           src={imageUrl}
           alt={animal.name}
-          width={24}
-          height={24}
+          width={32}
+          height={32}
           className="object-cover w-full h-full"
         />
       </div>
-      <span className="text-xs font-medium max-w-[80px] truncate">{animal.name}</span>
+      <span className="text-sm font-medium max-w-[100px] truncate">{animal.name}</span>
     </div>
   );
 }
@@ -120,8 +120,6 @@ function DroppableKennelCard({
   allAnimals,
   t,
   getZoneColor,
-  getStatusColor,
-  getTypeColor,
   getOccupancyStatusColor,
   getOccupancyStatus,
 }: {
@@ -129,133 +127,68 @@ function DroppableKennelCard({
   allAnimals: Animal[];
   t: ReturnType<typeof useTranslations<'kennels'>>;
   getZoneColor: (id: string) => string;
-  getStatusColor: (s: string) => 'default' | 'secondary' | 'destructive' | 'outline';
-  getTypeColor: (s: string) => string;
   getOccupancyStatusColor: (o: number, c: number) => string;
   getOccupancyStatus: (o: number, c: number) => string;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: kennel.id });
-  const occupancyPercent = (kennel.occupied_count / kennel.capacity) * 100;
   const isFull = kennel.occupied_count >= kennel.capacity;
 
-  // Map preview animals to full Animal objects for dragging
-  const previewAnimalsWithFull = kennel.animals_preview
-    .map(ka => allAnimals.find(a => a.id === ka.id))
-    .filter(Boolean) as Animal[];
+  // Use allAnimals filtered by current_kennel_id for live optimistic updates
+  const animalsInKennel = allAnimals.filter(a => a.current_kennel_id === kennel.id);
 
   return (
     <div
       ref={setNodeRef}
       className={`rounded-lg border bg-card text-card-foreground shadow-sm transition-all ${
-        isFull ? 'border-2 border-red-500' : ''
+        isFull ? 'border-red-400' : ''
       } ${isOver ? 'border-2 border-primary bg-primary/5 ring-2 ring-primary/20' : ''}`}
     >
-      <div className="p-4 pb-3">
+      <div className="p-3 pb-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-lg font-bold">{generateKennelCode(kennel)}</span>
-            <span className="text-sm text-muted-foreground ml-1">{kennel.name}</span>
-            <Badge className={getZoneColor(kennel.zone_id)}>
-              {kennel.zone_name || kennel.zone_id}
-            </Badge>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-base font-bold shrink-0">{kennel.code}</span>
+            <span className="text-sm text-muted-foreground truncate">{kennel.name}</span>
+            {kennel.zone_name && (
+              <Badge className={`${getZoneColor(kennel.zone_id)} shrink-0`} variant="outline">
+                {kennel.zone_name}
+              </Badge>
+            )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <Link href={`/dashboard/kennels/${kennel.id}`}>
               <Button variant="ghost" size="icon" className="h-7 w-7">
                 <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Users className="h-4 w-4 mr-2" />
-                  Move Animals
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Set Maintenance
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
-        </div>
-        <div className="flex items-center gap-2 mt-2">
-          <Badge variant={getStatusColor(kennel.status)}>
-            {t(`kennels.status.${kennel.status}` as any)}
-          </Badge>
-          <Badge className={getTypeColor(kennel.type)} variant="outline">
-            {t(`kennels.type.${kennel.type}` as any)}
-          </Badge>
         </div>
       </div>
 
-      <div className="p-4 pt-0">
+      <div className="p-3 pt-0">
         {/* Animal chips */}
-        <div className="mb-3 min-h-[40px]">
-          {previewAnimalsWithFull.length > 0 ? (
+        <div className="mb-2.5 min-h-[44px]">
+          {animalsInKennel.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
-              {previewAnimalsWithFull.map(animal => (
+              {animalsInKennel.map(animal => (
                 <DraggableKennelAnimalChip key={animal.id} animal={animal} />
-              ))}
-              {kennel.occupied_count > kennel.animals_preview.length && (
-                <span className="text-xs text-muted-foreground self-center">
-                  +{kennel.occupied_count - kennel.animals_preview.length} další
-                </span>
-              )}
-            </div>
-          ) : kennel.animals_preview.length > 0 ? (
-            // animals_preview has data but not matched in allAnimals (animals loaded separately)
-            <div className="flex flex-wrap gap-1.5">
-              {kennel.animals_preview.map(ka => (
-                <div key={ka.id} className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs">
-                  {ka.name}
-                </div>
               ))}
             </div>
           ) : (
-            <div className={`flex items-center justify-center h-10 rounded border border-dashed text-xs text-muted-foreground ${isOver ? 'border-primary text-primary' : ''}`}>
-              {isOver ? 'Přetáhněte sem' : 'Prázdný kotec'}
+            <div className={`flex items-center justify-center h-11 rounded border border-dashed text-xs text-muted-foreground ${isOver ? 'border-primary text-primary' : ''}`}>
+              {isOver ? 'Přetáhněte sem' : t('occupancy.empty')}
             </div>
           )}
         </div>
 
-        {/* Occupancy */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{t('kennels.occupancy')}</span>
-            <span className="text-sm font-medium">{kennel.occupied_count}/{kennel.capacity}</span>
+        {/* Simple footer: size • count/capacity • status */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="capitalize">{kennel.size_category}</span>
+          <div className="flex items-center gap-1.5">
+            <span>{kennel.occupied_count}/{kennel.capacity}</span>
+            <Badge className={`text-xs ${getOccupancyStatusColor(kennel.occupied_count, kennel.capacity)}`}>
+              {t(`occupancy.${getOccupancyStatus(kennel.occupied_count, kennel.capacity)}` as any)}
+            </Badge>
           </div>
-          <Progress value={occupancyPercent} className="h-2" />
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Badge className={getOccupancyStatusColor(kennel.occupied_count, kennel.capacity)}>
-                {t(`occupancy.${getOccupancyStatus(kennel.occupied_count, kennel.capacity)}` as any)}
-              </Badge>
-              {isFull && (
-                <div className="flex items-center gap-1 text-red-600">
-                  <AlertCircle className="h-3 w-3" />
-                  <span className="text-xs font-medium">FULL</span>
-                </div>
-              )}
-            </div>
-            <span className="text-xs capitalize">{kennel.size_category}</span>
-          </div>
-
-          {kennel.alerts && kennel.alerts.length > 0 && (
-            <div className="flex items-center gap-2 text-yellow-600">
-              <AlertTriangle className="h-3 w-3" />
-              <span className="text-xs">{kennel.alerts.length} alerts</span>
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -548,8 +481,6 @@ export default function KennelsPage() {
                 allAnimals={allAnimals}
                 t={t}
                 getZoneColor={getZoneColor}
-                getStatusColor={getStatusColor}
-                getTypeColor={getTypeColor}
                 getOccupancyStatusColor={getOccupancyStatusColor}
                 getOccupancyStatus={getOccupancyStatus}
               />
@@ -595,14 +526,14 @@ export default function KennelsPage() {
                     </td>
                     <td className="p-3">
                       <Badge className={getTypeColor(kennel.type)} variant="outline">
-                        {kennel.type}
+                        {t(`type.${kennel.type}` as any)}
                       </Badge>
                     </td>
                     <td className="p-3 capitalize">{kennel.size_category}</td>
                     <td className="p-3">{kennel.capacity}</td>
                     <td className="p-3">
-                      <Badge variant={getStatusColor(kennel.status)} className="capitalize">
-                        {kennel.status}
+                      <Badge variant={getStatusColor(kennel.status)}>
+                        {t(`status.${kennel.status}` as any)}
                       </Badge>
                     </td>
                     <td className="p-3">
