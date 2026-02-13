@@ -85,6 +85,7 @@ export interface AnimalBreed {
   breed_name: string;
   breed_species: string;
   percent: number | null;
+  display_name?: string;  // Localized name
 }
 
 export interface Animal {
@@ -134,6 +135,7 @@ export interface Kennel {
   size_category: 'small' | 'medium' | 'large' | 'xlarge';
   capacity: number;
   capacity_rules?: { by_species?: Record<string, number> };
+  suitable_species?: string[];  // Which species are suitable for this kennel
   primary_photo_path?: string;
   occupied_count: number;
   animals_preview: KennelAnimal[];

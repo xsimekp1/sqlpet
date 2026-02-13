@@ -348,6 +348,12 @@ export default function KennelsPage() {
       toast.warning(`${animal.name} (${animal.species}) a zvíře v kotci ${targetKennel.name} jsou různé druhy! 🐾`);
     }
 
+    // Warning: species not suitable for this kennel
+    const suitable = targetKennel.suitable_species;
+    if (suitable && suitable.length > 0 && !suitable.includes(animal.species)) {
+      toast.warning(`${animal.name} (${animal.species}) není vhodný/á pro tento kotec! 🏠`);
+    }
+
     const prevKennels = kennels;
     const prevAnimals = allAnimals;
 

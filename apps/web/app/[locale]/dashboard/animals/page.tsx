@@ -245,7 +245,7 @@ export default function AnimalsPage() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {animal.breeds && animal.breeds.length > 0
-                        ? animal.breeds.map(b => b.breed_name).join(', ')
+                        ? animal.breeds.map(b => b.display_name || b.breed_name).join(', ')
                         : '—'}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">

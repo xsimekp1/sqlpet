@@ -31,6 +31,7 @@ export default function AnimalDetailPage() {
   const [medicalDialogOpen, setMedicalDialogOpen] = useState(false);
   const [togglingDewormed, setTogglingDewormed] = useState(false);
   const [togglingAggressive, setTogglingAggressive] = useState(false);
+  const [togglingAltered, setTogglingAltered] = useState(false);
   const [healthEvents, setHealthEvents] = useState<{ text: string; date: Date }[]>([]);
 
   const animalId = params.id as string;
@@ -117,6 +118,25 @@ export default function AnimalDetailPage() {
       toast.error('Failed to update');
     } finally {
       setTogglingAggressive(false);
+    }
+  };
+
+  const toggleAltered = async () => {
+    if (!animal) return;
+    setTogglingAltered(true);
+    try {
+      const isCurrentlyAltered = animal.altered_status === 'neutered' || animal.altered_status === 'spayed';
+      const newStatus = isCurrentlyAltered ? 'intact' : (animal.sex === 'female' ? 'spayed' : 'neutered');
+      const updated = await ApiClient.updateAnimal(animal.id, { altered_status: newStatus } as any);
+      setAnimal(updated);
+      setHealthEvents((prev) => [
+        { text: isCurrentlyAltered ? 'Kastrace: označena jako neprovedená' : 'Kastrace: označena jako provedená', date: new Date() },
+        ...prev,
+      ]);
+    } catch {
+      toast.error('Failed to update');
+    } finally {
+      setTogglingAltered(false);
     }
   };
 
@@ -337,13 +357,14 @@ export default function AnimalDetailPage() {
                   </div>
                 )}
                 <span className="text-sm font-medium">{t('animals.health.neutered')}</span>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  {animal.altered_status === 'neutered' || animal.altered_status === 'spayed'
-                    ? t('animals.health.yes')
-                    : animal.altered_status === 'intact'
-                    ? t('animals.health.no')
-                    : t('animals.health.unknown')}
-                </span>
+                <button
+                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  onClick={toggleAltered}
+                  disabled={togglingAltered}
+                  title={t('animals.health.toggleAltered')}
+                >
+                  {togglingAltered ? '...' : (animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? t('animals.health.markIntact') : t('animals.health.markAltered'))}
+                </button>
               </div>
 
               {/* Dewormed */}
