@@ -1,9 +1,9 @@
 import axios, { AxiosError } from 'axios';
 
 const _rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-const API_URL = _rawApiUrl.startsWith('http://') && !_rawApiUrl.includes('localhost')
-  ? _rawApiUrl.replace('http://', 'https://')
-  : _rawApiUrl;
+const API_URL = _rawApiUrl.replace(/^http:\/\/([^/]+)/, (_, host) => 
+  host.includes('localhost') ? _rawApiUrl : `https://${host}`
+);
 
 // Response types
 export interface LoginResponse {

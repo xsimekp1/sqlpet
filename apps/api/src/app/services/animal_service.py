@@ -10,6 +10,7 @@ from src.app.models.animal import Animal, AnimalStatus, Species, Sex
 from src.app.models.animal_breed import AnimalBreed
 from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.models.breed import Breed
+from src.app.models.kennel import KennelStay
 from src.app.schemas.animal import AnimalCreate, AnimalUpdate
 from src.app.services.audit_service import AuditService
 
@@ -131,11 +132,25 @@ class AnimalService:
                 breed = breed_result.scalar_one_or_none()
                 if breed:
                     sex = str(data.sex) if hasattr(data.sex, "value") else data.sex
-                    if sex == "female" and breed.weight_female_min and breed.weight_female_max:
-                        avg = (Decimal(str(breed.weight_female_min)) + Decimal(str(breed.weight_female_max))) / 2
+                    if (
+                        sex == "female"
+                        and breed.weight_female_min
+                        and breed.weight_female_max
+                    ):
+                        avg = (
+                            Decimal(str(breed.weight_female_min))
+                            + Decimal(str(breed.weight_female_max))
+                        ) / 2
                         animal.weight_estimated_kg = avg
-                    elif sex in ("male", "unknown") and breed.weight_male_min and breed.weight_male_max:
-                        avg = (Decimal(str(breed.weight_male_min)) + Decimal(str(breed.weight_male_max))) / 2
+                    elif (
+                        sex in ("male", "unknown")
+                        and breed.weight_male_min
+                        and breed.weight_male_max
+                    ):
+                        avg = (
+                            Decimal(str(breed.weight_male_min))
+                            + Decimal(str(breed.weight_male_max))
+                        ) / 2
                         animal.weight_estimated_kg = avg
                     await self.db.flush()
 
@@ -322,8 +337,21 @@ class AnimalService:
             return False
 
         before = _animal_to_dict(animal)
-        animal.deleted_at = datetime.now(timezone.utc)
+
+        now = datetime.now(timezone.utc)
+
+        active_stays = await self.db.execute(
+            select(KennelStay).where(
+                KennelStay.animal_id == animal_id,
+                KennelStay.end_at.is_(None),
+            )
+        )
+        for stay in active_stays.scalars().all():
+            stay.end_at = now
+
         await self.db.flush()
+
+        animal.deleted_at = now
 
         await self.audit.log_action(
             organization_id=organization_id,

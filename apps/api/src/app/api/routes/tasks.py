@@ -6,7 +6,7 @@ from typing import Optional
 from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
 from src.app.api.dependencies.db import get_db
 from src.app.models.user import User
-from src.app.models.task import TaskType, TaskStatus
+from src.app.models.task import TaskType, TaskStatus, TaskPriority
 from src.app.schemas.task import (
     TaskResponse,
     TaskCreate,
@@ -28,6 +28,7 @@ async def create_task(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
     """Create a new task."""
+    print(f"[DEBUG] create_task called with data: {task_data}")
     task_service = TaskService(db)
 
     try:
@@ -38,13 +39,22 @@ async def create_task(
             detail=f"Invalid task type: {task_data.type}",
         )
 
+    try:
+        priority = (
+            TaskPriority(task_data.priority)
+            if task_data.priority
+            else TaskPriority.MEDIUM
+        )
+    except ValueError:
+        priority = TaskPriority.MEDIUM
+
     task = await task_service.create_task(
         organization_id=organization_id,
         created_by_id=current_user.id,
         title=task_data.title,
         description=task_data.description,
         task_type=task_type,
-        priority=task_data.priority,
+        priority=priority,
         assigned_to_id=task_data.assigned_to_id,
         due_at=task_data.due_at,
         task_metadata=task_data.task_metadata,
@@ -60,7 +70,9 @@ async def list_tasks(
     status: Optional[str] = Query(None, description="Filter by status"),
     type: Optional[str] = Query(None, description="Filter by type"),
     assigned_to_id: Optional[uuid.UUID] = Query(None, description="Filter by assignee"),
-    due_date: Optional[str] = Query(None, description="Filter by due date (YYYY-MM-DD)"),
+    due_date: Optional[str] = Query(
+        None, description="Filter by due date (YYYY-MM-DD)"
+    ),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(get_current_user),
