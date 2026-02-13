@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
+  Save,
 } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -55,6 +56,18 @@ interface Breed {
   display_name: string;
 }
 
+interface BreedTranslation {
+  locale: string;
+  name: string;
+}
+
+interface BreedAdmin {
+  id: string;
+  species: string;
+  name: string;
+  translations: BreedTranslation[];
+}
+
 const SPECIES_VALUES = ['dog', 'cat', 'rabbit', 'bird', 'other'] as const;
 
 export default function SettingsPage() {
@@ -84,6 +97,13 @@ export default function SettingsPage() {
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<DefaultImage | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Breeds admin state
+  const [breedsAdmin, setBreedsAdmin] = useState<BreedAdmin[]>([]);
+  const [breedsSearch, setBreedsSearch] = useState('');
+  const [isLoadingBreedsAdmin, setIsLoadingBreedsAdmin] = useState(false);
+  const [breedEdits, setBreedEdits] = useState<Record<string, { cs: string; en: string }>>({});
+  const [savingBreedId, setSavingBreedId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -247,6 +267,51 @@ export default function SettingsPage() {
     }
   };
 
+  const loadBreedsAdmin = useCallback(async () => {
+    setIsLoadingBreedsAdmin(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/breeds`, { headers: getAuthHeaders() });
+      if (!res.ok) return;
+      const data: BreedAdmin[] = await res.json();
+      setBreedsAdmin(data);
+      // Initialise edit state from existing translations
+      const edits: Record<string, { cs: string; en: string }> = {};
+      for (const b of data) {
+        edits[b.id] = {
+          cs: b.translations.find((t) => t.locale === 'cs')?.name ?? '',
+          en: b.translations.find((t) => t.locale === 'en')?.name ?? '',
+        };
+      }
+      setBreedEdits(edits);
+    } catch {
+      // ignore
+    } finally {
+      setIsLoadingBreedsAdmin(false);
+    }
+  }, []);
+
+  const saveBreedTranslations = async (breedId: string) => {
+    const edits = breedEdits[breedId];
+    if (!edits) return;
+    setSavingBreedId(breedId);
+    try {
+      const res = await fetch(`${API_URL}/admin/breeds/${breedId}/translations`, {
+        method: 'PUT',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cs: edits.cs || null, en: edits.en || null }),
+      });
+      if (!res.ok) {
+        toast.error(t('breedsAdmin.saveError'));
+        return;
+      }
+      toast.success(t('breedsAdmin.saveSuccess'));
+    } catch {
+      toast.error(t('breedsAdmin.saveError'));
+    } finally {
+      setSavingBreedId(null);
+    }
+  };
+
   const isSquare = dimensions ? dimensions.w === dimensions.h : null;
 
   return (
@@ -256,10 +321,11 @@ export default function SettingsPage() {
         <p className="text-muted-foreground mt-1">{t('description')}</p>
       </div>
 
-      <Tabs defaultValue="general">
+      <Tabs defaultValue="general" onValueChange={(v) => { if (v === 'breeds') loadBreedsAdmin(); }}>
         <TabsList>
           <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
           <TabsTrigger value="defaultImages">{t('tabs.defaultImages')}</TabsTrigger>
+          <TabsTrigger value="breeds">{t('tabs.breeds')}</TabsTrigger>
         </TabsList>
 
         {/* ── General tab ── */}
@@ -522,6 +588,96 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        {/* ── Breeds tab ── */}
+        <TabsContent value="breeds" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('breedsAdmin.title')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Input
+                placeholder={t('breedsAdmin.searchPlaceholder')}
+                value={breedsSearch}
+                onChange={(e) => setBreedsSearch(e.target.value)}
+              />
+
+              {isLoadingBreedsAdmin ? (
+                <div className="flex items-center justify-center h-24">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : breedsAdmin.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t('breedsAdmin.empty')}</p>
+              ) : (
+                <div className="space-y-2">
+                  {/* Header row */}
+                  <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 px-1 text-xs text-muted-foreground font-medium">
+                    <span>{t('breedsAdmin.breedName')}</span>
+                    <span>{t('breedsAdmin.nameCz')}</span>
+                    <span>{t('breedsAdmin.nameEn')}</span>
+                    <span />
+                  </div>
+                  {breedsAdmin
+                    .filter((b) => {
+                      const q = breedsSearch.toLowerCase();
+                      if (!q) return true;
+                      return (
+                        b.name.toLowerCase().includes(q) ||
+                        (breedEdits[b.id]?.cs ?? '').toLowerCase().includes(q) ||
+                        (breedEdits[b.id]?.en ?? '').toLowerCase().includes(q)
+                      );
+                    })
+                    .map((breed) => (
+                      <div
+                        key={breed.id}
+                        className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="secondary" className="text-xs shrink-0">
+                            {breed.species}
+                          </Badge>
+                          <span className="text-sm font-mono truncate">{breed.name}</span>
+                        </div>
+                        <Input
+                          value={breedEdits[breed.id]?.cs ?? ''}
+                          onChange={(e) =>
+                            setBreedEdits((prev) => ({
+                              ...prev,
+                              [breed.id]: { ...prev[breed.id], cs: e.target.value },
+                            }))
+                          }
+                          className="h-8 text-sm"
+                        />
+                        <Input
+                          value={breedEdits[breed.id]?.en ?? ''}
+                          onChange={(e) =>
+                            setBreedEdits((prev) => ({
+                              ...prev,
+                              [breed.id]: { ...prev[breed.id], en: e.target.value },
+                            }))
+                          }
+                          className="h-8 text-sm"
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2"
+                          onClick={() => saveBreedTranslations(breed.id)}
+                          disabled={savingBreedId === breed.id}
+                        >
+                          {savingBreedId === breed.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Save className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.app.api.dependencies.auth import get_current_user
 from src.app.api.dependencies.db import get_db
 from src.app.models.breed import Breed
+from src.app.models.breed_i18n import BreedI18n
 from src.app.models.file import DefaultAnimalImage
 from src.app.models.user import User
 from src.app.services.supabase_storage_service import supabase_storage_service
@@ -212,6 +213,88 @@ async def upload_default_image(
         source=default_image.source,
         created_at=default_image.created_at.isoformat(),
     )
+
+
+class BreedTranslationItem(BaseModel):
+    locale: str
+    name: str
+
+
+class BreedAdminResponse(BaseModel):
+    id: str
+    species: str
+    name: str
+    translations: List[BreedTranslationItem]
+
+
+class UpdateBreedTranslationsRequest(BaseModel):
+    cs: Optional[str] = None
+    en: Optional[str] = None
+
+
+@router.get("/breeds", response_model=List[BreedAdminResponse])
+async def list_breeds_admin(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(select(Breed).order_by(Breed.species, Breed.name))
+    breeds = result.scalars().all()
+
+    response = []
+    for breed in breeds:
+        i18n_result = await db.execute(
+            select(BreedI18n).where(BreedI18n.breed_id == breed.id)
+        )
+        translations = i18n_result.scalars().all()
+        response.append(
+            BreedAdminResponse(
+                id=str(breed.id),
+                species=breed.species,
+                name=breed.name,
+                translations=[
+                    BreedTranslationItem(locale=t.locale, name=t.name)
+                    for t in translations
+                ],
+            )
+        )
+    return response
+
+
+@router.put("/breeds/{breed_id}/translations", status_code=200)
+async def update_breed_translations(
+    breed_id: str,
+    body: UpdateBreedTranslationsRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        breed_uuid = uuid.UUID(breed_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid breed_id format")
+
+    result = await db.execute(select(Breed).where(Breed.id == breed_uuid))
+    breed = result.scalar_one_or_none()
+    if not breed:
+        raise HTTPException(status_code=404, detail="Breed not found")
+
+    for locale, name in [("cs", body.cs), ("en", body.en)]:
+        if name is None:
+            continue
+        name = name.strip()
+        i18n_result = await db.execute(
+            select(BreedI18n).where(
+                BreedI18n.breed_id == breed_uuid,
+                BreedI18n.locale == locale,
+            )
+        )
+        existing = i18n_result.scalar_one_or_none()
+        if existing:
+            existing.name = name
+        else:
+            db.add(BreedI18n(breed_id=breed_uuid, locale=locale, name=name))
+
+    await db.commit()
+    return {"ok": True}
 
 
 @router.delete("/default-images/{image_id}", status_code=204)

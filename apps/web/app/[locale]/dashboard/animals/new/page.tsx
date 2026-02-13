@@ -42,6 +42,8 @@ export default function NewAnimalPage() {
   const router = useRouter();
   const t = useTranslations('animals.new');
   const tColors = useTranslations('animals.colors');
+  const tSpecies = useTranslations('animals.species');
+  const tSex = useTranslations('animals.sex');
   const locale = useLocale();
 
   const [loading, setLoading] = useState(false);
@@ -214,10 +216,11 @@ export default function NewAnimalPage() {
                         <SelectValue placeholder={t('speciesPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="dog">Pes / Dog</SelectItem>
-                        <SelectItem value="cat">Kočka / Cat</SelectItem>
-                        <SelectItem value="rabbit">Králík / Rabbit</SelectItem>
-                        <SelectItem value="other">Jiné / Other</SelectItem>
+                        <SelectItem value="dog">{tSpecies('dog')}</SelectItem>
+                        <SelectItem value="cat">{tSpecies('cat')}</SelectItem>
+                        <SelectItem value="rabbit">{tSpecies('rabbit')}</SelectItem>
+                        <SelectItem value="bird">{tSpecies('bird')}</SelectItem>
+                        <SelectItem value="other">{tSpecies('other')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -229,9 +232,9 @@ export default function NewAnimalPage() {
                         <SelectValue placeholder={t('sexPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Pes / Male</SelectItem>
-                        <SelectItem value="female">Fena / Female</SelectItem>
-                        <SelectItem value="unknown">Neznámé / Unknown</SelectItem>
+                        <SelectItem value="male">{tSex('male')}</SelectItem>
+                        <SelectItem value="female">{tSex('female')}</SelectItem>
+                        <SelectItem value="unknown">{tSex('unknown')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

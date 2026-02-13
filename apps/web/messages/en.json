@@ -331,7 +331,8 @@
     "description": "Manage your preferences",
     "tabs": {
       "general": "General",
-      "defaultImages": "Default Images"
+      "defaultImages": "Default Images",
+      "breeds": "Breeds"
     },
     "preferences": "Preferences",
     "weightUnit": "Weight Unit",
@@ -373,12 +374,37 @@
       "species_rabbit": "Rabbit",
       "species_bird": "Bird",
       "species_other": "Other"
+    },
+    "breedsAdmin": {
+      "title": "Breed Management",
+      "description": "Edit Czech and English breed names",
+      "searchPlaceholder": "Search breed...",
+      "nameCz": "Name (CS)",
+      "nameEn": "Name (EN)",
+      "breedName": "Internal name",
+      "save": "Save",
+      "saving": "Saving...",
+      "saveSuccess": "Translation saved",
+      "saveError": "Error saving",
+      "empty": "No breeds found"
     }
   },
   "animals": {
     "view": {
       "grid": "Cards",
       "table": "Table"
+    },
+    "species": {
+      "dog": "Dog",
+      "cat": "Cat",
+      "rabbit": "Rabbit",
+      "bird": "Bird",
+      "other": "Other"
+    },
+    "sex": {
+      "male": "Male",
+      "female": "Female",
+      "unknown": "Unknown"
     },
     "new": {
       "title": "Add New Animal",

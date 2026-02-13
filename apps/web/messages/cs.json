@@ -333,7 +333,8 @@
     "description": "Spravujte své předvolby",
     "tabs": {
       "general": "Obecné",
-      "defaultImages": "Výchozí obrázky"
+      "defaultImages": "Výchozí obrázky",
+      "breeds": "Plemena"
     },
     "preferences": "Předvolby",
     "weightUnit": "Jednotka hmotnosti",
@@ -375,12 +376,37 @@
       "species_rabbit": "Králík",
       "species_bird": "Pták",
       "species_other": "Jiné"
+    },
+    "breedsAdmin": {
+      "title": "Správa plemen",
+      "description": "Upravte české a anglické názvy plemen",
+      "searchPlaceholder": "Hledat plemeno...",
+      "nameCz": "Název (CS)",
+      "nameEn": "Název (EN)",
+      "breedName": "Interní název",
+      "save": "Uložit",
+      "saving": "Ukládám...",
+      "saveSuccess": "Překlad uložen",
+      "saveError": "Chyba při ukládání",
+      "empty": "Žádná plemena nenalezena"
     }
   },
   "animals": {
     "view": {
       "grid": "Kartičky",
       "table": "Tabulka"
+    },
+    "species": {
+      "dog": "Pes",
+      "cat": "Kočka",
+      "rabbit": "Králík",
+      "bird": "Pták",
+      "other": "Jiné"
+    },
+    "sex": {
+      "male": "Samec",
+      "female": "Samice",
+      "unknown": "Neznámé"
     },
     "new": {
       "title": "Přidat nové zvíře",
