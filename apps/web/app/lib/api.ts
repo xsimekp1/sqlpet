@@ -112,6 +112,7 @@ export interface Animal {
   weight_estimated_kg: number | null;
   age_group: 'baby' | 'young' | 'adult' | 'senior' | 'unknown';
   breeds?: AnimalBreed[];
+  tags?: { id: string; name: string; color?: string }[];
   created_at: string;
   updated_at: string;
 }
