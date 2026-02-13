@@ -75,6 +75,7 @@ export default function SettingsPage() {
   const [dimensions, setDimensions] = useState<{ w: number; h: number } | null>(null);
   const [species, setSpecies] = useState('');
   const [breedId, setBreedId] = useState('');
+  const [customBreed, setCustomBreed] = useState('');
   const [colorValue, setColorValue] = useState('');
   const [customColor, setCustomColor] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -179,7 +180,11 @@ export default function SettingsPage() {
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('species', species);
-    if (breedId && breedId !== 'none') formData.append('breed_id', breedId);
+    if (breedId === 'new') {
+      if (customBreed.trim()) formData.append('breed_name', customBreed.trim());
+    } else if (breedId && breedId !== 'none') {
+      formData.append('breed_id', breedId);
+    }
     if (effectiveColor) formData.append('color_pattern', effectiveColor);
 
     setIsUploading(true);
@@ -203,6 +208,7 @@ export default function SettingsPage() {
       setDimensions(null);
       setSpecies('');
       setBreedId('');
+      setCustomBreed('');
       setColorValue('');
       setCustomColor('');
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -382,7 +388,7 @@ export default function SettingsPage() {
                     <label className="text-sm font-medium">{t('defaultImages.breed')}</label>
                     <Select
                       value={breedId}
-                      onValueChange={setBreedId}
+                      onValueChange={(v) => { setBreedId(v); if (v !== 'new') setCustomBreed(''); }}
                       disabled={!species || isLoadingBreeds}
                     >
                       <SelectTrigger>
@@ -401,13 +407,17 @@ export default function SettingsPage() {
                             {b.display_name || b.name}
                           </SelectItem>
                         ))}
-                        {breeds.length === 0 && !isLoadingBreeds && species && (
-                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                            {t('defaultImages.breedNone')}
-                          </div>
-                        )}
+                        <SelectItem value="new">{t('defaultImages.breedNew')}</SelectItem>
                       </SelectContent>
                     </Select>
+                    {breedId === 'new' && (
+                      <Input
+                        value={customBreed}
+                        onChange={(e) => setCustomBreed(e.target.value)}
+                        placeholder={t('defaultImages.breedNewPlaceholder')}
+                        className="mt-1"
+                      />
+                    )}
                   </div>
 
                   {/* Color */}

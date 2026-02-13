@@ -96,6 +96,7 @@ async def upload_default_image(
     file: UploadFile = File(...),
     species: str = Form(...),
     breed_id: Optional[str] = Form(None),
+    breed_name: Optional[str] = Form(None),
     color_pattern: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -127,22 +128,36 @@ async def upload_default_image(
             status_code=400, detail=f"Could not read image dimensions: {str(e)}"
         )
 
-    # Resolve breed
+    # Resolve breed — either by ID or by creating a new one from breed_name
     breed_uuid = None
-    breed_name = None
+    resolved_breed_name = None
     breed_slug = None
-    if breed_id:
+
+    if breed_id and breed_id != "none":
         try:
             breed_uuid = uuid.UUID(breed_id)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid breed_id format")
-
         breed_result = await db.execute(select(Breed).where(Breed.id == breed_uuid))
         breed_obj = breed_result.scalar_one_or_none()
         if not breed_obj:
             raise HTTPException(status_code=404, detail="Breed not found")
-        breed_name = breed_obj.name
+        resolved_breed_name = breed_obj.name
         breed_slug = breed_obj.name.lower().replace(" ", "_")
+    elif breed_name and breed_name.strip():
+        clean_name = breed_name.strip()
+        # Find existing or create new breed
+        breed_result = await db.execute(
+            select(Breed).where(Breed.species == species, Breed.name == clean_name)
+        )
+        breed_obj = breed_result.scalar_one_or_none()
+        if not breed_obj:
+            breed_obj = Breed(species=species, name=clean_name)
+            db.add(breed_obj)
+            await db.flush()
+        breed_uuid = breed_obj.id
+        resolved_breed_name = breed_obj.name
+        breed_slug = clean_name.lower().replace(" ", "_")
 
     # Build filename pattern
     ext = (
@@ -187,7 +202,7 @@ async def upload_default_image(
         id=str(default_image.id),
         species=default_image.species,
         breed_id=str(default_image.breed_id) if default_image.breed_id else None,
-        breed_name=breed_name,
+        breed_name=resolved_breed_name,
         color_pattern=default_image.color_pattern,
         public_url=default_image.public_url,
         storage_path=default_image.storage_path,

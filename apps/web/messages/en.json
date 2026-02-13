@@ -322,6 +322,8 @@
       "breedPlaceholder": "Select breed (optional)",
       "breedLoading": "Loading breeds...",
       "breedNone": "No breeds found",
+      "breedNew": "New breed...",
+      "breedNewPlaceholder": "Enter breed name",
       "color": "Color",
       "colorPlaceholder": "Select color",
       "colorNew": "Custom...",
