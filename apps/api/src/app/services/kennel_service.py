@@ -126,15 +126,14 @@ async def move_animal(
     if active_stay:
         active_stay.end_at = _now()
 
-        # 4) Remove from kennel = just clear current_kennel_id
-        # TODO: Re-enable after adding column to database
-        # if target_kennel_id is None:
-        #     animal.current_kennel_id = None
-        return {
-            "status": "removed",
-            "animal_id": str(animal_id),
-            "from": str(prev_kennel_id) if prev_kennel_id else None,
-        }
+        # 4) Remove from kennel (no target) = done
+        if target_kennel_id is None:
+            return {
+                "status": "removed",
+                "animal_id": str(animal_id),
+                "from": str(prev_kennel_id) if prev_kennel_id else None,
+            }
+        # else: fall through → steps 5-7 create the new stay in target kennel
 
     # 5) Lock target kennel row
     kennel_q = (
