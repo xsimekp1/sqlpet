@@ -146,6 +146,8 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     )
     featured: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     primary_photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_dewormed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_aggressive: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
     animal_breeds = relationship(

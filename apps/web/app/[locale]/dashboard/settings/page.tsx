@@ -105,6 +105,14 @@ export default function SettingsPage() {
   const [breedEdits, setBreedEdits] = useState<Record<string, { cs: string; en: string }>>({});
   const [savingBreedId, setSavingBreedId] = useState<string | null>(null);
 
+  // Colors admin state
+  interface ColorAdmin { code: string; cs: string | null; en: string | null }
+  const [colorsAdmin, setColorsAdmin] = useState<ColorAdmin[]>([]);
+  const [colorsSearch, setColorsSearch] = useState('');
+  const [isLoadingColorsAdmin, setIsLoadingColorsAdmin] = useState(false);
+  const [colorEdits, setColorEdits] = useState<Record<string, { cs: string; en: string }>>({});
+  const [savingColorCode, setSavingColorCode] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadImages = useCallback(async () => {
@@ -312,6 +320,40 @@ export default function SettingsPage() {
     }
   };
 
+  const loadColorsAdmin = useCallback(async () => {
+    setIsLoadingColorsAdmin(true);
+    try {
+      const data = await ApiClient.getAdminColors();
+      setColorsAdmin(data);
+      const edits: Record<string, { cs: string; en: string }> = {};
+      for (const c of data) {
+        edits[c.code] = { cs: c.cs ?? '', en: c.en ?? '' };
+      }
+      setColorEdits(edits);
+    } catch {
+      // ignore
+    } finally {
+      setIsLoadingColorsAdmin(false);
+    }
+  }, []);
+
+  const saveColorTranslations = async (code: string) => {
+    const edits = colorEdits[code];
+    if (!edits) return;
+    setSavingColorCode(code);
+    try {
+      await ApiClient.updateColorTranslation(code, {
+        cs: edits.cs || null,
+        en: edits.en || null,
+      });
+      toast.success(t('colorsAdmin.saveSuccess'));
+    } catch {
+      toast.error(t('colorsAdmin.saveError'));
+    } finally {
+      setSavingColorCode(null);
+    }
+  };
+
   const isSquare = dimensions ? dimensions.w === dimensions.h : null;
 
   return (
@@ -321,11 +363,15 @@ export default function SettingsPage() {
         <p className="text-muted-foreground mt-1">{t('description')}</p>
       </div>
 
-      <Tabs defaultValue="general" onValueChange={(v) => { if (v === 'breeds') loadBreedsAdmin(); }}>
+      <Tabs defaultValue="general" onValueChange={(v) => {
+        if (v === 'breeds') loadBreedsAdmin();
+        if (v === 'colors') loadColorsAdmin();
+      }}>
         <TabsList>
           <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
           <TabsTrigger value="defaultImages">{t('tabs.defaultImages')}</TabsTrigger>
           <TabsTrigger value="breeds">{t('tabs.breeds')}</TabsTrigger>
+          <TabsTrigger value="colors">{t('tabs.colors')}</TabsTrigger>
         </TabsList>
 
         {/* ── General tab ── */}
@@ -667,6 +713,90 @@ export default function SettingsPage() {
                           disabled={savingBreedId === breed.id}
                         >
                           {savingBreedId === breed.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Save className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        {/* ── Colors tab ── */}
+        <TabsContent value="colors" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('colorsAdmin.title')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Input
+                placeholder={t('colorsAdmin.searchPlaceholder')}
+                value={colorsSearch}
+                onChange={(e) => setColorsSearch(e.target.value)}
+              />
+
+              {isLoadingColorsAdmin ? (
+                <div className="flex items-center justify-center h-24">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : colorsAdmin.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t('colorsAdmin.empty')}</p>
+              ) : (
+                <div className="space-y-2">
+                  {/* Header row */}
+                  <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 px-1 text-xs text-muted-foreground font-medium">
+                    <span>{t('colorsAdmin.colorCode')}</span>
+                    <span>{t('colorsAdmin.nameCz')}</span>
+                    <span>{t('colorsAdmin.nameEn')}</span>
+                    <span />
+                  </div>
+                  {colorsAdmin
+                    .filter((c) => {
+                      const q = colorsSearch.toLowerCase();
+                      if (!q) return true;
+                      return (
+                        c.code.toLowerCase().includes(q) ||
+                        (colorEdits[c.code]?.cs ?? '').toLowerCase().includes(q) ||
+                        (colorEdits[c.code]?.en ?? '').toLowerCase().includes(q)
+                      );
+                    })
+                    .map((color) => (
+                      <div
+                        key={color.code}
+                        className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center"
+                      >
+                        <span className="text-sm font-mono truncate">{color.code}</span>
+                        <Input
+                          value={colorEdits[color.code]?.cs ?? ''}
+                          onChange={(e) =>
+                            setColorEdits((prev) => ({
+                              ...prev,
+                              [color.code]: { ...prev[color.code], cs: e.target.value },
+                            }))
+                          }
+                          className="h-8 text-sm"
+                        />
+                        <Input
+                          value={colorEdits[color.code]?.en ?? ''}
+                          onChange={(e) =>
+                            setColorEdits((prev) => ({
+                              ...prev,
+                              [color.code]: { ...prev[color.code], en: e.target.value },
+                            }))
+                          }
+                          className="h-8 text-sm"
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2"
+                          onClick={() => saveColorTranslations(color.code)}
+                          disabled={savingColorCode === color.code}
+                        >
+                          {savingColorCode === color.code ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
                             <Save className="h-3.5 w-3.5" />

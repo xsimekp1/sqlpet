@@ -4,9 +4,12 @@ from datetime import date, datetime, timezone
 from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from decimal import Decimal
+
 from src.app.models.animal import Animal, AnimalStatus, Species, Sex
 from src.app.models.animal_breed import AnimalBreed
 from src.app.models.animal_identifier import AnimalIdentifier
+from src.app.models.breed import Breed
 from src.app.schemas.animal import AnimalCreate, AnimalUpdate
 from src.app.services.audit_service import AuditService
 
@@ -97,6 +100,8 @@ class AnimalService:
             size_estimated=data.size_estimated,
             weight_current_kg=data.weight_current_kg,
             weight_estimated_kg=data.weight_estimated_kg,
+            is_dewormed=data.is_dewormed,
+            is_aggressive=data.is_aggressive,
             status_reason=data.status_reason,
             intake_date=data.intake_date,
             outcome_date=data.outcome_date,
@@ -117,6 +122,22 @@ class AnimalService:
                 )
                 self.db.add(ab)
             await self.db.flush()
+
+            # Auto-fill weight_estimated_kg from breed average if not provided
+            if animal.weight_estimated_kg is None and animal.weight_current_kg is None:
+                breed_result = await self.db.execute(
+                    select(Breed).where(Breed.id == data.breeds[0].breed_id)
+                )
+                breed = breed_result.scalar_one_or_none()
+                if breed:
+                    sex = str(data.sex) if hasattr(data.sex, "value") else data.sex
+                    if sex == "female" and breed.weight_female_min and breed.weight_female_max:
+                        avg = (Decimal(str(breed.weight_female_min)) + Decimal(str(breed.weight_female_max))) / 2
+                        animal.weight_estimated_kg = avg
+                    elif sex in ("male", "unknown") and breed.weight_male_min and breed.weight_male_max:
+                        avg = (Decimal(str(breed.weight_male_min)) + Decimal(str(breed.weight_male_max))) / 2
+                        animal.weight_estimated_kg = avg
+                    await self.db.flush()
 
         # Add identifiers
         if data.identifiers:

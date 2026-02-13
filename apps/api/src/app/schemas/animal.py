@@ -90,6 +90,8 @@ class AnimalCreate(BaseModel):
     description: str | None = None
     public_visibility: bool = False
     featured: bool = False
+    is_dewormed: bool = False
+    is_aggressive: bool = False
     breeds: list[AnimalBreedEntry] | None = None
     identifiers: list[AnimalIdentifierCreate] | None = None
 
@@ -113,6 +115,8 @@ class AnimalUpdate(BaseModel):
     description: str | None = None
     public_visibility: bool | None = None
     featured: bool | None = None
+    is_dewormed: bool | None = None
+    is_aggressive: bool | None = None
     breeds: list[AnimalBreedEntry] | None = None
     identifiers: list[AnimalIdentifierCreate] | None = None
 
@@ -139,6 +143,8 @@ class AnimalResponse(BaseModel):
     description: str | None = None
     public_visibility: bool
     featured: bool
+    is_dewormed: bool
+    is_aggressive: bool
     primary_photo_url: str | None = None
     default_image_url: str | None = None
     current_kennel_id: str | None = None

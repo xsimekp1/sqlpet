@@ -297,6 +297,110 @@ async def update_breed_translations(
     return {"ok": True}
 
 
+COLOR_CATALOG = [
+    "black",
+    "white",
+    "brown",
+    "golden",
+    "grey",
+    "gray",
+    "tan",
+    "fawn",
+    "blue",
+    "red",
+    "cream",
+    "brindle",
+    "orange",
+    "black-white",
+    "black_white",
+    "black-tan-white",
+    "black_tan_white",
+    "blue-tan",
+    "blue_tan",
+]
+
+
+class ColorAdminResponse(BaseModel):
+    code: str
+    cs: Optional[str] = None
+    en: Optional[str] = None
+
+
+class UpdateColorTranslationsRequest(BaseModel):
+    cs: Optional[str] = None
+    en: Optional[str] = None
+
+
+@router.get("/colors", response_model=List[ColorAdminResponse])
+async def list_colors_admin(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        text("SELECT code, locale, name FROM color_i18n WHERE organization_id IS NULL")
+    )
+    rows = result.fetchall()
+
+    # Build a lookup: code -> {locale: name}
+    lookup: dict = {}
+    for code, locale, name in rows:
+        if code not in lookup:
+            lookup[code] = {}
+        lookup[code][locale] = name
+
+    return [
+        ColorAdminResponse(
+            code=code,
+            cs=lookup.get(code, {}).get("cs"),
+            en=lookup.get(code, {}).get("en"),
+        )
+        for code in COLOR_CATALOG
+    ]
+
+
+@router.put("/colors/{code}/translations", status_code=200)
+async def update_color_translations(
+    code: str,
+    body: UpdateColorTranslationsRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if code not in COLOR_CATALOG:
+        raise HTTPException(status_code=404, detail="Color code not found")
+
+    for locale, name in [("cs", body.cs), ("en", body.en)]:
+        if name is None:
+            continue
+        name = name.strip()
+        existing = await db.execute(
+            text(
+                "SELECT id FROM color_i18n WHERE code = :code AND locale = :locale "
+                "AND organization_id IS NULL"
+            ),
+            {"code": code, "locale": locale},
+        )
+        row = existing.fetchone()
+        if row:
+            await db.execute(
+                text(
+                    "UPDATE color_i18n SET name = :name WHERE code = :code "
+                    "AND locale = :locale AND organization_id IS NULL"
+                ),
+                {"name": name, "code": code, "locale": locale},
+            )
+        else:
+            await db.execute(
+                text(
+                    "INSERT INTO color_i18n (code, locale, name) "
+                    "VALUES (:code, :locale, :name)"
+                ),
+                {"code": code, "locale": locale, "name": name},
+            )
+
+    await db.commit()
+    return {"ok": True}
+
+
 @router.delete("/default-images/{image_id}", status_code=204)
 async def delete_default_image(
     image_id: str,

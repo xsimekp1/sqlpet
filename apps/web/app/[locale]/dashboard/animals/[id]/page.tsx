@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, Edit, Trash2, MapPin, Calendar, Loader2, Stethoscope } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, MapPin, Calendar, Loader2, Stethoscope, CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +27,8 @@ export default function AnimalDetailPage() {
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
   const [medicalDialogOpen, setMedicalDialogOpen] = useState(false);
+  const [togglingDewormed, setTogglingDewormed] = useState(false);
+  const [togglingAggressive, setTogglingAggressive] = useState(false);
 
   const animalId = params.id as string;
 
@@ -49,6 +51,32 @@ fetchAnimal();
 
   const handleAnimalUpdate = (updatedAnimal: Animal) => {
     setAnimal(updatedAnimal);
+  };
+
+  const toggleDewormed = async () => {
+    if (!animal) return;
+    setTogglingDewormed(true);
+    try {
+      const updated = await ApiClient.updateAnimal(animal.id, { is_dewormed: !animal.is_dewormed } as any);
+      setAnimal(updated);
+    } catch {
+      toast.error('Failed to update');
+    } finally {
+      setTogglingDewormed(false);
+    }
+  };
+
+  const toggleAggressive = async () => {
+    if (!animal) return;
+    setTogglingAggressive(true);
+    try {
+      const updated = await ApiClient.updateAnimal(animal.id, { is_aggressive: !animal.is_aggressive } as any);
+      setAnimal(updated);
+    } catch {
+      toast.error('Failed to update');
+    } finally {
+      setTogglingAggressive(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -221,6 +249,71 @@ fetchAnimal();
               </p>
             </CardContent>
           </Card>
+
+          {/* Health & Welfare */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('animals.health.title')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Neutered / Spayed */}
+              <div className="flex items-center gap-3">
+                {animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? (
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                    <Scissors className="h-4 w-4 text-green-600" />
+                  </div>
+                ) : animal.altered_status === 'intact' ? (
+                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <HelpCircle className="h-4 w-4 text-gray-400" />
+                  </div>
+                )}
+                <span className="text-sm font-medium">{t('animals.health.neutered')}</span>
+                <span className="text-sm text-muted-foreground ml-auto">
+                  {animal.altered_status === 'neutered' || animal.altered_status === 'spayed'
+                    ? t('animals.health.yes')
+                    : animal.altered_status === 'intact'
+                    ? t('animals.health.no')
+                    : t('animals.health.unknown')}
+                </span>
+              </div>
+
+              {/* Dewormed */}
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${animal.is_dewormed ? 'bg-green-100' : 'bg-gray-100'}`}>
+                  <Pill className={`h-4 w-4 ${animal.is_dewormed ? 'text-green-600' : 'text-gray-400'}`} />
+                </div>
+                <span className="text-sm font-medium">{t('animals.health.dewormed')}</span>
+                <button
+                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  onClick={toggleDewormed}
+                  disabled={togglingDewormed}
+                  title={t('animals.health.toggleDewormed')}
+                >
+                  {animal.is_dewormed ? t('animals.health.yes') : t('animals.health.no')}
+                </button>
+              </div>
+
+              {/* Aggressive */}
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${animal.is_aggressive ? 'bg-red-100' : 'bg-gray-100'}`}>
+                  <AlertTriangle className={`h-4 w-4 ${animal.is_aggressive ? 'text-red-500' : 'text-gray-400'}`} />
+                </div>
+                <span className="text-sm font-medium">{t('animals.health.aggressive')}</span>
+                <button
+                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  onClick={toggleAggressive}
+                  disabled={togglingAggressive}
+                  title={t('animals.health.toggleAggressive')}
+                >
+                  {animal.is_aggressive ? t('animals.health.aggressiveWarning') : t('animals.health.no')}
+                </button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="timeline">
@@ -232,9 +325,39 @@ fetchAnimal();
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-center py-8">
-                Timeline feature coming in M4
-              </p>
+              <div className="relative pl-6">
+                {/* Vertical line */}
+                <div className="absolute left-2.5 top-0 bottom-0 w-0.5 bg-border" />
+
+                {/* Event: intake */}
+                {animal.intake_date && (
+                  <div className="relative mb-6">
+                    <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-background" />
+                    <div className="pl-2">
+                      <p className="text-sm font-semibold">Příjem do útulku</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(animal.intake_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Event: created in system */}
+                <div className="relative mb-6">
+                  <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-gray-300 border-2 border-background" />
+                  <div className="pl-2">
+                    <p className="text-sm font-semibold">Záznam vytvořen v systému</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(animal.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground mt-2">
+                  {/* TODO: M4 - load full event history from API */}
+                  Plná historie událostí bude přidána v M4.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -17,6 +17,7 @@ from src.app.api.routes.tags import router as tags_router
 from src.app.api.routes.files import router as files_router
 from src.app.api.routes.timezones import router as timezones_router
 from src.app.api.routes.admin import router as admin_router
+from src.app.api.routes.contacts import router as contacts_router
 
 # Files router is now working properly after fixing import issues
 
@@ -91,3 +92,4 @@ app.include_router(files_router)
 
 app.include_router(timezones_router)
 app.include_router(admin_router)
+app.include_router(contacts_router)

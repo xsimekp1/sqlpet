@@ -12,16 +12,16 @@ import { FeedingTodayWidget } from './FeedingTodayWidget'
 import { TasksWidget } from './TasksWidget'
 import { AlertsWidget } from './AlertsWidget'
 import { OccupancyWidget } from './OccupancyWidget'
-import { RecentWidget } from './RecentWidget'
+import { RecentlyAdmittedWidget } from './RecentlyAdmittedWidget'
 
-const ALL_WIDGETS = ['medical-today', 'feeding-today', 'tasks', 'alerts', 'occupancy', 'recent'] as const
+const ALL_WIDGETS = ['medical-today', 'feeding-today', 'tasks', 'alerts', 'occupancy', 'recently-admitted'] as const
 const widgetLabels: Record<string, string> = {
   'medical-today': 'medicalToday',
   'feeding-today': 'feedingToday',
   'tasks': 'tasks',
   'alerts': 'alerts',
   'occupancy': 'occupancy',
-  'recent': 'recent',
+  'recently-admitted': 'recentlyAdmitted',
 }
 
 // Widget registry
@@ -31,7 +31,7 @@ const widgetComponents = {
   'tasks': TasksWidget,
   'alerts': AlertsWidget,
   'occupancy': OccupancyWidget,
-  'recent': RecentWidget,
+  'recently-admitted': RecentlyAdmittedWidget,
 }
 
 interface SortableWidgetProps {

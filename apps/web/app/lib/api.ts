@@ -1,6 +1,9 @@
 import axios, { AxiosError } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const _rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = _rawApiUrl.startsWith('http://') && !_rawApiUrl.includes('localhost')
+  ? _rawApiUrl.replace('http://', 'https://')
+  : _rawApiUrl;
 
 // Response types
 export interface LoginResponse {
@@ -101,6 +104,8 @@ export interface Animal {
   current_kennel_id: string | null;
   current_kennel_name: string | null;
   current_kennel_code: string | null;
+  is_dewormed: boolean;
+  is_aggressive: boolean;
   breeds?: AnimalBreed[];
   created_at: string;
   updated_at: string;
@@ -1073,6 +1078,53 @@ class ApiClient {
         throw new Error(
           axiosError.response?.data?.detail || 'Failed to update task'
         );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  // ========================================
+  // COLORS ADMIN METHODS
+  // ========================================
+
+  /**
+   * Get color catalog with translations
+   */
+  static async getAdminColors(): Promise<Array<{ code: string; cs: string | null; en: string | null }>> {
+    try {
+      const response = await axios.get(
+        `${API_URL}/admin/colors`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch colors');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Update color translations
+   */
+  static async updateColorTranslation(code: string, data: { cs?: string | null; en?: string | null }): Promise<void> {
+    try {
+      await axios.put(
+        `${API_URL}/admin/colors/${encodeURIComponent(code)}/translations`,
+        data,
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to update color translation');
       }
       throw new Error('An unexpected error occurred');
     }

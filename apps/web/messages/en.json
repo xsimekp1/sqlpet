@@ -26,6 +26,8 @@
     "alerts": "Alerts",
     "occupancy": "Occupancy",
     "recent": "Recently Viewed",
+    "recentlyAdmitted": "Recently Admitted",
+    "noAnimals": "No animals",
     "medicationsDue": "Medications due",
     "animalsPending": "Animals pending",
     "tasksDue": "Tasks due",
@@ -332,7 +334,8 @@
     "tabs": {
       "general": "General",
       "defaultImages": "Default Images",
-      "breeds": "Breeds"
+      "breeds": "Breeds",
+      "colors": "Colors"
     },
     "preferences": "Preferences",
     "weightUnit": "Weight Unit",
@@ -387,6 +390,17 @@
       "saveSuccess": "Translation saved",
       "saveError": "Error saving",
       "empty": "No breeds found"
+    },
+    "colorsAdmin": {
+      "title": "Color Management",
+      "description": "Edit Czech and English color names",
+      "searchPlaceholder": "Search color...",
+      "colorCode": "Color code",
+      "nameCz": "Name (CS)",
+      "nameEn": "Name (EN)",
+      "saveSuccess": "Translation saved",
+      "saveError": "Error saving",
+      "empty": "No colors found"
     }
   },
   "animals": {
@@ -441,6 +455,18 @@
       "spayed": "Spayed",
       "intact": "Intact",
       "unknown": "Unknown"
+    },
+    "health": {
+      "title": "Health & Welfare",
+      "neutered": "Neutered / Spayed",
+      "dewormed": "Dewormed",
+      "aggressive": "Aggression",
+      "yes": "Yes",
+      "no": "No",
+      "unknown": "Unknown",
+      "aggressiveWarning": "Caution — animal may be aggressive",
+      "toggleDewormed": "Toggle dewormed status",
+      "toggleAggressive": "Toggle aggression status"
     },
     "colors": {
       "black": "Black",
@@ -754,5 +780,22 @@
     "cream": "Cream",
     "brindle": "Brindle",
     "orange": "Orange"
+  },
+  "adoptions": {
+    "title": "Adoptions",
+    "description": "Adoption process management",
+    "comingSoon": "The adoption module will be available in the next release",
+    "viewAnimals": "Go to Animals",
+    "pipeline": {
+      "title": "Adoption Pipeline",
+      "stages": {
+        "inquiry": "Inquiry",
+        "application": "Application",
+        "meeting": "Meeting",
+        "homecheck": "Home Check",
+        "approved": "Approved",
+        "adopted": "Adopted"
+      }
+    }
   }
 }

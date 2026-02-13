@@ -26,6 +26,8 @@
     "alerts": "Upozornění",
     "occupancy": "Obsazenost",
     "recent": "Nedávno zobrazeno",
+    "recentlyAdmitted": "Naposledy přijatí",
+    "noAnimals": "Žádná zvířata",
     "medicationsDue": "Léky na pořadu",
     "animalsPending": "Zvířat čeká",
     "tasksDue": "Úkolů dnes",
@@ -334,7 +336,8 @@
     "tabs": {
       "general": "Obecné",
       "defaultImages": "Výchozí obrázky",
-      "breeds": "Plemena"
+      "breeds": "Plemena",
+      "colors": "Barvy"
     },
     "preferences": "Předvolby",
     "weightUnit": "Jednotka hmotnosti",
@@ -389,6 +392,17 @@
       "saveSuccess": "Překlad uložen",
       "saveError": "Chyba při ukládání",
       "empty": "Žádná plemena nenalezena"
+    },
+    "colorsAdmin": {
+      "title": "Správa barev",
+      "description": "Upravte české a anglické názvy barev",
+      "searchPlaceholder": "Hledat barvu...",
+      "colorCode": "Kód barvy",
+      "nameCz": "Název (CS)",
+      "nameEn": "Název (EN)",
+      "saveSuccess": "Překlad uložen",
+      "saveError": "Chyba při ukládání",
+      "empty": "Žádné barvy nenalezeny"
     }
   },
   "animals": {
@@ -443,6 +457,18 @@
       "spayed": "Sterilizována",
       "intact": "Nekastrován",
       "unknown": "Neznámo"
+    },
+    "health": {
+      "title": "Zdraví a pohoda",
+      "neutered": "Kastrace / sterilizace",
+      "dewormed": "Odčervení",
+      "aggressive": "Agresivita",
+      "yes": "Ano",
+      "no": "Ne",
+      "unknown": "Neznámo",
+      "aggressiveWarning": "Pozor — zvíře může být agresivní",
+      "toggleDewormed": "Přepnout stav odčervení",
+      "toggleAggressive": "Přepnout stav agresivity"
     },
     "colors": {
       "black": "Černá",
@@ -760,5 +786,22 @@
     "cream": "Krémová",
     "brindle": "Pruhovaná",
     "orange": "Oranžová"
+  },
+  "adoptions": {
+    "title": "Adopce",
+    "description": "Správa adopčního procesu",
+    "comingSoon": "Adopční modul bude dostupný v další verzi",
+    "viewAnimals": "Přejít na seznam zvířat",
+    "pipeline": {
+      "title": "Adopční pipeline",
+      "stages": {
+        "inquiry": "Zájem",
+        "application": "Žádost",
+        "meeting": "Setkání",
+        "homecheck": "Domácí šetření",
+        "approved": "Schváleno",
+        "adopted": "Adoptováno"
+      }
+    }
   }
 }

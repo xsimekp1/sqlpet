@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors } from 'lucide-react';
+import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -208,6 +208,7 @@ export default function AnimalsPage() {
                   <th className="px-4 py-3 font-medium text-muted-foreground w-10" title={t('animals.alteredStatus.label')}>
                     <Scissors className="h-4 w-4" />
                   </th>
+                  <th className="px-4 py-3 font-medium text-muted-foreground w-24" title="Zdraví">Zdraví</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Kotec</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Intake</th>
@@ -251,6 +252,26 @@ export default function AnimalsPage() {
                       ) : animal.altered_status === 'intact' ? (
                         <Scissors className="h-4 w-4 text-muted-foreground/30" aria-label={t('animals.alteredStatus.intact')} />
                       ) : null}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
+                        {/* Dewormed */}
+                        <div
+                          className={`w-7 h-7 rounded-full flex items-center justify-center ${animal.is_dewormed ? 'bg-green-100' : 'bg-gray-100'}`}
+                          title={animal.is_dewormed ? t('animals.health.dewormed') + ': ' + t('animals.health.yes') : t('animals.health.dewormed') + ': ' + t('animals.health.no')}
+                        >
+                          <Pill className={`h-3.5 w-3.5 ${animal.is_dewormed ? 'text-green-600' : 'text-gray-300'}`} />
+                        </div>
+                        {/* Aggressive */}
+                        {animal.is_aggressive && (
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-red-100"
+                            title={t('animals.health.aggressiveWarning')}
+                          >
+                            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <Badge className={`text-xs ${getStatusColor(animal.status)}`}>

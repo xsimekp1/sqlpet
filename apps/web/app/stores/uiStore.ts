@@ -43,7 +43,7 @@ export const useUIStore = create<UIState>()(
         'tasks',
         'alerts',
         'occupancy',
-        'recent'
+        'recently-admitted'
       ],
       setDashboardWidgets: (widgets) => set({ dashboardWidgets: widgets }),
 
