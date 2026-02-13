@@ -12,8 +12,9 @@ from src.app.api.dependencies.db import get_db
 from src.app.models.breed import Breed
 from src.app.models.file import DefaultAnimalImage
 from src.app.models.user import User
-from src.app.services.file_upload_service import FileUploadService
 from src.app.services.supabase_storage_service import supabase_storage_service
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -99,11 +100,14 @@ async def upload_default_image(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Validate and read file
-    file_content, content_type = await FileUploadService.process_upload(
-        file=file,
-        organization_id="default",
-    )
+    # Validate content type via header (admin-only endpoint, no python-magic needed)
+    content_type = (file.content_type or "").lower().split(";")[0].strip()
+    if content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File type '{content_type}' not allowed. Use JPEG, PNG or WEBP.",
+        )
+    file_content = await file.read()
 
     # Check image dimensions (must be square)
     try:
