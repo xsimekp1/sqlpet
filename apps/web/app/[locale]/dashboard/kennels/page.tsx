@@ -342,6 +342,12 @@ export default function KennelsPage() {
       toast.warning(`${animal.name} není kastrovaný/á a v kotci ${targetKennel.name} je zvíře opačného pohlaví! ❤️`);
     }
 
+    // Warning: different species in same kennel
+    const differentSpecies = targetKennel.animals_preview?.some(a => a.species !== animal.species);
+    if (differentSpecies) {
+      toast.warning(`${animal.name} (${animal.species}) a zvíře v kotci ${targetKennel.name} jsou různé druhy! 🐾`);
+    }
+
     const prevKennels = kennels;
     const prevAnimals = allAnimals;
 
