@@ -29,6 +29,7 @@ export default function AnimalDetailPage() {
   const [medicalDialogOpen, setMedicalDialogOpen] = useState(false);
   const [togglingDewormed, setTogglingDewormed] = useState(false);
   const [togglingAggressive, setTogglingAggressive] = useState(false);
+  const [healthEvents, setHealthEvents] = useState<{ text: string; date: Date }[]>([]);
 
   const animalId = params.id as string;
 
@@ -57,8 +58,13 @@ fetchAnimal();
     if (!animal) return;
     setTogglingDewormed(true);
     try {
-      const updated = await ApiClient.updateAnimal(animal.id, { is_dewormed: !animal.is_dewormed } as any);
+      const newVal = !animal.is_dewormed;
+      const updated = await ApiClient.updateAnimal(animal.id, { is_dewormed: newVal } as any);
       setAnimal(updated);
+      setHealthEvents((prev) => [
+        { text: newVal ? 'Odčervení: označeno jako provedené' : 'Odčervení: označeno jako neprovedené', date: new Date() },
+        ...prev,
+      ]);
     } catch {
       toast.error('Failed to update');
     } finally {
@@ -70,8 +76,13 @@ fetchAnimal();
     if (!animal) return;
     setTogglingAggressive(true);
     try {
-      const updated = await ApiClient.updateAnimal(animal.id, { is_aggressive: !animal.is_aggressive } as any);
+      const newVal = !animal.is_aggressive;
+      const updated = await ApiClient.updateAnimal(animal.id, { is_aggressive: newVal } as any);
       setAnimal(updated);
+      setHealthEvents((prev) => [
+        { text: newVal ? 'Agresivita: označena jako problematická' : 'Agresivita: označena jako v pořádku', date: new Date() },
+        ...prev,
+      ]);
     } catch {
       toast.error('Failed to update');
     } finally {
@@ -328,6 +339,19 @@ fetchAnimal();
               <div className="relative pl-6">
                 {/* Vertical line */}
                 <div className="absolute left-2.5 top-0 bottom-0 w-0.5 bg-border" />
+
+                {/* Health toggle events (most recent first) */}
+                {healthEvents.map((ev, i) => (
+                  <div key={i} className="relative mb-6">
+                    <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-blue-400 border-2 border-background" />
+                    <div className="pl-2">
+                      <p className="text-sm font-semibold">{ev.text}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {ev.date.toLocaleTimeString()} · {ev.date.toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
 
                 {/* Event: intake */}
                 {animal.intake_date && (

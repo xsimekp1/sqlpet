@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ApiClient } from '@/app/lib/api';
+import ApiClient from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -48,11 +48,12 @@ export default function NewFeedingPlanPage() {
 
   const [scheduleTimes, setScheduleTimes] = useState<string[]>([]);
   const [newTime, setNewTime] = useState('08:00');
+  const [selectedAnimalId, setSelectedAnimalId] = useState('');
 
   // Fetch animals
   const { data: animalsData } = useQuery({
     queryKey: ['animals'],
-    queryFn: () => ApiClient.get('/animals', { page_size: 1000 }),
+    queryFn: () => ApiClient.getAnimals({ page_size: 100 }),
   });
 
   // Fetch foods
@@ -127,7 +128,8 @@ export default function NewFeedingPlanPage() {
         <div className="space-y-2">
           <Label htmlFor="animal_id">{t('fields.animal')} *</Label>
           <Select
-            onValueChange={(value) => setValue('animal_id', value)}
+            value={selectedAnimalId}
+            onValueChange={(value) => { setSelectedAnimalId(value); setValue('animal_id', value); }}
             required
           >
             <SelectTrigger>

@@ -22,7 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, Circle, Clock, XCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, XCircle, AlertCircle, Plus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
 
@@ -41,6 +42,9 @@ export default function TasksPage() {
 
   const [statusFilter, setStatusFilter] = useState<TaskStatus>(initialStatus);
   const [typeFilter, setTypeFilter] = useState<TaskType>(initialType);
+  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
 
   // Update filters when URL params change
   useEffect(() => {
@@ -154,6 +158,26 @@ export default function TasksPage() {
     completeTaskMutation.mutate({ taskId: task.id, isFeedingTask });
   };
 
+  // Create task mutation
+  const createTaskMutation = useMutation({
+    mutationFn: (title: string) =>
+      ApiClient.createTask({ title, priority: newTaskPriority, type: 'general' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setNewTaskTitle('');
+      setShowNewTaskForm(false);
+      toast({ title: 'Úkol vytvořen' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Chyba', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const handleCreateTask = () => {
+    if (!newTaskTitle.trim()) return;
+    createTaskMutation.mutate(newTaskTitle.trim());
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -171,7 +195,47 @@ export default function TasksPage() {
             Manage and complete tasks for your organization
           </p>
         </div>
+        <Button onClick={() => setShowNewTaskForm((v) => !v)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Task
+        </Button>
       </div>
+
+      {/* Inline new-task form */}
+      {showNewTaskForm && (
+        <div className="flex gap-2 items-center border rounded-lg p-3 bg-muted/30">
+          <Input
+            placeholder="Task title..."
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleCreateTask()}
+            className="flex-1"
+            autoFocus
+          />
+          <Select
+            value={newTaskPriority}
+            onValueChange={(v) => setNewTaskPriority(v as 'low' | 'medium' | 'high')}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            onClick={handleCreateTask}
+            disabled={!newTaskTitle.trim() || createTaskMutation.isPending}
+          >
+            Add
+          </Button>
+          <Button variant="outline" onClick={() => { setShowNewTaskForm(false); setNewTaskTitle(''); }}>
+            Cancel
+          </Button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-4">
