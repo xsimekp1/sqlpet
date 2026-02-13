@@ -160,17 +160,20 @@ class TestDefaultImageService:
         )
 
         assert result is None
-        assert mock_db.execute.call_count == 4  # Called 4 times for hierarchical search
+        assert mock_db.execute.call_count == 1  # Only species-only query runs (no breed_ids, no color)
 
     @pytest.mark.asyncio
     async def test_create_placeholder_svg(self, service):
         """Test creation of SVG placeholder"""
+        import base64
         species = "dog"
         result = await service.create_placeholder_svg(species)
 
         assert result.startswith("data:image/svg+xml;base64,")
-        # Check if species name is in the base64 encoded data
-        assert "Dog" in result or "dog" in result
+        # Decode base64 and check SVG content
+        encoded = result.split(",", 1)[1]
+        svg_content = base64.b64decode(encoded).decode()
+        assert "Dog" in svg_content or "dog" in svg_content
 
     def test_parse_filename_edge_cases(self, service):
         """Test edge cases for filename parsing"""

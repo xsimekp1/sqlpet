@@ -4,10 +4,14 @@ M3: Test auth flow with select-organization + animals CRUD with JWT org_id
 import uuid
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.models.user import User
 from src.app.models.organization import Organization
+from src.app.models.animal import Animal
+from src.app.models.animal_breed import AnimalBreed
+from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.models.role import Role
 from src.app.models.permission import Permission
 from src.app.models.role_permission import RolePermission
@@ -58,9 +62,7 @@ async def test_user_with_org(db_session: AsyncSession):
         select(Permission).where(
             Permission.key.in_([
                 "animals.read",
-                "animals.create",
-                "animals.update",
-                "animals.delete",
+                "animals.write",
             ])
         )
     )
@@ -70,9 +72,7 @@ async def test_user_with_org(db_session: AsyncSession):
     if not permissions:
         permissions = [
             Permission(id=uuid.uuid4(), key="animals.read", description="Read animals"),
-            Permission(id=uuid.uuid4(), key="animals.create", description="Create animals"),
-            Permission(id=uuid.uuid4(), key="animals.update", description="Update animals"),
-            Permission(id=uuid.uuid4(), key="animals.delete", description="Delete animals"),
+            Permission(id=uuid.uuid4(), key="animals.write", description="Create and edit animal records"),
         ]
         for perm in permissions:
             db_session.add(perm)
@@ -101,7 +101,23 @@ async def test_user_with_org(db_session: AsyncSession):
     await db_session.refresh(user)
     await db_session.refresh(org)
 
-    return user, org
+    yield user, org
+
+    # Cleanup: remove animals created by API calls during the test, then org data
+    animal_result = await db_session.execute(
+        select(Animal.id).where(Animal.organization_id == org_uuid)
+    )
+    animal_ids = [row[0] for row in animal_result.all()]
+    if animal_ids:
+        await db_session.execute(delete(AnimalIdentifier).where(AnimalIdentifier.animal_id.in_(animal_ids)))
+        await db_session.execute(delete(AnimalBreed).where(AnimalBreed.animal_id.in_(animal_ids)))
+        await db_session.execute(delete(Animal).where(Animal.organization_id == org_uuid))
+    await db_session.execute(delete(RolePermission).where(RolePermission.role_id == role.id))
+    await db_session.execute(delete(Membership).where(Membership.user_id == user_uuid))
+    await db_session.execute(delete(Role).where(Role.id == role.id))
+    await db_session.execute(delete(Organization).where(Organization.id == org_uuid))
+    await db_session.execute(delete(User).where(User.id == user_uuid))
+    await db_session.commit()
 
 
 async def test_login_and_select_organization(client: AsyncClient, test_user_with_org):
@@ -166,8 +182,8 @@ async def test_create_animal_with_org_token(client: AsyncClient, test_user_with_
         "/animals",  # Note: /animals not /orgs/{id}/animals
         json={
             "name": "Max",
-            "species": "DOG",
-            "sex": "MALE",
+            "species": "dog",
+            "sex": "male",
             "intake_date": "2024-01-15",
         },
         headers={"Authorization": f"Bearer {org_token}"},
@@ -175,7 +191,7 @@ async def test_create_animal_with_org_token(client: AsyncClient, test_user_with_
     assert create_resp.status_code == 201
     animal_data = create_resp.json()
     assert animal_data["name"] == "Max"
-    assert animal_data["species"] == "DOG"
+    assert animal_data["species"] == "dog"
     assert animal_data["organization_id"] == str(org.id)
 
     return animal_data["id"]
@@ -204,8 +220,8 @@ async def test_list_animals_with_org_token(client: AsyncClient, test_user_with_o
         "/animals",
         json={
             "name": "Luna",
-            "species": "CAT",
-            "sex": "FEMALE",
+            "species": "cat",
+            "sex": "female",
             "intake_date": "2024-02-01",
         },
         headers={"Authorization": f"Bearer {org_token}"},
@@ -239,8 +255,8 @@ async def test_create_animal_without_org_token_fails(client: AsyncClient, test_u
         "/animals",
         json={
             "name": "Max",
-            "species": "DOG",
-            "sex": "MALE",
+            "species": "dog",
+            "sex": "male",
             "intake_date": "2024-01-15",
         },
         headers={"Authorization": f"Bearer {token_without_org}"},

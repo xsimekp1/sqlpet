@@ -3,9 +3,35 @@ import uuid
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-from src.app.db.session import AsyncSessionLocal, async_engine
+# ── Patch DB session with NullPool engine BEFORE importing app ────────────────
+# This ensures that each async test gets a fresh connection (no event-loop
+# reuse across tests), avoiding "Event loop is closed" errors with asyncpg.
+import src.app.db.session as _db_session
+from src.app.core.config import settings
+
+_test_engine = create_async_engine(
+    settings.DATABASE_URL_ASYNC,
+    poolclass=NullPool,
+    connect_args={"statement_cache_size": 0, "ssl": "require"},
+)
+_TestSessionLocal = async_sessionmaker(
+    bind=_test_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+_db_session.async_engine = _test_engine
+_db_session.AsyncSessionLocal = _TestSessionLocal
+
+# ── NOW import app (dependencies.db picks up patched session factory) ─────────
+from src.app.main import app  # noqa: E402
+
+import src.app.api.dependencies.db as _dep_db  # noqa: E402
+_dep_db.AsyncSessionLocal = _TestSessionLocal
+
+# ── Model imports for fixtures ────────────────────────────────────────────────
 from src.app.core.security import hash_password, create_access_token
 from src.app.models.user import User
 from src.app.models.organization import Organization
@@ -16,7 +42,6 @@ from src.app.models.role import Role
 from src.app.models.permission import Permission
 from src.app.models.role_permission import RolePermission
 from src.app.models.membership import Membership, MembershipStatus
-from src.app.main import app
 
 
 @pytest.fixture(scope="session")
@@ -26,15 +51,16 @@ def anyio_backend():
 
 @pytest.fixture()
 async def db_session() -> AsyncSession:
-    async with AsyncSessionLocal() as session:
+    async with _TestSessionLocal() as session:
         yield session
         await session.rollback()
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def dispose_engine():
+def dispose_engine():
     yield
-    await async_engine.dispose()
+    import asyncio
+    asyncio.run(_test_engine.dispose())
 
 
 @pytest.fixture()
@@ -153,7 +179,6 @@ async def test_org_with_write_permission(db_session: AsyncSession, test_user: Us
     yield org, membership, role
 
     # Cleanup — delete animals and related data first
-    # Get all animal ids for this org
     animal_result = await db_session.execute(
         select(Animal.id).where(Animal.organization_id == org_id)
     )

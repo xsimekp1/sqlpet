@@ -32,7 +32,7 @@ class DefaultImageService:
         parts = name_without_ext.split("_")
 
         result = {
-            "species": parts[0] if len(parts) > 0 else None,
+            "species": parts[0] if len(parts) > 0 and parts[0] else None,
             "breed": None,
             "color": None,
             "filename_pattern": filename,
@@ -41,9 +41,9 @@ class DefaultImageService:
         if len(parts) >= 2:
             result["breed"] = parts[1]
         if len(parts) >= 3:
-            result["color"] = parts[2].replace(
+            result["color"] = "_".join(parts[2:]).replace(
                 "&", "_"
-            )  # Handle black&white -> black_white
+            )  # Handle black&white -> black_white, black_brown, etc.
 
         return result
 

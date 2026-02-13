@@ -1,4 +1,5 @@
 """Unit tests for FeedingService"""
+import uuid
 import pytest
 from datetime import datetime, timezone, date
 from uuid import uuid4
@@ -12,6 +13,7 @@ from src.app.models.food import Food, FoodType
 from src.app.models.animal import Animal
 from src.app.models.user import User
 from src.app.models.organization import Organization
+from src.app.models.task import Task, TaskType, TaskStatus
 
 
 @pytest.fixture
@@ -84,6 +86,7 @@ def sample_feeding_plan(sample_org, sample_animal, sample_food):
     """Sample feeding plan"""
     return FeedingPlan(
         id=uuid4(),
+        organization_id=sample_org.id,
         animal_id=sample_animal.id,
         food_id=sample_food.id,
         amount_g=200,
@@ -99,23 +102,19 @@ class TestFeedingService:
 
     @pytest.mark.asyncio
     async def test_create_feeding_plan(
-        self, feeding_service, mock_db, mock_audit, sample_org, sample_animal, sample_food
+        self, feeding_service, mock_db, mock_audit, sample_org, sample_user, sample_animal, sample_food
     ):
         """Test creating a feeding plan"""
-        # Arrange
-        plan_data = {
-            "animal_id": sample_animal.id,
-            "food_id": sample_food.id,
-            "amount_g": 200,
-            "times_per_day": 2,
-            "schedule_json": ["08:00", "18:00"],
-            "start_date": date.today()
-        }
-
         # Act
         result = await feeding_service.create_feeding_plan(
-            org_id=sample_org.id,
-            data=plan_data
+            organization_id=sample_org.id,
+            animal_id=sample_animal.id,
+            start_date=date.today(),
+            created_by_id=sample_user.id,
+            food_id=sample_food.id,
+            amount_g=200,
+            times_per_day=2,
+            schedule_json=["08:00", "18:00"],
         )
 
         # Assert
@@ -135,7 +134,7 @@ class TestFeedingService:
         """Test logging feeding without automatic inventory deduction"""
         # Act
         result = await feeding_service.log_feeding(
-            org_id=sample_org.id,
+            organization_id=sample_org.id,
             animal_id=sample_animal.id,
             fed_by_user_id=sample_user.id,
             amount_text="1 cup",
@@ -161,14 +160,13 @@ class TestFeedingService:
         # Arrange
         # Mock finding active feeding plan
         mock_plan_result = MagicMock()
-        mock_plan_result.scalar_one_or_none.return_value = sample_feeding_plan
+        mock_plan_result.scalars.return_value.all.return_value = [sample_feeding_plan]
 
         # Mock finding food
         mock_food_result = MagicMock()
         mock_food_result.scalar_one_or_none.return_value = sample_food
 
         async def mock_execute(query):
-            # Determine which query based on string representation
             query_str = str(query)
             if 'feeding_plans' in query_str.lower():
                 return mock_plan_result
@@ -179,7 +177,7 @@ class TestFeedingService:
         mock_db.execute = AsyncMock(side_effect=mock_execute)
 
         # Mock InventoryService
-        with patch('src.app.services.feeding_service.InventoryService') as MockInventoryService:
+        with patch('src.app.services.inventory_service.InventoryService') as MockInventoryService:
             mock_inv_service = AsyncMock()
             mock_inv_service.deduct_for_feeding = AsyncMock(return_value={
                 "item": MagicMock(name=sample_food.name),
@@ -189,7 +187,7 @@ class TestFeedingService:
 
             # Act
             result = await feeding_service.log_feeding(
-                org_id=sample_org.id,
+                organization_id=sample_org.id,
                 animal_id=sample_animal.id,
                 fed_by_user_id=sample_user.id,
                 amount_text="200g",
@@ -206,7 +204,7 @@ class TestFeedingService:
 
     @pytest.mark.asyncio
     async def test_deactivate_feeding_plan(
-        self, feeding_service, mock_db, mock_audit, sample_feeding_plan
+        self, feeding_service, mock_db, mock_audit, sample_org, sample_user, sample_feeding_plan
     ):
         """Test deactivating a feeding plan"""
         # Arrange
@@ -217,7 +215,8 @@ class TestFeedingService:
         # Act
         result = await feeding_service.deactivate_feeding_plan(
             plan_id=sample_feeding_plan.id,
-            org_id=sample_feeding_plan.organization_id
+            organization_id=sample_org.id,
+            user_id=sample_user.id,
         )
 
         # Assert
@@ -230,29 +229,45 @@ class TestFeedingService:
     async def test_complete_feeding_task(
         self, feeding_service, mock_db, sample_org, sample_animal, sample_user
     ):
-        """Test completing a feeding task"""
-        # Arrange
-        task_metadata = {
-            "feeding_plan_id": str(uuid4()),
-            "animal_id": str(sample_animal.id)
-        }
+        """Test completing a feeding task via task_id"""
+        task_id = uuid4()
 
-        # Mock log_feeding to avoid complex setup
+        # Create a task with feeding metadata
+        task = Task(
+            id=task_id,
+            organization_id=sample_org.id,
+            created_by_id=sample_user.id,
+            type=TaskType.FEEDING,
+            status=TaskStatus.PENDING,
+            title="Feed animal",
+            task_metadata={"animal_id": str(sample_animal.id)},
+        )
+
+        # Mock DB to return the task
+        mock_task_result = MagicMock()
+        mock_task_result.scalar_one_or_none.return_value = task
+        mock_db.execute = AsyncMock(return_value=mock_task_result)
+
+        mock_feeding_log = MagicMock(id=uuid4(), animal_id=sample_animal.id)
+        mock_completed_task = MagicMock(status=TaskStatus.COMPLETED)
+
         with patch.object(feeding_service, 'log_feeding') as mock_log_feeding:
-            mock_log = MagicMock(id=uuid4(), animal_id=sample_animal.id)
-            mock_log_feeding.return_value = mock_log
+            mock_log_feeding.return_value = mock_feeding_log
 
-            # Act
-            result = await feeding_service.complete_feeding_task(
-                task_metadata=task_metadata,
-                org_id=sample_org.id,
-                completed_by_user_id=sample_user.id,
-                notes="Task completed"
-            )
+            with patch('src.app.services.task_service.TaskService') as MockTaskService:
+                mock_task_svc = AsyncMock()
+                mock_task_svc.complete_task = AsyncMock(return_value=mock_completed_task)
+                MockTaskService.return_value = mock_task_svc
 
-            # Assert
-            assert result == mock_log
-            mock_log_feeding.assert_called_once()
-            call_args = mock_log_feeding.call_args
-            assert call_args[1]['animal_id'] == sample_animal.id
-            assert call_args[1]['auto_deduct_inventory'] is True
+                result = await feeding_service.complete_feeding_task(
+                    task_id=task_id,
+                    organization_id=sample_org.id,
+                    completed_by_user_id=sample_user.id,
+                    notes="Task completed",
+                )
+
+        assert result["feeding_log"] == mock_feeding_log
+        mock_log_feeding.assert_called_once()
+        call_args = mock_log_feeding.call_args
+        assert call_args[1]['animal_id'] == uuid.UUID(str(sample_animal.id))
+        assert call_args[1]['auto_deduct_inventory'] is True

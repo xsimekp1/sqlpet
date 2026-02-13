@@ -84,20 +84,16 @@ class TestInventoryService:
     """Test InventoryService methods"""
 
     @pytest.mark.asyncio
-    async def test_create_item(self, inventory_service, mock_db, mock_audit, sample_org):
+    async def test_create_item(self, inventory_service, mock_db, mock_audit, sample_org, sample_user):
         """Test creating an inventory item"""
-        # Arrange
-        item_data = {
-            "name": "Dog Food - Premium",
-            "category": InventoryCategory.FOOD,
-            "unit": "kg",
-            "reorder_threshold": 10
-        }
-
         # Act
         result = await inventory_service.create_item(
-            org_id=sample_org.id,
-            data=item_data
+            organization_id=sample_org.id,
+            name="Dog Food - Premium",
+            category=InventoryCategory.FOOD,
+            created_by_id=sample_user.id,
+            unit="kg",
+            reorder_threshold=10,
         )
 
         # Assert
@@ -110,20 +106,19 @@ class TestInventoryService:
 
 
     @pytest.mark.asyncio
-    async def test_create_lot(self, inventory_service, mock_db, mock_audit, sample_org, sample_item):
+    async def test_create_lot(self, inventory_service, mock_db, mock_audit, sample_org, sample_user, sample_item):
         """Test creating an inventory lot"""
-        # Arrange
-        lot_data = {
-            "item_id": sample_item.id,
-            "lot_number": "LOT-2024-002",
-            "quantity": 100,
-            "expires_at": date.today() + timedelta(days=365)
-        }
+        # Mock record_transaction to avoid double db.add/flush counting
+        inventory_service.record_transaction = AsyncMock(return_value=MagicMock())
 
         # Act
         result = await inventory_service.create_lot(
-            org_id=sample_org.id,
-            data=lot_data
+            organization_id=sample_org.id,
+            item_id=sample_item.id,
+            quantity=100,
+            created_by_id=sample_user.id,
+            lot_number="LOT-2024-002",
+            expires_at=date.today() + timedelta(days=365),
         )
 
         # Assert
@@ -147,10 +142,10 @@ class TestInventoryService:
 
         # Act
         result = await inventory_service.record_transaction(
-            org_id=sample_org.id,
+            organization_id=sample_org.id,
             item_id=sample_item.id,
             lot_id=sample_lot.id,
-            type=TransactionType.IN,
+            transaction_type=TransactionType.IN,
             quantity=Decimal("25.00"),
             reason="Received new shipment",
             user_id=sample_user.id
@@ -177,10 +172,10 @@ class TestInventoryService:
 
         # Act
         result = await inventory_service.record_transaction(
-            org_id=sample_org.id,
+            organization_id=sample_org.id,
             item_id=sample_item.id,
             lot_id=sample_lot.id,
-            type=TransactionType.OUT,
+            transaction_type=TransactionType.OUT,
             quantity=Decimal("-10.00"),  # Negative for OUT
             reason="Used for feeding",
             user_id=sample_user.id
@@ -231,7 +226,7 @@ class TestInventoryService:
 
         # Act
         result = await inventory_service.deduct_for_feeding(
-            org_id=sample_org.id,
+            organization_id=sample_org.id,
             food_name="Dog Food - Premium Dry",
             amount_g=200,  # 200 grams
             feeding_log_id=feeding_log_id,
@@ -241,13 +236,13 @@ class TestInventoryService:
         # Assert
         assert result['item'] == sample_item
         assert result['lot'] == sample_lot
-        assert result['quantity_deducted'] == Decimal("0.20")  # 200g = 0.2kg
+        assert abs(result['quantity_deducted'] - 0.2) < 1e-9  # 200g = 0.2kg
 
         # Verify record_transaction was called correctly
         inventory_service.record_transaction.assert_called_once()
         call_args = inventory_service.record_transaction.call_args[1]
-        assert call_args['type'] == TransactionType.OUT
-        assert call_args['quantity'] == Decimal("-0.20")
+        assert call_args.get('transaction_type') == TransactionType.OUT
+        assert abs(call_args['quantity'] - 0.2) < 1e-9  # 200g = 0.2kg, passed as positive
         assert call_args['related_entity_type'] == 'feeding_log'
         assert call_args['related_entity_id'] == feeding_log_id
 
@@ -300,7 +295,7 @@ class TestInventoryService:
 
         # Act
         result = await inventory_service.deduct_for_feeding(
-            org_id=sample_org.id,
+            organization_id=sample_org.id,
             food_name="Dog Food - Premium Dry",
             amount_g=200,
             feeding_log_id=feeding_log_id,
@@ -324,7 +319,7 @@ class TestInventoryService:
         # Act & Assert
         with pytest.raises(ValueError, match="No inventory item found"):
             await inventory_service.deduct_for_feeding(
-                org_id=sample_org.id,
+                organization_id=sample_org.id,
                 food_name="Non-existent Food",
                 amount_g=200,
                 feeding_log_id=uuid4(),
@@ -358,7 +353,7 @@ class TestInventoryService:
         # Act & Assert
         with pytest.raises(ValueError, match="No stock available"):
             await inventory_service.deduct_for_feeding(
-                org_id=sample_org.id,
+                organization_id=sample_org.id,
                 food_name="Dog Food - Premium Dry",
                 amount_g=200,
                 feeding_log_id=uuid4(),

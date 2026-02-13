@@ -48,10 +48,10 @@ class AnimalService:
     async def _generate_public_code(self, organization_id: uuid.UUID) -> str:
         year = datetime.now(timezone.utc).year
         prefix = f"A-{year}-"
-        # Get all codes, sort them properly, and take the highest
+        # Query globally: public_code has a global unique constraint,
+        # so the sequence must be unique across all organizations.
         result = await self.db.execute(
             select(Animal.public_code).where(
-                Animal.organization_id == organization_id,
                 Animal.public_code.like(f"{prefix}%"),
             )
         )

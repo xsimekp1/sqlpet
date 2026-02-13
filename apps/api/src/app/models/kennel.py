@@ -172,12 +172,18 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     )
 
 
-class KennelStay(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+class KennelStay(Base, UUIDPrimaryKeyMixin):
     __tablename__ = "kennel_stays"
     __table_args__ = (
         Index("ix_kennel_stays_org_active", "organization_id", "end_at"),
         Index("ix_kennel_stays_kennel_active", "kennel_id", "end_at"),
         Index("ix_kennel_stays_animal_active", "animal_id", "end_at"),
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
     )
 
     organization_id: Mapped[uuid.UUID] = mapped_column(

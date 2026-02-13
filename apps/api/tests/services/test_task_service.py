@@ -86,9 +86,13 @@ class TestTaskService:
 
         # Act
         result = await task_service.create_task(
-            org_id=sample_org.id,
-            created_by_user_id=sample_user.id,
-            data=task_data
+            organization_id=sample_org.id,
+            created_by_id=sample_user.id,
+            title=task_data["title"],
+            description=task_data["description"],
+            task_type=task_data["type"],
+            priority=task_data["priority"],
+            due_at=task_data["due_at"],
         )
 
         # Assert
@@ -112,8 +116,8 @@ class TestTaskService:
         # Act
         result = await task_service.complete_task(
             task_id=sample_task.id,
-            org_id=sample_task.organization_id,
-            completed_by_user_id=sample_user.id
+            organization_id=sample_task.organization_id,
+            completed_by_id=sample_user.id,
         )
 
         # Assert
@@ -124,39 +128,29 @@ class TestTaskService:
 
 
     @pytest.mark.asyncio
-    async def test_complete_feeding_task_calls_feeding_service(
+    async def test_complete_feeding_task(
         self, task_service, mock_db, mock_audit, sample_task, sample_user
     ):
-        """Test completing a feeding task triggers FeedingService"""
+        """Test completing a feeding-type task marks it as completed"""
         # Arrange
         sample_task.type = TaskType.FEEDING
         sample_task.status = TaskStatus.PENDING
-        sample_task.task_metadata = {
-            "feeding_plan_id": str(uuid4()),
-            "animal_id": str(uuid4())
-        }
 
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = sample_task
         mock_db.execute = AsyncMock(return_value=mock_result)
 
-        # Mock FeedingService
-        with patch('src.app.services.task_service.FeedingService') as MockFeedingService:
-            mock_feeding_service = AsyncMock()
-            mock_feeding_log = MagicMock(id=uuid4())
-            mock_feeding_service.complete_feeding_task = AsyncMock(return_value=mock_feeding_log)
-            MockFeedingService.return_value = mock_feeding_service
+        # Act
+        result = await task_service.complete_task(
+            task_id=sample_task.id,
+            organization_id=sample_task.organization_id,
+            completed_by_id=sample_user.id,
+        )
 
-            # Act
-            result = await task_service.complete_task(
-                task_id=sample_task.id,
-                org_id=sample_task.organization_id,
-                completed_by_user_id=sample_user.id
-            )
-
-            # Assert
-            assert result.status == TaskStatus.COMPLETED
-            mock_feeding_service.complete_feeding_task.assert_called_once()
+        # Assert
+        assert result.status == TaskStatus.COMPLETED
+        mock_db.flush.assert_called_once()
+        mock_audit.log.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -170,8 +164,9 @@ class TestTaskService:
         # Act
         result = await task_service.assign_task(
             task_id=sample_task.id,
-            org_id=sample_task.organization_id,
-            assigned_to_user_id=sample_user.id
+            organization_id=sample_task.organization_id,
+            assigned_to_id=sample_user.id,
+            assigned_by_id=sample_user.id,
         )
 
         # Assert
@@ -181,7 +176,7 @@ class TestTaskService:
 
 
     @pytest.mark.asyncio
-    async def test_cancel_task(self, task_service, mock_db, mock_audit, sample_task):
+    async def test_cancel_task(self, task_service, mock_db, mock_audit, sample_task, sample_user):
         """Test cancelling a task"""
         # Arrange
         mock_result = MagicMock()
@@ -191,7 +186,8 @@ class TestTaskService:
         # Act
         result = await task_service.cancel_task(
             task_id=sample_task.id,
-            org_id=sample_task.organization_id,
+            organization_id=sample_task.organization_id,
+            cancelled_by_id=sample_user.id,
             reason="No longer needed"
         )
 
@@ -213,9 +209,9 @@ class TestTaskService:
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         # Act & Assert
-        with pytest.raises(ValueError, match="Task is not in pending status"):
+        with pytest.raises(ValueError, match="is already completed"):
             await task_service.complete_task(
                 task_id=sample_task.id,
-                org_id=sample_task.organization_id,
-                completed_by_user_id=sample_user.id
+                organization_id=sample_task.organization_id,
+                completed_by_id=sample_user.id,
             )

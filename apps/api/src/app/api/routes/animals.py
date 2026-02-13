@@ -111,9 +111,7 @@ async def list_animals(
     status_filter: str | None = Query(None, alias="status"),
     sex: str | None = Query(None),
     search: str | None = Query(None),
-    current_user: User = Depends(
-        get_current_user
-    ),  # Remove permission check temporarily
+    current_user: User = Depends(require_permission("animals.read")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
