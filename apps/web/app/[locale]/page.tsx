@@ -1,6 +1,10 @@
 import { redirect } from 'next/navigation';
 
-export default function LocaleRoot() {
-  // Redirect to login page
-  redirect('/login');
+export default async function LocaleRoot({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect(`/${locale}/login`);
 }
