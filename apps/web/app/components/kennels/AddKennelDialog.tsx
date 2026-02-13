@@ -40,7 +40,7 @@ const formSchema = z.object({
   zone_id: z.string().min(1, 'required'),
   type: z.enum(['indoor', 'outdoor', 'isolation', 'quarantine']),
   size_category: z.enum(['small', 'medium', 'large', 'xlarge']),
-  capacity: z.coerce.number().min(1).max(50),
+  capacity: z.number().min(1).max(50),
   notes: z.string().optional(),
 });
 
@@ -206,7 +206,13 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
                 <FormItem>
                   <FormLabel>{t('add.capacity')}</FormLabel>
                   <FormControl>
-                    <Input type="number" min={1} max={50} {...field} />
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      {...field}
+                      onChange={e => field.onChange(e.target.valueAsNumber)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
