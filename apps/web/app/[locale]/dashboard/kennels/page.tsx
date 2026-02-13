@@ -305,7 +305,8 @@ export default function KennelsPage() {
       );
       try {
         await ApiClient.moveAnimal({ animal_id: animalId, target_kennel_id: null });
-        toast.success(`${animal.name} odebráno z kotce`);
+        const movedVerb = animal.sex === 'female' ? 'odebrána' : 'odebrán';
+        toast.success(`${animal.name} ${movedVerb} z kotce`);
         await fetchData(true);
       } catch (e: any) {
         toast.error('Nelze odebrat z kotce: ' + (e.message || 'Neznámá chyba'));
@@ -332,7 +333,8 @@ export default function KennelsPage() {
 
     try {
       await ApiClient.moveAnimal({ animal_id: animalId, target_kennel_id: targetKennelId });
-      toast.success(`${animal.name} přesunuto do ${targetKennel.name}`);
+      const movedVerb = animal.sex === 'female' ? 'přesunuta' : 'přesunut';
+      toast.success(`${animal.name} ${movedVerb} do ${targetKennel.name}`);
       await fetchData(true);
     } catch (e: any) {
       toast.error('Nelze přesunout: ' + (e.message || 'Neznámá chyba'));
