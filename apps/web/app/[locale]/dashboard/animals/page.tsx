@@ -129,49 +129,38 @@ export default function AnimalsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : view === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {filtered.map((animal) => (
             <Link key={animal.id} href={`/dashboard/animals/${animal.id}`}>
               <Card className="hover:bg-accent transition-colors cursor-pointer overflow-hidden">
-                {/* Thumbnail */}
-                <div className="relative w-full aspect-video bg-muted">
+                {/* Square thumbnail — object-contain so no crop */}
+                <div className="relative w-full aspect-square bg-muted flex items-center justify-center">
                   <Image
                     src={getAnimalImageUrl(animal)}
                     alt={animal.name}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     unoptimized
                   />
                 </div>
-                <CardHeader className="pb-2">
-                  <CardTitle>{animal.name}</CardTitle>
-                  <CardDescription className="flex items-center gap-1.5">
-                    {animal.species} • {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
+                <div className="p-2.5 space-y-1">
+                  <p className="font-semibold text-sm leading-tight truncate">{animal.name}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span className="capitalize">{animal.species}</span>
+                    <span>{animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : ''}</span>
                     {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
-                      <Scissors className="inline h-3 w-3 text-primary" aria-label={animal.altered_status === 'spayed' ? t('animals.alteredStatus.spayed') : t('animals.alteredStatus.neutered')} />
+                      <Scissors className="h-3 w-3 text-primary shrink-0" />
                     )}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-1 text-sm">
-                    {animal.color && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Color:</span>
-                        <span className="font-medium">{animal.color}</span>
-                      </div>
+                  </p>
+                  <div className="flex items-center justify-between gap-1">
+                    <Badge className={`text-xs px-1.5 py-0 ${getStatusColor(animal.status)}`}>
+                      {animal.status}
+                    </Badge>
+                    {animal.current_kennel_code && (
+                      <span className="text-xs text-muted-foreground font-mono">{animal.current_kennel_code}</span>
                     )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status:</span>
-                      <Badge className={`text-xs ${getStatusColor(animal.status)}`}>
-                        {animal.status}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Intake:</span>
-                      <span>{new Date(animal.intake_date).toLocaleDateString()}</span>
-                    </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             </Link>
           ))}
@@ -192,6 +181,7 @@ export default function AnimalsPage() {
                     <Scissors className="h-4 w-4" />
                   </th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Kotec</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Intake</th>
                   <th className="w-10"></th>
                 </tr>
@@ -238,6 +228,9 @@ export default function AnimalsPage() {
                       <Badge className={`text-xs ${getStatusColor(animal.status)}`}>
                         {animal.status}
                       </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                      {animal.current_kennel_code ?? '—'}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {new Date(animal.intake_date).toLocaleDateString()}

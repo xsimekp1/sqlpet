@@ -115,6 +115,30 @@ function AnimalChipPreview({ animal }: { animal: Animal }) {
   );
 }
 
+const UNHOUSED_ZONE_ID = '__unhoused__';
+
+// ---- Droppable "no kennel" zone ----
+function DroppableUnhousedZone({ animals }: { animals: Animal[] }) {
+  const { setNodeRef, isOver } = useDroppable({ id: UNHOUSED_ZONE_ID });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex flex-wrap gap-2 p-3 rounded-lg border border-dashed min-h-[56px] transition-colors ${
+        isOver ? 'bg-blue-50 border-blue-400' : 'bg-muted/50'
+      }`}
+    >
+      {animals.length === 0 && (
+        <span className={`text-sm self-center ${isOver ? 'text-blue-600' : 'text-muted-foreground'}`}>
+          {isOver ? 'Pustit pro odebrání z kotce' : 'Přetáhněte sem pro odebrání z kotce'}
+        </span>
+      )}
+      {animals.map(animal => (
+        <DraggableAnimalChip key={animal.id} animal={animal} />
+      ))}
+    </div>
+  );
+}
+
 // ---- Droppable kennel card ----
 function DroppableKennelCard({
   kennel,
@@ -227,9 +251,9 @@ export default function KennelsPage() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const params: Record<string, string> = {};
       if (filters.zone_id) params.zone_id = filters.zone_id;
       if (filters.status) params.status = filters.status;
@@ -266,18 +290,36 @@ export default function KennelsPage() {
     if (!over || active.id === over.id) return;
 
     const animalId = active.id as string;
-    const targetKennelId = over.id as string;
-
-    // Check if dropped on a kennel (not on itself via same kennel)
-    const targetKennel = kennels.find(k => k.id === targetKennelId);
-    if (!targetKennel) return;
-
     const animal = allAnimals.find(a => a.id === animalId);
     if (!animal) return;
-    // Skip if already in this kennel
+
+    // ── Drop on "no kennel" zone → remove from kennel ──────────────────────
+    if (over.id === UNHOUSED_ZONE_ID) {
+      if (!animal.current_kennel_id) return; // already unhoused
+      const prevAnimals = allAnimals;
+      setAllAnimals(prev =>
+        prev.map(a => a.id === animalId
+          ? { ...a, current_kennel_id: null, current_kennel_name: null, current_kennel_code: null }
+          : a
+        )
+      );
+      try {
+        await ApiClient.moveAnimal({ animal_id: animalId, target_kennel_id: null });
+        toast.success(`${animal.name} odebráno z kotce`);
+        await fetchData(true);
+      } catch (e: any) {
+        toast.error('Nelze odebrat z kotce: ' + (e.message || 'Neznámá chyba'));
+        setAllAnimals(prevAnimals);
+      }
+      return;
+    }
+
+    // ── Drop on a kennel card ────────────────────────────────────────────────
+    const targetKennelId = over.id as string;
+    const targetKennel = kennels.find(k => k.id === targetKennelId);
+    if (!targetKennel) return;
     if (animal.current_kennel_id === targetKennelId) return;
 
-    // Optimistic update: move animal to target kennel locally
     const prevKennels = kennels;
     const prevAnimals = allAnimals;
 
@@ -291,8 +333,7 @@ export default function KennelsPage() {
     try {
       await ApiClient.moveAnimal({ animal_id: animalId, target_kennel_id: targetKennelId });
       toast.success(`${animal.name} přesunuto do ${targetKennel.name}`);
-      // Refresh from server to get accurate counts
-      await fetchData();
+      await fetchData(true);
     } catch (e: any) {
       toast.error('Nelze přesunout: ' + (e.message || 'Neznámá chyba'));
       setKennels(prevKennels);
@@ -460,19 +501,13 @@ export default function KennelsPage() {
       {/* Grid View with DnD */}
       {view === 'grid' ? (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          {/* Unhoused animals bar */}
-          {unhousedAnimals.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm font-medium text-muted-foreground mb-2">
-                Zvířata bez kotce ({unhousedAnimals.length})
-              </p>
-              <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg border border-dashed">
-                {unhousedAnimals.map(animal => (
-                  <DraggableAnimalChip key={animal.id} animal={animal} />
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Unhoused animals bar — always visible, droppable */}
+          <div className="mb-4">
+            <p className="text-sm font-medium text-muted-foreground mb-2">
+              Zvířata bez kotce ({unhousedAnimals.length})
+            </p>
+            <DroppableUnhousedZone animals={unhousedAnimals} />
+          </div>
 
           {/* Kennel grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

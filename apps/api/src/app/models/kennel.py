@@ -210,7 +210,7 @@ class KennelStay(Base, UUIDPrimaryKeyMixin):
         server_default=func.now(),
         nullable=False,
     )
-    end_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
