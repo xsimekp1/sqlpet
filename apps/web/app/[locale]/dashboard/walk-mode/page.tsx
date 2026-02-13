@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { CheckCircle, XCircle, Clock, Footprints, MapPin, AlertTriangle } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Footprints, MapPin, AlertTriangle, Loader2 } from 'lucide-react'
+import { ApiClient, Kennel } from '@/app/lib/api'
 
 interface KennelTask {
   id: string
@@ -28,36 +29,42 @@ interface KennelTask {
 export default function WalkModePage() {
   const t = useTranslations('walkMode')
   const [currentKennelIndex, setCurrentKennelIndex] = useState(0)
-  const [kennelTasks, setKennelTasks] = useState<KennelTask[]>([
-    {
-      id: '1',
-      kennelId: 'A1',
-      kennelName: 'Kennel A1',
-      zone: 'Zone A',
-      animalName: 'Max',
-      animalId: 'A123',
-      tasks: { fed: false, walked: false, cleaned: false, waterChecked: false },
-      alerts: ['Medication due in 1 hour']
-    },
-    {
-      id: '2',
-      kennelId: 'A2',
-      kennelName: 'Kennel A2',
-      zone: 'Zone A',
-      animalName: 'Luna',
-      animalId: 'C456',
-      tasks: { fed: true, walked: false, cleaned: false, waterChecked: true }
-    },
-    {
-      id: '3',
-      kennelId: 'B1',
-      kennelName: 'Kennel B1',
-      zone: 'Zone B',
-      animalName: 'Charlie',
-      animalId: 'D789',
-      tasks: { fed: false, walked: false, cleaned: false, waterChecked: false }
+  const [kennelTasks, setKennelTasks] = useState<KennelTask[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchKennels() {
+      try {
+        setLoading(true)
+        const kennels = await ApiClient.getKennels({ status: 'available' })
+        
+        const tasks: KennelTask[] = kennels
+          .filter(k => k.occupied_count > 0 && k.animals_preview?.length > 0)
+          .flatMap(kennel => 
+            kennel.animals_preview.map(animal => ({
+              id: `${kennel.id}-${animal.id}`,
+              kennelId: kennel.id,
+              kennelName: kennel.name,
+              zone: kennel.zone_name || 'Unknown',
+              animalName: animal.name,
+              animalId: animal.id,
+              tasks: { fed: false, walked: false, cleaned: false, waterChecked: false },
+              alerts: kennel.alerts || []
+            }))
+          )
+        
+        setKennelTasks(tasks)
+      } catch (err) {
+        console.error('Failed to fetch kennels:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load kennels')
+      } finally {
+        setLoading(false)
+      }
     }
-  ])
+    
+    fetchKennels()
+  }, [])
 
   const currentKennel = kennelTasks[currentKennelIndex]
   const progress = kennelTasks.filter(k => 
@@ -117,6 +124,34 @@ export default function WalkModePage() {
   )
 
   if (!currentKennel) {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center min-h-96">
+          <Card className="w-full max-w-md">
+            <CardContent className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
+    
+    if (error) {
+      return (
+        <div className="flex items-center justify-center min-h-96">
+          <Card className="w-full max-w-md">
+            <CardContent className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">{t('errors.loadFailed')}</h3>
+                <p className="text-muted-foreground mb-4">{error}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
+    
     return (
       <div className="flex items-center justify-center min-h-96">
         <Card className="w-full max-w-md">
