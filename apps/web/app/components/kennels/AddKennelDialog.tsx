@@ -40,7 +40,7 @@ const formSchema = z.object({
   zone_id: z.string().min(1, 'required'),
   type: z.enum(['indoor', 'outdoor', 'isolation', 'quarantine']),
   size_category: z.enum(['small', 'medium', 'large', 'xlarge']),
-  capacity: z.number({ coerce: true }).min(1).max(50),
+  capacity: z.coerce.number().min(1).max(50),
   notes: z.string().optional(),
 });
 
