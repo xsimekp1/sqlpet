@@ -367,7 +367,7 @@ async def create_kennel(
     try:
         # Create new kennel using service
         kennel = await kennel_service_create(
-            db=session,
+            session=session,
             name=kennel_data.name,
             zone_id=kennel_data.zone_id,
             organization_id=organization_id,
