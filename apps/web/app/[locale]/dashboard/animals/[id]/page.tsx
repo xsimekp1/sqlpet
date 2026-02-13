@@ -79,7 +79,6 @@ export default function AnimalDetailPage() {
 
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < animalList.length - 1;
-  const showNav = animalList.length > 1;
 
   const handleAnimalUpdate = (updatedAnimal: Animal) => {
     setAnimal(updatedAnimal);
@@ -217,33 +216,31 @@ export default function AnimalDetailPage() {
         <div className="flex-1 text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
             <div className="flex items-center gap-1">
-              {showNav && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={goToPrevious}
-                  disabled={!hasPrev}
-                  className="mr-1"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              )}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={goToPrevious}
+                disabled={!hasPrev}
+                className="mr-1"
+                title="Previous animal"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
               <Link href="/dashboard/animals">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" title="Back to list">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
-              {showNav && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={goToNext}
-                  disabled={!hasNext}
-                  className="ml-1"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              )}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={goToNext}
+                disabled={!hasNext}
+                className="ml-1"
+                title="Next animal"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
             </div>
             <div className="flex-1 min-w-0">
               <EditableAnimalName 
