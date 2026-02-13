@@ -205,10 +205,10 @@ function DroppableKennelCard({
           )}
         </div>
 
-        {/* Simple footer: size • count/capacity • status */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="capitalize">{kennel.size_category}</span>
-          <div className="flex items-center gap-1.5">
+        {/* Simple footer: species badges • count/capacity • status */}
+        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          <SpeciesBadges species={kennel.allowed_species} />
+          <div className="flex items-center gap-1.5 shrink-0">
             <span>{kennel.occupied_count}/{kennel.capacity}</span>
             <Badge className={`text-xs ${getOccupancyStatusColor(kennel.occupied_count, kennel.capacity)}`}>
               {t(`occupancy.${getOccupancyStatus(kennel.occupied_count, kennel.capacity)}` as any)}
@@ -216,6 +216,31 @@ function DroppableKennelCard({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ---- Species badge config ----
+const SPECIES_BADGE: Record<string, { emoji: string; bg: string; title: string }> = {
+  dog:    { emoji: '🐕', bg: 'bg-amber-100 text-amber-700',   title: 'Pes' },
+  cat:    { emoji: '🐈', bg: 'bg-purple-100 text-purple-700', title: 'Kočka' },
+  bird:   { emoji: '🐦', bg: 'bg-sky-100 text-sky-700',       title: 'Pták' },
+  rabbit: { emoji: '🐇', bg: 'bg-pink-100 text-pink-700',     title: 'Králík' },
+  other:  { emoji: '🐾', bg: 'bg-gray-100 text-gray-600',     title: 'Jiné' },
+};
+
+function SpeciesBadges({ species }: { species?: string[] | null }) {
+  if (!species || species.length === 0) return null;
+  return (
+    <div className="flex gap-1 flex-wrap">
+      {species.map(s => {
+        const cfg = SPECIES_BADGE[s] || SPECIES_BADGE.other;
+        return (
+          <span key={s} title={cfg.title} className={`inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full font-medium ${cfg.bg}`}>
+            {cfg.emoji} {cfg.title}
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -575,7 +600,7 @@ export default function KennelsPage() {
                   <th className="text-left p-3">Název</th>
                   <th className="text-left p-3">Zóna</th>
                   <th className="text-left p-3">Typ</th>
-                  <th className="text-left p-3">Velikost</th>
+                  <th className="text-left p-3">Pro zvířata</th>
                   <th className="text-left p-3">Kapacita</th>
                   <th className="text-left p-3">Stav</th>
                   <th className="text-left p-3">Zvířata</th>
@@ -601,7 +626,7 @@ export default function KennelsPage() {
                         {t(`type.${kennel.type}` as any)}
                       </Badge>
                     </td>
-                    <td className="p-3 capitalize">{kennel.size_category}</td>
+                    <td className="p-3"><SpeciesBadges species={kennel.allowed_species} /></td>
                     <td className="p-3">{kennel.capacity}</td>
                     <td className="p-3">
                       <Badge variant={getStatusColor(kennel.status)}>

@@ -189,6 +189,7 @@ class TaskService:
         task_type: Optional[TaskType] = None,
         assigned_to_id: Optional[uuid.UUID] = None,
         due_date: Optional[str] = None,
+        related_entity_id: Optional[uuid.UUID] = None,
         skip: int = 0,
         limit: int = 100,
     ) -> List[Task]:
@@ -212,6 +213,8 @@ class TaskService:
                     Task.due_at < datetime.fromisoformat(due_date).replace(hour=23, minute=59, second=59)
                 )
             )
+        if related_entity_id:
+            conditions.append(Task.related_entity_id == related_entity_id)
 
         stmt = (
             select(Task)

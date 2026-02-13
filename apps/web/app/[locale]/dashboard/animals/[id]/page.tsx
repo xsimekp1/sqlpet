@@ -379,13 +379,26 @@ export default function AnimalDetailPage() {
             {animal.sex !== 'unknown' && ` · ${animal.sex === 'male' ? '♂' : '♀'}`}
           </p>
 
-          {/* Days in shelter — inline */}
-          {days !== null && (
-            <p className="text-sm text-muted-foreground mb-3">
-              <MapPin className="inline h-3.5 w-3.5 mr-0.5 mb-0.5" />
-              {days} {days === 1 ? 'den' : days < 5 ? 'dny' : 'dní'} v útulku · od {intakeDateFormatted}
-            </p>
-          )}
+          {/* Days in shelter + kennel link — inline */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-3">
+            {days !== null && (
+              <span className="text-sm text-muted-foreground">
+                <MapPin className="inline h-3.5 w-3.5 mr-0.5 mb-0.5" />
+                {days} {days === 1 ? 'den' : days < 5 ? 'dny' : 'dní'} v útulku · od {intakeDateFormatted}
+              </span>
+            )}
+            {animal.current_kennel_id ? (
+              <Link
+                href={`/dashboard/kennels/${animal.current_kennel_id}`}
+                className="text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
+              >
+                <MapPin className="inline h-3.5 w-3.5 mr-0.5 mb-0.5" />
+                {animal.current_kennel_name} ({animal.current_kennel_code})
+              </Link>
+            ) : (
+              <span className="text-sm text-muted-foreground">Bez kotce</span>
+            )}
+          </div>
 
           {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-2 justify-center sm:justify-start flex-wrap">

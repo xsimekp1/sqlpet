@@ -149,8 +149,10 @@ export interface Kennel {
   size_category: 'small' | 'medium' | 'large' | 'xlarge';
   capacity: number;
   capacity_rules?: { by_species?: Record<string, number> };
-  allowed_species?: string[] | null;  // Which species are suitable for this kennel
+  allowed_species?: string[] | null;
+  dimensions?: { length?: number; width?: number; height?: number } | null;
   primary_photo_path?: string;
+  notes?: string | null;
   occupied_count: number;
   animals_preview: KennelAnimal[];
   alerts: string[];
@@ -195,6 +197,7 @@ export interface KennelStay {
   animal_id: string;
   animal_name: string;
   animal_species: string;
+  animal_public_code?: string | null;
   start_at: string;
   end_at?: string | null;
   reason?: string | null;
@@ -612,6 +615,46 @@ class ApiClient {
   }
 
   /**
+   * Update kennel fields
+   */
+  static async updateKennel(id: string, data: Partial<CreateKennelRequest> & { status?: string; allowed_species?: string[] | null; dimensions?: { length?: number; width?: number; height?: number } | null }): Promise<Kennel> {
+    const organizationId = this.getOrganizationId();
+    try {
+      const response = await axios.patch<Kennel>(
+        `${API_URL}/kennels/${id}`,
+        data,
+        { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '', 'Content-Type': 'application/json' } }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to update kennel');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Soft-delete a kennel
+   */
+  static async deleteKennel(id: string): Promise<void> {
+    const organizationId = this.getOrganizationId();
+    try {
+      await axios.delete(
+        `${API_URL}/kennels/${id}`,
+        { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '' } }
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to delete kennel');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
    * Move animal between kennels
    * M4+: Kennels Management
    */
@@ -648,14 +691,12 @@ class ApiClient {
    */
   static async getKennelStays(kennelId: string, activeOnly: boolean = false): Promise<KennelStay[]> {
     try {
-      const organizationId = typeof window !== 'undefined' 
-        ? localStorage.getItem('currentOrganizationId') 
-        : null;
-      
+      const organizationId = this.getOrganizationId();
+
       const params = new URLSearchParams();
       if (activeOnly) params.append('active_only', 'true');
-      
-      const url = `${API_URL}/stays/${kennelId}/stays${params.toString() ? `?${params.toString()}` : ''}`;
+
+      const url = `${API_URL}/kennels/${kennelId}/stays${params.toString() ? `?${params.toString()}` : ''}`;
       
       const response = await axios.get<KennelStay[]>(
         url,
@@ -670,6 +711,8 @@ class ApiClient {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
+        // Return empty array if stays endpoint not yet implemented
+        if (axiosError.response?.status === 404) return [];
         throw new Error(
           axiosError.response?.data?.detail || 'Failed to fetch kennel stays'
         );
@@ -927,6 +970,7 @@ class ApiClient {
     type?: string;
     assigned_to_id?: string;
     due_date?: string;
+    related_entity_id?: string;
     page?: number;
     page_size?: number;
   }): Promise<TaskListResponse> {

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any, List
 import uuid
 
@@ -78,6 +79,7 @@ async def list_kennels(
                 k.id, k.code, k.name, k.zone_id, z.name AS zone_name,
                 k.status::text AS status, k.type::text AS type,
                 k.size_category::text AS size_category, k.capacity,
+                k.allowed_species, k.notes,
                 k.map_x, k.map_y, k.map_w, k.map_h,
                 COUNT(ks.id) FILTER (WHERE ks.end_at IS NULL) AS occupied_count,
                 COALESCE(
@@ -98,6 +100,7 @@ async def list_kennels(
             WHERE {where_sql}
             GROUP BY k.id, k.code, k.name, k.zone_id, z.name,
                      k.status, k.type, k.size_category, k.capacity,
+                     k.allowed_species, k.notes,
                      k.map_x, k.map_y, k.map_w, k.map_h
             ORDER BY k.name
         """)
@@ -123,6 +126,8 @@ async def list_kennels(
                 "capacity": row.capacity or 1,
                 "occupied_count": occupied,
                 "animals_preview": animals_preview,
+                "allowed_species": row.allowed_species,
+                "notes": row.notes,
                 "alerts": _calculate_alerts_from_data(
                     row.status or "available", row.type or "indoor", occupied, row.capacity or 1
                 ),
@@ -175,6 +180,8 @@ class UpdateKennelRequest(BaseModel):
     capacity: int | None = Field(None, ge=1, description="Maximum capacity")
     status: str | None = Field(None, description="Operational status")
     notes: str | None = Field(None, description="Optional notes")
+    allowed_species: list | None = Field(None, description="Allowed species list")
+    dimensions: dict | None = Field(None, description="Physical dimensions in cm")
 
 
 @router.patch("/{kennel_id}/layout")
@@ -289,7 +296,8 @@ async def get_kennel(
                 k.id, k.code, k.name, k.zone_id, z.name AS zone_name,
                 k.status::text AS status, k.type::text AS type,
                 k.size_category::text AS size_category, k.capacity,
-                k.notes, k.map_x, k.map_y, k.map_w, k.map_h,
+                k.notes, k.allowed_species, k.dimensions,
+                k.map_x, k.map_y, k.map_w, k.map_h,
                 k.map_rotation, k.map_meta,
                 COUNT(ks.id) FILTER (WHERE ks.end_at IS NULL) AS occupied_count,
                 COALESCE(
@@ -310,7 +318,8 @@ async def get_kennel(
             WHERE k.id = :kennel_id AND k.organization_id = :org_id AND k.deleted_at IS NULL
             GROUP BY k.id, k.code, k.name, k.zone_id, z.name,
                      k.status, k.type, k.size_category, k.capacity,
-                     k.notes, k.map_x, k.map_y, k.map_w, k.map_h,
+                     k.notes, k.allowed_species, k.dimensions,
+                     k.map_x, k.map_y, k.map_w, k.map_h,
                      k.map_rotation, k.map_meta
         """)
         result = await session.execute(
@@ -335,6 +344,8 @@ async def get_kennel(
             "capacity": row.capacity or 1,
             "occupied_count": occupied,
             "animals_preview": animals_preview,
+            "allowed_species": row.allowed_species,
+            "dimensions": row.dimensions,
             "alerts": _calculate_alerts_from_data(
                 row.status or "available", row.type or "indoor", occupied, row.capacity or 1
             ),
@@ -401,3 +412,146 @@ async def create_kennel(
         raise HTTPException(
             status_code=500, detail=f"Failed to create kennel: {str(e)}"
         )
+
+
+@router.patch("/{kennel_id}")
+async def update_kennel(
+    kennel_id: str,
+    data: UpdateKennelRequest,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Update kennel fields (capacity, status, allowed_species, type, name, notes, dimensions)."""
+    kennel_q = select(Kennel).where(
+        Kennel.id == uuid.UUID(kennel_id),
+        Kennel.organization_id == organization_id,
+        Kennel.deleted_at.is_(None),
+    )
+    kennel = (await session.execute(kennel_q)).scalar_one_or_none()
+    if not kennel:
+        raise HTTPException(status_code=404, detail="Kennel not found")
+
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(kennel, field, value)
+
+    await session.commit()
+    await session.refresh(kennel)
+
+    # Get zone name
+    zone_name = ""
+    if kennel.zone_id:
+        zone_q = select(Zone).where(Zone.id == kennel.zone_id)
+        zone = (await session.execute(zone_q)).scalar_one_or_none()
+        zone_name = zone.name if zone else ""
+
+    # Get occupied count
+    occ_q = text(
+        "SELECT COUNT(*) FROM kennel_stays WHERE kennel_id = :kid AND end_at IS NULL"
+    )
+    occ_result = await session.execute(occ_q, {"kid": str(kennel.id)})
+    occupied = int(occ_result.scalar() or 0)
+
+    return {
+        "id": str(kennel.id),
+        "code": kennel.code,
+        "name": kennel.name,
+        "zone_id": str(kennel.zone_id) if kennel.zone_id else None,
+        "zone_name": zone_name,
+        "status": str(kennel.status.value) if hasattr(kennel.status, 'value') else str(kennel.status),
+        "type": str(kennel.type.value) if hasattr(kennel.type, 'value') else str(kennel.type),
+        "size_category": str(kennel.size_category.value) if hasattr(kennel.size_category, 'value') else str(kennel.size_category),
+        "capacity": kennel.capacity,
+        "allowed_species": kennel.allowed_species,
+        "notes": kennel.notes,
+        "dimensions": kennel.dimensions,
+        "occupied_count": occupied,
+        "animals_preview": [],
+        "alerts": _calculate_alerts_from_data(
+            str(kennel.status.value) if hasattr(kennel.status, 'value') else str(kennel.status),
+            str(kennel.type.value) if hasattr(kennel.type, 'value') else str(kennel.type),
+            occupied,
+            kennel.capacity or 1,
+        ),
+    }
+
+
+@router.delete("/{kennel_id}", status_code=204)
+async def delete_kennel(
+    kennel_id: str,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Soft-delete a kennel (only if no active animals inside)."""
+    kennel_q = select(Kennel).where(
+        Kennel.id == uuid.UUID(kennel_id),
+        Kennel.organization_id == organization_id,
+        Kennel.deleted_at.is_(None),
+    )
+    kennel = (await session.execute(kennel_q)).scalar_one_or_none()
+    if not kennel:
+        raise HTTPException(status_code=404, detail="Kennel not found")
+
+    occ_q = text(
+        "SELECT COUNT(*) FROM kennel_stays WHERE kennel_id = :kid AND end_at IS NULL"
+    )
+    occ_result = await session.execute(occ_q, {"kid": str(kennel.id)})
+    occupied = int(occ_result.scalar() or 0)
+    if occupied > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Kennel has {occupied} active animal(s) — move them first",
+        )
+
+    kennel.deleted_at = datetime.now(timezone.utc)
+    await session.commit()
+
+
+@router.get("/{kennel_id}/stays")
+async def get_kennel_stays(
+    kennel_id: str,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """List historical (and current) stays for a kennel."""
+    try:
+        stays_query = text("""
+            SELECT
+                ks.id, ks.animal_id, ks.start_at, ks.end_at, ks.reason, ks.notes,
+                a.name AS animal_name,
+                a.species::text AS animal_species,
+                a.public_code AS animal_public_code
+            FROM kennel_stays ks
+            JOIN animals a ON a.id = ks.animal_id
+            WHERE ks.kennel_id = :kennel_id
+              AND ks.organization_id = :org_id
+            ORDER BY ks.start_at DESC
+            LIMIT 100
+        """)
+        result = await session.execute(
+            stays_query,
+            {"kennel_id": kennel_id, "org_id": str(organization_id)},
+        )
+        rows = result.fetchall()
+        return [
+            {
+                "id": str(row.id),
+                "animal_id": str(row.animal_id),
+                "animal_name": row.animal_name,
+                "animal_species": row.animal_species,
+                "animal_public_code": row.animal_public_code,
+                "start_at": row.start_at.isoformat() if row.start_at else None,
+                "end_at": row.end_at.isoformat() if row.end_at else None,
+                "reason": row.reason,
+                "notes": row.notes,
+            }
+            for row in rows
+        ]
+    except Exception as e:
+        import traceback
+        print(f"ERROR in get_kennel_stays: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

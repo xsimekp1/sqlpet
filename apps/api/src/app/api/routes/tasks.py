@@ -73,6 +73,7 @@ async def list_tasks(
     due_date: Optional[str] = Query(
         None, description="Filter by due date (YYYY-MM-DD)"
     ),
+    related_entity_id: Optional[str] = Query(None, description="Filter by related entity ID"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(get_current_user),
@@ -86,12 +87,15 @@ async def list_tasks(
     status_enum = TaskStatus(status) if status else None
     type_enum = TaskType(type) if type else None
 
+    related_entity_uuid = uuid.UUID(related_entity_id) if related_entity_id else None
+
     tasks = await task_service.get_tasks_for_organization(
         organization_id=organization_id,
         status=status_enum,
         task_type=type_enum,
         assigned_to_id=assigned_to_id,
         due_date=due_date,
+        related_entity_id=related_entity_uuid,
         skip=(page - 1) * page_size,
         limit=page_size,
     )

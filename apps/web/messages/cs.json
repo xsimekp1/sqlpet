@@ -337,7 +337,47 @@
       "large": "Velký",
       "xlarge": "Extra velký"
     },
-    "common_cancel": "Zrušit"
+    "common_cancel": "Zrušit",
+    "detail": {
+      "backToKennels": "Zpět na kotce",
+      "copyKennel": "Kopírovat kotec",
+      "deleteKennel": "Smazat kotec",
+      "deleteHasAnimals": "Kotec nelze smazat — jsou v něm zvířata",
+      "capacityWarning": "V kotci je momentálně {count} zvířat. Přesto snížit kapacitu?",
+      "overviewTab": "Přehled",
+      "historyTab": "Historie zvířat",
+      "tasksTab": "Úkoly",
+      "noHistory": "Žádné záznamy o pobytech",
+      "noTasks": "Žádné úkoly pro tento kotec",
+      "addTask": "Přidat úkol",
+      "stayCurrent": "Aktuálně",
+      "copySuccess": "Kotec zkopírován",
+      "updateSuccess": "Kotec upraven",
+      "deleteSuccess": "Kotec smazán",
+      "infoCard": "Informace",
+      "speciesCard": "Vhodnost pro zvířata",
+      "occupancyCard": "Obsazenost",
+      "capacity": "Kapacita",
+      "type": "Typ",
+      "zone": "Zóna",
+      "notes": "Poznámky",
+      "dimensions": "Rozměry",
+      "editCapacity": "Upravit kapacitu",
+      "saveCapacity": "Uložit",
+      "cancelEdit": "Zrušit"
+    },
+    "task": {
+      "dialogTitle": "Vytvořit úkol pro kotec",
+      "suggestions": "Návrhy",
+      "titleLabel": "Název úkolu",
+      "typeLabel": "Typ",
+      "priorityLabel": "Priorita",
+      "dueDateLabel": "Termín",
+      "descriptionLabel": "Popis",
+      "submit": "Vytvořit úkol",
+      "success": "Úkol vytvořen",
+      "error": "Nepodařilo se vytvořit úkol"
+    }
   },
   "settings": {
     "title": "Nastavení",

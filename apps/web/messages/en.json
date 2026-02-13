@@ -335,7 +335,47 @@
       "large": "Large",
       "xlarge": "Extra Large"
     },
-    "common_cancel": "Cancel"
+    "common_cancel": "Cancel",
+    "detail": {
+      "backToKennels": "Back to kennels",
+      "copyKennel": "Copy kennel",
+      "deleteKennel": "Delete kennel",
+      "deleteHasAnimals": "Cannot delete kennel — it has active animals",
+      "capacityWarning": "There are currently {count} animals in this kennel. Reduce capacity anyway?",
+      "overviewTab": "Overview",
+      "historyTab": "Animal history",
+      "tasksTab": "Tasks",
+      "noHistory": "No stay records",
+      "noTasks": "No tasks for this kennel",
+      "addTask": "Add task",
+      "stayCurrent": "Currently",
+      "copySuccess": "Kennel copied",
+      "updateSuccess": "Kennel updated",
+      "deleteSuccess": "Kennel deleted",
+      "infoCard": "Information",
+      "speciesCard": "Suitable for",
+      "occupancyCard": "Occupancy",
+      "capacity": "Capacity",
+      "type": "Type",
+      "zone": "Zone",
+      "notes": "Notes",
+      "dimensions": "Dimensions",
+      "editCapacity": "Edit capacity",
+      "saveCapacity": "Save",
+      "cancelEdit": "Cancel"
+    },
+    "task": {
+      "dialogTitle": "Create task for kennel",
+      "suggestions": "Suggestions",
+      "titleLabel": "Task title",
+      "typeLabel": "Type",
+      "priorityLabel": "Priority",
+      "dueDateLabel": "Due date",
+      "descriptionLabel": "Description",
+      "submit": "Create task",
+      "success": "Task created",
+      "error": "Failed to create task"
+    }
   },
   "settings": {
     "title": "Settings",
