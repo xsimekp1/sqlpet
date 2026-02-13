@@ -142,6 +142,21 @@ export interface KennelAnimal {
   species: string;
 }
 
+export interface KennelZone {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface CreateKennelRequest {
+  name: string;
+  zone_id: string;
+  type: 'indoor' | 'outdoor' | 'isolation' | 'quarantine';
+  size_category: 'small' | 'medium' | 'large' | 'xlarge';
+  capacity: number;
+  notes?: string | null;
+}
+
 export interface MoveAnimalRequest {
   animal_id: string;
   target_kennel_id?: string | null;
@@ -504,6 +519,39 @@ class ApiClient {
         throw new Error(
           axiosError.response?.data?.detail || 'Failed to fetch kennels'
         );
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Get all zones for current organization
+   */
+  static async getZones(): Promise<KennelZone[]> {
+    const organizationId = this.getOrganizationId();
+    const response = await axios.get<KennelZone[]>(
+      `${API_URL}/kennels/zones`,
+      { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '' } }
+    );
+    return response.data;
+  }
+
+  /**
+   * Create a new kennel
+   */
+  static async createKennel(data: CreateKennelRequest): Promise<Kennel> {
+    const organizationId = this.getOrganizationId();
+    try {
+      const response = await axios.post<Kennel>(
+        `${API_URL}/kennels`,
+        data,
+        { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '', 'Content-Type': 'application/json' } }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to create kennel');
       }
       throw new Error('An unexpected error occurred');
     }

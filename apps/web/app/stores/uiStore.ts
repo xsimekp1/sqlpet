@@ -18,6 +18,10 @@ interface UIState {
   // Dashboard widget layout (user customization)
   dashboardWidgets: string[]
   setDashboardWidgets: (widgets: string[]) => void
+
+  // Preferences
+  weightUnit: 'kg' | 'lbs'
+  setWeightUnit: (unit: 'kg' | 'lbs') => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -42,12 +46,16 @@ export const useUIStore = create<UIState>()(
         'recent'
       ],
       setDashboardWidgets: (widgets) => set({ dashboardWidgets: widgets }),
+
+      weightUnit: 'kg',
+      setWeightUnit: (unit) => set({ weightUnit: unit }),
     }),
     {
       name: 'pawshelter-ui-storage',
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
         dashboardWidgets: state.dashboardWidgets,
+        weightUnit: state.weightUnit,
       }),
     }
   )

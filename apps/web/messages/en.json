@@ -30,7 +30,11 @@
     "animalsPending": "Animals pending",
     "tasksDue": "Tasks due",
     "unacknowledged": "Unacknowledged",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "hiddenWidgets": "Hidden widgets — click to restore",
+    "totalCapacity": "total capacity",
+    "overall": "Overall",
+    "noKennels": "No kennel data available"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -273,7 +277,39 @@
     },
     "errors": {
       "fetchFailed": "Failed to load kennels"
-    }
+    },
+    "add": {
+      "title": "Add Kennel",
+      "description": "Create a new kennel in the shelter",
+      "name": "Name",
+      "zone": "Zone",
+      "zonePlaceholder": "Select zone",
+      "loadingZones": "Loading zones...",
+      "type": "Type",
+      "size": "Size",
+      "capacity": "Capacity",
+      "notes": "Notes",
+      "notesPlaceholder": "Optional notes about this kennel",
+      "submit": "Create Kennel",
+      "success": "Kennel created successfully",
+      "error": "Failed to create kennel"
+    },
+    "size": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "xlarge": "Extra Large"
+    },
+    "common_cancel": "Cancel"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your preferences",
+    "preferences": "Preferences",
+    "weightUnit": "Weight Unit",
+    "weightUnitDesc": "Choose the unit used to display animal weights throughout the app",
+    "kg": "Kilograms (kg)",
+    "lbs": "Pounds (lbs)"
   },
   "animals": {
     "view": {

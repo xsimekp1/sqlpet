@@ -12,7 +12,7 @@ from src.app.models.user import User
 from src.app.models.animal import Animal
 from pydantic import BaseModel, Field
 from src.app.services.kennel_service import (
-    create_kennel,
+    create_kennel as kennel_service_create,
     move_animal,
     CapacityError,
     InvalidStateError,
@@ -21,6 +21,21 @@ from src.app.services.kennel_service import (
 from src.app.schemas.kennel import KennelCreate
 
 router = APIRouter(prefix="/kennels", tags=["kennels"])
+
+
+@router.get("/zones")
+async def list_zones(
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """List all zones for the current organization."""
+    result = await session.execute(
+        select(Zone)
+        .where(Zone.organization_id == organization_id, Zone.deleted_at.is_(None))
+        .order_by(Zone.name)
+    )
+    return [{"id": str(z.id), "name": z.name, "code": z.code} for z in result.scalars()]
 
 
 @router.get("")
@@ -351,7 +366,7 @@ async def create_kennel(
 
     try:
         # Create new kennel using service
-        kennel = await create_kennel(
+        kennel = await kennel_service_create(
             db=session,
             name=kennel_data.name,
             zone_id=kennel_data.zone_id,

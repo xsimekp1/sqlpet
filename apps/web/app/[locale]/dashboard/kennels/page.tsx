@@ -35,6 +35,7 @@ import { getAnimalImageUrl } from '@/app/lib/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
+import { AddKennelDialog } from '@/app/components/kennels/AddKennelDialog';
 
 
 interface FilterState {
@@ -213,6 +214,7 @@ export default function KennelsPage() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'table' | 'grid'>('grid');
   const [activeAnimal, setActiveAnimal] = useState<Animal | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     zone_id: '',
     status: '',
@@ -393,7 +395,7 @@ export default function KennelsPage() {
             <Footprints className="h-4 w-4" />
             {t('quickActions.walkMode')}
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4" />
             {t('quickActions.addKennel')}
           </Button>
@@ -576,13 +578,19 @@ export default function KennelsPage() {
             <p className="text-muted-foreground mb-4">
               {t(`noResults.${search || Object.values(filters).some(v => v) ? 'withFilter' : 'noFilter'}` as any)}
             </p>
-            <Button>
+            <Button onClick={() => setShowAddDialog(true)}>
               <Plus className="h-4 w-4 mr-2" />
               {t('quickActions.addKennel')}
             </Button>
           </CardContent>
         </Card>
       )}
+
+      <AddKennelDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        onCreated={fetchData}
+      />
     </div>
   );
 }

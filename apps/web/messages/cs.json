@@ -30,7 +30,11 @@
     "animalsPending": "Zvířat čeká",
     "tasksDue": "Úkolů dnes",
     "unacknowledged": "Nepotvrzených",
-    "viewAll": "Zobrazit vše"
+    "viewAll": "Zobrazit vše",
+    "hiddenWidgets": "Skrytá okna — klikněte pro obnovení",
+    "totalCapacity": "celková kapacita",
+    "overall": "Celkově",
+    "noKennels": "Žádná data o kotcích"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -275,7 +279,39 @@
     },
     "errors": {
       "fetchFailed": "Nepodařilo se načíst kotce"
-    }
+    },
+    "add": {
+      "title": "Přidat kotec",
+      "description": "Vytvořte nový kotec v útulku",
+      "name": "Název",
+      "zone": "Zóna",
+      "zonePlaceholder": "Vyberte zónu",
+      "loadingZones": "Načítám zóny...",
+      "type": "Typ",
+      "size": "Velikost",
+      "capacity": "Kapacita",
+      "notes": "Poznámky",
+      "notesPlaceholder": "Volitelné poznámky o tomto kotci",
+      "submit": "Vytvořit kotec",
+      "success": "Kotec byl úspěšně vytvořen",
+      "error": "Nepodařilo se vytvořit kotec"
+    },
+    "size": {
+      "small": "Malý",
+      "medium": "Střední",
+      "large": "Velký",
+      "xlarge": "Extra velký"
+    },
+    "common_cancel": "Zrušit"
+  },
+  "settings": {
+    "title": "Nastavení",
+    "description": "Spravujte své předvolby",
+    "preferences": "Předvolby",
+    "weightUnit": "Jednotka hmotnosti",
+    "weightUnitDesc": "Vyberte jednotku pro zobrazení hmotnosti zvířat v celé aplikaci",
+    "kg": "Kilogramy (kg)",
+    "lbs": "Libry (lbs)"
   },
   "animals": {
     "view": {

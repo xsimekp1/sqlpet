@@ -4,12 +4,25 @@ import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, Pointer
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useUIStore } from '@/app/stores/uiStore'
+import { useTranslations } from 'next-intl'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { MedicalTodayWidget } from './MedicalTodayWidget'
 import { FeedingTodayWidget } from './FeedingTodayWidget'
 import { TasksWidget } from './TasksWidget'
 import { AlertsWidget } from './AlertsWidget'
 import { OccupancyWidget } from './OccupancyWidget'
 import { RecentWidget } from './RecentWidget'
+
+const ALL_WIDGETS = ['medical-today', 'feeding-today', 'tasks', 'alerts', 'occupancy', 'recent'] as const
+const widgetLabels: Record<string, string> = {
+  'medical-today': 'medicalToday',
+  'feeding-today': 'feedingToday',
+  'tasks': 'tasks',
+  'alerts': 'alerts',
+  'occupancy': 'occupancy',
+  'recent': 'recent',
+}
 
 // Widget registry
 const widgetComponents = {
@@ -62,6 +75,7 @@ function SortableWidget({ id, editMode, onRemove }: SortableWidgetProps) {
 
 export function DashboardGrid() {
   const { dashboardWidgets, setDashboardWidgets, dashboardEditMode } = useUIStore()
+  const t = useTranslations('dashboard')
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -85,6 +99,8 @@ export function DashboardGrid() {
     setDashboardWidgets(dashboardWidgets.filter(id => id !== widgetId))
   }
 
+  const hiddenWidgets = ALL_WIDGETS.filter(id => !dashboardWidgets.includes(id))
+
   return (
     <DndContext
       sensors={sensors}
@@ -103,6 +119,25 @@ export function DashboardGrid() {
           ))}
         </div>
       </SortableContext>
+
+      {dashboardEditMode && hiddenWidgets.length > 0 && (
+        <div className="mt-4 p-4 border border-dashed rounded-lg">
+          <p className="text-xs text-muted-foreground mb-2">{t('hiddenWidgets')}</p>
+          <div className="flex flex-wrap gap-2">
+            {hiddenWidgets.map(id => (
+              <Button
+                key={id}
+                variant="outline"
+                size="sm"
+                onClick={() => setDashboardWidgets([...dashboardWidgets, id])}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                {t(widgetLabels[id] as any)}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
     </DndContext>
   )
 }
