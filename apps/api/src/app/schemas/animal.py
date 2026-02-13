@@ -92,6 +92,7 @@ class AnimalCreate(BaseModel):
     featured: bool = False
     is_dewormed: bool = False
     is_aggressive: bool = False
+    is_pregnant: bool = False
     breeds: list[AnimalBreedEntry] | None = None
     identifiers: list[AnimalIdentifierCreate] | None = None
 
@@ -117,6 +118,7 @@ class AnimalUpdate(BaseModel):
     featured: bool | None = None
     is_dewormed: bool | None = None
     is_aggressive: bool | None = None
+    is_pregnant: bool | None = None
     breeds: list[AnimalBreedEntry] | None = None
     identifiers: list[AnimalIdentifierCreate] | None = None
 
@@ -145,6 +147,7 @@ class AnimalResponse(BaseModel):
     featured: bool
     is_dewormed: bool
     is_aggressive: bool
+    is_pregnant: bool
     primary_photo_url: str | None = None
     default_image_url: str | None = None
     current_kennel_id: str | None = None

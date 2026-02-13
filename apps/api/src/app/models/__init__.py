@@ -37,6 +37,7 @@ from src.app.models.inventory_lot import InventoryLot
 from src.app.models.inventory_transaction import InventoryTransaction, TransactionType
 from src.app.models.tag import Tag
 from src.app.models.animal_tag import AnimalTag
+from src.app.models.animal_weight_log import AnimalWeightLog
 from src.app.models.file import (
     File,
     EntityFile,
@@ -89,6 +90,7 @@ __all__ = [
     "TransactionType",
     "Tag",
     "AnimalTag",
+    "AnimalWeightLog",
     "File",
     "EntityFile",
     "DefaultAnimalImage",

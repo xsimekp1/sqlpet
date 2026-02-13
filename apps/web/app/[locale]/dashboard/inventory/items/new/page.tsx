@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
@@ -17,13 +18,24 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
+
+const SPECIES_OPTIONS = [
+  { value: 'dog',    label: '🐕 Pes' },
+  { value: 'cat',    label: '🐈 Kočka' },
+  { value: 'rabbit', label: '🐇 Králík' },
+  { value: 'bird',   label: '🐦 Pták' },
+  { value: 'other',  label: '🐾 Jiné' },
+] as const;
 
 interface InventoryItemFormData {
   name: string;
   category: 'medication' | 'vaccine' | 'food' | 'supply' | 'other';
   unit?: string;
   reorder_threshold?: number;
+  // Food-specific
+  kcal_per_100g?: number;
+  price_per_unit?: number;
 }
 
 export default function NewInventoryItemPage() {
@@ -32,15 +44,32 @@ export default function NewInventoryItemPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<InventoryItemFormData>();
+  const { register, handleSubmit, setValue, control, formState: { errors } } = useForm<InventoryItemFormData>();
+  const category = useWatch({ control, name: 'category' });
+  const isFood = category === 'food';
+
+  // Species selection state
+  const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
+
+  const toggleSpecies = (sp: string) => {
+    setSelectedSpecies(prev =>
+      prev.includes(sp) ? prev.filter(s => s !== sp) : [...prev, sp]
+    );
+  };
 
   // Create item mutation
   const createItemMutation = useMutation({
     mutationFn: async (data: InventoryItemFormData) => {
-      return await ApiClient.post('/inventory/items', {
+      const body: Record<string, any> = {
         ...data,
         reorder_threshold: data.reorder_threshold ? Number(data.reorder_threshold) : undefined,
-      });
+      };
+      if (isFood) {
+        if (data.kcal_per_100g) body.kcal_per_100g = Number(data.kcal_per_100g);
+        if (data.price_per_unit) body.price_per_unit = Number(data.price_per_unit);
+        if (selectedSpecies.length > 0) body.allowed_species = selectedSpecies;
+      }
+      return await ApiClient.post('/inventory/items', body);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
@@ -73,9 +102,7 @@ export default function NewInventoryItemPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('createItem')}</h1>
-          <p className="text-muted-foreground">
-            Add a new inventory item to track
-          </p>
+          <p className="text-muted-foreground">Add a new inventory item to track</p>
         </div>
       </div>
 
@@ -88,18 +115,13 @@ export default function NewInventoryItemPage() {
             placeholder="e.g. Dog Food - Premium Dry"
             {...register('name', { required: true })}
           />
-          {errors.name && (
-            <p className="text-sm text-destructive">Name is required</p>
-          )}
+          {errors.name && <p className="text-sm text-destructive">Name is required</p>}
         </div>
 
         {/* Category */}
         <div className="space-y-2">
           <Label htmlFor="category">{t('fields.category')} *</Label>
-          <Select
-            onValueChange={(value) => setValue('category', value as any)}
-            required
-          >
+          <Select onValueChange={(value) => setValue('category', value as any)} required>
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -113,6 +135,67 @@ export default function NewInventoryItemPage() {
           </Select>
         </div>
 
+        {/* Food-specific fields */}
+        {isFood && (
+          <div className="border rounded-lg p-4 space-y-4 bg-muted/20">
+            <p className="text-sm font-medium">🦴 Parametry krmiva</p>
+
+            {/* Kcal per 100g */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="kcal_per_100g">{t('fields.kcalPer100g')}</Label>
+                <Input
+                  id="kcal_per_100g"
+                  type="number"
+                  step="1"
+                  min="0"
+                  placeholder="např. 350"
+                  {...register('kcal_per_100g')}
+                />
+                <p className="text-xs text-muted-foreground">kcal / 100 g</p>
+              </div>
+
+              {/* Price per unit */}
+              <div className="space-y-2">
+                <Label htmlFor="price_per_unit">{t('fields.pricePerUnit')}</Label>
+                <Input
+                  id="price_per_unit"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="např. 299.90"
+                  {...register('price_per_unit')}
+                />
+                <p className="text-xs text-muted-foreground">Kč / jednotka</p>
+              </div>
+            </div>
+
+            {/* Allowed species */}
+            <div className="space-y-2">
+              <Label>{t('fields.allowedSpecies')}</Label>
+              <div className="flex gap-1.5 flex-wrap">
+                {SPECIES_OPTIONS.map(sp => (
+                  <button
+                    key={sp.value}
+                    type="button"
+                    onClick={() => toggleSpecies(sp.value)}
+                    className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                      selectedSpecies.includes(sp.value)
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background border-border hover:bg-accent'
+                    }`}
+                  >
+                    {sp.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Vyberte pro jaká zvířata je toto krmivo určeno (lze zvolit více druhů).
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Unit */}
         <div className="space-y-2">
           <Label htmlFor="unit">{t('fields.unit')}</Label>
@@ -121,9 +204,7 @@ export default function NewInventoryItemPage() {
             placeholder="e.g. kg, pcs, box, dose"
             {...register('unit')}
           />
-          <p className="text-sm text-muted-foreground">
-            Unit of measurement for this item
-          </p>
+          <p className="text-sm text-muted-foreground">Unit of measurement for this item</p>
         </div>
 
         {/* Reorder Threshold */}
@@ -136,23 +217,16 @@ export default function NewInventoryItemPage() {
             placeholder="e.g. 10"
             {...register('reorder_threshold')}
           />
-          <p className="text-sm text-muted-foreground">
-            Alert when stock falls below this level
-          </p>
+          <p className="text-sm text-muted-foreground">Alert when stock falls below this level</p>
         </div>
 
         {/* Actions */}
         <div className="flex gap-4">
-          <Button
-            type="submit"
-            disabled={createItemMutation.isPending}
-          >
+          <Button type="submit" disabled={createItemMutation.isPending}>
             {createItemMutation.isPending ? 'Creating...' : t('actions.createItem')}
           </Button>
           <Link href="/dashboard/inventory">
-            <Button type="button" variant="outline">
-              Cancel
-            </Button>
+            <Button type="button" variant="outline">Cancel</Button>
           </Link>
         </div>
       </form>

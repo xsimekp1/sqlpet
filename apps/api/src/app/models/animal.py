@@ -148,6 +148,7 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     primary_photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_dewormed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_aggressive: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_pregnant: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
     animal_breeds = relationship(
@@ -167,4 +168,11 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         secondary="animal_tags",
         back_populates="animals",
         lazy="selectin",
+    )
+    weight_logs = relationship(
+        "AnimalWeightLog",
+        back_populates="animal",
+        lazy="noload",
+        cascade="all, delete-orphan",
+        order_by="AnimalWeightLog.measured_at.desc()",
     )

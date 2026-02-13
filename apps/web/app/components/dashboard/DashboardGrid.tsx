@@ -10,16 +10,16 @@ import { Button } from '@/components/ui/button'
 import { MedicalTodayWidget } from './MedicalTodayWidget'
 import { FeedingTodayWidget } from './FeedingTodayWidget'
 import { TasksWidget } from './TasksWidget'
-import { AlertsWidget } from './AlertsWidget'
+import { ShelterStatsWidget } from './ShelterStatsWidget'
 import { OccupancyWidget } from './OccupancyWidget'
 import { RecentlyAdmittedWidget } from './RecentlyAdmittedWidget'
 
-const ALL_WIDGETS = ['medical-today', 'feeding-today', 'tasks', 'alerts', 'occupancy', 'recently-admitted'] as const
+const ALL_WIDGETS = ['medical-today', 'feeding-today', 'tasks', 'shelter-stats', 'occupancy', 'recently-admitted'] as const
 const widgetLabels: Record<string, string> = {
   'medical-today': 'medicalToday',
   'feeding-today': 'feedingToday',
   'tasks': 'tasks',
-  'alerts': 'alerts',
+  'shelter-stats': 'shelterStats',
   'occupancy': 'occupancy',
   'recently-admitted': 'recentlyAdmitted',
 }
@@ -29,7 +29,7 @@ const widgetComponents = {
   'medical-today': MedicalTodayWidget,
   'feeding-today': FeedingTodayWidget,
   'tasks': TasksWidget,
-  'alerts': AlertsWidget,
+  'shelter-stats': ShelterStatsWidget,
   'occupancy': OccupancyWidget,
   'recently-admitted': RecentlyAdmittedWidget,
 }

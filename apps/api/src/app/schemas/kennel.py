@@ -31,6 +31,7 @@ class KennelBase(BaseModel):
     size_category: KennelSizeCategory = Field(..., description="Velikostní kategorie")
     capacity: int = Field(..., ge=1, le=50, description="Maximální kapacita kotce")
     capacity_rules: Optional[Dict[str, int]] = Field(None, description="Kapacitní pravidla pro jednotlivé druhy zvířat")
+    allowed_species: Optional[list[str]] = Field(None, description="Povolené druhy zvířat, e.g. ['dog', 'cat']")
     primary_photo_path: Optional[str] = Field(None, description="Cesta k primární fotce kotce")
     notes: Optional[str] = Field(None, max_length=1000, description="Poznámky ke kotci")
 
@@ -53,6 +54,7 @@ class KennelUpdate(BaseModel):
     zone_id: str | None = None
     capacity: int | None = Field(None, ge=1, le=50)
     capacity_rules: dict[str, Any] | None = None
+    allowed_species: list[str] | None = None
     size_category: str | None = None
     status: str | None = None
     type: str | None = None
@@ -77,6 +79,7 @@ class KennelResponse(BaseModel):
     size_category: str
     capacity: int
     capacity_rules: dict[str, Any] | None
+    allowed_species: list[str] | None = None
     occupied_count: int
     animals: list[dict[str, Any]]
     primary_photo_path: str | None

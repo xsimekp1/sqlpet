@@ -28,6 +28,13 @@
     "recent": "Nedávno zobrazeno",
     "recentlyAdmitted": "Naposledy přijatí",
     "noAnimals": "Žádná zvířata",
+    "shelterStats": "Přehled útulku",
+    "stats": {
+      "total": "Celkem zvířat",
+      "available": "Ke adopci",
+      "intake": "V příjmu",
+      "quarantine": "V karanténě"
+    },
     "medicationsDue": "Léky na pořadu",
     "animalsPending": "Zvířat čeká",
     "tasksDue": "Úkolů dnes",
@@ -267,7 +274,7 @@
       "occupancy": "Obsazenost"
     },
     "quickActions": {
-      "addKennel": "Přidat kotec",
+      "addKennel": "Přidat kotec/voliéru",
       "manageZones": "Spravovat zóny",
       "walkMode": "Režim obchůzky",
       "title": "Rychlé akce",
@@ -318,8 +325,10 @@
       "capacity": "Kapacita",
       "notes": "Poznámky",
       "notesPlaceholder": "Volitelné poznámky o tomto kotci",
-      "submit": "Vytvořit kotec",
-      "success": "Kotec byl úspěšně vytvořen",
+      "allowedSpecies": "Pro jaká zvířata",
+      "allowedSpeciesHint": "Automatický název",
+      "submit": "Vytvořit",
+      "success": "Kotec/voliéra byl úspěšně vytvořen",
       "error": "Nepodařilo se vytvořit kotec"
     },
     "size": {
@@ -468,7 +477,21 @@
       "unknown": "Neznámo",
       "aggressiveWarning": "Pozor — zvíře může být agresivní",
       "toggleDewormed": "Přepnout stav odčervení",
-      "toggleAggressive": "Přepnout stav agresivity"
+      "toggleAggressive": "Přepnout stav agresivity",
+      "pregnant": "Těhotenství",
+      "togglePregnant": "Přepnout stav těhotenství",
+      "weight": "Váha",
+      "weightHistory": "Historie váhy",
+      "addWeight": "Přidat měření",
+      "weightKg": "Váha (kg)",
+      "weightDate": "Datum měření",
+      "weightNotes": "Poznámka",
+      "weightSave": "Uložit",
+      "weightSaving": "Ukládám...",
+      "weightAdded": "Váha zaznamenána",
+      "weightError": "Nepodařilo se uložit váhu",
+      "weightFirstMeasurement": "Přidejte první měření",
+      "energyNeeds": "Energetická potřeba"
     },
     "colors": {
       "black": "Černá",
@@ -744,7 +767,10 @@
       "quantity": "Množství",
       "costPerUnit": "Cena za jednotku",
       "type": "Typ transakce",
-      "reason": "Důvod"
+      "reason": "Důvod",
+      "kcalPer100g": "Kcal / 100 g",
+      "pricePerUnit": "Cena za jednotku (Kč)",
+      "allowedSpecies": "Pro jaká zvířata"
     },
     "actions": {
       "createItem": "Vytvořit položku",

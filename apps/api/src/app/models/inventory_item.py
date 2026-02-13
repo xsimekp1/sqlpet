@@ -4,7 +4,7 @@ import enum
 import uuid
 
 from sqlalchemy import String, Numeric, Enum, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
@@ -40,3 +40,7 @@ class InventoryItem(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
     unit: Mapped[str | None] = mapped_column(String(50), nullable=True)
     reorder_threshold: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    # Food-specific fields (relevant when category == 'food')
+    kcal_per_100g: Mapped[float | None] = mapped_column(Numeric(7, 2), nullable=True)
+    price_per_unit: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    allowed_species: Mapped[list | None] = mapped_column(JSONB, nullable=True)  # e.g. ["dog", "cat"]

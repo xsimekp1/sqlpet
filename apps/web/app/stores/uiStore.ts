@@ -41,7 +41,7 @@ export const useUIStore = create<UIState>()(
         'medical-today',
         'feeding-today',
         'tasks',
-        'alerts',
+        'shelter-stats',
         'occupancy',
         'recently-admitted'
       ],

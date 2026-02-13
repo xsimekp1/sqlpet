@@ -107,9 +107,22 @@ export interface Animal {
   current_kennel_code: string | null;
   is_dewormed: boolean;
   is_aggressive: boolean;
+  is_pregnant: boolean;
+  weight_current_kg: number | null;
+  weight_estimated_kg: number | null;
+  age_group: 'baby' | 'young' | 'adult' | 'senior' | 'unknown';
   breeds?: AnimalBreed[];
   created_at: string;
   updated_at: string;
+}
+
+export interface WeightLog {
+  id: string;
+  animal_id: string;
+  weight_kg: number;
+  measured_at: string;
+  notes?: string | null;
+  created_at: string;
 }
 
 export interface CreateAnimalRequest {
@@ -135,7 +148,7 @@ export interface Kennel {
   size_category: 'small' | 'medium' | 'large' | 'xlarge';
   capacity: number;
   capacity_rules?: { by_species?: Record<string, number> };
-  suitable_species?: string[];  // Which species are suitable for this kennel
+  allowed_species?: string[] | null;  // Which species are suitable for this kennel
   primary_photo_path?: string;
   occupied_count: number;
   animals_preview: KennelAnimal[];
@@ -164,6 +177,7 @@ export interface CreateKennelRequest {
   type: 'indoor' | 'outdoor' | 'isolation' | 'quarantine';
   size_category: 'small' | 'medium' | 'large' | 'xlarge';
   capacity: number;
+  allowed_species?: string[] | null;
   notes?: string | null;
 }
 
@@ -1133,6 +1147,49 @@ class ApiClient {
       }
       throw new Error('An unexpected error occurred');
     }
+  }
+
+  // ========================================
+  // WEIGHT LOG METHODS
+  // ========================================
+
+  /**
+   * Log a weight measurement for an animal
+   */
+  static async logWeight(animalId: string, weight_kg: number, notes?: string, measured_at?: string): Promise<WeightLog> {
+    const organizationId = this.getOrganizationId();
+    const body: Record<string, any> = { weight_kg };
+    if (notes) body.notes = notes;
+    if (measured_at) body.measured_at = measured_at;
+    const response = await axios.post<WeightLog>(
+      `${API_URL}/animals/${animalId}/weight`,
+      body,
+      {
+        headers: {
+          ...this.getAuthHeaders(),
+          'x-organization-id': organizationId || '',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Get weight history for an animal (newest first)
+   */
+  static async getWeightHistory(animalId: string): Promise<WeightLog[]> {
+    const organizationId = this.getOrganizationId();
+    const response = await axios.get<WeightLog[]>(
+      `${API_URL}/animals/${animalId}/weight`,
+      {
+        headers: {
+          ...this.getAuthHeaders(),
+          'x-organization-id': organizationId || '',
+        },
+      }
+    );
+    return response.data;
   }
 
   /**

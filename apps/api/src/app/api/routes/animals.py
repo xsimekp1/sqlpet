@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select, text
@@ -11,6 +12,7 @@ from src.app.api.dependencies.auth import (
 )
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Species
+from src.app.models.animal_weight_log import AnimalWeightLog
 from src.app.models.breed import Breed
 from src.app.models.breed_i18n import BreedI18n
 from src.app.models.file import DefaultAnimalImage
@@ -25,6 +27,7 @@ from src.app.schemas.animal import (
     BreedColorImageResponse,
     BreedResponse,
 )
+from src.app.schemas.weight_log import WeightLogCreate, WeightLogResponse
 from src.app.services.animal_service import AnimalService
 from src.app.services.default_image_service import DefaultImageService
 
@@ -218,6 +221,67 @@ async def delete_animal(
             status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
         )
     await db.commit()
+
+
+# --- Weight log endpoints ---
+
+
+@router.post(
+    "/{animal_id}/weight",
+    response_model=WeightLogResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def log_weight(
+    animal_id: uuid.UUID,
+    data: WeightLogCreate,
+    current_user: User = Depends(require_permission("animals.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Log a weight measurement for an animal."""
+    svc = AnimalService(db)
+    animal = await svc.get_animal(organization_id, animal_id)
+    if animal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+
+    measured_at = data.measured_at or datetime.now(timezone.utc)
+    log = AnimalWeightLog(
+        animal_id=animal_id,
+        weight_kg=data.weight_kg,
+        measured_at=measured_at,
+        notes=data.notes,
+        recorded_by_user_id=current_user.id,
+    )
+    db.add(log)
+    await db.commit()
+    await db.refresh(log)
+    return WeightLogResponse.model_validate(log)
+
+
+@router.get(
+    "/{animal_id}/weight",
+    response_model=list[WeightLogResponse],
+)
+async def get_weight_history(
+    animal_id: uuid.UUID,
+    current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get weight history for an animal, newest first."""
+    svc = AnimalService(db)
+    animal = await svc.get_animal(organization_id, animal_id)
+    if animal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+
+    result = await db.execute(
+        select(AnimalWeightLog)
+        .where(AnimalWeightLog.animal_id == animal_id)
+        .order_by(AnimalWeightLog.measured_at.desc())
+        .limit(50)
+    )
+    logs = result.scalars().all()
+    return [WeightLogResponse.model_validate(log) for log in logs]
 
 
 # --- Breeds endpoint (authenticated, no org scoping) ---

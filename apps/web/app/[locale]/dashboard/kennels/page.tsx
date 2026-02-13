@@ -349,7 +349,7 @@ export default function KennelsPage() {
     }
 
     // Warning: species not suitable for this kennel
-    const suitable = targetKennel.suitable_species;
+    const suitable = targetKennel.allowed_species;
     if (suitable && suitable.length > 0 && !suitable.includes(animal.species)) {
       toast.warning(`${animal.name} (${animal.species}) není vhodný/á pro tento kotec! 🏠`);
     }

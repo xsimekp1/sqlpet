@@ -191,6 +191,7 @@ async def create_kennel(
     size_category: str,
     capacity: int,
     capacity_rules: dict[str, int] | None = None,
+    allowed_species: list[str] | None = None,
     primary_photo_path: str | None = None,
     notes: str | None = None,
 ) -> Kennel:
@@ -224,6 +225,7 @@ async def create_kennel(
         size_category=size_category,
         capacity=capacity,
         capacity_rules=capacity_rules,
+        allowed_species=allowed_species,
         status="available",
         primary_photo_path=primary_photo_path,
         notes=notes,

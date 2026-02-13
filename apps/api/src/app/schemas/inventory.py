@@ -12,6 +12,10 @@ class InventoryItemBase(BaseModel):
     category: str  # medication, vaccine, food, supply, other
     unit: Optional[str] = Field(None, max_length=50)
     reorder_threshold: Optional[float] = None
+    # Food-specific fields
+    kcal_per_100g: Optional[float] = None
+    price_per_unit: Optional[float] = None
+    allowed_species: Optional[list[str]] = None  # e.g. ["dog", "cat"]
 
 
 class InventoryItemCreate(InventoryItemBase):
@@ -23,6 +27,9 @@ class InventoryItemUpdate(BaseModel):
     category: Optional[str] = None
     unit: Optional[str] = Field(None, max_length=50)
     reorder_threshold: Optional[float] = None
+    kcal_per_100g: Optional[float] = None
+    price_per_unit: Optional[float] = None
+    allowed_species: Optional[list[str]] = None
 
 
 class InventoryItemResponse(InventoryItemBase):

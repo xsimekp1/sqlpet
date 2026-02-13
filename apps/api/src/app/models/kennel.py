@@ -105,6 +105,9 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     capacity_rules: Mapped[dict | None] = mapped_column(
         JSON, nullable=True
     )  # Flexible capacity by species
+    allowed_species: Mapped[list | None] = mapped_column(
+        JSON, nullable=True
+    )  # List of allowed species strings, e.g. ["dog", "cat"]
     size_category: Mapped[KennelSizeCategory] = mapped_column(
         Enum(
             KennelSizeCategory,

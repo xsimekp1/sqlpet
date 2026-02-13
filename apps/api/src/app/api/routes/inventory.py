@@ -52,6 +52,9 @@ async def create_inventory_item(
         created_by_id=current_user.id,
         unit=item_data.unit,
         reorder_threshold=item_data.reorder_threshold,
+        kcal_per_100g=item_data.kcal_per_100g,
+        price_per_unit=item_data.price_per_unit,
+        allowed_species=item_data.allowed_species,
     )
     await db.commit()
     return item

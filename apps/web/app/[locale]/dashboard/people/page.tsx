@@ -46,14 +46,13 @@ export default function PeoplePage() {
     enabled: !!selectedOrg?.id,
   });
 
-  // Fetch contacts (external people without accounts)
+  // Fetch contacts (external people without accounts) — no selectedOrg guard, org comes from auth token
   const { data: contactsData, isLoading: contactsLoading } = useQuery({
-    queryKey: ['contacts', selectedOrg?.id, contactTypeFilter],
+    queryKey: ['contacts', contactTypeFilter],
     queryFn: () =>
       ApiClient.get('/contacts', {
         type: contactTypeFilter !== 'all' ? contactTypeFilter : undefined,
       }),
-    enabled: !!selectedOrg?.id,
   });
 
   const members = membersData?.items || [];

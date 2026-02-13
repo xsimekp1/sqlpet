@@ -28,6 +28,13 @@
     "recent": "Recently Viewed",
     "recentlyAdmitted": "Recently Admitted",
     "noAnimals": "No animals",
+    "shelterStats": "Shelter Stats",
+    "stats": {
+      "total": "Total animals",
+      "available": "Available",
+      "intake": "In intake",
+      "quarantine": "Quarantine"
+    },
     "medicationsDue": "Medications due",
     "animalsPending": "Animals pending",
     "tasksDue": "Tasks due",
@@ -316,7 +323,9 @@
       "capacity": "Capacity",
       "notes": "Notes",
       "notesPlaceholder": "Optional notes about this kennel",
-      "submit": "Create Kennel",
+      "allowedSpecies": "For which animals",
+      "allowedSpeciesHint": "Auto name",
+      "submit": "Create",
       "success": "Kennel created successfully",
       "error": "Failed to create kennel"
     },
@@ -466,7 +475,21 @@
       "unknown": "Unknown",
       "aggressiveWarning": "Caution — animal may be aggressive",
       "toggleDewormed": "Toggle dewormed status",
-      "toggleAggressive": "Toggle aggression status"
+      "toggleAggressive": "Toggle aggression status",
+      "pregnant": "Pregnancy",
+      "togglePregnant": "Toggle pregnancy status",
+      "weight": "Weight",
+      "weightHistory": "Weight history",
+      "addWeight": "Add measurement",
+      "weightKg": "Weight (kg)",
+      "weightDate": "Measurement date",
+      "weightNotes": "Notes",
+      "weightSave": "Save",
+      "weightSaving": "Saving...",
+      "weightAdded": "Weight recorded",
+      "weightError": "Failed to save weight",
+      "weightFirstMeasurement": "Add the first measurement",
+      "energyNeeds": "Energy needs"
     },
     "colors": {
       "black": "Black",
@@ -738,7 +761,10 @@
       "quantity": "Quantity",
       "costPerUnit": "Cost per unit",
       "type": "Transaction type",
-      "reason": "Reason"
+      "reason": "Reason",
+      "kcalPer100g": "Kcal / 100g",
+      "pricePerUnit": "Price per unit",
+      "allowedSpecies": "For which animals"
     },
     "actions": {
       "createItem": "Create Item",

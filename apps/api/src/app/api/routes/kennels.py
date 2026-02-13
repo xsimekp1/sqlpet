@@ -375,6 +375,7 @@ async def create_kennel(
             size_category=kennel_data.size_category,
             capacity=kennel_data.capacity,
             capacity_rules=kennel_data.capacity_rules,
+            allowed_species=kennel_data.allowed_species,
             primary_photo_path=kennel_data.primary_photo_path,
             notes=kennel_data.notes,
         )
@@ -388,6 +389,7 @@ async def create_kennel(
             "type": kennel.type,
             "size_category": kennel.size_category,
             "capacity": kennel.capacity,
+            "allowed_species": kennel.allowed_species,
             "occupied_count": 0,
             "animals": [],
             "primary_photo_path": kennel.primary_photo_path,

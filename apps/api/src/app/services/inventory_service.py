@@ -25,6 +25,9 @@ class InventoryService:
         created_by_id: uuid.UUID,
         unit: Optional[str] = None,
         reorder_threshold: Optional[float] = None,
+        kcal_per_100g: Optional[float] = None,
+        price_per_unit: Optional[float] = None,
+        allowed_species: Optional[list] = None,
     ) -> InventoryItem:
         """Create a new inventory item."""
         item = InventoryItem(
@@ -34,6 +37,9 @@ class InventoryService:
             category=category,
             unit=unit,
             reorder_threshold=reorder_threshold,
+            kcal_per_100g=kcal_per_100g,
+            price_per_unit=price_per_unit,
+            allowed_species=allowed_species,
         )
         self.db.add(item)
         await self.db.flush()

@@ -35,6 +35,22 @@ import {
 import ApiClient, { Kennel, KennelZone } from '@/app/lib/api';
 import { toast } from 'sonner';
 
+const SPECIES_OPTIONS = [
+  { value: 'dog',    label: '🐕 Pes',    autoName: 'Kotec' },
+  { value: 'cat',    label: '🐈 Kočka',  autoName: 'Kotec' },
+  { value: 'rabbit', label: '🐇 Králík', autoName: 'Kotec' },
+  { value: 'bird',   label: '🐦 Pták',   autoName: 'Voliéra' },
+  { value: 'other',  label: '🐾 Jiné',   autoName: 'Kotec' },
+] as const;
+
+function getAutoName(species: string[]): string | null {
+  if (species.length === 0) return null;
+  const onlyBirds = species.every(s => s === 'bird');
+  if (onlyBirds) return 'Voliéra';
+  if (species.includes('dog') || species.includes('cat')) return 'Kotec';
+  return 'Kotec';
+}
+
 const formSchema = z.object({
   name: z.string().min(1, 'required'),
   zone_id: z.string().min(1, 'required'),
@@ -57,6 +73,8 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
   const [zones, setZones] = useState<KennelZone[]>([]);
   const [loadingZones, setLoadingZones] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
+  const [nameManuallyEdited, setNameManuallyEdited] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -78,7 +96,28 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
         .catch(() => toast.error('Failed to load zones'))
         .finally(() => setLoadingZones(false));
     }
+    if (!open) {
+      // Reset species + name-edited flag on close
+      setSelectedSpecies([]);
+      setNameManuallyEdited(false);
+    }
   }, [open, zones.length]);
+
+  // Auto-name when species changes (only if name wasn't manually edited)
+  useEffect(() => {
+    if (!nameManuallyEdited) {
+      const auto = getAutoName(selectedSpecies);
+      if (auto !== null) {
+        form.setValue('name', auto);
+      }
+    }
+  }, [selectedSpecies, nameManuallyEdited, form]);
+
+  const toggleSpecies = (sp: string) => {
+    setSelectedSpecies(prev =>
+      prev.includes(sp) ? prev.filter(s => s !== sp) : [...prev, sp]
+    );
+  };
 
   const onSubmit = async (data: FormData) => {
     setSubmitting(true);
@@ -89,10 +128,13 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
         type: data.type,
         size_category: data.size_category,
         capacity: data.capacity,
+        allowed_species: selectedSpecies.length > 0 ? selectedSpecies : null,
         notes: data.notes || null,
       });
       toast.success(t('add.success'));
       form.reset();
+      setSelectedSpecies([]);
+      setNameManuallyEdited(false);
       onOpenChange(false);
       onCreated();
     } catch (e: any) {
@@ -104,7 +146,7 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t('add.title')}</DialogTitle>
           <DialogDescription>{t('add.description')}</DialogDescription>
@@ -112,6 +154,35 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
+            {/* Species (multi-select chips) */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium leading-none">{t('add.allowedSpecies')}</p>
+              <div className="flex gap-1.5 flex-wrap">
+                {SPECIES_OPTIONS.map(sp => (
+                  <button
+                    key={sp.value}
+                    type="button"
+                    onClick={() => toggleSpecies(sp.value)}
+                    className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                      selectedSpecies.includes(sp.value)
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background border-border hover:bg-accent'
+                    }`}
+                  >
+                    {sp.label}
+                  </button>
+                ))}
+              </div>
+              {selectedSpecies.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {t('add.allowedSpeciesHint')}:{' '}
+                  <span className="font-medium">{getAutoName(selectedSpecies)}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Name */}
             <FormField
               control={form.control}
               name="name"
@@ -119,13 +190,21 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
                 <FormItem>
                   <FormLabel>{t('add.name')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="např. Kotec A1" {...field} />
+                    <Input
+                      placeholder="např. Kotec A1"
+                      {...field}
+                      onChange={e => {
+                        field.onChange(e);
+                        setNameManuallyEdited(e.target.value !== '' && e.target.value !== getAutoName(selectedSpecies));
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* Zone */}
             <FormField
               control={form.control}
               name="zone_id"
@@ -150,6 +229,7 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
             />
 
             <div className="grid grid-cols-2 gap-4">
+              {/* Type */}
               <FormField
                 control={form.control}
                 name="type"
@@ -158,9 +238,7 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
                     <FormLabel>{t('add.type')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="indoor">{t('type.indoor')}</SelectItem>
@@ -174,6 +252,7 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
                 )}
               />
 
+              {/* Size */}
               <FormField
                 control={form.control}
                 name="size_category"
@@ -182,9 +261,7 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
                     <FormLabel>{t('add.size')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="small">{t('size.small')}</SelectItem>
@@ -199,6 +276,7 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
               />
             </div>
 
+            {/* Capacity */}
             <FormField
               control={form.control}
               name="capacity"
@@ -219,6 +297,7 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
               )}
             />
 
+            {/* Notes */}
             <FormField
               control={form.control}
               name="notes"

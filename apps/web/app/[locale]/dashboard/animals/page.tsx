@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -158,7 +158,7 @@ export default function AnimalsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : view === 'grid' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
           {filtered.map((animal) => (
             <Link key={animal.id} href={`/dashboard/animals/${animal.id}`}>
               <Card className="hover:bg-accent transition-colors cursor-pointer overflow-hidden">
@@ -171,22 +171,33 @@ export default function AnimalsPage() {
                     className="object-contain"
                     unoptimized
                   />
+                  {/* Sex badge in top-right corner */}
+                  {animal.sex !== 'unknown' && (
+                    <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white text-base font-bold leading-none">
+                      {animal.sex === 'male' ? '♂' : '♀'}
+                    </div>
+                  )}
+                  {/* Kennel code badge bottom-left */}
+                  {animal.current_kennel_code && (
+                    <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-xs font-mono font-semibold">
+                      {animal.current_kennel_code}
+                    </div>
+                  )}
                 </div>
-                <div className="p-2.5 space-y-1">
-                  <p className="font-semibold text-base leading-tight truncate">{animal.name}</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                    <span>{animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : ''}</span>
+                <div className="p-2.5 space-y-1.5">
+                  <p className="font-bold text-lg leading-tight truncate">{animal.name}</p>
+                  <div className="flex items-center gap-1 flex-wrap">
                     {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
                       <Scissors className="h-3 w-3 text-primary shrink-0" />
                     )}
-                  </p>
-                  <div className="flex items-center justify-between gap-1">
                     <Badge className={`text-xs px-1.5 py-0 ${getStatusColor(animal.status)}`}>
                       {animal.status}
                     </Badge>
-                    {animal.current_kennel_code && (
-                      <span className="text-xs text-muted-foreground font-mono">{animal.current_kennel_code}</span>
-                    )}
+                    {animal.tags && animal.tags.length > 0 && animal.tags.slice(0, 2).map((tag: any) => (
+                      <span key={tag.id} className="text-xs px-1.5 py-0 rounded-full border border-border bg-muted text-muted-foreground leading-5">
+                        {tag.name}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </Card>
@@ -205,10 +216,7 @@ export default function AnimalsPage() {
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Species</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Breed</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Color</th>
-                  <th className="px-4 py-3 font-medium text-muted-foreground w-10" title={t('animals.alteredStatus.label')}>
-                    <Scissors className="h-4 w-4" />
-                  </th>
-                  <th className="px-4 py-3 font-medium text-muted-foreground w-24" title="Zdraví">Zdraví</th>
+                  <th className="px-4 py-3 font-medium text-muted-foreground w-28" title="Zdraví">Zdraví</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Kotec</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Intake</th>
@@ -241,7 +249,7 @@ export default function AnimalsPage() {
                       <p className="text-xs text-muted-foreground">#{animal.public_code}</p>
                     </td>
                     <td className="px-4 py-3 capitalize">
-                      {animal.species} {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
+                      {animal.species}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {animal.breeds && animal.breeds.length > 0
@@ -252,18 +260,18 @@ export default function AnimalsPage() {
                       {animal.color || '—'}
                     </td>
                     <td className="px-4 py-3">
-                      {animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? (
-                        <Scissors className="h-4 w-4 text-primary" aria-label={animal.altered_status === 'spayed' ? t('animals.alteredStatus.spayed') : t('animals.alteredStatus.neutered')} />
-                      ) : animal.altered_status === 'intact' ? (
-                        <Scissors className="h-4 w-4 text-muted-foreground/30" aria-label={t('animals.alteredStatus.intact')} />
-                      ) : null}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 flex-wrap">
+                        {/* Neutered / Spayed */}
+                        <div
+                          className={`w-7 h-7 rounded-full flex items-center justify-center ${animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? 'bg-green-100' : 'bg-gray-100'}`}
+                          title={t('animals.health.neutered')}
+                        >
+                          <Scissors className={`h-3.5 w-3.5 ${animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? 'text-green-600' : 'text-gray-300'}`} />
+                        </div>
                         {/* Dewormed */}
                         <div
                           className={`w-7 h-7 rounded-full flex items-center justify-center ${animal.is_dewormed ? 'bg-green-100' : 'bg-gray-100'}`}
-                          title={animal.is_dewormed ? t('animals.health.dewormed') + ': ' + t('animals.health.yes') : t('animals.health.dewormed') + ': ' + t('animals.health.no')}
+                          title={t('animals.health.dewormed')}
                         >
                           <Pill className={`h-3.5 w-3.5 ${animal.is_dewormed ? 'text-green-600' : 'text-gray-300'}`} />
                         </div>
@@ -274,6 +282,15 @@ export default function AnimalsPage() {
                             title={t('animals.health.aggressiveWarning')}
                           >
                             <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                          </div>
+                        )}
+                        {/* Pregnant */}
+                        {animal.is_pregnant && (
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-pink-100"
+                            title={t('animals.health.pregnant')}
+                          >
+                            <Baby className="h-3.5 w-3.5 text-pink-500" />
                           </div>
                         )}
                       </div>
