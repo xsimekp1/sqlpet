@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, Edit, Trash2, MapPin, Calendar, Loader2, Stethoscope, CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, MapPin, Calendar, Loader2, Stethoscope, CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +25,8 @@ export default function AnimalDetailPage() {
   const params = useParams();
   const t = useTranslations();
   const [animal, setAnimal] = useState<Animal | null>(null);
+  const [animalList, setAnimalList] = useState<Animal[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [medicalDialogOpen, setMedicalDialogOpen] = useState(false);
   const [togglingDewormed, setTogglingDewormed] = useState(false);
@@ -47,8 +49,36 @@ export default function AnimalDetailPage() {
       }
     };
 
-fetchAnimal();
+    const fetchAnimalList = async () => {
+      try {
+        const result = await ApiClient.getAnimals({ page_size: 1000 });
+        setAnimalList(result.items);
+        const idx = result.items.findIndex(a => a.id === animalId);
+        if (idx >= 0) setCurrentIndex(idx);
+      } catch (error) {
+        console.error('Failed to load animal list:', error);
+      }
+    };
+
+    fetchAnimal();
+    fetchAnimalList();
   }, [animalId]);
+
+  const goToPrevious = () => {
+    if (currentIndex > 0) {
+      router.push(`/dashboard/animals/${animalList[currentIndex - 1].id}`);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentIndex < animalList.length - 1) {
+      router.push(`/dashboard/animals/${animalList[currentIndex + 1].id}`);
+    }
+  };
+
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex < animalList.length - 1;
+  const showNav = animalList.length > 1;
 
   const handleAnimalUpdate = (updatedAnimal: Animal) => {
     setAnimal(updatedAnimal);
@@ -166,11 +196,35 @@ fetchAnimal();
         </div>
         <div className="flex-1 text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
-            <Link href="/dashboard/animals">
-              <Button variant="ghost" size="icon" className="mr-2">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex items-center gap-1">
+              {showNav && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={goToPrevious}
+                  disabled={!hasPrev}
+                  className="mr-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+              <Link href="/dashboard/animals">
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              {showNav && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={goToNext}
+                  disabled={!hasNext}
+                  className="ml-1"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <EditableAnimalName 
                 animal={animal} 
