@@ -219,7 +219,7 @@ export default function AnimalsPage() {
                 {filtered.map((animal) => (
                   <tr key={animal.id} className="border-b hover:bg-muted/50 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="relative h-8 w-8 rounded-full overflow-hidden bg-muted shrink-0">
+                      <div className="relative h-10 w-10 rounded-full overflow-hidden bg-muted shrink-0">
                         <Image
                           src={getAnimalImageUrl(animal)}
                           alt={animal.name}
@@ -227,10 +227,15 @@ export default function AnimalsPage() {
                           className="object-cover"
                           unoptimized
                         />
+                        <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          animal.sex === 'male' ? 'bg-blue-500 text-white' : animal.sex === 'female' ? 'bg-pink-500 text-white' : 'bg-gray-400 text-white'
+                        }`}>
+                          {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <Link href={`/dashboard/animals/${animal.id}`} className="hover:underline font-medium">
+                      <Link href={`/dashboard/animals/${animal.id}`} className="hover:underline font-semibold text-base">
                         {animal.name}
                       </Link>
                       <p className="text-xs text-muted-foreground">#{animal.public_code}</p>
