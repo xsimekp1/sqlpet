@@ -225,11 +225,17 @@ class KennelStay(Base, UUIDPrimaryKeyMixin):
     animal = relationship("Animal")
 
 
-class KennelPhoto(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+class KennelPhoto(Base, UUIDPrimaryKeyMixin):
     __tablename__ = "kennel_photos"
     __table_args__ = (
         Index("ix_kennel_photos_org_kennel", "organization_id", "kennel_id"),
         Index("ix_kennel_photos_primary", "kennel_id", "is_primary"),
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
     )
 
     organization_id: Mapped[uuid.UUID] = mapped_column(
