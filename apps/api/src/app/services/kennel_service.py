@@ -196,25 +196,23 @@ async def create_kennel(
 ) -> Kennel:
     """Create a new kennel"""
 
-    # Generate unique kennel code (simple prefix + number)
-    from sqlalchemy import select, func
-
-    # Get next number for this organization
-    max_code_q = select(func.max(func.cast(func.substr(Kennel.code, 1, 2), str))).where(
+    # Generate unique kennel code: count existing kennels for this org → K001, K002, …
+    count_q = select(func.count()).select_from(Kennel).where(
         Kennel.organization_id == organization_id
     )
-    max_code = (await session.execute(max_code_q)).scalar() or "KE"
+    count = int((await session.execute(count_q)).scalar() or 0)
+    kennel_code = f"K{count + 1:03d}"
 
-    # Get next number for this prefix
-    max_number_q = (
-        select(func.cast(func.regexp_replace(Kennel.code, r"^\D+", ""), str))
-        .where(Kennel.organization_id == organization_id)
-        .where(Kennel.code.like(f"{max_code}%"))
-    )
-    max_number = (await session.execute(max_number_q)).scalar() or 0
-    next_number = max_number + 1
-
-    kennel_code = f"{max_code}{next_number}"
+    # Ensure uniqueness in the unlikely case of collision
+    while True:
+        exists_q = select(Kennel.id).where(
+            Kennel.organization_id == organization_id,
+            Kennel.code == kennel_code,
+        )
+        if not (await session.execute(exists_q)).scalar_one_or_none():
+            break
+        count += 1
+        kennel_code = f"K{count + 1:03d}"
 
     # Create new kennel
     new_kennel = Kennel(
