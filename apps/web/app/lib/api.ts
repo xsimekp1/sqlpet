@@ -145,6 +145,9 @@ export interface KennelAnimal {
   name: string;
   photo_url?: string | null;
   species: string;
+  is_aggressive?: boolean;
+  sex?: string;
+  altered_status?: string;
 }
 
 export interface KennelZone {

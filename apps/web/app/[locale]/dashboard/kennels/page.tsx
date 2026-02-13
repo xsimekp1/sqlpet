@@ -321,6 +321,27 @@ export default function KennelsPage() {
     if (!targetKennel) return;
     if (animal.current_kennel_id === targetKennelId) return;
 
+    // Warning: aggressive animal with other animals in kennel
+    if (animal.is_aggressive && targetKennel.occupied_count > 0) {
+      toast.warning(`${animal.name} je agresivní a v kotci ${targetKennel.name} je ${targetKennel.occupied_count} zvíře!`);
+    }
+
+    // Warning: other aggressive animal already in kennel
+    const existingAggressive = targetKennel.animals_preview?.some(a => a.is_aggressive);
+    if (!animal.is_aggressive && existingAggressive) {
+      toast.warning(`V kotci ${targetKennel.name} je již agresivní zvíře!`);
+    }
+
+    // Warning: opposite sex unneutered animals in same kennel
+    const isNeutered = animal.altered_status === 'neutered' || animal.altered_status === 'spayed';
+    const oppositeSex = targetKennel.animals_preview?.some(a => 
+      a.sex && animal.sex && a.sex !== animal.sex && 
+      a.altered_status !== 'neutered' && a.altered_status !== 'spayed'
+    );
+    if (!isNeutered && oppositeSex) {
+      toast.warning(`${animal.name} není kastrovaný/á a v kotci ${targetKennel.name} je zvíře opačného pohlaví!`);
+    }
+
     const prevKennels = kennels;
     const prevAnimals = allAnimals;
 
