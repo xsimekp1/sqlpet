@@ -305,11 +305,49 @@
   "settings": {
     "title": "Settings",
     "description": "Manage your preferences",
+    "tabs": {
+      "general": "General",
+      "defaultImages": "Default Images"
+    },
     "preferences": "Preferences",
     "weightUnit": "Weight Unit",
     "weightUnitDesc": "Choose the unit used to display animal weights throughout the app",
     "kg": "Kilograms (kg)",
-    "lbs": "Pounds (lbs)"
+    "lbs": "Pounds (lbs)",
+    "defaultImages": {
+      "uploadTitle": "Upload New Default Image",
+      "species": "Species",
+      "speciesPlaceholder": "Select species",
+      "breed": "Breed",
+      "breedPlaceholder": "Select breed (optional)",
+      "breedLoading": "Loading breeds...",
+      "breedNone": "No breeds found",
+      "color": "Color",
+      "colorPlaceholder": "Select color",
+      "colorNew": "Custom...",
+      "colorNewPlaceholder": "Enter color (e.g. black, white)",
+      "dropZone": "Drag image here or click to select",
+      "dropZoneAccept": "Accepts: JPG, PNG, WEBP",
+      "squareOk": "Square — OK",
+      "notSquare": "Not square",
+      "submit": "Upload Image",
+      "uploading": "Uploading...",
+      "uploadSuccess": "Image uploaded successfully",
+      "uploadError": "Failed to upload image",
+      "listTitle": "Existing Default Images",
+      "listEmpty": "No default images",
+      "deleteConfirmTitle": "Delete image?",
+      "deleteConfirmDesc": "This action cannot be undone. The image will be permanently removed.",
+      "deleteConfirm": "Delete",
+      "deleteCancel": "Cancel",
+      "deleteSuccess": "Image deleted",
+      "deleteError": "Failed to delete image",
+      "species_dog": "Dog",
+      "species_cat": "Cat",
+      "species_rabbit": "Rabbit",
+      "species_bird": "Bird",
+      "species_other": "Other"
+    }
   },
   "animals": {
     "view": {

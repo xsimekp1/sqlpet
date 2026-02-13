@@ -307,11 +307,49 @@
   "settings": {
     "title": "Nastavení",
     "description": "Spravujte své předvolby",
+    "tabs": {
+      "general": "Obecné",
+      "defaultImages": "Výchozí obrázky"
+    },
     "preferences": "Předvolby",
     "weightUnit": "Jednotka hmotnosti",
     "weightUnitDesc": "Vyberte jednotku pro zobrazení hmotnosti zvířat v celé aplikaci",
     "kg": "Kilogramy (kg)",
-    "lbs": "Libry (lbs)"
+    "lbs": "Libry (lbs)",
+    "defaultImages": {
+      "uploadTitle": "Nahrát nový výchozí obrázek",
+      "species": "Druh zvířete",
+      "speciesPlaceholder": "Vyberte druh",
+      "breed": "Plemeno",
+      "breedPlaceholder": "Vyberte plemeno (volitelné)",
+      "breedLoading": "Načítám plemena...",
+      "breedNone": "Žádná ploamena nenalezena",
+      "color": "Barva",
+      "colorPlaceholder": "Vyberte barvu",
+      "colorNew": "Jiná...",
+      "colorNewPlaceholder": "Zadejte barvu (např. black, white)",
+      "dropZone": "Přetáhni obrázek nebo klikni pro výběr",
+      "dropZoneAccept": "Přijímá: JPG, PNG, WEBP",
+      "squareOk": "Čtvercový — OK",
+      "notSquare": "Není čtvercový",
+      "submit": "Nahrát obrázek",
+      "uploading": "Nahrávám...",
+      "uploadSuccess": "Obrázek úspěšně nahrán",
+      "uploadError": "Nepodařilo se nahrát obrázek",
+      "listTitle": "Existující výchozí obrázky",
+      "listEmpty": "Žádné výchozí obrázky",
+      "deleteConfirmTitle": "Smazat obrázek?",
+      "deleteConfirmDesc": "Tato akce je nevratná. Obrázek bude trvale odstraněn.",
+      "deleteConfirm": "Smazat",
+      "deleteCancel": "Zrušit",
+      "deleteSuccess": "Obrázek smazán",
+      "deleteError": "Nepodařilo se smazat obrázek",
+      "species_dog": "Pes",
+      "species_cat": "Kočka",
+      "species_rabbit": "Králík",
+      "species_bird": "Pták",
+      "species_other": "Jiné"
+    }
   },
   "animals": {
     "view": {
