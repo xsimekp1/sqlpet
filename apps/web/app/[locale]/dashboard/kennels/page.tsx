@@ -339,7 +339,7 @@ export default function KennelsPage() {
       a.altered_status !== 'neutered' && a.altered_status !== 'spayed'
     );
     if (!isNeutered && oppositeSex) {
-      toast.warning(`${animal.name} není kastrovaný/á a v kotci ${targetKennel.name} je zvíře opačného pohlaví!`);
+      toast.warning(`${animal.name} není kastrovaný/á a v kotci ${targetKennel.name} je zvíře opačného pohlaví! ❤️`);
     }
 
     const prevKennels = kennels;
