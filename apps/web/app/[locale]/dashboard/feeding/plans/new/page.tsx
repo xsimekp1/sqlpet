@@ -17,7 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 
@@ -165,6 +166,17 @@ export default function NewFeedingPlanPage() {
           <p className="text-sm text-muted-foreground">
             Link to a specific food for automatic inventory deduction
           </p>
+          {selectedAnimalId && foods.length === 0 && (
+            <Alert variant="destructive" className="mt-2">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Sklad neobsahuje žádné krmivo. {' '}
+                <Link href="/dashboard/inventory/items/new" className="underline">
+                  Přidat krmivo
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         {/* Amount */}

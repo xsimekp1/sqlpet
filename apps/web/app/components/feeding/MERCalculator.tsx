@@ -184,11 +184,8 @@ export default function MERCalculator({
             {result.food_recommendation && (
               <>
                 <span className="text-muted-foreground">≈</span>
-                <Badge variant="secondary" className="text-sm font-semibold">
-                  {result.food_recommendation.amount_g_per_day} g/den
-                </Badge>
                 <span className="text-xs text-muted-foreground">
-                  ({result.food_recommendation.meals_per_day}× {result.food_recommendation.amount_g_per_meal} g)
+                  {result.food_recommendation.meals_per_day}× denně
                 </span>
               </>
             )}
@@ -230,8 +227,7 @@ export default function MERCalculator({
                 {result.food_recommendation && (
                   <div>
                     Krmivo: {result.food_recommendation.kcal_per_100g} kcal/100g →{' '}
-                    <span className="text-foreground font-semibold">{result.food_recommendation.amount_g_per_day} g/den</span>
-                    {' '}({result.food_recommendation.meals_per_day}× {result.food_recommendation.amount_g_per_meal} g/dávku)
+                    {result.food_recommendation.meals_per_day}× denně
                   </div>
                 )}
               </div>

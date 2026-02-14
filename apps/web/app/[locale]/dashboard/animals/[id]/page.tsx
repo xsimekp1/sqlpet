@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import {
   ArrowLeft, Trash2, MapPin, Loader2, Stethoscope,
   CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors,
-  ChevronLeft, ChevronRight, Baby, Scale, Accessibility,
+  ChevronLeft, ChevronRight, Baby, Scale, Accessibility, Home,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -28,6 +29,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import ApiClient, { Animal, WeightLog, MERCalculation } from '@/app/lib/api';
 import MERCalculator from '@/app/components/feeding/MERCalculator';
 import { getAnimalImageUrl } from '@/app/lib/utils';
@@ -140,6 +147,10 @@ export default function AnimalDetailPage() {
   const [weightNotes, setWeightNotes] = useState('');
   const [savingWeight, setSavingWeight] = useState(false);
 
+  // Kennel history
+  const [kennelHistory, setKennelHistory] = useState<{ kennel_code: string; assigned_at: string; released_at: string | null }[]>([]);
+
+  const queryClient = useQueryClient();
   const animalId = params.id as string;
 
   // Load animal + sibling IDs + weight history
@@ -147,14 +158,16 @@ export default function AnimalDetailPage() {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const [data, listData, wLogs] = await Promise.all([
+        const [data, listData, wLogs, kHistory] = await Promise.all([
           ApiClient.getAnimal(animalId),
           ApiClient.getAnimals({ page_size: 200 }),
           ApiClient.getWeightHistory(animalId),
+          ApiClient.getAnimalKennelHistory(animalId).catch(() => []),
         ]);
         setAnimal(data);
         setAnimalIds(listData.items.map(a => a.id));
         setWeightLogs(wLogs);
+        setKennelHistory(kHistory);
         setBehaviorNotes(data.behavior_notes ?? '');
       } catch (error) {
         toast.error('Failed to load animal');
@@ -170,11 +183,18 @@ export default function AnimalDetailPage() {
   const prevId = currentIdx > 0 ? animalIds[currentIdx - 1] : null;
   const nextId = currentIdx < animalIds.length - 1 ? animalIds[currentIdx + 1] : null;
 
-  // Prefetch prev/next routes so navigation feels instant
+  // Prefetch prev/next routes + API data so navigation feels instant
   useEffect(() => {
-    if (prevId) router.prefetch(`/dashboard/animals/${prevId}`);
-    if (nextId) router.prefetch(`/dashboard/animals/${nextId}`);
-  }, [prevId, nextId, router]);
+    [prevId, nextId].forEach(id => {
+      if (!id) return;
+      router.prefetch(`/dashboard/animals/${id}`);
+      queryClient.prefetchQuery({
+        queryKey: ['animal', id],
+        queryFn: () => ApiClient.getAnimal(id),
+        staleTime: 30_000,
+      });
+    });
+  }, [prevId, nextId, router, queryClient]);
 
   const handleAnimalUpdate = (updatedAnimal: Animal) => setAnimal(updatedAnimal);
 
@@ -551,124 +571,108 @@ export default function AnimalDetailPage() {
             <CardHeader>
               <CardTitle>{t('animals.health.title')}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Neutered */}
-              <div className="flex items-center gap-3">
-                {animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? (
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                    <Scissors className="h-4 w-4 text-green-600" />
-                  </div>
-                ) : animal.altered_status === 'intact' ? (
-                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                    <XCircle className="h-4 w-4 text-red-500" />
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                    <HelpCircle className="h-4 w-4 text-gray-400" />
+            <CardContent className="space-y-4">
+              {/* Active flags grid – only shown when true */}
+              <div className="grid grid-cols-2 gap-2">
+                {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                    <Scissors className="h-4 w-4 text-green-600 shrink-0" />
+                    <span className="text-xs font-medium">Kastrováno</span>
                   </div>
                 )}
-                <span className="text-sm font-medium">{t('animals.health.neutered')}</span>
-                <button
-                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={toggleAltered}
-                  disabled={togglingAltered || animal.is_pregnant}
-                  title={animal.is_pregnant ? 'Kastrace není možná u těhotného zvířete' : t('animals.health.toggleAltered')}
-                >
-                  {togglingAltered ? '...' : (animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? t('animals.health.markIntact') : t('animals.health.markAltered'))}
-                </button>
+                {animal.is_dewormed && (
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                    <Pill className="h-4 w-4 text-blue-600 shrink-0" />
+                    <span className="text-xs font-medium">{t('animals.health.dewormed')}</span>
+                  </div>
+                )}
+                {animal.is_aggressive && (
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
+                    <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+                    <span className="text-xs font-medium">{t('animals.health.aggressive')}</span>
+                  </div>
+                )}
                 {animal.is_pregnant && (
-                  <span className="text-xs text-amber-600 ml-1" title="Kastrace není možná u těhotného zvířete">⚠ těhotná</span>
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800">
+                    <Baby className="h-4 w-4 text-pink-600 shrink-0" />
+                    <span className="text-xs font-medium">{t('animals.health.pregnant')}</span>
+                  </div>
+                )}
+                {animal.is_special_needs && (
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800">
+                    <Accessibility className="h-4 w-4 text-orange-600 shrink-0" />
+                    <span className="text-xs font-medium">Speciální potřeby</span>
+                  </div>
                 )}
               </div>
 
-              {/* Dewormed */}
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${animal.is_dewormed ? 'bg-green-100' : 'bg-gray-100'}`}>
-                  <Pill className={`h-4 w-4 ${animal.is_dewormed ? 'text-green-600' : 'text-gray-400'}`} />
-                </div>
-                <span className="text-sm font-medium">{t('animals.health.dewormed')}</span>
+              {/* Toggle buttons */}
+              <div className="flex flex-wrap gap-2 pt-1 border-t border-border/40">
+                {/* Neutered toggle – disabled with tooltip if already altered */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <button
+                          className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={toggleAltered}
+                          disabled={togglingAltered || animal.is_pregnant || animal.altered_status !== 'intact'}
+                        >
+                          {togglingAltered ? '...' : (animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? t('animals.health.markIntact') : t('animals.health.markAltered'))}
+                        </button>
+                      </span>
+                    </TooltipTrigger>
+                    {animal.is_pregnant && <TooltipContent>Kastrace není možná u těhotného zvířete</TooltipContent>}
+                    {!animal.is_pregnant && animal.altered_status !== 'intact' && <TooltipContent>Již kastrováno</TooltipContent>}
+                  </Tooltip>
+                </TooltipProvider>
+
                 <button
-                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
                   onClick={toggleDewormed}
                   disabled={togglingDewormed}
                   title={t('animals.health.toggleDewormed')}
                 >
-                  {animal.is_dewormed ? t('animals.health.yes') : t('animals.health.no')}
+                  {togglingDewormed ? '...' : (animal.is_dewormed ? '✓ ' + t('animals.health.dewormed') : t('animals.health.dewormed') + '?')}
                 </button>
-              </div>
 
-              {/* Aggressive */}
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${animal.is_aggressive ? 'bg-red-100' : 'bg-gray-100'}`}>
-                  <AlertTriangle className={`h-4 w-4 ${animal.is_aggressive ? 'text-red-500' : 'text-gray-400'}`} />
-                </div>
-                <span className="text-sm font-medium">{t('animals.health.aggressive')}</span>
                 <button
-                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
                   onClick={toggleAggressive}
                   disabled={togglingAggressive}
                   title={t('animals.health.toggleAggressive')}
                 >
-                  {animal.is_aggressive ? t('animals.health.aggressiveWarning') : t('animals.health.no')}
+                  {togglingAggressive ? '...' : (animal.is_aggressive ? '⚠ ' + t('animals.health.aggressive') : t('animals.health.aggressive') + '?')}
                 </button>
-              </div>
 
-              {/* Pregnant */}
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${animal.is_pregnant ? 'bg-pink-100' : 'bg-gray-100'}`}>
-                  <Baby className={`h-4 w-4 ${animal.is_pregnant ? 'text-pink-500' : 'text-gray-400'}`} />
-                </div>
-                <span className="text-sm font-medium">{t('animals.health.pregnant')}</span>
                 <button
-                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
                   onClick={togglePregnant}
                   disabled={togglingPregnant}
                   title={t('animals.health.togglePregnant')}
                 >
-                  {animal.is_pregnant ? t('animals.health.yes') : t('animals.health.no')}
+                  {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('animals.health.pregnant') : t('animals.health.pregnant') + '?')}
                 </button>
-              </div>
 
-              {/* Abortion request — only when pregnant */}
-              {animal.is_pregnant && (
-                <div className="ml-11 flex items-center gap-2 py-1 border-t border-dashed border-pink-200">
-                  <span className="text-xs text-muted-foreground">Veterinární zákrok:</span>
-                  <button
-                    className="text-xs px-2.5 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
-                    onClick={handleRequestAbortion}
-                    disabled={requestingAbortion}
-                    title="Vyžádat provedení potratu — odstraní označení těhotenství"
-                  >
-                    {requestingAbortion ? 'Zpracovávám…' : '🚫 Vyžádat potrat'}
-                  </button>
-                </div>
-              )}
-
-              {/* Special needs */}
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${animal.is_special_needs ? 'bg-violet-100' : 'bg-gray-100'}`}>
-                  <Accessibility className={`h-4 w-4 ${animal.is_special_needs ? 'text-violet-600' : 'text-gray-400'}`} />
-                </div>
-                <span className="text-sm font-medium">Speciální potřeby</span>
                 <button
-                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
                   onClick={toggleSpecialNeeds}
                   disabled={togglingSpecialNeeds}
-                  title="Zvíře má speciální potřeby (handicap, zdravotní omezení...)"
+                  title="Zvíře má speciální potřeby"
                 >
-                  {togglingSpecialNeeds ? '...' : (animal.is_special_needs ? 'Ano' : 'Ne')}
+                  {togglingSpecialNeeds ? '...' : (animal.is_special_needs ? '✓ Spec. potřeby' : 'Spec. potřeby?')}
                 </button>
               </div>
 
-              {/* Expected litter date (shown when pregnant) */}
+              {/* Pregnancy extras */}
               {animal.is_pregnant && (
-                <div className="ml-11 space-y-1">
+                <div className="space-y-2 border-t border-dashed border-pink-200 pt-2">
                   {animal.expected_litter_date && (
                     <p className="text-sm text-pink-700 dark:text-pink-300 font-medium">
                       Očekávaný termín vrhu: {new Date(animal.expected_litter_date).toLocaleDateString()}
                     </p>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Input
                       type="date"
                       value={litterDateInput || (animal.expected_litter_date ?? '')}
@@ -682,6 +686,13 @@ export default function AnimalDetailPage() {
                       disabled={savingLitterDate || !litterDateInput}
                     >
                       {savingLitterDate ? 'Ukládám…' : 'Uložit termín'}
+                    </button>
+                    <button
+                      className="text-xs px-2.5 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
+                      onClick={handleRequestAbortion}
+                      disabled={requestingAbortion}
+                    >
+                      {requestingAbortion ? 'Zpracovávám…' : '🚫 Vyžádat potrat'}
                     </button>
                   </div>
                 </div>
@@ -749,19 +760,10 @@ export default function AnimalDetailPage() {
                 </div>
               ) : null}
 
-              {/* Chart */}
-              {weightLogs.length >= 2 ? (
-                <div className="border rounded-lg p-3 bg-muted/20">
-                  <p className="text-xs text-muted-foreground mb-2">{t('animals.health.weightHistory')}</p>
-                  <WeightSparkline logs={weightLogs} />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>{new Date(weightLogs[weightLogs.length - 1].measured_at).toLocaleDateString()}</span>
-                    <span>{new Date(weightLogs[0].measured_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              ) : weightLogs.length === 0 ? (
+              {/* No measurements yet */}
+              {weightLogs.length === 0 && (
                 <p className="text-sm text-muted-foreground">{t('animals.health.weightFirstMeasurement')}</p>
-              ) : null}
+              )}
 
               {/* Add measurement form */}
               <div className="border rounded-lg p-3 space-y-2 bg-muted/10">
@@ -841,7 +843,7 @@ export default function AnimalDetailPage() {
             <CardContent>
               <MERCalculator
                 animalId={animalId}
-                weightKg={weightKg}
+                weightKg={latestWeight ? Number(latestWeight.weight_kg) : null}
               />
             </CardContent>
           </Card>
@@ -898,6 +900,24 @@ export default function AnimalDetailPage() {
                   </div>
                 )}
 
+                {/* Kennel assignment history */}
+                {kennelHistory.map((entry, i) => (
+                  <div key={i} className="relative mb-6">
+                    <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-purple-400 border-2 border-background" />
+                    <div className="pl-2">
+                      <p className="text-sm font-semibold flex items-center gap-1">
+                        <Home className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+                        Přemístěn/a do kotce {entry.kennel_code}
+                        {!entry.released_at && <span className="text-xs text-purple-600 dark:text-purple-400 ml-1">(aktuálně)</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(entry.assigned_at).toLocaleDateString()}
+                        {entry.released_at && ` – ${new Date(entry.released_at).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
                 <div className="relative mb-6">
                   <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-gray-300 border-2 border-background" />
                   <div className="pl-2">
@@ -918,7 +938,22 @@ export default function AnimalDetailPage() {
         </TabsContent>
 
         {/* ── Medical ── */}
-        <TabsContent value="medical">
+        <TabsContent value="medical" className="space-y-4">
+          {/* Weight history sparkline */}
+          {weightLogs.length >= 2 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{t('animals.health.weightHistory')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <WeightSparkline logs={weightLogs} />
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>{new Date(weightLogs[weightLogs.length - 1].measured_at).toLocaleDateString()}</span>
+                  <span>{new Date(weightLogs[0].measured_at).toLocaleDateString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader>
               <CardTitle>Medical Records</CardTitle>

@@ -1321,6 +1321,20 @@ class ApiClient {
     return response.data;
   }
 
+  static async getAnimalKennelHistory(animalId: string): Promise<{ kennel_code: string; assigned_at: string; released_at: string | null }[]> {
+    const organizationId = this.getOrganizationId();
+    const response = await axios.get(
+      `${API_URL}/animals/${animalId}/kennel-history`,
+      {
+        headers: {
+          ...this.getAuthHeaders(),
+          'x-organization-id': organizationId || '',
+        },
+      }
+    );
+    return response.data;
+  }
+
   // ========================================
   // BIRTH / LITTER EVENT
   // ========================================

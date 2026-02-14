@@ -252,14 +252,29 @@ function SpeciesBadges({ species }: { species?: string[] | null }) {
   );
 }
 
-// ---- Format animal names for table view ----
-function formatAnimalNames(animals: KennelAnimal[], total: number) {
+// ---- Clickable animal names for table view ----
+function AnimalNames({ animals, total }: { animals: KennelAnimal[]; total: number }) {
+  const [expanded, setExpanded] = useState(false);
   if (total === 0) return <span className="text-muted-foreground text-sm">Prázdný</span>;
-  const shown = animals.slice(0, 2);
+  const shown = expanded ? animals : animals.slice(0, 2);
   const rest = total - shown.length;
-  const names = shown.map(a => a.name).join(', ');
-  if (rest > 0) return <span className="text-sm">{names} a {rest} další</span>;
-  return <span className="text-sm">{names}</span>;
+  return (
+    <span className="text-sm flex flex-wrap gap-x-1 items-center">
+      {shown.map((a, i) => (
+        <Link key={a.id} href={`/dashboard/animals/${a.id}`}
+          className="hover:underline text-primary"
+          onClick={e => e.stopPropagation()}>
+          {a.name}{i < shown.length - 1 ? ',' : ''}
+        </Link>
+      ))}
+      {rest > 0 && !expanded && (
+        <button className="text-muted-foreground text-xs hover:text-foreground"
+          onClick={e => { e.stopPropagation(); setExpanded(true); }}>
+          a {rest} další
+        </button>
+      )}
+    </span>
+  );
 }
 
 export default function KennelsPage() {
@@ -676,7 +691,7 @@ export default function KennelsPage() {
                       </Badge>
                     </td>
                     <td className="p-3">
-                      {formatAnimalNames(kennel.animals_preview, kennel.occupied_count)}
+                      <AnimalNames animals={kennel.animals_preview} total={kennel.occupied_count} />
                     </td>
                     <td className="p-3">
                       <DropdownMenu>

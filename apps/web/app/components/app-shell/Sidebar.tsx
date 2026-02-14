@@ -5,7 +5,7 @@ import {
   PawPrint,
   Grid3x3,
   HeartPulse,
-  Apple,
+  Bone,
   CheckSquare,
   Users,
   BarChart3,
@@ -56,7 +56,7 @@ export function Sidebar() {
       items: [
         { label: 'nav.kennels', href: '/dashboard/kennels', icon: Grid3x3, permission: 'kennels.view' },
         { label: 'nav.medical', href: '/dashboard/medical', icon: HeartPulse, permission: 'medical.view' },
-        { label: 'nav.feeding', href: '/dashboard/feeding', icon: Apple, permission: 'feeding.view' },
+        { label: 'nav.feeding', href: '/dashboard/feeding', icon: Bone, permission: 'feeding.view' },
         { label: 'nav.inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory.view' },
         { label: 'nav.tasks', href: '/dashboard/tasks', icon: CheckSquare, permission: 'tasks.view' },
       ]

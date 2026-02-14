@@ -52,13 +52,13 @@ class FeedingService:
         self.db.add(plan)
         await self.db.flush()
 
-        await self.audit.log(
+        await self.audit.log_action(
             organization_id=organization_id,
+            actor_user_id=created_by_id,
+            action="create",
             entity_type="feeding_plan",
             entity_id=plan.id,
-            action="create",
-            actor_id=created_by_id,
-            changes={
+            after={
                 "animal_id": str(animal_id),
                 "food_id": str(food_id) if food_id else None,
                 "start_date": str(start_date),
@@ -96,13 +96,13 @@ class FeedingService:
 
         if changes:
             await self.db.flush()
-            await self.audit.log(
+            await self.audit.log_action(
                 organization_id=organization_id,
+                actor_user_id=user_id,
+                action="update",
                 entity_type="feeding_plan",
                 entity_id=plan.id,
-                action="update",
-                actor_id=user_id,
-                changes=changes,
+                after=changes,
             )
 
         return plan
@@ -192,13 +192,13 @@ class FeedingService:
                         # Log error but don't fail the feeding log
                         print(f"Warning: Failed to deduct inventory: {e}")
 
-        await self.audit.log(
+        await self.audit.log_action(
             organization_id=organization_id,
+            actor_user_id=fed_by_user_id,
+            action="create",
             entity_type="feeding_log",
             entity_id=feeding_log.id,
-            action="create",
-            actor_id=fed_by_user_id,
-            changes={
+            after={
                 "animal_id": str(animal_id),
                 "fed_at": str(feeding_log.fed_at),
                 "inventory_deducted": inventory_transaction is not None,

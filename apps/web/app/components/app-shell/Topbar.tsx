@@ -13,7 +13,7 @@ export function Topbar() {
   const { toggleSidebar } = useUIStore()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-primary/10 bg-gradient-to-r from-primary/8 via-background/95 to-background/95 backdrop-blur supports-[backdrop-filter]:from-primary/5">
       <div className="flex h-16 items-center justify-between px-4 gap-4">
         {/* Left: Menu toggle (mobile) + Org Switcher */}
         <div className="flex items-center gap-2">

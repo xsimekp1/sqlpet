@@ -454,6 +454,44 @@ async def get_bcs_history(
     return [BCSLogResponse.model_validate(log) for log in logs]
 
 
+# --- Kennel history endpoint ---
+
+
+@router.get("/{animal_id}/kennel-history")
+async def get_animal_kennel_history(
+    animal_id: uuid.UUID,
+    current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get kennel assignment history for an animal."""
+    from src.app.models.kennel import KennelStay, Kennel
+
+    svc = AnimalService(db)
+    animal = await svc.get_animal(organization_id, animal_id)
+    if animal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+
+    result = await db.execute(
+        select(KennelStay, Kennel.code)
+        .join(Kennel, KennelStay.kennel_id == Kennel.id)
+        .where(
+            KennelStay.animal_id == animal_id,
+            KennelStay.organization_id == organization_id,
+        )
+        .order_by(KennelStay.start_at.asc())
+    )
+    rows = result.all()
+    return [
+        {
+            "kennel_code": code,
+            "assigned_at": stay.start_at.isoformat() if stay.start_at else None,
+            "released_at": stay.end_at.isoformat() if stay.end_at else None,
+        }
+        for stay, code in rows
+    ]
+
+
 # --- Daily count stats endpoint ---
 
 @router.get("/stats/daily-count")

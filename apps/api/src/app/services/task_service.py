@@ -46,13 +46,13 @@ class TaskService:
         self.db.add(task)
         await self.db.flush()
 
-        await self.audit.log(
+        await self.audit.log_action(
             organization_id=organization_id,
+            actor_user_id=created_by_id,
+            action="create",
             entity_type="task",
             entity_id=task.id,
-            action="create",
-            actor_id=created_by_id,
-            changes={
+            after={
                 "title": title,
                 "type": task_type.value,
                 "status": TaskStatus.PENDING.value,
@@ -91,13 +91,13 @@ class TaskService:
 
         if changes:
             await self.db.flush()
-            await self.audit.log(
+            await self.audit.log_action(
                 organization_id=organization_id,
+                actor_user_id=user_id,
+                action="update",
                 entity_type="task",
                 entity_id=task.id,
-                action="update",
-                actor_id=user_id,
-                changes=changes,
+                after=changes,
             )
 
         return task
@@ -145,13 +145,13 @@ class TaskService:
         task.completed_at = datetime.now(timezone.utc)
         await self.db.flush()
 
-        await self.audit.log(
+        await self.audit.log_action(
             organization_id=organization_id,
+            actor_user_id=completed_by_id,
+            action="complete",
             entity_type="task",
             entity_id=task.id,
-            action="complete",
-            actor_id=completed_by_id,
-            changes={
+            after={
                 "status": TaskStatus.COMPLETED.value,
                 "completed_at": str(task.completed_at),
                 "completion_data": completion_data,

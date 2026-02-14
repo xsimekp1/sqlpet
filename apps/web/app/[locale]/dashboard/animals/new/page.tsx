@@ -155,9 +155,15 @@ export default function NewAnimalPage() {
     }
 
     try {
-      await ApiClient.createAnimal(data);
+      const newAnimal = await ApiClient.createAnimal(data);
       toast.success(t('success'));
-      router.push('/dashboard/animals');
+      try {
+        const foodsData = await ApiClient.get('/feeding/foods');
+        if (!foodsData?.items?.length) {
+          toast.warning('Upozornění: V inventáři není žádné krmivo. Nezapomeňte ho přidat před prvním krmením.');
+        }
+      } catch { /* nekritické */ }
+      router.push(`/dashboard/animals/${newAnimal.id}`);
     } catch (error) {
       toast.error(t('error'));
       console.error(error);
