@@ -338,6 +338,42 @@
       "xlarge": "Extra velký"
     },
     "common_cancel": "Zrušit",
+    "assignButton": {
+      "loadError": "Nelze načíst kotce: {msg}",
+      "assigned": "{name} přiřazen/a do {kennel}",
+      "removed": "{name} odebrán/a z kotce",
+      "assignError": "Nelze přiřadit: {msg}",
+      "removeError": "Nelze odebrat: {msg}",
+      "unknownError": "Neznámá chyba",
+      "trigger": "Kotec: {code}",
+      "triggerEmpty": "Přiřadit kotec",
+      "popoverTitle": "Přiřadit do kotce",
+      "currentKennel": "Aktuálně: {name}",
+      "noKennel": "Zvíře nemá přiřazený kotec",
+      "removeFromKennel": "Odebrat z kotce"
+    },
+    "map": {
+      "positionSaved": "Poloha uložena",
+      "positionError": "Nepodařilo se uložit polohu",
+      "legendAvailable": "Dostupný",
+      "legendMaintenance": "Údržba",
+      "legendClosed": "Uzavřen",
+      "dragHint": "Přetáhněte kotec pro změnu polohy"
+    },
+    "dropZone": {
+      "drop": "Pustit pro odebrání z kotce",
+      "dragHere": "Přetáhněte sem pro odebrání z kotce"
+    },
+    "warnings": {
+      "aggressive": "{name} je agresivní a v kotci {kennel} je {count} zvíře!",
+      "aggressiveInKennel": "V kotci {kennel} je již agresivní zvíře!",
+      "oppositeSex": "{name} není kastrovaný/á a v kotci {kennel} je zvíře opačného pohlaví! ❤️",
+      "differentSpecies": "{name} ({species}) a zvíře v kotci {kennel} jsou různé druhy! 🐾",
+      "notSuitable": "{name} ({species}) nemá být v kotci pro {allowed}!",
+      "removeError": "Nelze odebrat z kotce: {msg}",
+      "moveError": "Nelze přesunout do kotce: {msg}"
+    },
+    "loadError": "Nepodařilo se načíst kotce",
     "detail": {
       "backToKennels": "Zpět na kotce",
       "copyKennel": "Kopírovat kotec",
@@ -557,6 +593,123 @@
       "brindle": "Pruhovaná",
       "orange": "Oranžová",
       "blue": "Modrá"
+    },
+    "editName": {
+      "nameRequired": "Jméno nesmí být prázdné",
+      "updated": "Jméno zvířete bylo aktualizováno",
+      "updateError": "Nepodařilo se aktualizovat jméno",
+      "placeholder": "Zadejte jméno zvířete",
+      "clickHint": "Klikněte pro editaci jména",
+      "editTitle": "Upravit jméno"
+    },
+    "notFound": {
+      "title": "Zvíře nenalezeno",
+      "description": "Zvíře nebylo nalezeno",
+      "back": "Zpět na seznam"
+    },
+    "loadError": "Nepodařilo se načíst zvíře",
+    "backToList": "Zpět na seznam",
+    "noKennel": "Bez kotce",
+    "birth": "Porod",
+    "delete": "Smazat",
+    "confirmDelete": "Opravdu chcete smazat toto zvíře?",
+    "deleteSuccess": "Zvíře bylo smazáno",
+    "deleteError": "Nepodařilo se smazat zvíře",
+    "confirmDeath": "Opravdu chcete zaevidovat úmrtí zvířete {name}? Tato akce změní status na \"Uhynul/a\".",
+    "recordDeath": "Zaevidovat úmrtí",
+    "deathRecorded": "Úmrtí zaevidováno",
+    "deathError": "Nepodařilo se zaevidovat úmrtí",
+    "deathTaskCreated": "Byl automaticky vytvořen úkol na likvidaci těla.",
+    "tabs": {
+      "overview": "Přehled",
+      "timeline": "Časová osa",
+      "feeding": "Krmení",
+      "medical": "Zdraví",
+      "behavior": "Chování",
+      "documents": "Dokumenty"
+    },
+    "overview": {
+      "basicInfo": "Základní informace",
+      "basicInfoDesc": "Základní údaje o zvířeti (klikněte na tlačítko úprav)",
+      "specialNeeds": "Speciální potřeby",
+      "neutered": "Kastrováno",
+      "toggleSpecialNeeds": "Zvíře má speciální potřeby",
+      "specNeeds": "Spec. potřeby",
+      "noNeuteringPregnant": "Kastrace není možná u těhotného zvířete",
+      "alreadyAltered": "Již kastrováno",
+      "statusChanged": "Status změněn na {status}",
+      "statusChangeError": "Nepodařilo se změnit status"
+    },
+    "pregnancy": {
+      "expectedLitter": "Očekávaný termín vrhu",
+      "litterDateTitle": "Očekávaný termín vrhu",
+      "saveLitterDate": "Uložit termín",
+      "savingLitterDate": "Ukládám…",
+      "litterDateSaved": "Termín vrhu uložen",
+      "litterDateError": "Nepodařilo se uložit termín vrhu",
+      "requestAbortion": "Vyžádat potrat",
+      "processingAbortion": "Zpracovávám…",
+      "confirmAbortion": "Opravdu chcete vyžádat potrat pro {name}? Tato akce odstraní označení těhotenství a termín vrhu.",
+      "abortionRecorded": "Potrat zaevidován, těhotenství odstraněno",
+      "abortionError": "Nepodařilo se zaevidovat potrat",
+      "future": "(v budoucnosti)"
+    },
+    "timeline": {
+      "title": "Časová osa",
+      "description": "Historie aktivit tohoto zvířete",
+      "intake": "Příjem do útulku",
+      "created": "Záznam vytvořen v systému",
+      "movedToKennel": "Přemístěn/a do kotce {code}",
+      "currentKennel": "(aktuálně)",
+      "expectedLitter": "Očekávaný termín vrhu",
+      "comingSoon": "Plná historie událostí bude přidána v M4."
+    },
+    "medical": {
+      "tabTitle": "Zdravotní záznamy",
+      "tabDesc": "Zdravotní historie a lékařské úkony",
+      "comingSoon": "Zdravotní záznamy budou přidány v M4",
+      "requestProcedure": "Požádat o lékařský úkon"
+    },
+    "behavior": {
+      "title": "Povaha a chování",
+      "description": "Co má rád, nerad, čeho se bojí a další poznámky k povaze zvířete",
+      "placeholder": "Co má rád, nerad, čeho se bojí...",
+      "save": "Uložit",
+      "saving": "Ukládám…",
+      "saved": "Poznámky k povaze uloženy",
+      "saveError": "Nepodařilo se uložit poznámky"
+    },
+    "documents": {
+      "title": "Dokumenty",
+      "description": "Soubory a přílohy",
+      "comingSoon": "Dokumenty budou přidány v M5+"
+    },
+    "weight": {
+      "estimated": "odhadovaná váha",
+      "showCalc": "Zobrazit výpočet",
+      "cancelInput": "Zrušit"
+    },
+    "feeding": {
+      "tabTitle": "Energetické potřeby (RER/MER)",
+      "tabDesc": "Vědecky podložené doporučení dávkování krmiva na základě váhy, věku, kastrace a podmínek chovu."
+    },
+    "daysInShelter": "{days, plural, =1 {# den} =2 {# dny} =3 {# dny} =4 {# dny} other {# dní}}",
+    "since": "od {date}",
+    "healthEvents": {
+      "dewormedOn": "Odčervení: označeno jako provedené",
+      "dewormedOff": "Odčervení: označeno jako neprovedené",
+      "aggressiveOn": "Agresivita: označena jako problematická",
+      "aggressiveOff": "Agresivita: označena jako v pořádku",
+      "alteredOn": "Kastrace: označena jako provedená",
+      "alteredOff": "Kastrace: označena jako neprovedená",
+      "pregnantOn": "Těhotenství: označeno",
+      "pregnantOff": "Těhotenství: odznačeno",
+      "specialNeedsOn": "Speciální potřeby: označeny",
+      "specialNeedsOff": "Speciální potřeby: odstraněny",
+      "weightRecorded": "Váha zaznamenána: {weight} kg",
+      "litterDate": "Očekávaný termín vrhu: {date}",
+      "deathRecorded": "Zaevidováno úmrtí",
+      "birthRegistered": "Porod: zaevidováno {count} mláďat"
     }
   },
   "tasks": {
@@ -856,6 +1009,68 @@
     "cream": "Krémová",
     "brindle": "Pruhovaná",
     "orange": "Oranžová"
+  },
+  "birth": {
+    "title": "Zaevidovat porod",
+    "description": "Zaevidujete porod u {name}. Systém vytvoří zadaný počet mláďat stejného druhu a plemene, přidá je do jejího kotce a nastaví datum narození.",
+    "litterCount": "Počet mláďat",
+    "birthDate": "Datum porodu (volitelné, výchozí: dnes)",
+    "cancel": "Zrušit",
+    "submit": "Zaregistrovat",
+    "submitting": "Ukládám…",
+    "invalidCount": "Zadejte počet mláďat (1–20)",
+    "success": "Zaevidováno {count} mláďat. Byli přidáni do kotce.",
+    "error": "Chyba při registraci porodu",
+    "offspringOne": "mládě",
+    "offspringFew": "mláďata",
+    "offspringMany": "mláďat"
+  },
+  "mer": {
+    "title": "Doporučení krmení (RER/MER)",
+    "noWeight": "Nejprve zadejte váhu zvířete pro výpočet energetických potřeb.",
+    "healthLabel": "Zdravotní stav",
+    "environmentLabel": "Prostředí",
+    "weightGoalLabel": "Cíl váhy",
+    "foodKcalLabel": "Krmivo (kcal/100g)",
+    "calculate": "Vypočítat",
+    "recalculate": "Přepočítat",
+    "calculating": "Počítám…",
+    "calcError": "Chyba při výpočtu MER",
+    "noWeightToast": "Nejprve zadejte váhu zvířete.",
+    "breakdown": "Jak se k tomu přišlo",
+    "applyRecommendation": "Použít doporučení v plánu krmení",
+    "timesPerDay": "{meals}× denně",
+    "health": {
+      "healthy": "Zdravý",
+      "recovery": "Rekonvalescence",
+      "critical": "Kritický stav",
+      "cancer": "Onkologické onemocnění",
+      "obese_program": "Redukční program",
+      "kidney_disease": "Onemocnění ledvin",
+      "pregnant": "Březost",
+      "lactating": "Laktace"
+    },
+    "environment": {
+      "indoor": "Vnitřní prostředí",
+      "outdoor_summer": "Venkovní kotec – léto (> 20 °C)",
+      "outdoor_cool": "Venkovní kotec – podzim (10–20 °C)",
+      "outdoor_winter": "Venkovní kotec – zima (< 10 °C)",
+      "outdoor_cold": "Venkovní kotec – mráz (< 0 °C)"
+    },
+    "weightGoal": {
+      "maintain": "Udržet váhu",
+      "lose": "Zhubnout (-20 %)",
+      "gain": "Přibrat (+20 %)"
+    },
+    "factors": {
+      "activity": "Aktivita",
+      "bcs": "BCS",
+      "age": "Věk",
+      "health": "Zdraví",
+      "environment": "Prostředí",
+      "breed_size": "Velikost",
+      "weight_goal": "Cíl váhy"
+    }
   },
   "adoptions": {
     "title": "Adopce",

@@ -116,7 +116,7 @@ function WeightSparkline({ logs }: { logs: WeightLog[] }) {
 export default function AnimalDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const t = useTranslations();
+  const t = useTranslations('animals');
 
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
@@ -170,7 +170,7 @@ export default function AnimalDetailPage() {
         setKennelHistory(kHistory);
         setBehaviorNotes(data.behavior_notes ?? '');
       } catch (error) {
-        toast.error('Failed to load animal');
+        toast.error(t('loadError'));
         console.error(error);
       } finally {
         setLoading(false);
@@ -206,7 +206,7 @@ export default function AnimalDetailPage() {
       const updated = await ApiClient.updateAnimal(animal.id, { is_dewormed: newVal } as any);
       setAnimal(updated);
       setHealthEvents(prev => [
-        { text: newVal ? 'Odčervení: označeno jako provedené' : 'Odčervení: označeno jako neprovedené', date: new Date() },
+        { text: newVal ? t('healthEvents.dewormedOn') : t('healthEvents.dewormedOff'), date: new Date() },
         ...prev,
       ]);
     } catch { toast.error('Failed to update'); }
@@ -221,7 +221,7 @@ export default function AnimalDetailPage() {
       const updated = await ApiClient.updateAnimal(animal.id, { is_aggressive: newVal } as any);
       setAnimal(updated);
       setHealthEvents(prev => [
-        { text: newVal ? 'Agresivita: označena jako problematická' : 'Agresivita: označena jako v pořádku', date: new Date() },
+        { text: newVal ? t('healthEvents.aggressiveOn') : t('healthEvents.aggressiveOff'), date: new Date() },
         ...prev,
       ]);
     } catch { toast.error('Failed to update'); }
@@ -237,7 +237,7 @@ export default function AnimalDetailPage() {
       const updated = await ApiClient.updateAnimal(animal.id, { altered_status: newStatus } as any);
       setAnimal(updated);
       setHealthEvents((prev) => [
-        { text: isCurrentlyAltered ? 'Kastrace: označena jako neprovedená' : 'Kastrace: označena jako provedená', date: new Date() },
+        { text: isCurrentlyAltered ? t('healthEvents.alteredOff') : t('healthEvents.alteredOn'), date: new Date() },
         ...prev,
       ]);
     } catch {
@@ -255,7 +255,7 @@ export default function AnimalDetailPage() {
       const updated = await ApiClient.updateAnimal(animal.id, { is_pregnant: newVal } as any);
       setAnimal(updated);
       setHealthEvents(prev => [
-        { text: newVal ? 'Těhotenství: označeno' : 'Těhotenství: odznačeno', date: new Date() },
+        { text: newVal ? t('healthEvents.pregnantOn') : t('healthEvents.pregnantOff'), date: new Date() },
         ...prev,
       ]);
     } catch { toast.error('Failed to update'); }
@@ -268,8 +268,8 @@ export default function AnimalDetailPage() {
     try {
       const updated = await ApiClient.updateAnimal(animal.id, { status: newStatus } as any);
       setAnimal(updated);
-      toast.success(`Status změněn na ${newStatus}`);
-    } catch { toast.error('Nepodařilo se změnit status'); }
+      toast.success(t('overview.statusChanged', { status: newStatus }));
+    } catch { toast.error(t('overview.statusChangeError')); }
     finally { setChangingStatus(false); }
   };
 
@@ -287,14 +287,14 @@ export default function AnimalDetailPage() {
         (a, b) => new Date(b.measured_at).getTime() - new Date(a.measured_at).getTime()
       ));
       setHealthEvents(prev => [
-        { text: `Váha zaznamenána: ${kg} kg`, date: new Date() },
+        { text: t('healthEvents.weightRecorded', { weight: kg }), date: new Date() },
         ...prev,
       ]);
-      toast.success(t('animals.health.weightAdded'));
+      toast.success(t('health.weightAdded'));
       setWeightInput('');
       setWeightDate('');
       setWeightNotes('');
-    } catch { toast.error(t('animals.health.weightError')); }
+    } catch { toast.error(t('health.weightError')); }
     finally { setSavingWeight(false); }
   };
 
@@ -305,12 +305,12 @@ export default function AnimalDetailPage() {
       const updated = await ApiClient.updateAnimal(animal.id, { expected_litter_date: litterDateInput } as any);
       setAnimal(updated);
       setHealthEvents(prev => [
-        { text: `Očekávaný termín vrhu: ${new Date(litterDateInput).toLocaleDateString()}`, date: new Date() },
+        { text: t('healthEvents.litterDate', { date: new Date(litterDateInput).toLocaleDateString() }), date: new Date() },
         ...prev,
       ]);
-      toast.success('Termín vrhu uložen');
+      toast.success(t('pregnancy.litterDateSaved'));
       setLitterDateInput('');
-    } catch { toast.error('Nepodařilo se uložit termín vrhu'); }
+    } catch { toast.error(t('pregnancy.litterDateError')); }
     finally { setSavingLitterDate(false); }
   };
 
@@ -322,7 +322,7 @@ export default function AnimalDetailPage() {
       const updated = await ApiClient.updateAnimal(animal.id, { is_special_needs: newVal } as any);
       setAnimal(updated);
       setHealthEvents(prev => [
-        { text: newVal ? 'Speciální potřeby: označeny' : 'Speciální potřeby: odstraněny', date: new Date() },
+        { text: newVal ? t('healthEvents.specialNeedsOn') : t('healthEvents.specialNeedsOff'), date: new Date() },
         ...prev,
       ]);
     } catch { toast.error('Failed to update'); }
@@ -331,7 +331,7 @@ export default function AnimalDetailPage() {
 
   const handleRequestAbortion = async () => {
     if (!animal) return;
-    if (!confirm(`Opravdu chcete vyžádat potrat pro ${animal.name}? Tato akce odstraní označení těhotenství a termín vrhu.`)) return;
+    if (!confirm(t('pregnancy.confirmAbortion', { name: animal.name }))) return;
     setRequestingAbortion(true);
     try {
       const updated = await ApiClient.updateAnimal(animal.id, {
@@ -340,11 +340,11 @@ export default function AnimalDetailPage() {
       } as any);
       setAnimal(updated);
       setHealthEvents(prev => [
-        { text: 'Vyžádán potrat — těhotenství ukončeno', date: new Date() },
+        { text: t('pregnancy.abortionRecorded'), date: new Date() },
         ...prev,
       ]);
-      toast.success('Potrat zaevidován, těhotenství odstraněno');
-    } catch { toast.error('Nepodařilo se zaevidovat potrat'); }
+      toast.success(t('pregnancy.abortionRecorded'));
+    } catch { toast.error(t('pregnancy.abortionError')); }
     finally { setRequestingAbortion(false); }
   };
 
@@ -354,19 +354,19 @@ export default function AnimalDetailPage() {
     try {
       const updated = await ApiClient.updateAnimal(animal.id, { behavior_notes: behaviorNotes } as any);
       setAnimal(updated);
-      toast.success('Poznámky k povaze uloženy');
-    } catch { toast.error('Nepodařilo se uložit poznámky'); }
+      toast.success(t('behavior.saved'));
+    } catch { toast.error(t('behavior.saveError')); }
     finally { setSavingBehaviorNotes(false); }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this animal?')) return;
+    if (!confirm(t('confirmDelete'))) return;
     try {
       await ApiClient.deleteAnimal(animalId);
-      toast.success('Animal deleted successfully');
+      toast.success(t('deleteSuccess'));
       router.push('/dashboard/animals');
     } catch (error) {
-      toast.error('Failed to delete animal');
+      toast.error(t('deleteError'));
       console.error(error);
     }
   };
@@ -400,12 +400,12 @@ export default function AnimalDetailPage() {
           <Link href="/dashboard/animals">
             <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
           </Link>
-          <h1 className="text-3xl font-bold">Animal Not Found</h1>
+          <h1 className="text-3xl font-bold">{t('notFound.title')}</h1>
         </div>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">Animal not found</p>
-            <Link href="/dashboard/animals"><Button className="mt-4">Back to Animals</Button></Link>
+            <p className="text-muted-foreground">{t('notFound.description')}</p>
+            <Link href="/dashboard/animals"><Button className="mt-4">{t('notFound.back')}</Button></Link>
           </CardContent>
         </Card>
       </div>
@@ -457,7 +457,7 @@ export default function AnimalDetailPage() {
           {/* Back link */}
           <Link href="/dashboard/animals">
             <Button variant="ghost" size="sm" className="mb-2 -ml-2 text-muted-foreground">
-              <ArrowLeft className="h-4 w-4 mr-1" /> Zpět na seznam
+              <ArrowLeft className="h-4 w-4 mr-1" /> {t('backToList')}
             </Button>
           </Link>
 
@@ -502,7 +502,7 @@ export default function AnimalDetailPage() {
                 {animal.current_kennel_name} ({animal.current_kennel_code})
               </Link>
             ) : (
-              <span className="text-sm text-muted-foreground">Bez kotce</span>
+              <span className="text-sm text-muted-foreground">{t('noKennel')}</span>
             )}
           </div>
 
@@ -531,12 +531,12 @@ export default function AnimalDetailPage() {
                 className="border-pink-300 text-pink-700 hover:bg-pink-50 dark:border-pink-700 dark:text-pink-300"
               >
                 <Baby className="h-4 w-4 mr-2" />
-                Porod
+                {t('birth')}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={handleDelete}>
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              {t('delete')}
             </Button>
           </div>
         </div>
@@ -545,12 +545,12 @@ export default function AnimalDetailPage() {
       {/* ── Tabs ── */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="feeding">Krmení</TabsTrigger>
-          <TabsTrigger value="medical">Medical</TabsTrigger>
-          <TabsTrigger value="behavior">Chování</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="overview">{t('tabs.overview')}</TabsTrigger>
+          <TabsTrigger value="timeline">{t('tabs.timeline')}</TabsTrigger>
+          <TabsTrigger value="feeding">{t('tabs.feeding')}</TabsTrigger>
+          <TabsTrigger value="medical">{t('tabs.medical')}</TabsTrigger>
+          <TabsTrigger value="behavior">{t('tabs.behavior')}</TabsTrigger>
+          <TabsTrigger value="documents">{t('tabs.documents')}</TabsTrigger>
         </TabsList>
 
         {/* ── Overview ── */}
@@ -558,8 +558,8 @@ export default function AnimalDetailPage() {
           {/* Basic Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Core details about this animal (click edit buttons to modify)</CardDescription>
+              <CardTitle>{t('overview.basicInfo')}</CardTitle>
+              <CardDescription>{t('overview.basicInfoDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <EditableAnimalDetails animal={animal} onAnimalUpdate={handleAnimalUpdate} />
@@ -569,7 +569,7 @@ export default function AnimalDetailPage() {
           {/* Health & Welfare */}
           <Card>
             <CardHeader>
-              <CardTitle>{t('animals.health.title')}</CardTitle>
+              <CardTitle>{t('health.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Active flags grid – only shown when true */}
@@ -577,31 +577,31 @@ export default function AnimalDetailPage() {
                 {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
                   <div className="flex items-center gap-2 p-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
                     <Scissors className="h-4 w-4 text-green-600 shrink-0" />
-                    <span className="text-xs font-medium">Kastrováno</span>
+                    <span className="text-xs font-medium">{t('overview.neutered')}</span>
                   </div>
                 )}
                 {animal.is_dewormed && (
                   <div className="flex items-center gap-2 p-2 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
                     <Pill className="h-4 w-4 text-blue-600 shrink-0" />
-                    <span className="text-xs font-medium">{t('animals.health.dewormed')}</span>
+                    <span className="text-xs font-medium">{t('health.dewormed')}</span>
                   </div>
                 )}
                 {animal.is_aggressive && (
                   <div className="flex items-center gap-2 p-2 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
                     <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
-                    <span className="text-xs font-medium">{t('animals.health.aggressive')}</span>
+                    <span className="text-xs font-medium">{t('health.aggressive')}</span>
                   </div>
                 )}
                 {animal.is_pregnant && (
                   <div className="flex items-center gap-2 p-2 rounded-md bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-800">
                     <Baby className="h-4 w-4 text-pink-600 shrink-0" />
-                    <span className="text-xs font-medium">{t('animals.health.pregnant')}</span>
+                    <span className="text-xs font-medium">{t('health.pregnant')}</span>
                   </div>
                 )}
                 {animal.is_special_needs && (
                   <div className="flex items-center gap-2 p-2 rounded-md bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800">
                     <Accessibility className="h-4 w-4 text-orange-600 shrink-0" />
-                    <span className="text-xs font-medium">Speciální potřeby</span>
+                    <span className="text-xs font-medium">{t('overview.specialNeeds')}</span>
                   </div>
                 )}
               </div>
@@ -618,12 +618,12 @@ export default function AnimalDetailPage() {
                           onClick={toggleAltered}
                           disabled={togglingAltered || animal.is_pregnant || animal.altered_status !== 'intact'}
                         >
-                          {togglingAltered ? '...' : (animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? t('animals.health.markIntact') : t('animals.health.markAltered'))}
+                          {togglingAltered ? '...' : (animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? t('health.markIntact') : t('health.markAltered'))}
                         </button>
                       </span>
                     </TooltipTrigger>
-                    {animal.is_pregnant && <TooltipContent>Kastrace není možná u těhotného zvířete</TooltipContent>}
-                    {!animal.is_pregnant && animal.altered_status !== 'intact' && <TooltipContent>Již kastrováno</TooltipContent>}
+                    {animal.is_pregnant && <TooltipContent>{t('overview.noNeuteringPregnant')}</TooltipContent>}
+                    {!animal.is_pregnant && animal.altered_status !== 'intact' && <TooltipContent>{t('overview.alreadyAltered')}</TooltipContent>}
                   </Tooltip>
                 </TooltipProvider>
 
@@ -631,36 +631,36 @@ export default function AnimalDetailPage() {
                   className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
                   onClick={toggleDewormed}
                   disabled={togglingDewormed}
-                  title={t('animals.health.toggleDewormed')}
+                  title={t('health.toggleDewormed')}
                 >
-                  {togglingDewormed ? '...' : (animal.is_dewormed ? '✓ ' + t('animals.health.dewormed') : t('animals.health.dewormed') + '?')}
+                  {togglingDewormed ? '...' : (animal.is_dewormed ? '✓ ' + t('health.dewormed') : t('health.dewormed') + '?')}
                 </button>
 
                 <button
                   className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
                   onClick={toggleAggressive}
                   disabled={togglingAggressive}
-                  title={t('animals.health.toggleAggressive')}
+                  title={t('health.toggleAggressive')}
                 >
-                  {togglingAggressive ? '...' : (animal.is_aggressive ? '⚠ ' + t('animals.health.aggressive') : t('animals.health.aggressive') + '?')}
+                  {togglingAggressive ? '...' : (animal.is_aggressive ? '⚠ ' + t('health.aggressive') : t('health.aggressive') + '?')}
                 </button>
 
                 <button
                   className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
                   onClick={togglePregnant}
                   disabled={togglingPregnant}
-                  title={t('animals.health.togglePregnant')}
+                  title={t('health.togglePregnant')}
                 >
-                  {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('animals.health.pregnant') : t('animals.health.pregnant') + '?')}
+                  {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('health.pregnant') : t('health.pregnant') + '?')}
                 </button>
 
                 <button
                   className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
                   onClick={toggleSpecialNeeds}
                   disabled={togglingSpecialNeeds}
-                  title="Zvíře má speciální potřeby"
+                  title={t('overview.toggleSpecialNeeds')}
                 >
-                  {togglingSpecialNeeds ? '...' : (animal.is_special_needs ? '✓ Spec. potřeby' : 'Spec. potřeby?')}
+                  {togglingSpecialNeeds ? '...' : (animal.is_special_needs ? `✓ ${t('overview.specNeeds')}` : `${t('overview.specNeeds')}?`)}
                 </button>
               </div>
 
@@ -669,7 +669,7 @@ export default function AnimalDetailPage() {
                 <div className="space-y-2 border-t border-dashed border-pink-200 pt-2">
                   {animal.expected_litter_date && (
                     <p className="text-sm text-pink-700 dark:text-pink-300 font-medium">
-                      Očekávaný termín vrhu: {new Date(animal.expected_litter_date).toLocaleDateString()}
+                      {t('pregnancy.expectedLitter')}: {new Date(animal.expected_litter_date).toLocaleDateString()}
                     </p>
                   )}
                   <div className="flex items-center gap-2 flex-wrap">
@@ -678,21 +678,21 @@ export default function AnimalDetailPage() {
                       value={litterDateInput || (animal.expected_litter_date ?? '')}
                       onChange={e => setLitterDateInput(e.target.value)}
                       className="h-7 text-xs w-36"
-                      title="Očekávaný termín vrhu"
+                      title={t('pregnancy.litterDateTitle')}
                     />
                     <button
                       className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
                       onClick={handleSaveLitterDate}
                       disabled={savingLitterDate || !litterDateInput}
                     >
-                      {savingLitterDate ? 'Ukládám…' : 'Uložit termín'}
+                      {savingLitterDate ? t('pregnancy.savingLitterDate') : t('pregnancy.saveLitterDate')}
                     </button>
                     <button
                       className="text-xs px-2.5 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
                       onClick={handleRequestAbortion}
                       disabled={requestingAbortion}
                     >
-                      {requestingAbortion ? 'Zpracovávám…' : '🚫 Vyžádat potrat'}
+                      {requestingAbortion ? t('pregnancy.processingAbortion') : `🚫 ${t('pregnancy.requestAbortion')}`}
                     </button>
                   </div>
                 </div>
@@ -705,7 +705,7 @@ export default function AnimalDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Scale className="h-5 w-5" />
-                {t('animals.health.weight')}
+                {t('health.weight')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -721,7 +721,7 @@ export default function AnimalDetailPage() {
                   </p>
                   {/* Energy needs */}
                   <p className="text-sm text-muted-foreground mt-1">
-                    ⚡ {t('animals.health.energyNeeds')}: ~{calcMER(
+                    ⚡ {t('health.energyNeeds')}: ~{calcMER(
                       Number(latestWeight.weight_kg),
                       animal.age_group,
                       animal.altered_status,
@@ -729,7 +729,7 @@ export default function AnimalDetailPage() {
                     )} kcal/den
                   </p>
                   <details className="text-xs text-muted-foreground mt-1 ml-2">
-                    <summary className="cursor-pointer hover:text-foreground">Zobrazit výpočet</summary>
+                    <summary className="cursor-pointer hover:text-foreground">{t('weight.showCalc')}</summary>
                     <div className="mt-1 space-y-0.5 font-mono">
                       <p>RER = 70 × {Number(latestWeight.weight_kg).toFixed(1)}^0.75 = {calcRER(Number(latestWeight.weight_kg))} kcal</p>
                       <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)}</p>
@@ -740,9 +740,9 @@ export default function AnimalDetailPage() {
               ) : weightKg ? (
                 <div>
                   <p className="text-2xl font-bold">{Number(weightKg).toFixed(1)} kg</p>
-                  <p className="text-xs text-muted-foreground">odhadovaná váha</p>
+                  <p className="text-xs text-muted-foreground">{t('weight.estimated')}</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    ⚡ {t('animals.health.energyNeeds')}: ~{calcMER(
+                    ⚡ {t('health.energyNeeds')}: ~{calcMER(
                       Number(weightKg),
                       animal.age_group,
                       animal.altered_status,
@@ -750,7 +750,7 @@ export default function AnimalDetailPage() {
                     )} kcal/den
                   </p>
                   <details className="text-xs text-muted-foreground mt-1 ml-2">
-                    <summary className="cursor-pointer hover:text-foreground">Zobrazit výpočet</summary>
+                    <summary className="cursor-pointer hover:text-foreground">{t('weight.showCalc')}</summary>
                     <div className="mt-1 space-y-0.5 font-mono">
                       <p>RER = 70 × {Number(weightKg).toFixed(1)}^0.75 = {calcRER(Number(weightKg))} kcal</p>
                       <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)}</p>
@@ -762,19 +762,19 @@ export default function AnimalDetailPage() {
 
               {/* No measurements yet */}
               {weightLogs.length === 0 && (
-                <p className="text-sm text-muted-foreground">{t('animals.health.weightFirstMeasurement')}</p>
+                <p className="text-sm text-muted-foreground">{t('health.weightFirstMeasurement')}</p>
               )}
 
               {/* Add measurement form */}
               <div className="border rounded-lg p-3 space-y-2 bg-muted/10">
-                <p className="text-xs font-medium text-muted-foreground">{t('animals.health.addWeight')}</p>
+                <p className="text-xs font-medium text-muted-foreground">{t('health.addWeight')}</p>
                 <div className="flex gap-2 flex-wrap">
                   <Input
                     type="number"
                     step="0.1"
                     min="0.1"
                     max="999"
-                    placeholder={t('animals.health.weightKg')}
+                    placeholder={t('health.weightKg')}
                     value={weightInput}
                     onChange={e => setWeightInput(e.target.value)}
                     className="w-28 h-8 text-sm"
@@ -784,11 +784,11 @@ export default function AnimalDetailPage() {
                     value={weightDate}
                     onChange={e => setWeightDate(e.target.value)}
                     className="w-36 h-8 text-sm"
-                    title={t('animals.health.weightDate')}
+                    title={t('health.weightDate')}
                   />
                   <Input
                     type="text"
-                    placeholder={t('animals.health.weightNotes')}
+                    placeholder={t('health.weightNotes')}
                     value={weightNotes}
                     onChange={e => setWeightNotes(e.target.value)}
                     className="flex-1 min-w-[120px] h-8 text-sm"
@@ -799,7 +799,7 @@ export default function AnimalDetailPage() {
                     onClick={handleLogWeight}
                     disabled={savingWeight || !weightInput}
                   >
-                    {savingWeight ? t('animals.health.weightSaving') : t('animals.health.weightSave')}
+                    {savingWeight ? t('health.weightSaving') : t('health.weightSave')}
                   </Button>
                   {weightInput && (
                     <Button
@@ -835,10 +835,8 @@ export default function AnimalDetailPage() {
         <TabsContent value="feeding" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Energetické potřeby (RER/MER)</CardTitle>
-              <CardDescription>
-                Vědecky podložené doporučení dávkování krmiva na základě váhy, věku, kastrace a podmínek chovu.
-              </CardDescription>
+              <CardTitle>{t('feeding.tabTitle')}</CardTitle>
+              <CardDescription>{t('feeding.tabDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <MERCalculator
@@ -853,8 +851,8 @@ export default function AnimalDetailPage() {
         <TabsContent value="timeline">
           <Card>
             <CardHeader>
-              <CardTitle>Timeline</CardTitle>
-              <CardDescription>Activity history for this animal</CardDescription>
+              <CardTitle>{t('timeline.title')}</CardTitle>
+              <CardDescription>{t('timeline.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="relative pl-6">
@@ -878,8 +876,8 @@ export default function AnimalDetailPage() {
                     <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-pink-400 border-2 border-background" />
                     <div className="pl-2">
                       <p className="text-sm font-semibold text-pink-700 dark:text-pink-300">
-                        Očekávaný termín vrhu
-                        {new Date(animal.expected_litter_date) > new Date() && ' (v budoucnosti)'}
+                        {t('timeline.expectedLitter')}
+                        {new Date(animal.expected_litter_date) > new Date() && ` ${t('pregnancy.future')}`}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(animal.expected_litter_date).toLocaleDateString()}
@@ -892,7 +890,7 @@ export default function AnimalDetailPage() {
                   <div className="relative mb-6">
                     <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-background" />
                     <div className="pl-2">
-                      <p className="text-sm font-semibold">Příjem do útulku</p>
+                      <p className="text-sm font-semibold">{t('timeline.intake')}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(animal.intake_date).toLocaleDateString()}
                       </p>
@@ -907,8 +905,8 @@ export default function AnimalDetailPage() {
                     <div className="pl-2">
                       <p className="text-sm font-semibold flex items-center gap-1">
                         <Home className="h-3.5 w-3.5 text-purple-500 shrink-0" />
-                        Přemístěn/a do kotce {entry.kennel_code}
-                        {!entry.released_at && <span className="text-xs text-purple-600 dark:text-purple-400 ml-1">(aktuálně)</span>}
+                        {t('timeline.movedToKennel', { code: entry.kennel_code })}
+                        {!entry.released_at && <span className="text-xs text-purple-600 dark:text-purple-400 ml-1">{t('timeline.currentKennel')}</span>}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(entry.assigned_at).toLocaleDateString()}
@@ -921,7 +919,7 @@ export default function AnimalDetailPage() {
                 <div className="relative mb-6">
                   <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-gray-300 border-2 border-background" />
                   <div className="pl-2">
-                    <p className="text-sm font-semibold">Záznam vytvořen v systému</p>
+                    <p className="text-sm font-semibold">{t('timeline.created')}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(animal.created_at).toLocaleDateString()}
                     </p>
@@ -930,7 +928,7 @@ export default function AnimalDetailPage() {
 
                 <p className="text-xs text-muted-foreground mt-2">
                   {/* TODO: M4 - load full event history from API */}
-                  Plná historie událostí bude přidána v M4.
+                  {t('timeline.comingSoon')}
                 </p>
               </div>
             </CardContent>
@@ -943,7 +941,7 @@ export default function AnimalDetailPage() {
           {weightLogs.length >= 2 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">{t('animals.health.weightHistory')}</CardTitle>
+                <CardTitle className="text-base">{t('health.weightHistory')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <WeightSparkline logs={weightLogs} />
@@ -956,11 +954,11 @@ export default function AnimalDetailPage() {
           )}
           <Card>
             <CardHeader>
-              <CardTitle>Medical Records</CardTitle>
-              <CardDescription>Health history and medical procedures</CardDescription>
+              <CardTitle>{t('medical.tabTitle')}</CardTitle>
+              <CardDescription>{t('medical.tabDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-center py-8">Medical records coming in M4</p>
+              <p className="text-muted-foreground text-center py-8">{t('medical.comingSoon')}</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -969,13 +967,13 @@ export default function AnimalDetailPage() {
         <TabsContent value="behavior">
           <Card>
             <CardHeader>
-              <CardTitle>Povaha a chování</CardTitle>
-              <CardDescription>Co má rád, nerad, čeho se bojí a další poznámky k povaze zvířete</CardDescription>
+              <CardTitle>{t('behavior.title')}</CardTitle>
+              <CardDescription>{t('behavior.description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <textarea
                 className="w-full min-h-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
-                placeholder="Co má rád, nerad, čeho se bojí..."
+                placeholder={t('behavior.placeholder')}
                 value={behaviorNotes}
                 onChange={e => setBehaviorNotes(e.target.value)}
               />
@@ -985,7 +983,7 @@ export default function AnimalDetailPage() {
                   onClick={handleSaveBehaviorNotes}
                   disabled={savingBehaviorNotes}
                 >
-                  {savingBehaviorNotes ? 'Ukládám…' : 'Uložit'}
+                  {savingBehaviorNotes ? t('behavior.saving') : t('behavior.save')}
                 </Button>
               </div>
             </CardContent>
@@ -996,11 +994,11 @@ export default function AnimalDetailPage() {
         <TabsContent value="documents">
           <Card>
             <CardHeader>
-              <CardTitle>Documents</CardTitle>
-              <CardDescription>Files and attachments</CardDescription>
+              <CardTitle>{t('documents.title')}</CardTitle>
+              <CardDescription>{t('documents.description')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-center py-8">Documents coming in M5+</p>
+              <p className="text-muted-foreground text-center py-8">{t('documents.comingSoon')}</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1013,17 +1011,17 @@ export default function AnimalDetailPage() {
             <button
               className="text-xs text-muted-foreground/50 hover:text-red-500 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-red-300"
               onClick={async () => {
-                if (!confirm(`Opravdu chcete zaevidovat úmrtí zvířete ${animal.name}? Tato akce změní status na "Uhynul/a".`)) return;
+                if (!confirm(t('confirmDeath', { name: animal.name }))) return;
                 try {
                   const updated = await ApiClient.updateAnimal(animal.id, { status: 'deceased' } as any);
                   setAnimal(updated);
-                  setHealthEvents(prev => [{ text: 'Zaevidováno úmrtí', date: new Date() }, ...prev]);
-                  toast.success('Úmrtí zaevidováno');
-                  setTimeout(() => toast.info('Byl automaticky vytvořen úkol na likvidaci těla.'), 800);
-                } catch { toast.error('Nepodařilo se zaevidovat úmrtí'); }
+                  setHealthEvents(prev => [{ text: t('healthEvents.deathRecorded'), date: new Date() }, ...prev]);
+                  toast.success(t('deathRecorded'));
+                  setTimeout(() => toast.info(t('deathTaskCreated')), 800);
+                } catch { toast.error(t('deathError')); }
               }}
             >
-              Zaevidovat úmrtí
+              {t('recordDeath')}
             </button>
             {/* Diagonal mourning stripe */}
             <span
@@ -1059,7 +1057,7 @@ export default function AnimalDetailPage() {
           onBirthRegistered={(count) => {
             setAnimal(prev => prev ? { ...prev, is_pregnant: false, expected_litter_date: null } : null);
             setHealthEvents(prev => [
-              { text: `Porod: zaevidováno ${count} mláďat`, date: new Date() },
+              { text: t('healthEvents.birthRegistered', { count }), date: new Date() },
               ...prev,
             ]);
           }}

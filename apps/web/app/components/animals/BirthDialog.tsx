@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import ApiClient from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,13 +33,20 @@ export default function BirthDialog({
   onOpenChange,
   onBirthRegistered,
 }: BirthDialogProps) {
+  const t = useTranslations('birth');
   const [litterCount, setLitterCount] = useState(1);
   const [birthDate, setBirthDate] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const getOffspringLabel = (count: number): string => {
+    if (count === 1) return t('offspringOne');
+    if (count >= 2 && count <= 4) return t('offspringFew');
+    return t('offspringMany');
+  };
+
   const handleSubmit = async () => {
     if (litterCount < 1 || litterCount > 20) {
-      toast.error('Zadejte počet mláďat (1–20)');
+      toast.error(t('invalidCount'));
       return;
     }
     setLoading(true);
@@ -48,11 +56,11 @@ export default function BirthDialog({
         litterCount,
         birthDate || undefined,
       );
-      toast.success(`Zaevidováno ${result.created} mláďat. Byli přidáni do kotce.`);
+      toast.success(t('success', { count: result.created }));
       onOpenChange(false);
       onBirthRegistered?.(result.created);
     } catch (err: any) {
-      toast.error(err?.message || 'Chyba při registraci porodu');
+      toast.error(err?.message || t('error'));
     } finally {
       setLoading(false);
     }
@@ -64,17 +72,16 @@ export default function BirthDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Baby className="h-5 w-5 text-pink-500" />
-            Zaevidovat porod
+            {t('title')}
           </DialogTitle>
           <DialogDescription>
-            Zaevidujete porod u <strong>{animalName}</strong>. Systém vytvoří zadaný počet mláďat
-            stejného druhu a plemene, přidá je do jejího kotce a nastaví datum narození.
+            {t('description', { name: animalName })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="litter-count">Počet mláďat</Label>
+            <Label htmlFor="litter-count">{t('litterCount')}</Label>
             <Input
               id="litter-count"
               type="number"
@@ -86,7 +93,7 @@ export default function BirthDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="birth-date">Datum porodu (volitelné, výchozí: dnes)</Label>
+            <Label htmlFor="birth-date">{t('birthDate')}</Label>
             <Input
               id="birth-date"
               type="date"
@@ -99,10 +106,10 @@ export default function BirthDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Zrušit
+            {t('cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Ukládám…' : `Zaregistrovat ${litterCount} ${litterCount === 1 ? 'mládě' : litterCount < 5 ? 'mláďata' : 'mláďat'}`}
+            {loading ? t('submitting') : `${t('submit')} ${litterCount} ${getOffspringLabel(litterCount)}`}
           </Button>
         </DialogFooter>
       </DialogContent>

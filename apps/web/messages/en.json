@@ -336,6 +336,42 @@
       "xlarge": "Extra Large"
     },
     "common_cancel": "Cancel",
+    "assignButton": {
+      "loadError": "Cannot load kennels: {msg}",
+      "assigned": "{name} assigned to {kennel}",
+      "removed": "{name} removed from kennel",
+      "assignError": "Cannot assign: {msg}",
+      "removeError": "Cannot remove: {msg}",
+      "unknownError": "Unknown error",
+      "trigger": "Kennel: {code}",
+      "triggerEmpty": "Assign kennel",
+      "popoverTitle": "Assign to kennel",
+      "currentKennel": "Currently: {name}",
+      "noKennel": "No kennel assigned",
+      "removeFromKennel": "Remove from kennel"
+    },
+    "map": {
+      "positionSaved": "Position saved",
+      "positionError": "Failed to save position",
+      "legendAvailable": "Available",
+      "legendMaintenance": "Maintenance",
+      "legendClosed": "Closed",
+      "dragHint": "Drag a kennel to reposition"
+    },
+    "dropZone": {
+      "drop": "Drop to remove from kennel",
+      "dragHere": "Drag here to remove from kennel"
+    },
+    "warnings": {
+      "aggressive": "{name} is aggressive and kennel {kennel} has {count} animal!",
+      "aggressiveInKennel": "Kennel {kennel} already has an aggressive animal!",
+      "oppositeSex": "{name} is unneutered and kennel {kennel} has an opposite-sex animal! ❤️",
+      "differentSpecies": "{name} ({species}) and the animal in kennel {kennel} are different species! 🐾",
+      "notSuitable": "{name} ({species}) should not be in a kennel for {allowed}!",
+      "removeError": "Cannot remove from kennel: {msg}",
+      "moveError": "Cannot move to kennel: {msg}"
+    },
+    "loadError": "Failed to load kennels",
     "detail": {
       "backToKennels": "Back to kennels",
       "copyKennel": "Copy kennel",
@@ -375,6 +411,68 @@
       "submit": "Create task",
       "success": "Task created",
       "error": "Failed to create task"
+    }
+  },
+  "birth": {
+    "title": "Register Birth",
+    "description": "You are registering a birth for {name}. The system will create the specified number of offspring of the same species and breed, add them to her kennel and set the birth date.",
+    "litterCount": "Number of offspring",
+    "birthDate": "Birth date (optional, default: today)",
+    "cancel": "Cancel",
+    "submit": "Register",
+    "submitting": "Saving…",
+    "invalidCount": "Enter number of offspring (1–20)",
+    "success": "{count} offspring registered. They have been added to the kennel.",
+    "error": "Error registering birth",
+    "offspringOne": "offspring",
+    "offspringFew": "offspring",
+    "offspringMany": "offspring"
+  },
+  "mer": {
+    "title": "Feeding recommendation (RER/MER)",
+    "noWeight": "Enter the animal's weight first to calculate energy needs.",
+    "healthLabel": "Health status",
+    "environmentLabel": "Environment",
+    "weightGoalLabel": "Weight goal",
+    "foodKcalLabel": "Food (kcal/100g)",
+    "calculate": "Calculate",
+    "recalculate": "Recalculate",
+    "calculating": "Calculating…",
+    "calcError": "Error calculating MER",
+    "noWeightToast": "Enter the animal's weight first.",
+    "breakdown": "How it was calculated",
+    "applyRecommendation": "Apply recommendation to feeding plan",
+    "timesPerDay": "{meals}× per day",
+    "health": {
+      "healthy": "Healthy",
+      "recovery": "Recovery",
+      "critical": "Critical condition",
+      "cancer": "Oncological disease",
+      "obese_program": "Weight loss program",
+      "kidney_disease": "Kidney disease",
+      "pregnant": "Pregnant",
+      "lactating": "Lactating"
+    },
+    "environment": {
+      "indoor": "Indoor",
+      "outdoor_summer": "Outdoor kennel – summer (> 20 °C)",
+      "outdoor_cool": "Outdoor kennel – autumn (10–20 °C)",
+      "outdoor_winter": "Outdoor kennel – winter (< 10 °C)",
+      "outdoor_cold": "Outdoor kennel – frost (< 0 °C)"
+    },
+    "weightGoal": {
+      "maintain": "Maintain weight",
+      "lose": "Lose weight (-20%)",
+      "gain": "Gain weight (+20%)"
+    },
+    "factors": {
+      "activity": "Activity",
+      "bcs": "BCS",
+      "age": "Age",
+      "health": "Health",
+      "environment": "Environment",
+      "breed_size": "Size",
+      "weight_goal": "Weight goal"
     }
   },
   "settings": {
@@ -554,6 +652,123 @@
       "red": "Red",
       "cream": "Cream",
       "brindle": "Brindle"
+    },
+    "editName": {
+      "nameRequired": "Name cannot be empty",
+      "updated": "Animal name updated",
+      "updateError": "Failed to update name",
+      "placeholder": "Enter animal name",
+      "clickHint": "Click to edit name",
+      "editTitle": "Edit name"
+    },
+    "notFound": {
+      "title": "Animal Not Found",
+      "description": "Animal not found",
+      "back": "Back to Animals"
+    },
+    "loadError": "Failed to load animal",
+    "backToList": "Back to list",
+    "noKennel": "No kennel",
+    "birth": "Birth",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this animal?",
+    "deleteSuccess": "Animal deleted successfully",
+    "deleteError": "Failed to delete animal",
+    "confirmDeath": "Are you sure you want to record the death of {name}? This will change the status to \"Deceased\".",
+    "recordDeath": "Record death",
+    "deathRecorded": "Death recorded",
+    "deathError": "Failed to record death",
+    "deathTaskCreated": "A body disposal task was automatically created.",
+    "tabs": {
+      "overview": "Overview",
+      "timeline": "Timeline",
+      "feeding": "Feeding",
+      "medical": "Medical",
+      "behavior": "Behavior",
+      "documents": "Documents"
+    },
+    "overview": {
+      "basicInfo": "Basic Information",
+      "basicInfoDesc": "Core details about this animal (click edit buttons to modify)",
+      "specialNeeds": "Special needs",
+      "neutered": "Neutered",
+      "toggleSpecialNeeds": "Animal has special needs",
+      "specNeeds": "Spec. needs",
+      "noNeuteringPregnant": "Neutering not possible for pregnant animal",
+      "alreadyAltered": "Already altered",
+      "statusChanged": "Status changed to {status}",
+      "statusChangeError": "Failed to change status"
+    },
+    "pregnancy": {
+      "expectedLitter": "Expected litter date",
+      "litterDateTitle": "Expected litter date",
+      "saveLitterDate": "Save date",
+      "savingLitterDate": "Saving…",
+      "litterDateSaved": "Litter date saved",
+      "litterDateError": "Failed to save litter date",
+      "requestAbortion": "Request abortion",
+      "processingAbortion": "Processing…",
+      "confirmAbortion": "Are you sure you want to request an abortion for {name}? This will remove the pregnancy flag and litter date.",
+      "abortionRecorded": "Abortion recorded, pregnancy removed",
+      "abortionError": "Failed to record abortion",
+      "future": "(upcoming)"
+    },
+    "timeline": {
+      "title": "Timeline",
+      "description": "Activity history for this animal",
+      "intake": "Admitted to shelter",
+      "created": "Record created in system",
+      "movedToKennel": "Moved to kennel {code}",
+      "currentKennel": "(current)",
+      "expectedLitter": "Expected litter date",
+      "comingSoon": "Full event history will be added in M4."
+    },
+    "medical": {
+      "tabTitle": "Medical Records",
+      "tabDesc": "Health history and medical procedures",
+      "comingSoon": "Medical records coming in M4",
+      "requestProcedure": "Request medical procedure"
+    },
+    "behavior": {
+      "title": "Character & Behavior",
+      "description": "Likes, dislikes, fears and other behavioral notes",
+      "placeholder": "Likes, dislikes, fears...",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Behavioral notes saved",
+      "saveError": "Failed to save notes"
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Files and attachments",
+      "comingSoon": "Documents coming in M5+"
+    },
+    "weight": {
+      "estimated": "estimated weight",
+      "showCalc": "Show calculation",
+      "cancelInput": "Cancel"
+    },
+    "feeding": {
+      "tabTitle": "Energy needs (RER/MER)",
+      "tabDesc": "Science-based feeding recommendations based on weight, age, neutering status and housing conditions."
+    },
+    "daysInShelter": "{days, plural, =1 {# day} other {# days}}",
+    "since": "since {date}",
+    "healthEvents": {
+      "dewormedOn": "Deworming: marked as done",
+      "dewormedOff": "Deworming: marked as not done",
+      "aggressiveOn": "Aggression: flagged as problematic",
+      "aggressiveOff": "Aggression: cleared",
+      "alteredOn": "Altered: marked as done",
+      "alteredOff": "Altered: marked as not done",
+      "pregnantOn": "Pregnancy: flagged",
+      "pregnantOff": "Pregnancy: cleared",
+      "specialNeedsOn": "Special needs: flagged",
+      "specialNeedsOff": "Special needs: cleared",
+      "weightRecorded": "Weight recorded: {weight} kg",
+      "litterDate": "Expected litter date: {date}",
+      "deathRecorded": "Death recorded",
+      "birthRegistered": "Birth: {count} offspring registered"
     }
   },
   "tasks": {

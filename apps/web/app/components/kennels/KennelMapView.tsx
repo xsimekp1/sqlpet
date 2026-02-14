@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   DndContext,
   useDraggable,
@@ -159,6 +160,7 @@ function DraggableKennelBox({
 
 // ---- Main map view ----
 export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: KennelMapViewProps) {
+  const t = useTranslations('kennels.map');
   // Build local position state from kennel data
   const [positions, setPositions] = useState<Record<string, KennelPos>>(() => {
     const init: Record<string, KennelPos> = {};
@@ -196,10 +198,10 @@ export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: 
           map_w: savedPos.w,
           map_h: savedPos.h,
         });
-        toast.success('Poloha uložena');
+        toast.success(t('positionSaved'));
         onPositionSaved?.();
       } catch {
-        toast.error('Nepodařilo se uložit polohu');
+        toast.error(t('positionError'));
       }
     }, 0);
   }, [onPositionSaved]);
@@ -253,17 +255,17 @@ export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: 
       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded-sm border-l-2 border-l-green-500 bg-card inline-block" />
-          Dostupný
+          {t('legendAvailable')}
         </span>
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded-sm border-l-2 border-l-yellow-500 bg-card inline-block" />
-          Údržba
+          {t('legendMaintenance')}
         </span>
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded-sm border-l-2 border-l-red-500 bg-card inline-block" />
-          Uzavřen
+          {t('legendClosed')}
         </span>
-        <span className="ml-auto">Přetáhněte kotec pro změnu polohy</span>
+        <span className="ml-auto">{t('dragHint')}</span>
       </div>
     </DndContext>
   );

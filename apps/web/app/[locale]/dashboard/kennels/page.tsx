@@ -126,6 +126,7 @@ const UNHOUSED_ZONE_ID = '__unhoused__';
 
 // ---- Droppable "no kennel" zone ----
 function DroppableUnhousedZone({ animals }: { animals: Animal[] }) {
+  const t = useTranslations('kennels');
   const { setNodeRef, isOver } = useDroppable({ id: UNHOUSED_ZONE_ID });
   return (
     <div
@@ -136,7 +137,7 @@ function DroppableUnhousedZone({ animals }: { animals: Animal[] }) {
     >
       {animals.length === 0 && (
         <span className={`text-sm self-center ${isOver ? 'text-blue-600' : 'text-muted-foreground'}`}>
-          {isOver ? 'Pustit pro odebrání z kotce' : 'Přetáhněte sem pro odebrání z kotce'}
+          {isOver ? t('dropZone.drop') : t('dropZone.dragHere')}
         </span>
       )}
       {animals.map(animal => (
@@ -254,8 +255,9 @@ function SpeciesBadges({ species }: { species?: string[] | null }) {
 
 // ---- Clickable animal names for table view ----
 function AnimalNames({ animals, total }: { animals: KennelAnimal[]; total: number }) {
+  const t = useTranslations('kennels');
   const [expanded, setExpanded] = useState(false);
-  if (total === 0) return <span className="text-muted-foreground text-sm">Prázdný</span>;
+  if (total === 0) return <span className="text-muted-foreground text-sm">{t('occupancy.empty')}</span>;
   const shown = expanded ? animals : animals.slice(0, 2);
   const rest = total - shown.length;
   return (
@@ -315,7 +317,7 @@ export default function KennelsPage() {
       setKennels(kennelsData);
       setAllAnimals(animalsData.items);
     } catch (error) {
-      toast.error('Failed to load kennels');
+      toast.error(t('loadError'));
       console.error(error);
     } finally {
       setLoading(false);
@@ -352,11 +354,10 @@ export default function KennelsPage() {
       );
       try {
         await ApiClient.moveAnimal({ animal_id: animalId, target_kennel_id: null });
-        const movedVerb = animal.sex === 'female' ? 'odebrána' : 'odebrán';
-        toast.success(`${animal.name} ${movedVerb} z kotce`);
+        toast.success(t('assignButton.removed', { name: animal.name }));
         await fetchData(true);
       } catch (e: any) {
-        toast.error('Nelze odebrat z kotce: ' + (e.message || 'Neznámá chyba'));
+        toast.error(t('warnings.removeError', { msg: e.message || t('assignButton.unknownError') }));
         setAllAnimals(prevAnimals);
       }
       return;
@@ -370,35 +371,35 @@ export default function KennelsPage() {
 
     // Warning: aggressive animal with other animals in kennel
     if (animal.is_aggressive && targetKennel.occupied_count > 0) {
-      toast.warning(`${animal.name} je agresivní a v kotci ${targetKennel.name} je ${targetKennel.occupied_count} zvíře!`);
+      toast.warning(t('warnings.aggressive', { name: animal.name, kennel: targetKennel.name, count: targetKennel.occupied_count }));
     }
 
     // Warning: other aggressive animal already in kennel
     const existingAggressive = targetKennel.animals_preview?.some(a => a.is_aggressive);
     if (!animal.is_aggressive && existingAggressive) {
-      toast.warning(`V kotci ${targetKennel.name} je již agresivní zvíře!`);
+      toast.warning(t('warnings.aggressiveInKennel', { kennel: targetKennel.name }));
     }
 
     // Warning: opposite sex unneutered animals in same kennel
     const isNeutered = animal.altered_status === 'neutered' || animal.altered_status === 'spayed';
-    const oppositeSex = targetKennel.animals_preview?.some(a => 
-      a.sex && animal.sex && a.sex !== animal.sex && 
+    const oppositeSex = targetKennel.animals_preview?.some(a =>
+      a.sex && animal.sex && a.sex !== animal.sex &&
       a.altered_status !== 'neutered' && a.altered_status !== 'spayed'
     );
     if (!isNeutered && oppositeSex) {
-      toast.warning(`${animal.name} není kastrovaný/á a v kotci ${targetKennel.name} je zvíře opačného pohlaví! ❤️`);
+      toast.warning(t('warnings.oppositeSex', { name: animal.name, kennel: targetKennel.name }));
     }
 
     // Warning: different species in same kennel
     const differentSpecies = targetKennel.animals_preview?.some(a => a.species !== animal.species);
     if (differentSpecies) {
-      toast.warning(`${animal.name} (${animal.species}) a zvíře v kotci ${targetKennel.name} jsou různé druhy! 🐾`);
+      toast.warning(t('warnings.differentSpecies', { name: animal.name, species: animal.species, kennel: targetKennel.name }));
     }
 
     // Warning: species not suitable for this kennel
     const suitable = targetKennel.allowed_species;
     if (suitable && suitable.length > 0 && !suitable.includes(animal.species)) {
-      toast.warning(`${animal.name} (${animal.species}) není vhodný/á pro tento kotec! 🏠`);
+      toast.warning(t('warnings.notSuitable', { name: animal.name, species: animal.species, allowed: suitable.join(', ') }));
     }
 
     const prevKennels = kennels;
@@ -413,11 +414,10 @@ export default function KennelsPage() {
 
     try {
       await ApiClient.moveAnimal({ animal_id: animalId, target_kennel_id: targetKennelId });
-      const movedVerb = animal.sex === 'female' ? 'přesunuta' : 'přesunut';
-      toast.success(`${animal.name} ${movedVerb} do ${targetKennel.name}`);
+      toast.success(t('assignButton.assigned', { name: animal.name, kennel: targetKennel.name }));
       await fetchData(true);
     } catch (e: any) {
-      toast.error('Nelze přesunout: ' + (e.message || 'Neznámá chyba'));
+      toast.error(t('warnings.moveError', { msg: e.message || t('assignButton.unknownError') }));
       setKennels(prevKennels);
       setAllAnimals(prevAnimals);
     }

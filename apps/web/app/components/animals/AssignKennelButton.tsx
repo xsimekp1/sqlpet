@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { MapPin, ChevronDown, Check, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,6 +15,7 @@ interface AssignKennelButtonProps {
 }
 
 export function AssignKennelButton({ animal, onAssigned }: AssignKennelButtonProps) {
+  const t = useTranslations('kennels');
   const [open, setOpen] = useState(false);
   const [kennels, setKennels] = useState<Kennel[]>([]);
   const [loadingKennels, setLoadingKennels] = useState(false);
@@ -33,7 +35,7 @@ export function AssignKennelButton({ animal, onAssigned }: AssignKennelButtonPro
         });
         setKennels(sorted);
       } catch (e: any) {
-        toast.error('Nelze načíst kotce: ' + (e.message || ''));
+        toast.error(t('assignButton.loadError', { msg: e.message || '' }));
       } finally {
         setLoadingKennels(false);
       }
@@ -50,11 +52,11 @@ export function AssignKennelButton({ animal, onAssigned }: AssignKennelButtonPro
     setSaving(true);
     try {
       await ApiClient.moveAnimal({ animal_id: animal.id, target_kennel_id: kennel.id });
-      toast.success(`${animal.name} přiřazen do ${kennel.name}`);
+      toast.success(t('assignButton.assigned', { name: animal.name, kennel: kennel.name }));
       onAssigned({ id: kennel.id, name: kennel.name, code: kennel.code });
       setOpen(false);
     } catch (e: any) {
-      toast.error('Nelze přiřadit: ' + (e.message || 'Neznámá chyba'));
+      toast.error(t('assignButton.assignError', { msg: e.message || t('assignButton.unknownError') }));
     } finally {
       setSaving(false);
     }
@@ -65,11 +67,11 @@ export function AssignKennelButton({ animal, onAssigned }: AssignKennelButtonPro
     setSaving(true);
     try {
       await ApiClient.moveAnimal({ animal_id: animal.id, target_kennel_id: null });
-      toast.success(`${animal.name} odebrán z kotce`);
+      toast.success(t('assignButton.removed', { name: animal.name }));
       onAssigned(null);
       setOpen(false);
     } catch (e: any) {
-      toast.error('Nelze odebrat: ' + (e.message || 'Neznámá chyba'));
+      toast.error(t('assignButton.removeError', { msg: e.message || t('assignButton.unknownError') }));
     } finally {
       setSaving(false);
     }
@@ -77,14 +79,14 @@ export function AssignKennelButton({ animal, onAssigned }: AssignKennelButtonPro
 
   const getOccupancyBadge = (kennel: Kennel) => {
     const pct = kennel.occupied_count / kennel.capacity;
-    if (kennel.occupied_count === 0) return <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">Prázdný</Badge>;
+    if (kennel.occupied_count === 0) return <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">{t('occupancy.empty')}</Badge>;
     if (pct < 1) return <Badge variant="outline" className="text-xs bg-green-50 text-green-700">{kennel.occupied_count}/{kennel.capacity}</Badge>;
-    return <Badge variant="outline" className="text-xs bg-red-50 text-red-700">Plný {kennel.occupied_count}/{kennel.capacity}</Badge>;
+    return <Badge variant="outline" className="text-xs bg-red-50 text-red-700">{t('occupancy.full')} {kennel.occupied_count}/{kennel.capacity}</Badge>;
   };
 
   const getStatusBadge = (kennel: Kennel) => {
-    if (kennel.status === 'maintenance') return <Badge variant="secondary" className="text-xs">Údržba</Badge>;
-    if (kennel.status === 'closed') return <Badge variant="destructive" className="text-xs">Zavřený</Badge>;
+    if (kennel.status === 'maintenance') return <Badge variant="secondary" className="text-xs">{t('status.maintenance')}</Badge>;
+    if (kennel.status === 'closed') return <Badge variant="destructive" className="text-xs">{t('status.closed')}</Badge>;
     return null;
   };
 
@@ -94,18 +96,18 @@ export function AssignKennelButton({ animal, onAssigned }: AssignKennelButtonPro
         <Button variant="outline" size="sm" className="gap-2">
           <MapPin className="h-4 w-4" />
           {animal.current_kennel_code
-            ? `Kotec: ${animal.current_kennel_code}`
-            : 'Přiřadit kotec'}
+            ? t('assignButton.trigger', { code: animal.current_kennel_code })
+            : t('assignButton.triggerEmpty')}
           <ChevronDown className="h-3 w-3 opacity-60" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
         <div className="p-3 border-b">
-          <p className="text-sm font-semibold">Přiřadit do kotce</p>
+          <p className="text-sm font-semibold">{t('assignButton.popoverTitle')}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {animal.current_kennel_name
-              ? `Aktuálně: ${animal.current_kennel_name}`
-              : 'Zvíře nemá přiřazený kotec'}
+              ? t('assignButton.currentKennel', { name: animal.current_kennel_name })
+              : t('assignButton.noKennel')}
           </p>
         </div>
 
@@ -160,7 +162,7 @@ export function AssignKennelButton({ animal, onAssigned }: AssignKennelButtonPro
               className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
             >
               <X className="h-4 w-4" />
-              Odebrat z kotce
+              {t('assignButton.removeFromKennel')}
             </button>
           </div>
         )}
