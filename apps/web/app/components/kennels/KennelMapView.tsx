@@ -158,11 +158,6 @@ function DraggableKennelBox({
       ? 'border-l-red-500'
       : 'border-l-green-500';
 
-  const occupancyPct =
-    kennel.capacity > 0
-      ? Math.min(100, Math.round((kennel.occupied_count / kennel.capacity) * 100))
-      : 0;
-
   return (
     <div
       ref={setDragRef}
@@ -204,23 +199,6 @@ function DraggableKennelBox({
           <p className="text-xs text-muted-foreground truncate">{kennel.name}</p>
         )}
 
-        {/* Occupancy bar */}
-        <div className="mt-auto pt-1">
-          <div className="h-1 rounded-full bg-muted overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${
-                occupancyPct >= 100
-                  ? 'bg-red-500'
-                  : occupancyPct >= 80
-                  ? 'bg-yellow-500'
-                  : occupancyPct > 0
-                  ? 'bg-green-500'
-                  : 'bg-gray-300'
-              }`}
-              style={{ width: `${occupancyPct}%` }}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );
