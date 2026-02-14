@@ -163,6 +163,12 @@ export default function AnimalDetailPage() {
   const prevId = currentIdx > 0 ? animalIds[currentIdx - 1] : null;
   const nextId = currentIdx < animalIds.length - 1 ? animalIds[currentIdx + 1] : null;
 
+  // Prefetch prev/next routes so navigation feels instant
+  useEffect(() => {
+    if (prevId) router.prefetch(`/dashboard/animals/${prevId}`);
+    if (nextId) router.prefetch(`/dashboard/animals/${nextId}`);
+  }, [prevId, nextId, router]);
+
   const handleAnimalUpdate = (updatedAnimal: Animal) => setAnimal(updatedAnimal);
 
   const toggleDewormed = async () => {
