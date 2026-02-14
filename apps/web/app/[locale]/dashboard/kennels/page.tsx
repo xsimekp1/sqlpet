@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import {
   Plus, Search, Loader2, Grid, Table, Settings,
   Footprints, MoreHorizontal, Users, Edit,
-  ArrowRight
+  ArrowRight, Map, Accessibility
 } from 'lucide-react';
 import {
   DndContext,
@@ -35,7 +35,9 @@ import { getAnimalImageUrl } from '@/app/lib/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { AddKennelDialog } from '@/app/components/kennels/AddKennelDialog';
+import KennelMapView from '@/app/components/kennels/KennelMapView';
 
 
 interface FilterState {
@@ -87,6 +89,11 @@ function DraggableAnimalChip({ animal }: { animal: Animal }) {
         />
       </div>
       <span className="text-sm font-medium max-w-[100px] truncate">{animal.name}</span>
+      {animal.is_special_needs && (
+        <span title="Speciální potřeby" className="shrink-0">
+          <Accessibility className="h-3.5 w-3.5 text-violet-500" />
+        </span>
+      )}
     </div>
   );
 }
@@ -171,8 +178,8 @@ function DroppableKennelCard({
       <div className="p-3 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-base font-bold shrink-0">{kennel.code}</span>
-            <span className="text-sm text-muted-foreground truncate">{kennel.name}</span>
+            <Link href={`/dashboard/kennels/${kennel.id}`} className="text-base font-bold shrink-0 hover:underline hover:text-primary">{kennel.code}</Link>
+            <Link href={`/dashboard/kennels/${kennel.id}`} className="text-sm text-muted-foreground truncate hover:underline hover:text-primary">{kennel.name}</Link>
             {kennel.zone_name && (
               <Badge className={`${getZoneColor(kennel.zone_id)} shrink-0`} variant="outline">
                 {kennel.zone_name}
@@ -261,7 +268,7 @@ export default function KennelsPage() {
   const [kennels, setKennels] = useState<Kennel[]>([]);
   const [allAnimals, setAllAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'table' | 'grid'>('grid');
+  const [view, setView] = useState<'table' | 'grid' | 'map'>('grid');
   const [activeAnimal, setActiveAnimal] = useState<Animal | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -480,14 +487,32 @@ export default function KennelsPage() {
           <p className="text-muted-foreground mt-1">{t('description')}</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setView(view === 'table' ? 'grid' : 'table')}
-          >
-            {view === 'table' ? <Grid className="h-4 w-4 mr-1" /> : <Table className="h-4 w-4 mr-1" />}
-            {t(`view.${view === 'table' ? 'grid' : 'table'}` as any)}
-          </Button>
+          <div className="flex rounded-md border divide-x overflow-hidden">
+            <Button
+              variant={view === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none border-0"
+              onClick={() => setView('grid')}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={view === 'table' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none border-0"
+              onClick={() => setView('table')}
+            >
+              <Table className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={view === 'map' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none border-0"
+              onClick={() => setView('map')}
+            >
+              <Map className="h-4 w-4" />
+            </Button>
+          </div>
           <Button variant="outline" className="gap-2">
             <Settings className="h-4 w-4" />
             {t('quickActions.manageZones')}
@@ -558,8 +583,17 @@ export default function KennelsPage() {
         </CardHeader>
       </Card>
 
+      {/* Map View */}
+      {view === 'map' && (
+        <KennelMapView
+          kennels={filteredKennels}
+          allAnimals={allAnimals}
+          onPositionSaved={() => fetchData(true)}
+        />
+      )}
+
       {/* Grid View with DnD */}
-      {view === 'grid' ? (
+      {view === 'grid' && (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           {/* Unhoused animals bar — always visible, droppable */}
           <div className="mb-4">
@@ -572,15 +606,21 @@ export default function KennelsPage() {
           {/* Kennel grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredKennels.map(kennel => (
-              <DroppableKennelCard
+              <motion.div
                 key={kennel.id}
-                kennel={kennel}
-                allAnimals={allAnimals}
-                t={t}
-                getZoneColor={getZoneColor}
-                getOccupancyStatusColor={getOccupancyStatusColor}
-                getOccupancyStatus={getOccupancyStatus}
-              />
+                layoutId={`kennel-${kennel.id}`}
+                layout
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              >
+                <DroppableKennelCard
+                  kennel={kennel}
+                  allAnimals={allAnimals}
+                  t={t}
+                  getZoneColor={getZoneColor}
+                  getOccupancyStatusColor={getOccupancyStatusColor}
+                  getOccupancyStatus={getOccupancyStatus}
+                />
+              </motion.div>
             ))}
           </div>
 
@@ -589,8 +629,10 @@ export default function KennelsPage() {
             {activeAnimal ? <AnimalChipPreview animal={activeAnimal} /> : null}
           </DragOverlay>
         </DndContext>
-      ) : (
-        /* Table View */
+      )}
+
+      {/* Table View */}
+      {view === 'table' && (
         <Card>
           <div className="overflow-x-auto">
             <table className="w-full">

@@ -31,6 +31,7 @@ class FeedingService:
         schedule_json: Optional[Dict[str, Any]] = None,
         end_date: Optional[date] = None,
         notes: Optional[str] = None,
+        mer_calculation: Optional[Dict[str, Any]] = None,
     ) -> FeedingPlan:
         """Create a new feeding plan for an animal."""
         plan = FeedingPlan(
@@ -46,6 +47,7 @@ class FeedingService:
             end_date=end_date,
             notes=notes,
             is_active=True,
+            mer_calculation=mer_calculation,
         )
         self.db.add(plan)
         await self.db.flush()

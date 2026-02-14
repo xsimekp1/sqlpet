@@ -55,6 +55,9 @@ async def create_inventory_item(
         kcal_per_100g=item_data.kcal_per_100g,
         price_per_unit=item_data.price_per_unit,
         allowed_species=item_data.allowed_species,
+        food_type=item_data.food_type,
+        shelf_life_days=item_data.shelf_life_days,
+        unit_weight_g=item_data.unit_weight_g,
     )
     await db.commit()
     return item

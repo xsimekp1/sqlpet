@@ -158,6 +158,9 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     map_h: Mapped[int] = mapped_column(Integer, nullable=False, default=120)
     map_rotation: Mapped[int | None] = mapped_column(Integer, nullable=True)
     map_meta: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    last_cleaned_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     zone = relationship("Zone", back_populates="kennels")

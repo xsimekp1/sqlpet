@@ -6,6 +6,41 @@ from typing import Optional, Dict, Any
 import uuid
 
 
+# MER / RER calculation schemas
+
+class MERFactor(BaseModel):
+    value: float
+    label: str
+
+
+class MERFoodRecommendation(BaseModel):
+    food_id: Optional[uuid.UUID] = None
+    kcal_per_100g: float
+    amount_g_per_day: float
+    meals_per_day: int
+    amount_g_per_meal: float
+
+
+class MERCalculationResponse(BaseModel):
+    weight_kg: float
+    rer: float
+    factors: Dict[str, Any]
+    mer_total_factor: float
+    mer_kcal: float
+    food_recommendation: Optional[MERFoodRecommendation] = None
+    calculated_at: str
+
+
+class MERCalculateRequest(BaseModel):
+    animal_id: uuid.UUID
+    health_modifier: str = "healthy"
+    environment: str = "indoor"
+    weight_goal: str = "maintain"
+    food_id: Optional[uuid.UUID] = None
+    food_kcal_per_100g: Optional[float] = None  # manual override if no food_id
+    meals_per_day: int = Field(2, ge=1, le=10)
+
+
 # Food schemas
 class FoodBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
@@ -42,7 +77,7 @@ class FeedingPlanBase(BaseModel):
 
 
 class FeedingPlanCreate(FeedingPlanBase):
-    pass
+    mer_calculation: Optional[Dict[str, Any]] = None  # MER snapshot at plan creation
 
 
 class FeedingPlanUpdate(BaseModel):
@@ -60,6 +95,7 @@ class FeedingPlanResponse(FeedingPlanBase):
     id: uuid.UUID
     organization_id: uuid.UUID
     is_active: bool
+    mer_calculation: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: datetime
 

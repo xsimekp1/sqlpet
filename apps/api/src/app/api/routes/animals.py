@@ -1,7 +1,8 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from pydantic import BaseModel, Field
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +14,7 @@ from src.app.api.dependencies.auth import (
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Species
 from src.app.models.animal_weight_log import AnimalWeightLog
+from src.app.models.animal_bcs_log import AnimalBCSLog
 from src.app.models.breed import Breed
 from src.app.models.breed_i18n import BreedI18n
 from src.app.models.file import DefaultAnimalImage
@@ -28,6 +30,7 @@ from src.app.schemas.animal import (
     BreedResponse,
 )
 from src.app.schemas.weight_log import WeightLogCreate, WeightLogResponse
+from src.app.schemas.bcs_log import BCSLogCreate, BCSLogResponse
 from src.app.services.animal_service import AnimalService
 from src.app.services.default_image_service import DefaultImageService
 
@@ -282,6 +285,173 @@ async def get_weight_history(
     )
     logs = result.scalars().all()
     return [WeightLogResponse.model_validate(log) for log in logs]
+
+
+# --- Birth / litter event endpoint ---
+
+
+class BirthRequest(BaseModel):
+    litter_count: int = Field(..., ge=1, le=20)
+    birth_date: date | None = None  # defaults to today
+
+
+@router.post(
+    "/{animal_id}/birth",
+    status_code=status.HTTP_201_CREATED,
+)
+async def register_birth(
+    animal_id: uuid.UUID,
+    data: BirthRequest,
+    current_user: User = Depends(require_permission("animals.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Register a birth event for a pregnant animal.
+    Creates litter_count new animals of the same species + breed,
+    assigns them to the mother's current kennel (ignoring capacity),
+    and sets their birth date to today.
+    Returns list of created offspring.
+    """
+    from sqlalchemy import text as sql_text
+    from src.app.models.animal import Animal, AgeGroup, AnimalStatus, AlteredStatus
+    from src.app.models.animal_breed import AnimalBreed
+    from src.app.models.kennel import KennelStay
+
+    svc = AnimalService(db)
+    mother = await svc.get_animal(organization_id, animal_id)
+    if mother is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+
+    today = data.birth_date or datetime.now(timezone.utc).date()
+
+    # Find mother's current kennel
+    stay_result = await db.execute(
+        sql_text("""
+            SELECT kennel_id FROM kennel_stays
+            WHERE animal_id = :animal_id AND end_at IS NULL
+            LIMIT 1
+        """),
+        {"animal_id": str(mother.id)},
+    )
+    current_kennel_row = stay_result.first()
+    current_kennel_id = current_kennel_row[0] if current_kennel_row else None
+
+    # Get mother's breeds for offspring
+    breed_ids = [ab.breed_id for ab in (mother.animal_breeds or [])]
+
+    created = []
+    for i in range(data.litter_count):
+        public_code = await svc._generate_public_code(organization_id)
+        offspring = Animal(
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            public_code=public_code,
+            name=f"{mother.name} – mládě {i + 1}",
+            species=mother.species,
+            sex="unknown",
+            status=AnimalStatus.INTAKE,
+            altered_status=AlteredStatus.UNKNOWN,
+            age_group=AgeGroup.BABY,
+            birth_date_estimated=today,
+            intake_date=today,
+            public_visibility=False,
+            featured=False,
+            is_dewormed=False,
+            is_aggressive=False,
+            is_pregnant=False,
+        )
+        db.add(offspring)
+        await db.flush()
+
+        # Copy breeds from mother
+        for breed_id in breed_ids:
+            db.add(AnimalBreed(animal_id=offspring.id, breed_id=breed_id))
+
+        # Place in mother's kennel (ignoring capacity)
+        if current_kennel_id:
+            db.add(KennelStay(
+                id=uuid.uuid4(),
+                organization_id=organization_id,
+                animal_id=offspring.id,
+                kennel_id=current_kennel_id,
+                start_at=datetime.now(timezone.utc),
+                reason="Narozeno",
+                moved_by_user_id=current_user.id,
+            ))
+
+        created.append({"id": str(offspring.id), "public_code": public_code, "name": offspring.name})
+        await db.flush()
+
+    # Clear expected litter date and unmark pregnant on mother
+    mother.expected_litter_date = None
+    mother.is_pregnant = False
+
+    await db.commit()
+    return {"created": len(created), "offspring": created}
+
+
+# --- BCS log endpoints ---
+
+
+@router.post(
+    "/{animal_id}/bcs",
+    response_model=BCSLogResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def log_bcs(
+    animal_id: uuid.UUID,
+    data: BCSLogCreate,
+    current_user: User = Depends(require_permission("animals.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Log a Body Condition Score (BCS 1–9) measurement for an animal."""
+    svc = AnimalService(db)
+    animal = await svc.get_animal(organization_id, animal_id)
+    if animal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+
+    measured_at = data.measured_at or datetime.now(timezone.utc)
+    log = AnimalBCSLog(
+        animal_id=animal_id,
+        bcs=data.bcs,
+        measured_at=measured_at,
+        notes=data.notes,
+        recorded_by_user_id=current_user.id,
+    )
+    db.add(log)
+    # Update current BCS on animal
+    animal.bcs = data.bcs
+    await db.commit()
+    await db.refresh(log)
+    return BCSLogResponse.model_validate(log)
+
+
+@router.get(
+    "/{animal_id}/bcs",
+    response_model=list[BCSLogResponse],
+)
+async def get_bcs_history(
+    animal_id: uuid.UUID,
+    current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get BCS history for an animal, newest first."""
+    svc = AnimalService(db)
+    animal = await svc.get_animal(organization_id, animal_id)
+    if animal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+
+    result = await db.execute(
+        select(AnimalBCSLog)
+        .where(AnimalBCSLog.animal_id == animal_id)
+        .order_by(AnimalBCSLog.measured_at.desc())
+        .limit(50)
+    )
+    logs = result.scalars().all()
+    return [BCSLogResponse.model_validate(log) for log in logs]
 
 
 # --- Breeds endpoint (authenticated, no org scoping) ---

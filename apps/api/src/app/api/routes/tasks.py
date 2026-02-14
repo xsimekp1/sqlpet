@@ -20,7 +20,7 @@ from src.app.services.task_service import TaskService
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
-@router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 async def create_task(
     task_data: TaskCreate,
     current_user: User = Depends(get_current_user),
@@ -206,11 +206,27 @@ async def complete_task(
             completed_by_id=current_user.id,
             completion_data=complete_data.completion_data,
         )
+        # If cleaning task linked to a kennel → update last_cleaned_at
+        if (
+            task.type == TaskType.CLEANING
+            and task.related_entity_type == "kennel"
+            and task.related_entity_id
+        ):
+            from src.app.models.kennel import Kennel
+            from sqlalchemy import select as _select
+            from datetime import timezone as _tz
+            kennel_result = await db.execute(
+                _select(Kennel).where(
+                    Kennel.id == task.related_entity_id,
+                    Kennel.organization_id == organization_id,
+                )
+            )
+            kennel = kennel_result.scalar_one_or_none()
+            if kennel:
+                from datetime import datetime as _dt
+                kennel.last_cleaned_at = _dt.now(_tz.utc)
+
         await db.commit()
-
-        # TODO: M4 - If task is feeding type, trigger feeding log creation
-        # This will be implemented in the feeding integration phase
-
         return task
     except ValueError as e:
         raise HTTPException(

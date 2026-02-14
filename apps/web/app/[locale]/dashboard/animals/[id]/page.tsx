@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import {
   ArrowLeft, Trash2, MapPin, Loader2, Stethoscope,
   CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors,
-  ChevronLeft, ChevronRight, Baby, Scale,
+  ChevronLeft, ChevronRight, Baby, Scale, Accessibility,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -28,10 +28,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import ApiClient, { Animal, WeightLog } from '@/app/lib/api';
+import ApiClient, { Animal, WeightLog, MERCalculation } from '@/app/lib/api';
+import MERCalculator from '@/app/components/feeding/MERCalculator';
 import { getAnimalImageUrl } from '@/app/lib/utils';
 import { toast } from 'sonner';
 import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
+import BirthDialog from '@/app/components/animals/BirthDialog';
 import { EditableAnimalName, EditableAnimalDetails, AssignKennelButton } from '@/app/components/animals';
 import { calcMER } from '@/app/lib/energy';
 
@@ -105,15 +107,24 @@ export default function AnimalDetailPage() {
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
   const [medicalDialogOpen, setMedicalDialogOpen] = useState(false);
+  const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const [togglingDewormed, setTogglingDewormed] = useState(false);
   const [togglingAggressive, setTogglingAggressive] = useState(false);
   const [togglingAltered, setTogglingAltered] = useState(false);
   const [togglingPregnant, setTogglingPregnant] = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
   const [healthEvents, setHealthEvents] = useState<{ text: string; date: Date }[]>([]);
+  const [behaviorNotes, setBehaviorNotes] = useState('');
+  const [savingBehaviorNotes, setSavingBehaviorNotes] = useState(false);
+  const [togglingSpecialNeeds, setTogglingSpecialNeeds] = useState(false);
+  const [requestingAbortion, setRequestingAbortion] = useState(false);
 
   // Nav arrows
   const [animalIds, setAnimalIds] = useState<string[]>([]);
+
+  // Expected litter date
+  const [litterDateInput, setLitterDateInput] = useState('');
+  const [savingLitterDate, setSavingLitterDate] = useState(false);
 
   // Weight
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
@@ -137,6 +148,7 @@ export default function AnimalDetailPage() {
         setAnimal(data);
         setAnimalIds(listData.items.map(a => a.id));
         setWeightLogs(wLogs);
+        setBehaviorNotes(data.behavior_notes ?? '');
       } catch (error) {
         toast.error('Failed to load animal');
         console.error(error);
@@ -253,6 +265,67 @@ export default function AnimalDetailPage() {
     finally { setSavingWeight(false); }
   };
 
+  const handleSaveLitterDate = async () => {
+    if (!animal || !litterDateInput) return;
+    setSavingLitterDate(true);
+    try {
+      const updated = await ApiClient.updateAnimal(animal.id, { expected_litter_date: litterDateInput } as any);
+      setAnimal(updated);
+      setHealthEvents(prev => [
+        { text: `Očekávaný termín vrhu: ${new Date(litterDateInput).toLocaleDateString()}`, date: new Date() },
+        ...prev,
+      ]);
+      toast.success('Termín vrhu uložen');
+      setLitterDateInput('');
+    } catch { toast.error('Nepodařilo se uložit termín vrhu'); }
+    finally { setSavingLitterDate(false); }
+  };
+
+  const toggleSpecialNeeds = async () => {
+    if (!animal) return;
+    setTogglingSpecialNeeds(true);
+    try {
+      const newVal = !animal.is_special_needs;
+      const updated = await ApiClient.updateAnimal(animal.id, { is_special_needs: newVal } as any);
+      setAnimal(updated);
+      setHealthEvents(prev => [
+        { text: newVal ? 'Speciální potřeby: označeny' : 'Speciální potřeby: odstraněny', date: new Date() },
+        ...prev,
+      ]);
+    } catch { toast.error('Failed to update'); }
+    finally { setTogglingSpecialNeeds(false); }
+  };
+
+  const handleRequestAbortion = async () => {
+    if (!animal) return;
+    if (!confirm(`Opravdu chcete vyžádat potrat pro ${animal.name}? Tato akce odstraní označení těhotenství a termín vrhu.`)) return;
+    setRequestingAbortion(true);
+    try {
+      const updated = await ApiClient.updateAnimal(animal.id, {
+        is_pregnant: false,
+        expected_litter_date: null,
+      } as any);
+      setAnimal(updated);
+      setHealthEvents(prev => [
+        { text: 'Vyžádán potrat — těhotenství ukončeno', date: new Date() },
+        ...prev,
+      ]);
+      toast.success('Potrat zaevidován, těhotenství odstraněno');
+    } catch { toast.error('Nepodařilo se zaevidovat potrat'); }
+    finally { setRequestingAbortion(false); }
+  };
+
+  const handleSaveBehaviorNotes = async () => {
+    if (!animal) return;
+    setSavingBehaviorNotes(true);
+    try {
+      const updated = await ApiClient.updateAnimal(animal.id, { behavior_notes: behaviorNotes } as any);
+      setAnimal(updated);
+      toast.success('Poznámky k povaze uloženy');
+    } catch { toast.error('Nepodařilo se uložit poznámky'); }
+    finally { setSavingBehaviorNotes(false); }
+  };
+
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this animal?')) return;
     try {
@@ -318,7 +391,7 @@ export default function AnimalDetailPage() {
               src={getAnimalImageUrl(animal)}
               alt={animal.name}
               fill
-              className="object-contain"
+              className="object-cover object-center"
               unoptimized
             />
           </div>
@@ -417,6 +490,17 @@ export default function AnimalDetailPage() {
               <Stethoscope className="h-4 w-4 mr-2" />
               {t('medical.requestProcedure')}
             </Button>
+            {animal.is_pregnant && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBirthDialogOpen(true)}
+                className="border-pink-300 text-pink-700 hover:bg-pink-50 dark:border-pink-700 dark:text-pink-300"
+              >
+                <Baby className="h-4 w-4 mr-2" />
+                Porod
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={handleDelete}>
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
@@ -430,7 +514,9 @@ export default function AnimalDetailPage() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
+          <TabsTrigger value="feeding">Krmení</TabsTrigger>
           <TabsTrigger value="medical">Medical</TabsTrigger>
+          <TabsTrigger value="behavior">Chování</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
@@ -470,13 +556,16 @@ export default function AnimalDetailPage() {
                 )}
                 <span className="text-sm font-medium">{t('animals.health.neutered')}</span>
                 <button
-                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={toggleAltered}
-                  disabled={togglingAltered}
-                  title={t('animals.health.toggleAltered')}
+                  disabled={togglingAltered || animal.is_pregnant}
+                  title={animal.is_pregnant ? 'Kastrace není možná u těhotného zvířete' : t('animals.health.toggleAltered')}
                 >
                   {togglingAltered ? '...' : (animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? t('animals.health.markIntact') : t('animals.health.markAltered'))}
                 </button>
+                {animal.is_pregnant && (
+                  <span className="text-xs text-amber-600 ml-1" title="Kastrace není možná u těhotného zvířete">⚠ těhotná</span>
+                )}
               </div>
 
               {/* Dewormed */}
@@ -526,6 +615,64 @@ export default function AnimalDetailPage() {
                   {animal.is_pregnant ? t('animals.health.yes') : t('animals.health.no')}
                 </button>
               </div>
+
+              {/* Abortion request — only when pregnant */}
+              {animal.is_pregnant && (
+                <div className="ml-11 flex items-center gap-2 py-1 border-t border-dashed border-pink-200">
+                  <span className="text-xs text-muted-foreground">Veterinární zákrok:</span>
+                  <button
+                    className="text-xs px-2.5 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    onClick={handleRequestAbortion}
+                    disabled={requestingAbortion}
+                    title="Vyžádat provedení potratu — odstraní označení těhotenství"
+                  >
+                    {requestingAbortion ? 'Zpracovávám…' : '🚫 Vyžádat potrat'}
+                  </button>
+                </div>
+              )}
+
+              {/* Special needs */}
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${animal.is_special_needs ? 'bg-violet-100' : 'bg-gray-100'}`}>
+                  <Accessibility className={`h-4 w-4 ${animal.is_special_needs ? 'text-violet-600' : 'text-gray-400'}`} />
+                </div>
+                <span className="text-sm font-medium">Speciální potřeby</span>
+                <button
+                  className="ml-auto text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  onClick={toggleSpecialNeeds}
+                  disabled={togglingSpecialNeeds}
+                  title="Zvíře má speciální potřeby (handicap, zdravotní omezení...)"
+                >
+                  {togglingSpecialNeeds ? '...' : (animal.is_special_needs ? 'Ano' : 'Ne')}
+                </button>
+              </div>
+
+              {/* Expected litter date (shown when pregnant) */}
+              {animal.is_pregnant && (
+                <div className="ml-11 space-y-1">
+                  {animal.expected_litter_date && (
+                    <p className="text-sm text-pink-700 dark:text-pink-300 font-medium">
+                      Očekávaný termín vrhu: {new Date(animal.expected_litter_date).toLocaleDateString()}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="date"
+                      value={litterDateInput || (animal.expected_litter_date ?? '')}
+                      onChange={e => setLitterDateInput(e.target.value)}
+                      className="h-7 text-xs w-36"
+                      title="Očekávaný termín vrhu"
+                    />
+                    <button
+                      className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                      onClick={handleSaveLitterDate}
+                      disabled={savingLitterDate || !litterDateInput}
+                    >
+                      {savingLitterDate ? 'Ukládám…' : 'Uložit termín'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -648,6 +795,24 @@ export default function AnimalDetailPage() {
           </Card>
         </TabsContent>
 
+        {/* ── Feeding ── */}
+        <TabsContent value="feeding" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Energetické potřeby (RER/MER)</CardTitle>
+              <CardDescription>
+                Vědecky podložené doporučení dávkování krmiva na základě váhy, věku, kastrace a podmínek chovu.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MERCalculator
+                animalId={animalId}
+                weightKg={weightKg}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* ── Timeline ── */}
         <TabsContent value="timeline">
           <Card>
@@ -670,6 +835,22 @@ export default function AnimalDetailPage() {
                     </div>
                   </div>
                 ))}
+
+                {/* Expected litter date – shown in timeline even if in the future */}
+                {animal.expected_litter_date && (
+                  <div className="relative mb-6">
+                    <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-pink-400 border-2 border-background" />
+                    <div className="pl-2">
+                      <p className="text-sm font-semibold text-pink-700 dark:text-pink-300">
+                        Očekávaný termín vrhu
+                        {new Date(animal.expected_litter_date) > new Date() && ' (v budoucnosti)'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(animal.expected_litter_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {animal.intake_date && (
                   <div className="relative mb-6">
@@ -715,6 +896,33 @@ export default function AnimalDetailPage() {
           </Card>
         </TabsContent>
 
+        {/* ── Behavior ── */}
+        <TabsContent value="behavior">
+          <Card>
+            <CardHeader>
+              <CardTitle>Povaha a chování</CardTitle>
+              <CardDescription>Co má rád, nerad, čeho se bojí a další poznámky k povaze zvířete</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <textarea
+                className="w-full min-h-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+                placeholder="Co má rád, nerad, čeho se bojí..."
+                value={behaviorNotes}
+                onChange={e => setBehaviorNotes(e.target.value)}
+              />
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={handleSaveBehaviorNotes}
+                  disabled={savingBehaviorNotes}
+                >
+                  {savingBehaviorNotes ? 'Ukládám…' : 'Uložit'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* ── Documents ── */}
         <TabsContent value="documents">
           <Card>
@@ -729,12 +937,63 @@ export default function AnimalDetailPage() {
         </TabsContent>
       </Tabs>
 
+      {/* ── Deceased zone – de-emphasized, at the bottom ── */}
+      {animal.status !== 'deceased' && (
+        <div className="pt-8 border-t border-dashed">
+          <div className="relative inline-block">
+            <button
+              className="text-xs text-muted-foreground/50 hover:text-red-500 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-red-300"
+              onClick={async () => {
+                if (!confirm(`Opravdu chcete zaevidovat úmrtí zvířete ${animal.name}? Tato akce změní status na "Uhynul/a".`)) return;
+                try {
+                  const updated = await ApiClient.updateAnimal(animal.id, { status: 'deceased' } as any);
+                  setAnimal(updated);
+                  setHealthEvents(prev => [{ text: 'Zaevidováno úmrtí', date: new Date() }, ...prev]);
+                  toast.success('Úmrtí zaevidováno');
+                  setTimeout(() => toast.info('Byl automaticky vytvořen úkol na likvidaci těla.'), 800);
+                } catch { toast.error('Nepodařilo se zaevidovat úmrtí'); }
+              }}
+            >
+              Zaevidovat úmrtí
+            </button>
+            {/* Diagonal mourning stripe */}
+            <span
+              className="absolute inset-0 pointer-events-none rounded overflow-hidden"
+              aria-hidden
+            >
+              <span className="absolute inset-0 opacity-20"
+                style={{
+                  background: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.3) 4px, rgba(0,0,0,0.3) 5px)',
+                }}
+              />
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Medical Request Dialog */}
       {animal && (
         <RequestMedicalProcedureDialog
           animal={animal}
           open={medicalDialogOpen}
           onOpenChange={setMedicalDialogOpen}
+        />
+      )}
+
+      {/* Birth Dialog */}
+      {animal && (
+        <BirthDialog
+          animalId={animal.id}
+          animalName={animal.name}
+          open={birthDialogOpen}
+          onOpenChange={setBirthDialogOpen}
+          onBirthRegistered={(count) => {
+            setAnimal(prev => prev ? { ...prev, is_pregnant: false, expected_litter_date: null } : null);
+            setHealthEvents(prev => [
+              { text: `Porod: zaevidováno ${count} mláďat`, date: new Date() },
+              ...prev,
+            ]);
+          }}
         />
       )}
     </div>

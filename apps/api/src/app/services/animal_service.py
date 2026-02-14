@@ -300,6 +300,9 @@ class AnimalService:
                 )
                 self.db.add(ai)
 
+        # Track status change before applying
+        new_status = update_data.get("status")
+
         # Update scalar fields
         for field, value in update_data.items():
             setattr(animal, field, value)
@@ -307,6 +310,24 @@ class AnimalService:
         await self.db.flush()
 
         after = _animal_to_dict(animal)
+
+        # Auto-create disposal task when animal is marked deceased
+        if new_status == "deceased":
+            from src.app.models.task import Task, TaskType, TaskStatus, TaskPriority
+            disposal_task = Task(
+                id=uuid.uuid4(),
+                organization_id=organization_id,
+                created_by_id=actor_id,
+                title=f"Likvidace těla – {animal.name} ({animal.public_code})",
+                description=f"Zvíře {animal.name} bylo zaevidováno jako uhynulé. Zajistěte likvidaci těla v souladu s předpisy.",
+                type=TaskType.GENERAL,
+                priority=TaskPriority.HIGH,
+                status=TaskStatus.PENDING,
+                related_entity_type="animal",
+                related_entity_id=animal.id,
+            )
+            self.db.add(disposal_task)
+            await self.db.flush()
 
         # Audit log
         await self.audit.log_action(

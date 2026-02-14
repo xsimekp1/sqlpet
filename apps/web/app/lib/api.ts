@@ -108,6 +108,10 @@ export interface Animal {
   is_dewormed: boolean;
   is_aggressive: boolean;
   is_pregnant: boolean;
+  bcs: number | null;
+  expected_litter_date: string | null;
+  behavior_notes: string | null;
+  is_special_needs: boolean;
   weight_current_kg: number | null;
   weight_estimated_kg: number | null;
   age_group: 'baby' | 'young' | 'adult' | 'senior' | 'unknown';
@@ -124,6 +128,57 @@ export interface WeightLog {
   measured_at: string;
   notes?: string | null;
   created_at: string;
+}
+
+export interface BCSLog {
+  id: string;
+  animal_id: string;
+  bcs: number;
+  measured_at: string;
+  notes?: string | null;
+  created_at: string;
+}
+
+// MER / RER calculation types
+export interface MERFactor {
+  value: number;
+  label: string;
+}
+
+export interface MERFoodRecommendation {
+  food_id: string | null;
+  kcal_per_100g: number;
+  amount_g_per_day: number;
+  meals_per_day: number;
+  amount_g_per_meal: number;
+}
+
+export interface MERCalculation {
+  weight_kg: number;
+  rer: number;
+  factors: {
+    activity: MERFactor;
+    bcs?: MERFactor;
+    age: MERFactor;
+    health: MERFactor;
+    environment: MERFactor;
+    breed_size: MERFactor;
+    weight_goal: MERFactor;
+  };
+  mer_total_factor: number;
+  mer_kcal: number;
+  food_recommendation?: MERFoodRecommendation;
+  calculated_at: string;
+}
+
+export interface MERCalculateRequest {
+  animal_id: string;
+  health_modifier?: string;
+  environment?: string;
+  weight_goal?: string;
+  food_id?: string;
+  food_kcal_per_100g?: number;
+  meals_per_day?: number;
 }
 
 export interface CreateAnimalRequest {
@@ -156,6 +211,11 @@ export interface Kennel {
   occupied_count: number;
   animals_preview: KennelAnimal[];
   alerts: string[];
+  last_cleaned_at?: string | null;
+  map_x: number;
+  map_y: number;
+  map_w: number;
+  map_h: number;
 }
 
 export interface KennelAnimal {
@@ -166,6 +226,7 @@ export interface KennelAnimal {
   is_aggressive?: boolean;
   sex?: string;
   altered_status?: string;
+  start_at?: string | null;
 }
 
 export interface KennelZone {
@@ -649,6 +710,29 @@ class ApiClient {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
         throw new Error(axiosError.response?.data?.detail || 'Failed to delete kennel');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  /**
+   * Update kennel map position
+   */
+  static async updateKennelMapPosition(
+    id: string,
+    pos: { map_x: number; map_y: number; map_w: number; map_h: number }
+  ): Promise<void> {
+    const organizationId = this.getOrganizationId();
+    try {
+      await axios.put(
+        `${API_URL}/kennels/${id}/map-position`,
+        pos,
+        { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '', 'Content-Type': 'application/json' } }
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to update kennel map position');
       }
       throw new Error('An unexpected error occurred');
     }
@@ -1231,6 +1315,98 @@ class ApiClient {
         headers: {
           ...this.getAuthHeaders(),
           'x-organization-id': organizationId || '',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  // ========================================
+  // BIRTH / LITTER EVENT
+  // ========================================
+
+  /**
+   * Register a birth event for a pregnant animal.
+   * Creates N offspring in the same kennel.
+   */
+  static async registerBirth(animalId: string, litter_count: number, birth_date?: string): Promise<{ created: number; offspring: { id: string; public_code: string; name: string }[] }> {
+    const organizationId = this.getOrganizationId();
+    const body: Record<string, any> = { litter_count };
+    if (birth_date) body.birth_date = birth_date;
+    const response = await axios.post(
+      `${API_URL}/animals/${animalId}/birth`,
+      body,
+      {
+        headers: {
+          ...this.getAuthHeaders(),
+          'x-organization-id': organizationId || '',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  // ========================================
+  // BCS LOG METHODS
+  // ========================================
+
+  /**
+   * Log a BCS (Body Condition Score) measurement for an animal
+   */
+  static async logBCS(animalId: string, bcs: number, notes?: string, measured_at?: string): Promise<BCSLog> {
+    const organizationId = this.getOrganizationId();
+    const body: Record<string, any> = { bcs };
+    if (notes) body.notes = notes;
+    if (measured_at) body.measured_at = measured_at;
+    const response = await axios.post<BCSLog>(
+      `${API_URL}/animals/${animalId}/bcs`,
+      body,
+      {
+        headers: {
+          ...this.getAuthHeaders(),
+          'x-organization-id': organizationId || '',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Get BCS history for an animal (newest first)
+   */
+  static async getBCSHistory(animalId: string): Promise<BCSLog[]> {
+    const organizationId = this.getOrganizationId();
+    const response = await axios.get<BCSLog[]>(
+      `${API_URL}/animals/${animalId}/bcs`,
+      {
+        headers: {
+          ...this.getAuthHeaders(),
+          'x-organization-id': organizationId || '',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  // ========================================
+  // MER CALCULATION METHODS
+  // ========================================
+
+  /**
+   * Calculate MER/RER energy requirements for an animal
+   */
+  static async calculateMER(params: MERCalculateRequest): Promise<MERCalculation> {
+    const organizationId = this.getOrganizationId();
+    const response = await axios.post<MERCalculation>(
+      `${API_URL}/feeding/calculate-mer`,
+      params,
+      {
+        headers: {
+          ...this.getAuthHeaders(),
+          'x-organization-id': organizationId || '',
+          'Content-Type': 'application/json',
         },
       }
     );

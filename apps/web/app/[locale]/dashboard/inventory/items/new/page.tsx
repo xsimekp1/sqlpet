@@ -36,6 +36,9 @@ interface InventoryItemFormData {
   // Food-specific
   kcal_per_100g?: number;
   price_per_unit?: number;
+  food_type?: string;
+  shelf_life_days?: number;
+  unit_weight_g?: number;
 }
 
 export default function NewInventoryItemPage() {
@@ -68,6 +71,9 @@ export default function NewInventoryItemPage() {
         if (data.kcal_per_100g) body.kcal_per_100g = Number(data.kcal_per_100g);
         if (data.price_per_unit) body.price_per_unit = Number(data.price_per_unit);
         if (selectedSpecies.length > 0) body.allowed_species = selectedSpecies;
+        if (data.food_type) body.food_type = data.food_type;
+        if (data.shelf_life_days) body.shelf_life_days = Number(data.shelf_life_days);
+        if (data.unit_weight_g) body.unit_weight_g = Number(data.unit_weight_g);
       }
       return await ApiClient.post('/inventory/items', body);
     },
@@ -167,6 +173,52 @@ export default function NewInventoryItemPage() {
                   {...register('price_per_unit')}
                 />
                 <p className="text-xs text-muted-foreground">Kč / jednotka</p>
+              </div>
+            </div>
+
+            {/* Food type */}
+            <div className="space-y-2">
+              <Label htmlFor="food_type">Typ krmiva</Label>
+              <Select onValueChange={(v) => setValue('food_type', v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Vyberte typ" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dry">Suché (granule)</SelectItem>
+                  <SelectItem value="wet">Vlhké (kapsy)</SelectItem>
+                  <SelectItem value="canned">Konzerva</SelectItem>
+                  <SelectItem value="treats">Pamlsky</SelectItem>
+                  <SelectItem value="raw">Syrové (BARF)</SelectItem>
+                  <SelectItem value="other">Jiné</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Shelf life + unit weight */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="shelf_life_days">Trvanlivost po otevření (dny)</Label>
+                <Input
+                  id="shelf_life_days"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="např. 30"
+                  {...register('shelf_life_days')}
+                />
+                <p className="text-xs text-muted-foreground">Trvanlivost po otevření / použití</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="unit_weight_g">Hmotnost balení (g)</Label>
+                <Input
+                  id="unit_weight_g"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="např. 400"
+                  {...register('unit_weight_g')}
+                />
+                <p className="text-xs text-muted-foreground">Pro konzervy / balení</p>
               </div>
             </div>
 

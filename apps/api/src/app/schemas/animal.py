@@ -93,6 +93,10 @@ class AnimalCreate(BaseModel):
     is_dewormed: bool = False
     is_aggressive: bool = False
     is_pregnant: bool = False
+    bcs: int | None = Field(None, ge=1, le=9)
+    expected_litter_date: date | None = None
+    behavior_notes: str | None = None
+    is_special_needs: bool = False
     breeds: list[AnimalBreedEntry] | None = None
     identifiers: list[AnimalIdentifierCreate] | None = None
 
@@ -119,6 +123,10 @@ class AnimalUpdate(BaseModel):
     is_dewormed: bool | None = None
     is_aggressive: bool | None = None
     is_pregnant: bool | None = None
+    bcs: int | None = Field(None, ge=1, le=9)
+    expected_litter_date: date | None = None
+    behavior_notes: str | None = None
+    is_special_needs: bool | None = None
     breeds: list[AnimalBreedEntry] | None = None
     identifiers: list[AnimalIdentifierCreate] | None = None
 
@@ -148,6 +156,10 @@ class AnimalResponse(BaseModel):
     is_dewormed: bool
     is_aggressive: bool
     is_pregnant: bool
+    bcs: int | None = None
+    expected_litter_date: date | None = None
+    behavior_notes: str | None = None
+    is_special_needs: bool = False
     primary_photo_url: str | None = None
     default_image_url: str | None = None
     current_kennel_id: str | None = None

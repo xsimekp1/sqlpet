@@ -29,6 +29,7 @@ import {
 import ApiClient, { Kennel, KennelStay, Task } from '@/app/lib/api';
 import { KennelTaskDialog } from '@/app/components/kennels/KennelTaskDialog';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -103,6 +104,15 @@ export default function KennelDetailPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Name inline edit
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [savingName, setSavingName] = useState(false);
+
+  // Type inline edit
+  const [editingType, setEditingType] = useState(false);
+  const [savingType, setSavingType] = useState(false);
+
   // Capacity inline edit
   const [editingCapacity, setEditingCapacity] = useState(false);
   const [capacityInput, setCapacityInput] = useState('');
@@ -149,6 +159,36 @@ export default function KennelDetailPage() {
     };
     load();
   }, [kennelId]);
+
+  const handleSaveName = async () => {
+    if (!kennel || !nameInput.trim()) return;
+    setSavingName(true);
+    try {
+      const updated = await ApiClient.updateKennel(kennel.id, { name: nameInput.trim() });
+      setKennel(prev => prev ? { ...prev, name: updated.name } : null);
+      toast.success(t('detail.updateSuccess'));
+      setEditingName(false);
+    } catch (e: any) {
+      toast.error(e.message || 'Chyba při ukládání jména');
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const handleSaveType = async (newType: string) => {
+    if (!kennel) return;
+    setSavingType(true);
+    try {
+      const updated = await ApiClient.updateKennel(kennel.id, { type: newType });
+      setKennel(prev => prev ? { ...prev, type: updated.type } : null);
+      toast.success(t('detail.updateSuccess'));
+      setEditingType(false);
+    } catch (e: any) {
+      toast.error(e.message || 'Chyba při ukládání typu');
+    } finally {
+      setSavingType(false);
+    }
+  };
 
   const handleStatusChange = async (newStatus: string) => {
     if (!kennel) return;
@@ -209,10 +249,20 @@ export default function KennelDetailPage() {
     if (!kennel) return;
     setSavingSpecies(true);
     try {
-      const updated = await ApiClient.updateKennel(kennel.id, { allowed_species: selectedSpecies.length > 0 ? selectedSpecies : null });
+      const newSpecies = selectedSpecies.length > 0 ? selectedSpecies : null;
+      const updated = await ApiClient.updateKennel(kennel.id, { allowed_species: newSpecies });
       setKennel(prev => prev ? { ...prev, allowed_species: updated.allowed_species } : null);
       toast.success(t('detail.updateSuccess'));
       setEditingSpecies(false);
+      // Warn if any current animals are incompatible with new species restriction
+      if (newSpecies && kennel.animals_preview && kennel.animals_preview.length > 0) {
+        const incompatible = kennel.animals_preview.filter(a => !newSpecies.includes(a.species));
+        if (incompatible.length > 0) {
+          toast.warning(
+            `Pozor: ${incompatible.map(a => a.name).join(', ')} ${incompatible.length === 1 ? 'není' : 'nejsou'} kompatibilní s novou vhodností kotce.`
+          );
+        }
+      }
     } catch (e: any) {
       toast.error(e.message || 'Chyba při ukládání');
     } finally {
@@ -309,7 +359,35 @@ export default function KennelDetailPage() {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold truncate">{kennel.name}</h1>
+            {editingName ? (
+              <div className="flex items-center gap-1.5">
+                <Input
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  className="h-9 text-xl font-bold w-48"
+                  autoFocus
+                  onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setEditingName(false); }}
+                />
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleSaveName} disabled={savingName}>
+                  {savingName ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 text-green-600" />}
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingName(false)}>
+                  <X className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 group">
+                <h1 className="text-2xl font-bold truncate">{kennel.name}</h1>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => { setNameInput(kennel.name); setEditingName(true); }}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
 
             {/* Inline status select */}
             <Select value={kennel.status} onValueChange={handleStatusChange} disabled={changingStatus}>
@@ -398,9 +476,38 @@ export default function KennelDetailPage() {
                 <CardTitle className="text-base">{t('detail.infoCard')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">{t('detail.type')}</span>
-                  <span className="font-medium">{getTypeLabel(kennel.type)}</span>
+                  {editingType ? (
+                    <div className="flex items-center gap-1.5">
+                      <Select
+                        value={kennel.type}
+                        onValueChange={v => { handleSaveType(v); }}
+                        disabled={savingType}
+                      >
+                        <SelectTrigger className="h-7 w-36 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="indoor">Vnitřní</SelectItem>
+                          <SelectItem value="outdoor">Venkovní</SelectItem>
+                          <SelectItem value="isolation">Izolace</SelectItem>
+                          <SelectItem value="quarantine">Karanténa</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {savingType && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingType(false)}>
+                        <X className="h-3.5 w-3.5 text-red-500" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium">{getTypeLabel(kennel.type)}</span>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingType(true)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('detail.zone')}</span>
@@ -445,7 +552,7 @@ export default function KennelDetailPage() {
                       <div className="flex items-center gap-1">
                         <Input
                           type="number"
-                          placeholder="Délka cm"
+                          placeholder="Délka (m)"
                           value={dimLength}
                           onChange={e => setDimLength(e.target.value)}
                           className="h-7 w-20 text-xs"
@@ -454,7 +561,7 @@ export default function KennelDetailPage() {
                         <span className="text-xs text-muted-foreground">×</span>
                         <Input
                           type="number"
-                          placeholder="Šířka cm"
+                          placeholder="Šířka (m)"
                           value={dimWidth}
                           onChange={e => setDimWidth(e.target.value)}
                           className="h-7 w-20 text-xs"
@@ -500,6 +607,16 @@ export default function KennelDetailPage() {
                   )}
                 </div>
 
+                {/* Last cleaned */}
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Poslední čištění</span>
+                  <span className={`text-sm font-medium ${!kennel.last_cleaned_at ? 'text-muted-foreground/50 italic' : ''}`}>
+                    {kennel.last_cleaned_at
+                      ? new Date(kennel.last_cleaned_at).toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                      : 'Nezaznamenáno'}
+                  </span>
+                </div>
+
                 {kennel.notes && (
                   <div>
                     <span className="text-muted-foreground block mb-0.5">{t('detail.notes')}</span>
@@ -526,15 +643,28 @@ export default function KennelDetailPage() {
                 <p className="text-xs text-muted-foreground text-right">{occupancyPercent.toFixed(0)}%</p>
 
                 {kennel.animals_preview && kennel.animals_preview.length > 0 && (
-                  <div className="pt-1 space-y-1.5">
+                  <div className="pt-1 space-y-2">
                     {kennel.animals_preview.map(a => (
                       <Link
                         key={a.id}
                         href={`/dashboard/animals/${a.id}`}
-                        className="flex items-center gap-2 text-sm hover:text-primary hover:underline transition-colors"
+                        className="flex items-center gap-2 hover:text-primary transition-colors"
                       >
-                        <span>{SPECIES_CONFIG[a.species]?.emoji ?? '🐾'}</span>
-                        <span>{a.name}</span>
+                        <div className="relative h-8 w-8 rounded-full overflow-hidden bg-muted shrink-0">
+                          <Image
+                            src={a.photo_url || (a.species === 'dog' ? '/dog-default.png' : a.species === 'cat' ? '/cat_default.png' : '/placeholder-animal.svg')}
+                            alt={a.name}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium hover:underline truncate">{a.name}</p>
+                          {a.start_at && (
+                            <p className="text-xs text-muted-foreground">od {formatDate(a.start_at)}</p>
+                          )}
+                        </div>
                       </Link>
                     ))}
                   </div>
@@ -756,10 +886,10 @@ function DimensionsDisplay({ dimensions }: { dimensions: NonNullable<Kennel['dim
   const h = dimensions.height;
   if (!l || !w) return null;
 
-  const lm = (l / 100).toFixed(1);
-  const wm = (w / 100).toFixed(1);
-  const hm = h ? (h / 100).toFixed(1) : null;
-  const area = ((l / 100) * (w / 100)).toFixed(2);
+  const lm = l.toFixed(1);
+  const wm = w.toFixed(1);
+  const hm = h ? h.toFixed(1) : null;
+  const area = (l * w).toFixed(2);
 
   const label = hm
     ? `${lm} × ${wm} × ${hm} m (výška)`

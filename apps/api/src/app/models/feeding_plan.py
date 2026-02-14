@@ -38,3 +38,4 @@ class FeedingPlan(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    mer_calculation: Mapped[dict | None] = mapped_column(JSONB, nullable=True)

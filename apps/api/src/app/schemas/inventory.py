@@ -16,6 +16,9 @@ class InventoryItemBase(BaseModel):
     kcal_per_100g: Optional[float] = None
     price_per_unit: Optional[float] = None
     allowed_species: Optional[list[str]] = None  # e.g. ["dog", "cat"]
+    food_type: Optional[str] = None  # dry, wet, canned, treats, raw, other
+    shelf_life_days: Optional[int] = None  # shelf life after opening in days
+    unit_weight_g: Optional[int] = None  # package weight in grams
 
 
 class InventoryItemCreate(InventoryItemBase):
@@ -30,6 +33,9 @@ class InventoryItemUpdate(BaseModel):
     kcal_per_100g: Optional[float] = None
     price_per_unit: Optional[float] = None
     allowed_species: Optional[list[str]] = None
+    food_type: Optional[str] = None
+    shelf_life_days: Optional[int] = None
+    unit_weight_g: Optional[int] = None
 
 
 class InventoryItemResponse(InventoryItemBase):

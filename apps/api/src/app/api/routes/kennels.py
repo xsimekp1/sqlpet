@@ -80,7 +80,7 @@ async def list_kennels(
                 k.status::text AS status, k.type::text AS type,
                 k.size_category::text AS size_category, k.capacity,
                 k.allowed_species, k.notes,
-                k.map_x, k.map_y, k.map_w, k.map_h,
+                k.map_x, k.map_y, k.map_w, k.map_h, k.last_cleaned_at,
                 COUNT(ks.id) FILTER (WHERE ks.end_at IS NULL) AS occupied_count,
                 COALESCE(
                   json_agg(
@@ -88,7 +88,8 @@ async def list_kennels(
                       'id', a.id::text,
                       'name', a.name,
                       'species', a.species::text,
-                      'photo_url', a.primary_photo_url
+                      'photo_url', a.primary_photo_url,
+                      'start_at', ks.start_at
                     ) ORDER BY ks.start_at
                   ) FILTER (WHERE ks.end_at IS NULL AND a.id IS NOT NULL),
                   '[]'::json
@@ -101,7 +102,7 @@ async def list_kennels(
             GROUP BY k.id, k.code, k.name, k.zone_id, z.name,
                      k.status, k.type, k.size_category, k.capacity,
                      k.allowed_species, k.notes,
-                     k.map_x, k.map_y, k.map_w, k.map_h
+                     k.map_x, k.map_y, k.map_w, k.map_h, k.last_cleaned_at
             ORDER BY k.name
         """)
 
@@ -135,6 +136,7 @@ async def list_kennels(
                 "map_y": row.map_y or 0,
                 "map_w": row.map_w or 160,
                 "map_h": row.map_h or 120,
+                "last_cleaned_at": row.last_cleaned_at.isoformat() if row.last_cleaned_at else None,
             }
             kennels.append(kennel_dict)
 
@@ -298,7 +300,7 @@ async def get_kennel(
                 k.size_category::text AS size_category, k.capacity,
                 k.notes, k.allowed_species, k.dimensions,
                 k.map_x, k.map_y, k.map_w, k.map_h,
-                k.map_rotation, k.map_meta,
+                k.map_rotation, k.map_meta, k.last_cleaned_at,
                 COUNT(ks.id) FILTER (WHERE ks.end_at IS NULL) AS occupied_count,
                 COALESCE(
                   json_agg(
@@ -306,7 +308,8 @@ async def get_kennel(
                       'id', a.id::text,
                       'name', a.name,
                       'species', a.species::text,
-                      'photo_url', a.primary_photo_url
+                      'photo_url', a.primary_photo_url,
+                      'start_at', ks.start_at
                     ) ORDER BY ks.start_at
                   ) FILTER (WHERE ks.end_at IS NULL AND a.id IS NOT NULL),
                   '[]'::json
@@ -356,6 +359,7 @@ async def get_kennel(
             "map_h": row.map_h or 120,
             "map_rotation": row.map_rotation,
             "map_meta": row.map_meta,
+            "last_cleaned_at": row.last_cleaned_at.isoformat() if row.last_cleaned_at else None,
         }
     except HTTPException:
         raise

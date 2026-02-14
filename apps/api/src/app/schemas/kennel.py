@@ -1,4 +1,5 @@
 from typing import Any, Optional, Dict, Union
+from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field, validator
 from uuid import UUID
@@ -85,6 +86,7 @@ class KennelResponse(BaseModel):
     primary_photo_path: str | None
     notes: str | None
     dimensions: dict[str, Any] | None
+    last_cleaned_at: datetime | None = None
 
 
 class KennelListResponse(BaseModel):

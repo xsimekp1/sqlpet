@@ -28,6 +28,9 @@ class InventoryService:
         kcal_per_100g: Optional[float] = None,
         price_per_unit: Optional[float] = None,
         allowed_species: Optional[list] = None,
+        food_type: Optional[str] = None,
+        shelf_life_days: Optional[int] = None,
+        unit_weight_g: Optional[int] = None,
     ) -> InventoryItem:
         """Create a new inventory item."""
         item = InventoryItem(
@@ -40,6 +43,9 @@ class InventoryService:
             kcal_per_100g=kcal_per_100g,
             price_per_unit=price_per_unit,
             allowed_species=allowed_species,
+            food_type=food_type,
+            shelf_life_days=shelf_life_days,
+            unit_weight_g=unit_weight_g,
         )
         self.db.add(item)
         await self.db.flush()

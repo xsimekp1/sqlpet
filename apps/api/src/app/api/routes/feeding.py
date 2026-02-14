@@ -20,6 +20,8 @@ from src.app.schemas.feeding import (
     FeedingLogResponse,
     CompleteFeedingTaskRequest,
     CompleteFeedingTaskResponse,
+    MERCalculateRequest,
+    MERCalculationResponse,
 )
 from src.app.services.feeding_service import FeedingService
 
@@ -83,6 +85,7 @@ async def create_feeding_plan(
         schedule_json=plan_data.schedule_json,
         end_date=plan_data.end_date,
         notes=plan_data.notes,
+        mer_calculation=plan_data.mer_calculation,
     )
     await db.commit()
     return plan
@@ -259,6 +262,72 @@ async def complete_feeding_task(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+
+# MER / RER calculation endpoint
+@router.post("/calculate-mer", response_model=MERCalculationResponse)
+async def calculate_mer(
+    request: MERCalculateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """
+    Calculate RER/MER (energy requirements) for an animal.
+    Returns a full transparent breakdown of each factor.
+    """
+    from sqlalchemy import select
+    from src.app.models.animal import Animal
+    from src.app.models.food import Food
+    from src.app.services.mer_calculator import calculate_mer as _calc_mer
+
+    # Load animal
+    result = await db.execute(
+        select(Animal).where(
+            Animal.id == request.animal_id,
+            Animal.organization_id == organization_id,
+            Animal.deleted_at.is_(None),
+        )
+    )
+    animal = result.scalar_one_or_none()
+    if animal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+
+    if animal.weight_current_kg is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Animal has no current weight recorded. Please log a weight first.",
+        )
+
+    # Optionally load food kcal_per_100g
+    food_kcal: Optional[float] = request.food_kcal_per_100g
+    if request.food_id and food_kcal is None:
+        food_result = await db.execute(
+            select(Food).where(Food.id == request.food_id, Food.organization_id == organization_id)
+        )
+        food = food_result.scalar_one_or_none()
+        if food and food.kcal_per_100g:
+            food_kcal = float(food.kcal_per_100g)
+
+    snapshot = _calc_mer(
+        weight_kg=float(animal.weight_current_kg),
+        species=animal.species.value if hasattr(animal.species, "value") else str(animal.species),
+        altered_status=animal.altered_status.value if hasattr(animal.altered_status, "value") else str(animal.altered_status),
+        age_group=animal.age_group.value if hasattr(animal.age_group, "value") else str(animal.age_group),
+        bcs=animal.bcs,
+        health_modifier=request.health_modifier,
+        environment=request.environment,
+        breed_size=animal.size_estimated.value if hasattr(animal.size_estimated, "value") else "unknown",
+        weight_goal=request.weight_goal,
+        food_kcal_per_100g=food_kcal,
+        meals_per_day=request.meals_per_day,
+    )
+
+    # Attach food_id to recommendation if provided
+    if snapshot.get("food_recommendation") and request.food_id:
+        snapshot["food_recommendation"]["food_id"] = str(request.food_id)
+
+    return snapshot
 
 
 # Manual task generation (MVP - no Celery Beat)

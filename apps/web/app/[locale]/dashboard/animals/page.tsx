@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,7 @@ const SPECIES_EMOJI: Record<string, string> = {
 };
 
 export default function AnimalsPage() {
+  const router = useRouter();
   const t = useTranslations();
   const tSpecies = useTranslations('animals.species');
   const [search, setSearch] = useState('');
@@ -162,19 +164,25 @@ export default function AnimalsPage() {
           {filtered.map((animal) => (
             <Link key={animal.id} href={`/dashboard/animals/${animal.id}`}>
               <Card className="hover:bg-accent transition-colors cursor-pointer overflow-hidden">
-                {/* Square thumbnail — object-contain so no crop */}
-                <div className="relative w-full aspect-square bg-muted flex items-center justify-center">
+                {/* Square thumbnail — equal padding on all sides */}
+                <div className="relative w-full aspect-square bg-muted overflow-hidden">
                   <Image
                     src={getAnimalImageUrl(animal)}
                     alt={animal.name}
                     fill
-                    className="object-contain"
+                    className="object-cover object-center"
                     unoptimized
                   />
                   {/* Sex badge in top-right corner */}
                   {animal.sex !== 'unknown' && (
                     <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white text-base font-bold leading-none">
                       {animal.sex === 'male' ? '♂' : '♀'}
+                    </div>
+                  )}
+                  {/* Special needs badge top-left */}
+                  {animal.is_special_needs && (
+                    <div className="absolute top-1.5 left-1.5 w-7 h-7 rounded-full bg-violet-600/80 flex items-center justify-center" title="Zvíře se speciálními potřebami">
+                      <Accessibility className="h-4 w-4 text-white" />
                     </div>
                   )}
                   {/* Kennel code badge bottom-left */}
@@ -225,7 +233,11 @@ export default function AnimalsPage() {
               </thead>
               <tbody>
                 {filtered.map((animal) => (
-                  <tr key={animal.id} className="border-b hover:bg-muted/50 transition-colors">
+                  <tr
+                    key={animal.id}
+                    className="border-b hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/dashboard/animals/${animal.id}`)}
+                  >
                     <td className="px-4 py-3">
                       <div className="relative h-10 w-10 rounded-full overflow-hidden bg-muted shrink-0">
                         <Image
@@ -257,7 +269,7 @@ export default function AnimalsPage() {
                         : '—'}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {animal.color || '—'}
+                      {animal.color ? t(`colors.${animal.color}` as any, { fallback: animal.color }) : '—'}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1 flex-wrap">
@@ -291,6 +303,15 @@ export default function AnimalsPage() {
                             title={t('animals.health.pregnant')}
                           >
                             <Baby className="h-3.5 w-3.5 text-pink-500" />
+                          </div>
+                        )}
+                        {/* Special needs */}
+                        {animal.is_special_needs && (
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-violet-100"
+                            title="Speciální potřeby"
+                          >
+                            <Accessibility className="h-3.5 w-3.5 text-violet-600" />
                           </div>
                         )}
                       </div>

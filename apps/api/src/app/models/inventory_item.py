@@ -3,7 +3,7 @@
 import enum
 import uuid
 
-from sqlalchemy import String, Numeric, Enum, ForeignKey
+from sqlalchemy import String, Numeric, Enum, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -44,3 +44,6 @@ class InventoryItem(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     kcal_per_100g: Mapped[float | None] = mapped_column(Numeric(7, 2), nullable=True)
     price_per_unit: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     allowed_species: Mapped[list | None] = mapped_column(JSONB, nullable=True)  # e.g. ["dog", "cat"]
+    food_type: Mapped[str | None] = mapped_column(String(20), nullable=True)  # dry, wet, canned, treats, raw, other
+    shelf_life_days: Mapped[int | None] = mapped_column(Integer, nullable=True)  # Shelf life after opening in days
+    unit_weight_g: Mapped[int | None] = mapped_column(Integer, nullable=True)  # Package weight in grams

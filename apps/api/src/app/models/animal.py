@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import date
 
-from sqlalchemy import Boolean, Date, Enum, ForeignKey, Index, Numeric, String, Text
+from sqlalchemy import Boolean, Date, Enum, ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -149,6 +149,10 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     is_dewormed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_aggressive: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_pregnant: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    bcs: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    expected_litter_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    behavior_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_special_needs: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
     animal_breeds = relationship(
@@ -175,4 +179,11 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         lazy="noload",
         cascade="all, delete-orphan",
         order_by="AnimalWeightLog.measured_at.desc()",
+    )
+    bcs_logs = relationship(
+        "AnimalBCSLog",
+        back_populates="animal",
+        lazy="noload",
+        cascade="all, delete-orphan",
+        order_by="AnimalBCSLog.measured_at.desc()",
     )
