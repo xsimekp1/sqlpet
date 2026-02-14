@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 const _rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-const API_URL = _rawApiUrl.replace(/^http:\/\/([^/]+)/, (_, host) => 
+const API_URL = _rawApiUrl.replace(/^http:\/\/([^/]+)/, (_, host) =>
   host.includes('localhost') ? _rawApiUrl : `https://${host}`
 );
 
@@ -268,33 +268,39 @@ export interface KennelStay {
 
 class ApiClient {
   /**
-   * Get authorization headers with Bearer token from localStorage
+   * Get authorization headers with Bearer token + organization ID from localStorage.
+   * This is the single source of truth for auth headers — do not duplicate org ID handling in individual methods.
    */
   private static getAuthHeaders(): Record<string, string> {
-    if (typeof window === 'undefined') {
-      console.warn('getAuthHeaders: running on server, no localStorage');
-      return {};
-    }
+    if (typeof window === 'undefined') return {};
 
     const token = localStorage.getItem('token');
-    if (!token) {
-      console.warn('getAuthHeaders: no token in localStorage');
-      return {};
-    }
+    if (!token) return {};
 
-    console.log('getAuthHeaders: token found, length:', token.length);
-    
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${token}`,
     };
-    
-    // Add organization ID if available
+
     const orgId = this.getOrganizationId();
     if (orgId) {
       headers['x-organization-id'] = orgId;
     }
-    
+
     return headers;
+  }
+
+  /**
+   * Read organization ID from localStorage (no logging).
+   */
+  private static getOrganizationId(): string | null {
+    if (typeof window === 'undefined') return null;
+    const raw = localStorage.getItem('selectedOrg');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw).id ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -407,114 +413,56 @@ class ApiClient {
     }
   }
 
-  /**
-   * Login with email and password
-   * Backend expects JSON with email and password fields
-   */
   static async login(email: string, password: string): Promise<LoginResponse> {
     try {
       const response = await axios.post<LoginResponse>(
         `${API_URL}/auth/login`,
         { email, password },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { 'Content-Type': 'application/json' } }
       );
-
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Login failed'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Login failed');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Refresh access token using refresh token
-   */
   static async refreshToken(refreshToken: string): Promise<LoginResponse> {
     try {
       const response = await axios.post<LoginResponse>(
         `${API_URL}/auth/refresh`,
         { refresh_token: refreshToken },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { 'Content-Type': 'application/json' } }
       );
-
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Token refresh failed'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Token refresh failed');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Helper to get organization ID from selectedOrg in localStorage
-   */
-  private static getOrganizationId(): string | null {
-    const selectedOrgData = typeof window !== 'undefined'
-      ? localStorage.getItem('selectedOrg')
-      : null;
-
-    console.log('[API] getOrganizationId - selectedOrgData:', selectedOrgData);
-
-    if (!selectedOrgData) {
-      console.log('[API] getOrganizationId - NO selectedOrg in localStorage!');
-      return null;
-    }
-
-    try {
-      const parsed = JSON.parse(selectedOrgData);
-      console.log('[API] getOrganizationId - parsed:', parsed);
-      console.log('[API] getOrganizationId - returning id:', parsed.id);
-      return parsed.id;
-    } catch (e) {
-      console.error('[API] getOrganizationId - parse error:', e);
-      return null;
-    }
-  }
-
-  /**
-   * Get current user profile with memberships
-   */
   static async getUserProfile(): Promise<UserProfile> {
     try {
       const response = await axios.get<UserProfile>(
         `${API_URL}/auth/me`,
-        {
-          headers: this.getAuthHeaders(),
-        }
+        { headers: this.getAuthHeaders() }
       );
-
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch user profile'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch user profile');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Select organization and get new token with org context
-   */
   static async selectOrganization(organizationId: string): Promise<LoginResponse> {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -523,45 +471,31 @@ class ApiClient {
         {},
         {
           params: { organization_id: organizationId },
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Authorization': `Bearer ${token}` },
         }
       );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to select organization'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to select organization');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Logout (revoke token on backend)
-   */
   static async logout(): Promise<void> {
     try {
-      await axios.post(
-        `${API_URL}/auth/logout`,
-        {},
-        {
-          headers: this.getAuthHeaders(),
-        }
-      );
+      await axios.post(`${API_URL}/auth/logout`, {}, { headers: this.getAuthHeaders() });
     } catch (error) {
-      // Ignore errors on logout, we'll clear local state anyway
       console.error('Logout error:', error);
     }
   }
 
-  /**
-   * Get all kennels for current organization
-   * M4+: Kennels Management
-   */
+  // ========================================
+  // KENNELS
+  // ========================================
+
   static async getKennels(params?: {
     zone_id?: string;
     status?: string;
@@ -569,72 +503,42 @@ class ApiClient {
     size_category?: string;
     q?: string;
   }): Promise<Kennel[]> {
+    if (!this.getOrganizationId()) {
+      throw new Error('No organization selected. Please select an organization first.');
+    }
     try {
-      // Get current organization from localStorage
-      const organizationId = this.getOrganizationId();
-      
-      if (!organizationId) {
-        throw new Error('No organization selected. Please select an organization first.');
-      }
-
       const searchParams = new URLSearchParams();
       if (params?.zone_id) searchParams.append('zone_id', params.zone_id);
       if (params?.status) searchParams.append('status', params.status);
       if (params?.type) searchParams.append('type', params.type);
       if (params?.size_category) searchParams.append('size_category', params.size_category);
       if (params?.q) searchParams.append('q', params.q);
-      
       const url = `${API_URL}/kennels${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-      
-      const response = await axios.get<Kennel[]>(
-        url,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId,
-          },
-        }
-      );
+      const response = await axios.get<Kennel[]>(url, { headers: this.getAuthHeaders() });
       return response.data;
     } catch (error) {
-      console.error('getKennels error:', error);
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        console.error('getKennels axios error:', {
-          status: axiosError.response?.status,
-          data: axiosError.response?.data,
-          detail: axiosError.response?.data?.detail
-        });
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch kennels'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch kennels');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Get all zones for current organization
-   */
   static async getZones(): Promise<KennelZone[]> {
-    const organizationId = this.getOrganizationId();
     const response = await axios.get<KennelZone[]>(
       `${API_URL}/kennels/zones`,
-      { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '' } }
+      { headers: this.getAuthHeaders() }
     );
     return response.data;
   }
 
-  /**
-   * Create a new kennel
-   */
   static async createKennel(data: CreateKennelRequest): Promise<Kennel> {
-    const organizationId = this.getOrganizationId();
     try {
       const response = await axios.post<Kennel>(
         `${API_URL}/kennels`,
         data,
-        { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '', 'Content-Type': 'application/json' } }
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
       );
       return response.data;
     } catch (error) {
@@ -646,45 +550,35 @@ class ApiClient {
     }
   }
 
-  /**
-   * Get single kennel by ID
-   * M4+: Kennels Management
-   */
   static async getKennel(id: string): Promise<Kennel> {
     try {
-      const organizationId = this.getOrganizationId();
-      
       const response = await axios.get<Kennel>(
         `${API_URL}/kennels/${id}`,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-          },
-        }
+        { headers: this.getAuthHeaders() }
       );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch kennel'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch kennel');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Update kennel fields
-   */
-  static async updateKennel(id: string, data: Partial<CreateKennelRequest> & { status?: string; allowed_species?: string[] | null; dimensions?: { length?: number; width?: number; height?: number } | null }): Promise<Kennel> {
-    const organizationId = this.getOrganizationId();
+  static async updateKennel(
+    id: string,
+    data: Partial<CreateKennelRequest> & {
+      status?: string;
+      allowed_species?: string[] | null;
+      dimensions?: { length?: number; width?: number; height?: number } | null;
+    }
+  ): Promise<Kennel> {
     try {
       const response = await axios.patch<Kennel>(
         `${API_URL}/kennels/${id}`,
         data,
-        { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '', 'Content-Type': 'application/json' } }
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
       );
       return response.data;
     } catch (error) {
@@ -696,16 +590,9 @@ class ApiClient {
     }
   }
 
-  /**
-   * Soft-delete a kennel
-   */
   static async deleteKennel(id: string): Promise<void> {
-    const organizationId = this.getOrganizationId();
     try {
-      await axios.delete(
-        `${API_URL}/kennels/${id}`,
-        { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '' } }
-      );
+      await axios.delete(`${API_URL}/kennels/${id}`, { headers: this.getAuthHeaders() });
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
@@ -715,19 +602,15 @@ class ApiClient {
     }
   }
 
-  /**
-   * Update kennel map position
-   */
   static async updateKennelMapPosition(
     id: string,
     pos: { map_x: number; map_y: number; map_w: number; map_h: number }
   ): Promise<void> {
-    const organizationId = this.getOrganizationId();
     try {
       await axios.put(
         `${API_URL}/kennels/${id}/map-position`,
         pos,
-        { headers: { ...this.getAuthHeaders(), 'x-organization-id': organizationId || '', 'Content-Type': 'application/json' } }
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
       );
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -738,512 +621,179 @@ class ApiClient {
     }
   }
 
-  /**
-   * Move animal between kennels
-   * M4+: Kennels Management
-   */
   static async moveAnimal(request: MoveAnimalRequest): Promise<any> {
     try {
-      const organizationId = this.getOrganizationId();
-      
       const response = await axios.post<any>(
         `${API_URL}/stays/move`,
         request,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
       );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to move animal'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to move animal');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Get kennel stays (history)
-   * M4+: Kennels Management
-   */
   static async getKennelStays(kennelId: string, activeOnly: boolean = false): Promise<KennelStay[]> {
     try {
-      const organizationId = this.getOrganizationId();
-
       const params = new URLSearchParams();
       if (activeOnly) params.append('active_only', 'true');
-
       const url = `${API_URL}/kennels/${kennelId}/stays${params.toString() ? `?${params.toString()}` : ''}`;
-      
-      const response = await axios.get<KennelStay[]>(
-        url,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-          },
-        }
-      );
+      const response = await axios.get<KennelStay[]>(url, { headers: this.getAuthHeaders() });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        // Return empty array if stays endpoint not yet implemented
         if (axiosError.response?.status === 404) return [];
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch kennel stays'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch kennel stays');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Get all animals for current organization
-   * M3: Animals CRUD
-   */
+  // ========================================
+  // ANIMALS
+  // ========================================
+
   static async getAnimals(params?: { status?: string; species?: string; search?: string; page_size?: number }): Promise<{ items: Animal[]; total: number }> {
+    if (!this.getOrganizationId()) {
+      throw new Error('No organization selected. Please select an organization first.');
+    }
     try {
-      // Get current organization from localStorage
-      const organizationId = this.getOrganizationId();
-
-      if (!organizationId) {
-        throw new Error('No organization selected. Please select an organization first.');
-      }
-
-      // Build query string
       const queryParams = new URLSearchParams();
       if (params?.status) queryParams.append('status', params.status);
       if (params?.species) queryParams.append('species', params.species);
       if (params?.search) queryParams.append('search', params.search);
       if (params?.page_size) queryParams.append('page_size', String(params.page_size));
       const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-
-      const response = await axios.get<{ items: Animal[], total: number, page: number, page_size: number }>(
+      const response = await axios.get<{ items: Animal[]; total: number; page: number; page_size: number }>(
         `${API_URL}/animals${queryString}`,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId,
-          },
-        }
+        { headers: this.getAuthHeaders() }
       );
       return { items: response.data.items, total: response.data.total };
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch animals'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch animals');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Get single animal by ID
-   * M3: Animals CRUD
-   */
   static async getAnimal(id: string): Promise<Animal> {
     try {
-      const organizationId = this.getOrganizationId();
-
       const response = await axios.get<Animal>(
         `${API_URL}/animals/${id}`,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-          },
-        }
+        { headers: this.getAuthHeaders() }
       );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch animal'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch animal');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Create new animal
-   * M3: Animals CRUD
-   */
   static async createAnimal(data: CreateAnimalRequest): Promise<Animal> {
-    try {
-      console.log('[API] createAnimal - starting');
-      const organizationId = this.getOrganizationId();
-      console.log('[API] createAnimal - organizationId:', organizationId);
-
-      if (!organizationId) {
-        console.error('[API] createAnimal - NO ORGANIZATION ID!');
-        throw new Error('No organization selected. Please select an organization first.');
-      }
-
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'x-organization-id': organizationId,
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      console.log('[API] createAnimal - headers:', headers);
-      console.log('[API] createAnimal - making POST request to:', `${API_URL}/animals`);
-
-      // Use fetch instead of axios
-      const response = await fetch(`${API_URL}/animals`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(data),
-      });
-
-      console.log('[API] createAnimal - response status:', response.status);
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Failed to create animal' }));
-        throw new Error(error.detail || 'Failed to create animal');
-      }
-
-      const result = await response.json();
-      console.log('[API] createAnimal - success:', result);
-      return result;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to create animal'
-        );
-      }
-      throw new Error('An unexpected error occurred');
+    const organizationId = this.getOrganizationId();
+    if (!organizationId) {
+      throw new Error('No organization selected. Please select an organization first.');
     }
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'x-organization-id': organizationId,
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_URL}/animals`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: 'Failed to create animal' }));
+      throw new Error(err.detail || 'Failed to create animal');
+    }
+    return response.json();
   }
 
-  /**
-   * Update existing animal
-   * M3: Animals CRUD
-   */
   static async updateAnimal(id: string, data: Partial<CreateAnimalRequest>): Promise<Animal> {
     try {
-      const organizationId = this.getOrganizationId();
-
       const response = await axios.patch<Animal>(
         `${API_URL}/animals/${id}`,
         data,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
       );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to update animal'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to update animal');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Delete animal
-   * M3: Animals CRUD
-   */
   static async deleteAnimal(id: string): Promise<void> {
     try {
-      const organizationId = this.getOrganizationId();
-
-      await axios.delete(
-        `${API_URL}/animals/${id}`,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-          },
-        }
-      );
+      await axios.delete(`${API_URL}/animals/${id}`, { headers: this.getAuthHeaders() });
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to delete animal'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to delete animal');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Get breeds for a species with translated display names
-   */
+  // ========================================
+  // BREEDS & COLORS
+  // ========================================
+
   static async getBreeds(species?: string, locale?: string): Promise<Array<{ id: string; name: string; species: string; display_name: string }>> {
     try {
       const params = new URLSearchParams();
       if (species) params.set('species', species);
       if (locale) params.set('locale', locale);
       const queryString = params.toString() ? `?${params.toString()}` : '';
-      const response = await axios.get(
-        `${API_URL}/breeds${queryString}`,
-        {
-          headers: this.getAuthHeaders(),
-        }
-      );
+      const response = await axios.get(`${API_URL}/breeds${queryString}`, { headers: this.getAuthHeaders() });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch breeds'
-        );
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch breeds');
       }
       throw new Error('An unexpected error occurred');
     }
   }
 
-  /**
-   * Get available color options with image URLs for a breed
-   */
   static async getBreedColorImages(breedId: string): Promise<Array<{ color: string; image_url: string }>> {
     try {
       const response = await axios.get(
         `${API_URL}/breeds/${breedId}/color-images`,
-        {
-          headers: this.getAuthHeaders(),
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch breed colors'
-        );
-      }
-      throw new Error('An unexpected error occurred');
-    }
-  }
-
-  // ========================================
-  // TASK METHODS
-  // ========================================
-
-  /**
-   * Get all tasks for organization with filters
-   */
-  static async getTasks(params?: {
-    status?: string;
-    type?: string;
-    assigned_to_id?: string;
-    due_date?: string;
-    related_entity_id?: string;
-    page?: number;
-    page_size?: number;
-  }): Promise<TaskListResponse> {
-    try {
-      const organizationId = this.getOrganizationId();
-
-      const response = await axios.get<TaskListResponse>(
-        `${API_URL}/tasks`,
-        {
-          params,
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch tasks'
-        );
-      }
-      throw new Error('An unexpected error occurred');
-    }
-  }
-
-  /**
-   * Get single task by ID
-   */
-  static async getTask(id: string): Promise<Task> {
-    try {
-      const organizationId = this.getOrganizationId();
-
-      const response = await axios.get<Task>(
-        `${API_URL}/tasks/${id}`,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to fetch task'
-        );
-      }
-      throw new Error('An unexpected error occurred');
-    }
-  }
-
-  /**
-   * Create new task
-   */
-  static async createTask(data: CreateTaskRequest): Promise<Task> {
-    try {
-      const organizationId = this.getOrganizationId();
-
-      const response = await axios.post<Task>(
-        `${API_URL}/tasks`,
-        data,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to create task'
-        );
-      }
-      throw new Error('An unexpected error occurred');
-    }
-  }
-
-  /**
-   * Complete a task
-   */
-  static async completeTask(id: string, data?: { notes?: string; completion_data?: any }): Promise<Task> {
-    try {
-      const organizationId = this.getOrganizationId();
-
-      const response = await axios.post<Task>(
-        `${API_URL}/tasks/${id}/complete`,
-        data || {},
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to complete task'
-        );
-      }
-      throw new Error('An unexpected error occurred');
-    }
-  }
-
-  /**
-   * Complete a feeding task (special endpoint)
-   */
-  static async completeFeedingTask(taskId: string, notes?: string): Promise<any> {
-    try {
-      const organizationId = this.getOrganizationId();
-
-      const response = await axios.post(
-        `${API_URL}/feeding/tasks/${taskId}/complete`,
-        { notes },
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to complete feeding task'
-        );
-      }
-      throw new Error('An unexpected error occurred');
-    }
-  }
-
-  /**
-   * Update task
-   */
-  static async updateTask(id: string, data: Partial<CreateTaskRequest>): Promise<Task> {
-    try {
-      const organizationId = this.getOrganizationId();
-
-      const response = await axios.put<Task>(
-        `${API_URL}/tasks/${id}`,
-        data,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to update task'
-        );
-      }
-      throw new Error('An unexpected error occurred');
-    }
-  }
-
-  // ========================================
-  // COLORS ADMIN METHODS
-  // ========================================
-
-  /**
-   * Get color catalog with translations
-   */
-  static async getAdminColors(): Promise<Array<{ code: string; cs: string | null; en: string | null }>> {
-    try {
-      const response = await axios.get(
-        `${API_URL}/admin/colors`,
         { headers: this.getAuthHeaders() }
       );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch breed colors');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async getAdminColors(): Promise<Array<{ code: string; cs: string | null; en: string | null }>> {
+    try {
+      const response = await axios.get(`${API_URL}/admin/colors`, { headers: this.getAuthHeaders() });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -1254,20 +804,12 @@ class ApiClient {
     }
   }
 
-  /**
-   * Update color translations
-   */
   static async updateColorTranslation(code: string, data: { cs?: string | null; en?: string | null }): Promise<void> {
     try {
       await axios.put(
         `${API_URL}/admin/colors/${encodeURIComponent(code)}/translations`,
         data,
-        {
-          headers: {
-            ...this.getAuthHeaders(),
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
       );
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -1279,180 +821,206 @@ class ApiClient {
   }
 
   // ========================================
-  // WEIGHT LOG METHODS
+  // TASKS
   // ========================================
 
-  /**
-   * Log a weight measurement for an animal
-   */
+  static async getTasks(params?: {
+    status?: string;
+    type?: string;
+    assigned_to_id?: string;
+    due_date?: string;
+    related_entity_id?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<TaskListResponse> {
+    try {
+      const response = await axios.get<TaskListResponse>(
+        `${API_URL}/tasks`,
+        { params, headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch tasks');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async getTask(id: string): Promise<Task> {
+    try {
+      const response = await axios.get<Task>(
+        `${API_URL}/tasks/${id}`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch task');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async createTask(data: CreateTaskRequest): Promise<Task> {
+    try {
+      const response = await axios.post<Task>(
+        `${API_URL}/tasks`,
+        data,
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to create task');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async completeTask(id: string, data?: { notes?: string; completion_data?: any }): Promise<Task> {
+    try {
+      const response = await axios.post<Task>(
+        `${API_URL}/tasks/${id}/complete`,
+        data || {},
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to complete task');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async completeFeedingTask(taskId: string, notes?: string): Promise<any> {
+    try {
+      const response = await axios.post(
+        `${API_URL}/feeding/tasks/${taskId}/complete`,
+        { notes },
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to complete feeding task');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async updateTask(id: string, data: Partial<CreateTaskRequest>): Promise<Task> {
+    try {
+      const response = await axios.put<Task>(
+        `${API_URL}/tasks/${id}`,
+        data,
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to update task');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async cancelTask(id: string, reason?: string): Promise<void> {
+    try {
+      await axios.delete(
+        `${API_URL}/tasks/${id}`,
+        { params: { reason }, headers: this.getAuthHeaders() }
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to cancel task');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  // ========================================
+  // WEIGHT / BCS
+  // ========================================
+
   static async logWeight(animalId: string, weight_kg: number, notes?: string, measured_at?: string): Promise<WeightLog> {
-    const organizationId = this.getOrganizationId();
     const body: Record<string, any> = { weight_kg };
     if (notes) body.notes = notes;
     if (measured_at) body.measured_at = measured_at;
     const response = await axios.post<WeightLog>(
       `${API_URL}/animals/${animalId}/weight`,
       body,
-      {
-        headers: {
-          ...this.getAuthHeaders(),
-          'x-organization-id': organizationId || '',
-          'Content-Type': 'application/json',
-        },
-      }
+      { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
     );
     return response.data;
   }
 
-  /**
-   * Get weight history for an animal (newest first)
-   */
   static async getWeightHistory(animalId: string): Promise<WeightLog[]> {
-    const organizationId = this.getOrganizationId();
     const response = await axios.get<WeightLog[]>(
       `${API_URL}/animals/${animalId}/weight`,
-      {
-        headers: {
-          ...this.getAuthHeaders(),
-          'x-organization-id': organizationId || '',
-        },
-      }
+      { headers: this.getAuthHeaders() }
     );
     return response.data;
   }
 
   static async getAnimalKennelHistory(animalId: string): Promise<{ kennel_code: string; assigned_at: string; released_at: string | null }[]> {
-    const organizationId = this.getOrganizationId();
     const response = await axios.get(
       `${API_URL}/animals/${animalId}/kennel-history`,
-      {
-        headers: {
-          ...this.getAuthHeaders(),
-          'x-organization-id': organizationId || '',
-        },
-      }
+      { headers: this.getAuthHeaders() }
     );
     return response.data;
   }
 
-  // ========================================
-  // BIRTH / LITTER EVENT
-  // ========================================
-
-  /**
-   * Register a birth event for a pregnant animal.
-   * Creates N offspring in the same kennel.
-   */
   static async registerBirth(animalId: string, litter_count: number, birth_date?: string): Promise<{ created: number; offspring: { id: string; public_code: string; name: string }[] }> {
-    const organizationId = this.getOrganizationId();
     const body: Record<string, any> = { litter_count };
     if (birth_date) body.birth_date = birth_date;
     const response = await axios.post(
       `${API_URL}/animals/${animalId}/birth`,
       body,
-      {
-        headers: {
-          ...this.getAuthHeaders(),
-          'x-organization-id': organizationId || '',
-          'Content-Type': 'application/json',
-        },
-      }
+      { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
     );
     return response.data;
   }
 
-  // ========================================
-  // BCS LOG METHODS
-  // ========================================
-
-  /**
-   * Log a BCS (Body Condition Score) measurement for an animal
-   */
   static async logBCS(animalId: string, bcs: number, notes?: string, measured_at?: string): Promise<BCSLog> {
-    const organizationId = this.getOrganizationId();
     const body: Record<string, any> = { bcs };
     if (notes) body.notes = notes;
     if (measured_at) body.measured_at = measured_at;
     const response = await axios.post<BCSLog>(
       `${API_URL}/animals/${animalId}/bcs`,
       body,
-      {
-        headers: {
-          ...this.getAuthHeaders(),
-          'x-organization-id': organizationId || '',
-          'Content-Type': 'application/json',
-        },
-      }
+      { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
     );
     return response.data;
   }
 
-  /**
-   * Get BCS history for an animal (newest first)
-   */
   static async getBCSHistory(animalId: string): Promise<BCSLog[]> {
-    const organizationId = this.getOrganizationId();
     const response = await axios.get<BCSLog[]>(
       `${API_URL}/animals/${animalId}/bcs`,
-      {
-        headers: {
-          ...this.getAuthHeaders(),
-          'x-organization-id': organizationId || '',
-        },
-      }
+      { headers: this.getAuthHeaders() }
     );
     return response.data;
   }
 
   // ========================================
-  // MER CALCULATION METHODS
+  // MER CALCULATION
   // ========================================
 
-  /**
-   * Calculate MER/RER energy requirements for an animal
-   */
   static async calculateMER(params: MERCalculateRequest): Promise<MERCalculation> {
-    const organizationId = this.getOrganizationId();
     const response = await axios.post<MERCalculation>(
       `${API_URL}/feeding/calculate-mer`,
       params,
-      {
-        headers: {
-          ...this.getAuthHeaders(),
-          'x-organization-id': organizationId || '',
-          'Content-Type': 'application/json',
-        },
-      }
+      { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
     );
     return response.data;
-  }
-
-  /**
-   * Cancel task
-   */
-  static async cancelTask(id: string, reason?: string): Promise<void> {
-    try {
-      const organizationId = this.getOrganizationId();
-
-      await axios.delete(
-        `${API_URL}/tasks/${id}`,
-        {
-          params: { reason },
-          headers: {
-            ...this.getAuthHeaders(),
-            'x-organization-id': organizationId || '',
-          },
-        }
-      );
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<ApiError>;
-        throw new Error(
-          axiosError.response?.data?.detail || 'Failed to cancel task'
-        );
-      }
-      throw new Error('An unexpected error occurred');
-    }
   }
 
   // ========================================
@@ -1460,15 +1028,9 @@ class ApiClient {
   // ========================================
 
   static async getAnimalDailyCount(days: number = 90): Promise<{ date: string; count: number }[]> {
-    const organizationId = this.getOrganizationId();
     const response = await axios.get<{ date: string; count: number }[]>(
       `${API_URL}/animals/stats/daily-count?days=${days}`,
-      {
-        headers: {
-          ...this.getAuthHeaders(),
-          'x-organization-id': organizationId || '',
-        },
-      }
+      { headers: this.getAuthHeaders() }
     );
     return response.data;
   }
