@@ -1440,6 +1440,24 @@ class ApiClient {
       throw new Error('An unexpected error occurred');
     }
   }
+
+  // ========================================
+  // REPORTS
+  // ========================================
+
+  static async getAnimalDailyCount(days: number = 90): Promise<{ date: string; count: number }[]> {
+    const organizationId = this.getOrganizationId();
+    const response = await axios.get<{ date: string; count: number }[]>(
+      `${API_URL}/animals/stats/daily-count?days=${days}`,
+      {
+        headers: {
+          ...this.getAuthHeaders(),
+          'x-organization-id': organizationId || '',
+        },
+      }
+    );
+    return response.data;
+  }
 }
 
 export { ApiClient };

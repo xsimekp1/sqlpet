@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
@@ -452,6 +452,41 @@ async def get_bcs_history(
     )
     logs = result.scalars().all()
     return [BCSLogResponse.model_validate(log) for log in logs]
+
+
+# --- Daily count stats endpoint ---
+
+@router.get("/stats/daily-count")
+async def get_daily_animal_count(
+    days: int = Query(90, ge=7, le=365),
+    current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return daily animal count for the last N days."""
+    from src.app.models.animal import Animal as AnimalModel
+    from sqlalchemy import func, and_, or_  # noqa: F811 (or_ already imported via text)
+
+    today = date.today()
+    result = []
+
+    for i in range(days - 1, -1, -1):
+        day = today - timedelta(days=i)
+        count_query = select(func.count()).select_from(AnimalModel).where(
+            and_(
+                AnimalModel.organization_id == organization_id,
+                AnimalModel.intake_date <= day,
+                or_(
+                    AnimalModel.outcome_date.is_(None),
+                    AnimalModel.outcome_date > day,
+                ),
+            )
+        )
+        count_result = await db.execute(count_query)
+        count = count_result.scalar() or 0
+        result.append({"date": day.isoformat(), "count": count})
+
+    return result
 
 
 # --- Breeds endpoint (authenticated, no org scoping) ---

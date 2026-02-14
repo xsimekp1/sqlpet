@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Animal } from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -78,6 +78,7 @@ const getColorLabel = (color: string): string => {
 
 export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimalDetailsProps) {
   const locale = useLocale();
+  const t = useTranslations('animals');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [breeds, setBreeds] = useState<Breed[]>([]);
@@ -331,7 +332,7 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
               <Edit className="h-3 w-3" />
             </Button>
           </p>
-          <p className="font-medium">{animal.color}</p>
+          <p className="font-medium">{animal.color ? t(`colors.${animal.color}` as any) || animal.color : '—'}</p>
         </div>
       )}
 

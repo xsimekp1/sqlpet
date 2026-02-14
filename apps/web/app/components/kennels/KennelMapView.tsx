@@ -102,8 +102,6 @@ function DraggableKennelBox({
   return (
     <motion.div
       layoutId={`kennel-${kennel.id}`}
-      layout
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       style={style}
       ref={setNodeRef}
       {...listeners}
@@ -119,9 +117,16 @@ function DraggableKennelBox({
         >
           {kennel.code}
         </Link>
-        <Badge className="text-xs shrink-0 px-1.5 py-0">
-          {kennel.occupied_count}/{kennel.capacity}
-        </Badge>
+        <div className="flex items-center gap-1 shrink-0">
+          {animalsInKennel.length > 0 && (
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+              {animalsInKennel.length}
+            </span>
+          )}
+          <Badge className="text-xs px-1.5 py-0">
+            {kennel.occupied_count}/{kennel.capacity}
+          </Badge>
+        </div>
       </div>
 
       {/* Body */}
@@ -141,9 +146,9 @@ function DraggableKennelBox({
             />
           </div>
           {animalsInKennel.length > 0 && (
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+            <p className="text-xs font-medium mt-0.5 truncate">
               {animalsInKennel.slice(0, 2).map(a => a.name).join(', ')}
-              {animalsInKennel.length > 2 && ` +${animalsInKennel.length - 2}`}
+              {animalsInKennel.length > 2 && <span className="text-muted-foreground"> +{animalsInKennel.length - 2}</span>}
             </p>
           )}
         </div>
@@ -167,35 +172,37 @@ export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: 
     const { active, delta } = event;
     const kennelId = active.id as string;
 
+    // Use functional update to get current position and compute new position atomically
+    let savedPos: KennelPos | null = null;
     setPositions(prev => {
       const old = prev[kennelId];
       if (!old) return prev;
-      return {
-        ...prev,
-        [kennelId]: {
-          ...old,
-          x: Math.max(0, old.x + delta.x),
-          y: Math.max(0, old.y + delta.y),
-        },
+      const updated: KennelPos = {
+        ...old,
+        x: Math.max(0, Math.round(old.x + delta.x)),
+        y: Math.max(0, Math.round(old.y + delta.y)),
       };
+      savedPos = updated;
+      return { ...prev, [kennelId]: updated };
     });
 
-    // Save to backend
-    try {
-      const updated = positions[kennelId];
-      if (!updated) return;
-      await ApiClient.updateKennelMapPosition(kennelId, {
-        map_x: Math.max(0, Math.round(updated.x + delta.x)),
-        map_y: Math.max(0, Math.round(updated.y + delta.y)),
-        map_w: updated.w,
-        map_h: updated.h,
-      });
-      toast.success('Poloha uložena');
-      onPositionSaved?.();
-    } catch {
-      toast.error('Nepodařilo se uložit polohu');
-    }
-  }, [positions, onPositionSaved]);
+    // Save after state update using the computed position
+    setTimeout(async () => {
+      if (!savedPos) return;
+      try {
+        await ApiClient.updateKennelMapPosition(kennelId, {
+          map_x: savedPos.x,
+          map_y: savedPos.y,
+          map_w: savedPos.w,
+          map_h: savedPos.h,
+        });
+        toast.success('Poloha uložena');
+        onPositionSaved?.();
+      } catch {
+        toast.error('Nepodařilo se uložit polohu');
+      }
+    }, 0);
+  }, [onPositionSaved]);
 
   // Compute canvas size to fit all boxes
   const canvasW = Math.max(

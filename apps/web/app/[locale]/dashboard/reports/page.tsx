@@ -1,15 +1,97 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { BarChart3, TrendingUp, FileText, PieChart, Clock } from 'lucide-react';
+import { BarChart3, TrendingUp, FileText, PieChart, Clock, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import ApiClient from '@/app/lib/api';
+import { toast } from 'sonner';
+
+// ── Simple SVG line chart for daily animal count ────────────────────────────
+function DailyCountChart({ data }: { data: { date: string; count: number }[] }) {
+  if (data.length < 2) return <p className="text-sm text-muted-foreground">Nedostatek dat pro zobrazení grafu</p>;
+
+  const W = 600, H = 200;
+  const padL = 40, padR = 30, padT = 16, padB = 32;
+
+  const counts = data.map(d => d.count);
+  const minC = Math.min(...counts);
+  const maxC = Math.max(...counts);
+  const rangeC = maxC - minC || 1;
+  const avg = counts.reduce((a, b) => a + b, 0) / counts.length;
+
+  const toX = (i: number) => padL + (i / (data.length - 1)) * (W - padL - padR);
+  const toY = (v: number) => padT + (H - padT - padB) - ((v - minC) / rangeC) * (H - padT - padB);
+
+  const avgY = toY(avg);
+  const polyline = data.map((d, i) => `${toX(i)},${toY(d.count)}`).join(' ');
+
+  // Show ~6 date labels
+  const labelStep = Math.max(1, Math.floor(data.length / 6));
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }} aria-hidden>
+      {/* Average reference line */}
+      <line
+        x1={padL} y1={avgY} x2={W - padR} y2={avgY}
+        stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth="1" opacity="0.5"
+      />
+      <text x={W - padR + 2} y={avgY + 4} fontSize="10" fill="hsl(var(--muted-foreground))">
+        ⌀{avg.toFixed(0)}
+      </text>
+
+      {/* Y-axis labels */}
+      {[minC, Math.round((minC + maxC) / 2), maxC].map((v, i) => (
+        <text key={i} x={padL - 4} y={toY(v) + 4} fontSize="10" fill="hsl(var(--muted-foreground))" textAnchor="end">
+          {v}
+        </text>
+      ))}
+
+      {/* Polyline */}
+      <polyline
+        points={polyline}
+        fill="none"
+        stroke="hsl(var(--primary))"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+
+      {/* Dots */}
+      {data.map((d, i) => (
+        <circle key={i} cx={toX(i)} cy={toY(d.count)} r="2.5" fill="hsl(var(--primary))">
+          <title>{`${d.date}: ${d.count} zvířat`}</title>
+        </circle>
+      ))}
+
+      {/* X-axis date labels */}
+      {data.map((d, i) => {
+        if (i % labelStep !== 0 && i !== data.length - 1) return null;
+        return (
+          <text key={i} x={toX(i)} y={H - 4} fontSize="9" fill="hsl(var(--muted-foreground))" textAnchor="middle">
+            {d.date.slice(5)}
+          </text>
+        );
+      })}
+    </svg>
+  );
+}
 
 export default function ReportsPage() {
   const t = useTranslations();
 
+  const [dailyData, setDailyData] = useState<{ date: string; count: number }[]>([]);
+  const [loadingChart, setLoadingChart] = useState(true);
+
+  useEffect(() => {
+    ApiClient.getAnimalDailyCount(90)
+      .then(setDailyData)
+      .catch(() => toast.error('Nepodařilo se načíst statistiky'))
+      .finally(() => setLoadingChart(false));
+  }, []);
+
   const plannedReports = [
-    { icon: TrendingUp, title: 'Obsazenost v čase', desc: 'Počet zvířat v útulku po dnech/týdnech/měsících' },
     { icon: PieChart, title: 'Příjmy a výdeje', desc: 'Statistiky příjmů (intake) vs adopcí/výdejů' },
     { icon: FileText, title: 'Adopční přehled', desc: 'Úspěšnost adopcí, průměrná doba v útulku' },
     { icon: BarChart3, title: 'Lékařské záznamy', desc: 'Přehled veterinárních úkonů, očkování, léčby' },
@@ -23,17 +105,42 @@ export default function ReportsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Reporty</h1>
           <p className="text-muted-foreground mt-1">Statistiky a přehledy provozu útulku</p>
         </div>
-        <Badge variant="secondary" className="text-sm px-3 py-1">Připravujeme</Badge>
       </div>
 
-      <Card className="border-dashed">
+      {/* ── Live chart: daily animal count ── */}
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-muted-foreground" />
-            Analytické reporty
+            <TrendingUp className="h-5 w-5" />
+            Počet zvířat v útulku (posledních 90 dní)
           </CardTitle>
           <CardDescription>
-            Modul reportů bude dostupný v další fázi vývoje. Plánujeme následující přehledy:
+            Denní stav — počet zvířat s aktivním pobytem (od příjmu do výdeje)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingChart ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : (
+            <DailyCountChart data={dailyData} />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Planned reports placeholder ── */}
+      <Card className="border-dashed">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-muted-foreground" />
+              Další reporty
+            </CardTitle>
+            <Badge variant="secondary" className="text-sm px-3 py-1">Připravujeme</Badge>
+          </div>
+          <CardDescription>
+            Plánované přehledy pro další fáze vývoje:
           </CardDescription>
         </CardHeader>
         <CardContent>

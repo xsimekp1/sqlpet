@@ -48,20 +48,27 @@ async def create_task(
     except ValueError:
         priority = TaskPriority.MEDIUM
 
-    task = await task_service.create_task(
-        organization_id=organization_id,
-        created_by_id=current_user.id,
-        title=task_data.title,
-        description=task_data.description,
-        task_type=task_type,
-        priority=priority,
-        assigned_to_id=task_data.assigned_to_id,
-        due_at=task_data.due_at,
-        task_metadata=task_data.task_metadata,
-        related_entity_type=task_data.related_entity_type,
-        related_entity_id=task_data.related_entity_id,
-    )
-    await db.commit()
+    try:
+        task = await task_service.create_task(
+            organization_id=organization_id,
+            created_by_id=current_user.id,
+            title=task_data.title,
+            description=task_data.description,
+            task_type=task_type,
+            priority=priority,
+            assigned_to_id=task_data.assigned_to_id,
+            due_at=task_data.due_at,
+            task_metadata=task_data.task_metadata,
+            related_entity_type=task_data.related_entity_type,
+            related_entity_id=task_data.related_entity_id,
+        )
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Failed to create task: {str(e)}",
+        )
     return task
 
 

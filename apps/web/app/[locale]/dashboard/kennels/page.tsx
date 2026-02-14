@@ -694,7 +694,15 @@ export default function KennelsPage() {
                             <Users className="h-4 w-4 mr-2" />
                             Move Animals
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={async () => {
+                              try {
+                                await ApiClient.updateKennel(kennel.id, { status: 'maintenance' });
+                                toast.success(`${kennel.name} nastaven do údržby`);
+                                fetchData(true);
+                              } catch (e: any) { toast.error(e.message || 'Chyba při nastavení údržby'); }
+                            }}
+                          >
                             <Settings className="h-4 w-4 mr-2" />
                             Set Maintenance
                           </DropdownMenuItem>

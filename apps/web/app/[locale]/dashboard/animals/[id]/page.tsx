@@ -35,7 +35,7 @@ import { toast } from 'sonner';
 import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
 import BirthDialog from '@/app/components/animals/BirthDialog';
 import { EditableAnimalName, EditableAnimalDetails, AssignKennelButton } from '@/app/components/animals';
-import { calcMER } from '@/app/lib/energy';
+import { calcMER, calcRER, getMERFactor } from '@/app/lib/energy';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -77,9 +77,16 @@ function WeightSparkline({ logs }: { logs: WeightLog[] }) {
   });
 
   const polyline = pts.map(p => `${p.x},${p.y}`).join(' ');
+  const avg = weights.reduce((a, b) => a + b, 0) / weights.length;
+  const avgY = H - pad - ((avg - minW) / range) * (H - pad * 2);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-16" aria-hidden>
+      <line
+        x1={pad} y1={avgY} x2={W - pad} y2={avgY}
+        stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth="1" opacity="0.5"
+      />
+      <text x={W - pad + 2} y={avgY + 4} fontSize="9" fill="hsl(var(--muted-foreground))">{avg.toFixed(1)}</text>
       <polyline
         points={polyline}
         fill="none"
@@ -702,10 +709,7 @@ export default function AnimalDetailPage() {
                     {latestWeight.notes && ` · ${latestWeight.notes}`}
                   </p>
                   {/* Energy needs */}
-                  <p
-                    className="text-sm text-muted-foreground mt-1"
-                    title="RER = 70 × kg^0.75, MER = RER × faktor aktivity/kastrace"
-                  >
+                  <p className="text-sm text-muted-foreground mt-1">
                     ⚡ {t('animals.health.energyNeeds')}: ~{calcMER(
                       Number(latestWeight.weight_kg),
                       animal.age_group,
@@ -713,15 +717,20 @@ export default function AnimalDetailPage() {
                       animal.is_pregnant,
                     )} kcal/den
                   </p>
+                  <details className="text-xs text-muted-foreground mt-1 ml-2">
+                    <summary className="cursor-pointer hover:text-foreground">Zobrazit výpočet</summary>
+                    <div className="mt-1 space-y-0.5 font-mono">
+                      <p>RER = 70 × {Number(latestWeight.weight_kg).toFixed(1)}^0.75 = {calcRER(Number(latestWeight.weight_kg))} kcal</p>
+                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)}</p>
+                      <p>MER = {calcRER(Number(latestWeight.weight_kg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)} = {calcMER(Number(latestWeight.weight_kg), animal.age_group, animal.altered_status, animal.is_pregnant)} kcal/den</p>
+                    </div>
+                  </details>
                 </div>
               ) : weightKg ? (
                 <div>
                   <p className="text-2xl font-bold">{Number(weightKg).toFixed(1)} kg</p>
                   <p className="text-xs text-muted-foreground">odhadovaná váha</p>
-                  <p
-                    className="text-sm text-muted-foreground mt-1"
-                    title="RER = 70 × kg^0.75, MER = RER × faktor aktivity/kastrace"
-                  >
+                  <p className="text-sm text-muted-foreground mt-1">
                     ⚡ {t('animals.health.energyNeeds')}: ~{calcMER(
                       Number(weightKg),
                       animal.age_group,
@@ -729,6 +738,14 @@ export default function AnimalDetailPage() {
                       animal.is_pregnant,
                     )} kcal/den
                   </p>
+                  <details className="text-xs text-muted-foreground mt-1 ml-2">
+                    <summary className="cursor-pointer hover:text-foreground">Zobrazit výpočet</summary>
+                    <div className="mt-1 space-y-0.5 font-mono">
+                      <p>RER = 70 × {Number(weightKg).toFixed(1)}^0.75 = {calcRER(Number(weightKg))} kcal</p>
+                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)}</p>
+                      <p>MER = {calcRER(Number(weightKg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)} = {calcMER(Number(weightKg), animal.age_group, animal.altered_status, animal.is_pregnant)} kcal/den</p>
+                    </div>
+                  </details>
                 </div>
               ) : null}
 
@@ -782,6 +799,17 @@ export default function AnimalDetailPage() {
                   >
                     {savingWeight ? t('animals.health.weightSaving') : t('animals.health.weightSave')}
                   </Button>
+                  {weightInput && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => { setWeightInput(''); setWeightDate(''); setWeightNotes(''); }}
+                      title="Zrušit"
+                    >
+                      <XCircle className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  )}
                 </div>
               </div>
 

@@ -425,6 +425,10 @@ export default function KennelDetailPage() {
 
         {/* Action buttons */}
         <div className="flex gap-2 shrink-0">
+          <Button size="sm" onClick={() => setTaskDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            {t('detail.addTask')}
+          </Button>
           <Button variant="outline" size="sm" onClick={handleCopy} disabled={copying}>
             {copying ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Copy className="h-4 w-4 mr-1" />}
             {t('detail.copyKennel')}

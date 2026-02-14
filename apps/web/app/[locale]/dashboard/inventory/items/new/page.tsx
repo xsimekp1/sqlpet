@@ -95,6 +95,14 @@ export default function NewInventoryItemPage() {
   });
 
   const onSubmit = (data: InventoryItemFormData) => {
+    if (!data.category) {
+      toast({
+        title: 'Kategorie je povinná',
+        description: 'Vyberte kategorii položky skladu',
+        variant: 'destructive',
+      });
+      return;
+    }
     createItemMutation.mutate(data);
   };
 

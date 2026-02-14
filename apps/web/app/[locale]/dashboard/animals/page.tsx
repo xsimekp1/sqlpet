@@ -45,6 +45,14 @@ const SPECIES_EMOJI: Record<string, string> = {
   dog: '🐕', cat: '🐈', rabbit: '🐇', bird: '🐦', other: '🐾',
 };
 
+const AGE_LABELS: Record<string, string> = {
+  baby: 'Mládě',
+  young: 'Mladé',
+  adult: 'Dospělé',
+  senior: 'Senior',
+  unknown: 'Neznámý',
+};
+
 export default function AnimalsPage() {
   const router = useRouter();
   const t = useTranslations();
@@ -173,12 +181,6 @@ export default function AnimalsPage() {
                     className="object-cover object-center"
                     unoptimized
                   />
-                  {/* Sex badge in top-right corner */}
-                  {animal.sex !== 'unknown' && (
-                    <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white text-base font-bold leading-none">
-                      {animal.sex === 'male' ? '♂' : '♀'}
-                    </div>
-                  )}
                   {/* Special needs badge top-left */}
                   {animal.is_special_needs && (
                     <div className="absolute top-1.5 left-1.5 w-7 h-7 rounded-full bg-violet-600/80 flex items-center justify-center" title="Zvíře se speciálními potřebami">
@@ -192,8 +194,12 @@ export default function AnimalsPage() {
                     </div>
                   )}
                 </div>
-                <div className="p-2.5 space-y-1.5">
-                  <p className="font-bold text-lg leading-tight truncate">{animal.name}</p>
+                <div className="p-1.5 space-y-1">
+                  <p className="font-bold text-base leading-tight truncate">{animal.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {animal.current_kennel_code && <span className="font-mono mr-1">{animal.current_kennel_code}</span>}
+                    {AGE_LABELS[animal.age_group] ?? ''}
+                  </p>
                   <div className="flex items-center gap-1 flex-wrap">
                     {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
                       <Scissors className="h-3 w-3 text-primary shrink-0" />
@@ -223,7 +229,7 @@ export default function AnimalsPage() {
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Species</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Breed</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Color</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Věk</th>
                   <th className="px-4 py-3 font-medium text-muted-foreground w-28" title="Zdraví">Zdraví</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Kotec</th>
@@ -247,11 +253,6 @@ export default function AnimalsPage() {
                           className="object-cover"
                           unoptimized
                         />
-                        <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                          animal.sex === 'male' ? 'bg-blue-500 text-white' : animal.sex === 'female' ? 'bg-pink-500 text-white' : 'bg-gray-400 text-white'
-                        }`}>
-                          {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
-                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -269,7 +270,7 @@ export default function AnimalsPage() {
                         : '—'}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {animal.color ? t(`colors.${animal.color}` as any, { fallback: animal.color }) : '—'}
+                      {AGE_LABELS[animal.age_group] ?? '—'}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1 flex-wrap">
