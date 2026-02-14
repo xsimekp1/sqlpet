@@ -134,6 +134,8 @@ export default function AnimalDetailPage() {
   const [requestingAbortion, setRequestingAbortion] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
+  const queryClient = useQueryClient();
+
   // Nav arrows — initialise from cache so arrows are visible immediately on navigation
   const [animalIds, setAnimalIds] = useState<string[]>(
     () => queryClient.getQueryData<string[]>(['animalIds']) ?? []
@@ -152,8 +154,6 @@ export default function AnimalDetailPage() {
 
   // Kennel history
   const [kennelHistory, setKennelHistory] = useState<{ kennel_code: string; assigned_at: string; released_at: string | null }[]>([]);
-
-  const queryClient = useQueryClient();
   const animalId = params.id as string;
   const photoInputRef = useRef<HTMLInputElement>(null);
 
