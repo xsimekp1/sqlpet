@@ -129,25 +129,25 @@ export default function MedicalPage() {
               <p>{t('medical.quarantine.noAnimals')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="divide-y">
               {quarantineAnimals.map((animal) => (
                 <Link key={animal.id} href={`/dashboard/animals/${animal.id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <AnimalImage animal={animal} size="sm" />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold truncate">{animal.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            #{animal.public_code} • {animal.species}
-                          </p>
-                          <Badge className={getStatusColor(animal.status)} variant="outline">
-                            {t(`animals.status.${animal.status}`)}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div className="flex items-center gap-3 py-2.5 hover:bg-muted/50 rounded-md px-2 -mx-2 transition-colors">
+                    <AnimalImage animal={animal} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{animal.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        #{animal.public_code}
+                        {animal.current_kennel_code && <> · <span className="font-mono">{animal.current_kennel_code}</span></>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-300 text-xs gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        Karanténa
+                      </Badge>
+                    </div>
+                  </div>
                 </Link>
               ))}
             </div>

@@ -124,15 +124,20 @@ export default function SettingsPage() {
   const [savingColorCode, setSavingColorCode] = useState<string | null>(null);
 
   // Members state
-  interface MemberListItem { user_id: string; email: string; name: string; role_name?: string | null; status: string }
+  interface MemberListItem { user_id: string; email: string; name: string; role_id?: string | null; role_name?: string | null; status: string }
+  interface OrgRole { id: string; name: string }
   const [members, setMembers] = useState<MemberListItem[]>([]);
+  const [orgRoles, setOrgRoles] = useState<OrgRole[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [addUserOpen, setAddUserOpen] = useState(false);
-  const [addUserForm, setAddUserForm] = useState({ name: '', email: '', password: '' });
+  const [addUserForm, setAddUserForm] = useState({ name: '', email: '', password: '', role_id: '' });
   const [addingUser, setAddingUser] = useState(false);
   const [setPasswordTarget, setSetPasswordTarget] = useState<MemberListItem | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [settingPassword, setSettingPassword] = useState(false);
+  const [changeRoleTarget, setChangeRoleTarget] = useState<MemberListItem | null>(null);
+  const [changeRoleValue, setChangeRoleValue] = useState('');
+  const [changingRole, setChangingRole] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -361,9 +366,12 @@ export default function SettingsPage() {
   const loadMembers = useCallback(async () => {
     setIsLoadingMembers(true);
     try {
-      const res = await fetch(`${API_URL}/admin/members`, { headers: getAuthHeaders() });
-      if (!res.ok) return;
-      setMembers(await res.json());
+      const [membersRes, rolesRes] = await Promise.all([
+        fetch(`${API_URL}/admin/members`, { headers: getAuthHeaders() }),
+        fetch(`${API_URL}/admin/roles`, { headers: getAuthHeaders() }),
+      ]);
+      if (membersRes.ok) setMembers(await membersRes.json());
+      if (rolesRes.ok) setOrgRoles(await rolesRes.json());
     } catch { /* ignore */ } finally {
       setIsLoadingMembers(false);
     }
@@ -376,10 +384,16 @@ export default function SettingsPage() {
     }
     setAddingUser(true);
     try {
+      const body: Record<string, string> = {
+        name: addUserForm.name,
+        email: addUserForm.email,
+        password: addUserForm.password,
+      };
+      if (addUserForm.role_id) body.role_id = addUserForm.role_id;
       const res = await fetch(`${API_URL}/admin/members/create`, {
         method: 'POST',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify(addUserForm),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: 'Chyba' }));
@@ -388,10 +402,31 @@ export default function SettingsPage() {
       }
       toast.success('Uživatel byl vytvořen');
       setAddUserOpen(false);
-      setAddUserForm({ name: '', email: '', password: '' });
+      setAddUserForm({ name: '', email: '', password: '', role_id: '' });
       await loadMembers();
     } catch { toast.error('Nepodařilo se vytvořit uživatele'); }
     finally { setAddingUser(false); }
+  };
+
+  const handleChangeRole = async () => {
+    if (!changeRoleTarget) return;
+    setChangingRole(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/members/${changeRoleTarget.user_id}/role`, {
+        method: 'PATCH',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role_id: changeRoleValue || null }),
+      });
+      if (!res.ok) {
+        toast.error('Nepodařilo se změnit roli');
+        return;
+      }
+      toast.success('Role byla změněna');
+      setChangeRoleTarget(null);
+      setChangeRoleValue('');
+      await loadMembers();
+    } catch { toast.error('Nepodařilo se změnit roli'); }
+    finally { setChangingRole(false); }
   };
 
   const handleSetPassword = async () => {
@@ -920,17 +955,29 @@ export default function SettingsPage() {
                         <p className="font-medium text-sm">{member.name}</p>
                         <p className="text-xs text-muted-foreground">{member.email}</p>
                         {member.role_name && (
-                          <p className="text-xs text-muted-foreground mt-0.5">{member.role_name}</p>
+                          <Badge variant="secondary" className="text-xs mt-0.5">{member.role_name}</Badge>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => { setSetPasswordTarget(member); setNewPassword(''); }}
-                      >
-                        <KeyRound className="h-3.5 w-3.5 mr-1.5" />
-                        Změnit heslo
-                      </Button>
+                      <div className="flex gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setChangeRoleTarget(member);
+                            setChangeRoleValue(member.role_id ?? '');
+                          }}
+                        >
+                          Změnit roli
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => { setSetPasswordTarget(member); setNewPassword(''); }}
+                        >
+                          <KeyRound className="h-3.5 w-3.5 mr-1.5" />
+                          Heslo
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -973,6 +1020,25 @@ export default function SettingsPage() {
                 placeholder="Zadejte heslo"
               />
             </div>
+            {orgRoles.length > 0 && (
+              <div className="space-y-1">
+                <Label>Role</Label>
+                <Select
+                  value={addUserForm.role_id}
+                  onValueChange={v => setAddUserForm(p => ({ ...p, role_id: v === '__none__' ? '' : v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Bez role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Bez role</SelectItem>
+                    {orgRoles.map(r => (
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="flex gap-2 justify-end pt-2">
               <Button variant="outline" onClick={() => setAddUserOpen(false)} disabled={addingUser}>
                 Zrušit
@@ -1007,6 +1073,39 @@ export default function SettingsPage() {
               </Button>
               <Button onClick={handleSetPassword} disabled={settingPassword || !newPassword}>
                 {settingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Uložit heslo'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change role dialog */}
+      <Dialog open={!!changeRoleTarget} onOpenChange={(open) => !open && setChangeRoleTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Změnit roli — {changeRoleTarget?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="space-y-1">
+              <Label>Role</Label>
+              <Select value={changeRoleValue} onValueChange={v => setChangeRoleValue(v === '__none__' ? '' : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Bez role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Bez role</SelectItem>
+                  {orgRoles.map(r => (
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => setChangeRoleTarget(null)} disabled={changingRole}>
+                Zrušit
+              </Button>
+              <Button onClick={handleChangeRole} disabled={changingRole}>
+                {changingRole ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Uložit roli'}
               </Button>
             </div>
           </div>

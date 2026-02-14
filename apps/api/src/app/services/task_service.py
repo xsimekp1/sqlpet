@@ -168,12 +168,16 @@ class TaskService:
         reason: Optional[str] = None,
     ) -> Task:
         """Cancel a task."""
+        description = None
+        if reason:
+            existing = await self._get_task_description(task_id)
+            description = f"{reason}\n\n{existing}" if existing else reason
         return await self.update_task(
             task_id=task_id,
             organization_id=organization_id,
             user_id=cancelled_by_id,
             status=TaskStatus.CANCELLED,
-            description=f"{reason}\n\n{await self._get_task_description(task_id)}" if reason else None,
+            description=description,
         )
 
     async def _get_task_description(self, task_id: uuid.UUID) -> str:

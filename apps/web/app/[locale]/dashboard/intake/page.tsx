@@ -1,62 +1,172 @@
 'use client';
 
-import { ClipboardList, Search, Stethoscope, Home, CheckSquare } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Plus, Loader2, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import ApiClient from '@/app/lib/api';
+import { toast } from 'sonner';
+
+interface IntakeRecord {
+  id: string;
+  animal_id: string;
+  reason: string;
+  intake_date: string;
+  planned_end_date: string | null;
+  funding_source: string | null;
+  notes: string | null;
+}
+
+const REASON_LABELS: Record<string, string> = {
+  found: 'Nález',
+  return: 'Návrat',
+  surrender: 'Odevzdání',
+  official: 'Úřední příděl',
+  transfer: 'Převod',
+  other: 'Jiné',
+};
+
+const REASON_COLORS: Record<string, string> = {
+  found: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  return: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  surrender: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  official: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  transfer: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+  other: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+};
 
 export default function IntakePage() {
-  const plannedSteps = [
-    { icon: Search, title: 'Identifikace zvířete', desc: 'Hledání dle čipu, jména nebo fotek — propojení s existujícím záznamem' },
-    { icon: ClipboardList, title: 'Příjmové detaily', desc: 'Důvod příjmu, odkud přišlo, první zdravotní prohlídka' },
-    { icon: Home, title: 'Přiřazení kotce', desc: 'Výběr volného kotce, zohlednění karantény a druhu zvířete' },
-    { icon: CheckSquare, title: 'Automatické úkoly', desc: 'Šablony úkolů pro nový příjem — veterinář, registrace, foto' },
-    { icon: Stethoscope, title: 'Zdravotní záznam', desc: 'Vstupní prohlídka, vakcinace, odčervení — rovnou při příjmu' },
-  ];
+  const [intakes, setIntakes] = useState<IntakeRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reasonFilter, setReasonFilter] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const params = reasonFilter ? `?reason=${reasonFilter}` : '';
+        const data = await ApiClient.get(`/intakes${params}`);
+        setIntakes(data);
+      } catch {
+        toast.error('Nepodařilo se načíst příjmy');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [reasonFilter]);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Příjem zvířete</h1>
-          <p className="text-muted-foreground mt-1">Průvodce příjmem nového zvířete do útulku</p>
+          <h1 className="text-3xl font-bold tracking-tight">Příjmy zvířat</h1>
+          <p className="text-muted-foreground mt-1">Přehled všech příjmů zvířat do útulku</p>
         </div>
-        <Badge variant="secondary" className="text-sm px-3 py-1">Připravujeme</Badge>
+        <Link href="/dashboard/intake/new">
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Nový příjem
+          </Button>
+        </Link>
       </div>
 
-      <Card className="border-dashed">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ClipboardList className="h-5 w-5 text-muted-foreground" />
-            Průvodce příjmem
-          </CardTitle>
-          <CardDescription>
-            Příjmový wizard bude dostupný v další fázi vývoje. Prozatím zvířata přidávejte přes{' '}
-            <a href="/dashboard/animals/new" className="underline text-primary">Přidat zvíře</a>.
-            Plánujeme průchod těmito kroky:
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {plannedSteps.map((step, i) => (
-              <div
-                key={step.title}
-                className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 border border-dashed"
-              >
-                <div className="p-2 rounded-lg bg-background border shrink-0">
-                  <step.icon className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">
-                    <span className="text-muted-foreground mr-1">{i + 1}.</span>
-                    {step.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{step.desc}</p>
-                </div>
-              </div>
+      {/* Filters */}
+      <div className="flex gap-3 flex-wrap">
+        <Select value={reasonFilter || '__all__'} onValueChange={v => setReasonFilter(v === '__all__' ? '' : v)}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="Všechny důvody" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">Všechny důvody</SelectItem>
+            {Object.entries(REASON_LABELS).map(([v, label]) => (
+              <SelectItem key={v} value={v}>{label}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : intakes.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground/30 mb-3" />
+            <p className="text-muted-foreground">Žádné příjmy</p>
+            <Link href="/dashboard/intake/new" className="mt-4">
+              <Button variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Nový příjem
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Zvíře</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Důvod příjmu</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Datum příjmu</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Plánovaný konec</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Způsob financování</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Poznámky</th>
+                </tr>
+              </thead>
+              <tbody>
+                {intakes.map(intake => (
+                  <tr key={intake.id} className="border-b hover:bg-muted/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/animals/${intake.animal_id}`}
+                        className="text-primary hover:underline font-mono text-xs"
+                      >
+                        {intake.animal_id.slice(0, 8)}…
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge className={`text-xs ${REASON_COLORS[intake.reason] ?? ''}`}>
+                        {REASON_LABELS[intake.reason] ?? intake.reason}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {new Date(intake.intake_date).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {intake.planned_end_date
+                        ? new Date(intake.planned_end_date).toLocaleDateString()
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">
+                      {intake.funding_source ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs max-w-xs truncate">
+                      {intake.notes ?? '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }

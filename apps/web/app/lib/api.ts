@@ -88,6 +88,12 @@ export interface AnimalBreed {
   display_name?: string;  // Localized name
 }
 
+export interface AnimalIdentifier {
+  id: string;
+  type: 'microchip' | 'tattoo' | 'tag' | 'passport' | 'other';
+  value: string;
+}
+
 export interface Animal {
   id: string;
   organization_id: string;
@@ -117,6 +123,7 @@ export interface Animal {
   age_group: 'baby' | 'young' | 'adult' | 'senior' | 'unknown';
   breeds?: AnimalBreed[];
   tags?: { id: string; name: string; color?: string }[];
+  identifiers?: AnimalIdentifier[];
   created_at: string;
   updated_at: string;
 }

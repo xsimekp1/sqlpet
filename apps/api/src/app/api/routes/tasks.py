@@ -1,7 +1,9 @@
 import uuid
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
+from typing import List, Optional
 
 from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
 from src.app.api.dependencies.db import get_db
@@ -20,6 +22,46 @@ from src.app.services.task_service import TaskService
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
+class BulkTaskCreate(BaseModel):
+    animal_ids: List[str]
+    title: str
+    task_type: TaskType = TaskType.MEDICAL
+    priority: TaskPriority = TaskPriority.HIGH
+    due_at: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+@router.post("/bulk", status_code=status.HTTP_201_CREATED)
+async def bulk_create_tasks(
+    data: BulkTaskCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Create one task per animal_id in bulk."""
+    task_service = TaskService(db)
+    created_ids = []
+    for animal_id_str in data.animal_ids:
+        try:
+            animal_uuid = uuid.UUID(animal_id_str)
+        except ValueError:
+            continue
+        task = await task_service.create_task(
+            organization_id=organization_id,
+            created_by_id=current_user.id,
+            title=data.title,
+            description=data.notes,
+            task_type=data.task_type,
+            priority=data.priority,
+            due_at=data.due_at,
+            related_entity_type="animal",
+            related_entity_id=animal_uuid,
+        )
+        created_ids.append(str(task.id))
+    await db.commit()
+    return {"created": len(created_ids), "task_ids": created_ids}
+
+
 @router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 async def create_task(
     task_data: TaskCreate,
@@ -28,12 +70,13 @@ async def create_task(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
     """Create a new task."""
-    print(f"[DEBUG] create_task called with data: {task_data}")
+    print(f"[DEBUG] create_task: org={organization_id}, user={current_user.id}, title={task_data.title!r}, type={task_data.type!r}, priority={task_data.priority!r}")
     task_service = TaskService(db)
 
     try:
         task_type = TaskType(task_data.type)
     except ValueError:
+        print(f"[DEBUG] create_task: invalid task_type={task_data.type!r}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid task type: {task_data.type}",
@@ -62,8 +105,11 @@ async def create_task(
             related_entity_type=task_data.related_entity_type,
             related_entity_id=task_data.related_entity_id,
         )
+        print(f"[DEBUG] create_task: flush OK, task.id={task.id}")
         await db.commit()
+        print(f"[DEBUG] create_task: commit OK, task.id={task.id}")
     except Exception as e:
+        print(f"[DEBUG] create_task: FAILED with {type(e).__name__}: {e!r}")
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

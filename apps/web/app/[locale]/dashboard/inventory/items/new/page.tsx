@@ -52,6 +52,9 @@ export default function NewInventoryItemPage() {
   const category = useWatch({ control, name: 'category' });
   const isFood = category === 'food';
 
+  // Controlled value for category Select (needed for pre-fill to show visually)
+  const [categoryValue, setCategoryValue] = useState('');
+
   // Species selection state
   const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
 
@@ -60,6 +63,7 @@ export default function NewInventoryItemPage() {
     const defaultCategory = searchParams.get('category');
     const defaultSpecies = searchParams.get('species');
     if (defaultCategory) {
+      setCategoryValue(defaultCategory);
       setValue('category', defaultCategory as any);
     }
     if (defaultSpecies) {
@@ -148,7 +152,11 @@ export default function NewInventoryItemPage() {
         {/* Category */}
         <div className="space-y-2">
           <Label htmlFor="category">{t('fields.category')} *</Label>
-          <Select onValueChange={(value) => setValue('category', value as any)} required>
+          <Select
+            value={categoryValue}
+            onValueChange={(value) => { setCategoryValue(value); setValue('category', value as any); }}
+            required
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>

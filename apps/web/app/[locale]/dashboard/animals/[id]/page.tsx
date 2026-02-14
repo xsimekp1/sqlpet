@@ -42,7 +42,7 @@ import { toast } from 'sonner';
 import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
 import BirthDialog from '@/app/components/animals/BirthDialog';
 import { EditableAnimalName, EditableAnimalDetails, AssignKennelButton } from '@/app/components/animals';
-import { calcMER, calcRER, getMERFactor } from '@/app/lib/energy';
+import { calcMER, calcRER, getMERFactor, getMERFactorLabel } from '@/app/lib/energy';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -134,8 +134,10 @@ export default function AnimalDetailPage() {
   const [requestingAbortion, setRequestingAbortion] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  // Nav arrows
-  const [animalIds, setAnimalIds] = useState<string[]>([]);
+  // Nav arrows — initialise from cache so arrows are visible immediately on navigation
+  const [animalIds, setAnimalIds] = useState<string[]>(
+    () => queryClient.getQueryData<string[]>(['animalIds']) ?? []
+  );
 
   // Expected litter date
   const [litterDateInput, setLitterDateInput] = useState('');
@@ -193,8 +195,10 @@ export default function AnimalDetailPage() {
         ]);
         // Store fresh data back in cache
         queryClient.setQueryData(['animal', data.id], data);
+        const ids = listData.items.map(a => a.id);
+        queryClient.setQueryData(['animalIds'], ids);
         setAnimal(data);
-        setAnimalIds(listData.items.map(a => a.id));
+        setAnimalIds(ids);
         setWeightLogs(wLogs);
         setKennelHistory(kHistory);
         setBehaviorNotes(data.behavior_notes ?? '');
@@ -459,6 +463,7 @@ export default function AnimalDetailPage() {
         <div className="flex-shrink-0 flex flex-col items-center gap-2">
           <div className="relative w-full max-w-sm aspect-square rounded-xl overflow-hidden bg-muted mx-auto group">
             <Image
+              key={animal.id}
               src={getAnimalImageUrl(animal)}
               alt={animal.name}
               fill
@@ -542,6 +547,14 @@ export default function AnimalDetailPage() {
           <p className="text-muted-foreground mb-1">
             #{animal.public_code} · {animal.species}
             {animal.sex !== 'unknown' && ` · ${animal.sex === 'male' ? '♂' : '♀'}`}
+            {(() => {
+              const chip = animal.identifiers?.find(i => i.type === 'microchip');
+              return chip ? (
+                <span className="ml-2 inline-flex items-center gap-1 text-xs bg-muted border border-border rounded px-1.5 py-0.5">
+                  🔖 {chip.value}
+                </span>
+              ) : null;
+            })()}
           </p>
 
           {/* Days in shelter + kennel link — inline */}
@@ -787,14 +800,15 @@ export default function AnimalDetailPage() {
                       animal.age_group,
                       animal.altered_status,
                       animal.is_pregnant,
+                      animal.species,
                     )} kcal/den
                   </p>
                   <details className="text-xs text-muted-foreground mt-1 ml-2">
                     <summary className="cursor-pointer hover:text-foreground">{t('weight.showCalc')}</summary>
                     <div className="mt-1 space-y-0.5 font-mono">
                       <p>RER = 70 × {Number(latestWeight.weight_kg).toFixed(1)}^0.75 = {calcRER(Number(latestWeight.weight_kg))} kcal</p>
-                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)}</p>
-                      <p>MER = {calcRER(Number(latestWeight.weight_kg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)} = {calcMER(Number(latestWeight.weight_kg), animal.age_group, animal.altered_status, animal.is_pregnant)} kcal/den</p>
+                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} ({getMERFactorLabel(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)})</p>
+                      <p>MER = {calcRER(Number(latestWeight.weight_kg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} = {calcMER(Number(latestWeight.weight_kg), animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} kcal/den</p>
                     </div>
                   </details>
                 </div>
@@ -808,14 +822,15 @@ export default function AnimalDetailPage() {
                       animal.age_group,
                       animal.altered_status,
                       animal.is_pregnant,
+                      animal.species,
                     )} kcal/den
                   </p>
                   <details className="text-xs text-muted-foreground mt-1 ml-2">
                     <summary className="cursor-pointer hover:text-foreground">{t('weight.showCalc')}</summary>
                     <div className="mt-1 space-y-0.5 font-mono">
                       <p>RER = 70 × {Number(weightKg).toFixed(1)}^0.75 = {calcRER(Number(weightKg))} kcal</p>
-                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)}</p>
-                      <p>MER = {calcRER(Number(weightKg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant)} = {calcMER(Number(weightKg), animal.age_group, animal.altered_status, animal.is_pregnant)} kcal/den</p>
+                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} ({getMERFactorLabel(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)})</p>
+                      <p>MER = {calcRER(Number(weightKg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} = {calcMER(Number(weightKg), animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} kcal/den</p>
                     </div>
                   </details>
                 </div>

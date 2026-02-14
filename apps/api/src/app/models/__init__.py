@@ -46,6 +46,8 @@ from src.app.models.file import (
     AnimalPhoto,
     StorageProvider,
 )
+from src.app.models.contact import Contact
+from src.app.models.intake import Intake, IntakeReason
 
 __all__ = [
     "Base",
@@ -98,4 +100,7 @@ __all__ = [
     "DefaultAnimalImage",
     "AnimalPhoto",
     "StorageProvider",
+    "Contact",
+    "Intake",
+    "IntakeReason",
 ]

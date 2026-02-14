@@ -12,20 +12,40 @@ export function calcRER(weightKg: number): number {
 export function getMERFactor(
   ageGroup: string,
   alteredStatus: string,
-  isPregnant: boolean
+  isPregnant: boolean,
+  species?: string,
 ): number {
   if (isPregnant) return 2.5;
   if (ageGroup === 'baby' || ageGroup === 'young') return 2.5;
   if (ageGroup === 'senior') return 1.4;
-  if (alteredStatus === 'neutered' || alteredStatus === 'spayed') return 1.6;
-  return 1.8; // adult intact
+  const isCat = species === 'cat';
+  if (alteredStatus === 'neutered' || alteredStatus === 'spayed') return isCat ? 1.2 : 1.6;
+  return isCat ? 1.4 : 1.8; // adult intact
+}
+
+export function getMERFactorLabel(
+  ageGroup: string,
+  alteredStatus: string,
+  isPregnant: boolean,
+  species?: string,
+): string {
+  if (isPregnant) return 'Březí: RER × 2.5';
+  if (ageGroup === 'baby' || ageGroup === 'young') return 'Mládě: RER × 2.5';
+  if (ageGroup === 'senior') return 'Senior: RER × 1.4';
+  const isCat = species === 'cat';
+  if (alteredStatus === 'neutered' || alteredStatus === 'spayed') {
+    return isCat ? 'Kastrovaná dospělá kočka: RER × 1.2' : 'Kastrovaný dospělý pes: RER × 1.6';
+  }
+  if (isCat) return 'Nekastrovaná kočka: RER × 1.4';
+  return 'Nekastrovaný pes: RER × 1.8';
 }
 
 export function calcMER(
   weightKg: number,
   ageGroup: string,
   alteredStatus: string,
-  isPregnant: boolean
+  isPregnant: boolean,
+  species?: string,
 ): number {
-  return Math.round(calcRER(weightKg) * getMERFactor(ageGroup, alteredStatus, isPregnant));
+  return Math.round(calcRER(weightKg) * getMERFactor(ageGroup, alteredStatus, isPregnant, species));
 }

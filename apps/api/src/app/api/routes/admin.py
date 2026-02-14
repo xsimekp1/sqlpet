@@ -549,6 +549,71 @@ async def create_member(
     )
 
 
+class RoleListItem(BaseModel):
+    id: str
+    name: str
+
+
+@router.get("/roles", response_model=List[RoleListItem])
+async def list_org_roles(
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """List roles available in the current organization."""
+    result = await db.execute(
+        select(Role)
+        .where(Role.organization_id == organization_id)
+        .order_by(Role.name)
+    )
+    return [RoleListItem(id=str(r.id), name=r.name) for r in result.scalars().all()]
+
+
+class SetRoleRequest(BaseModel):
+    role_id: Optional[str] = None  # None to remove role
+
+
+@router.patch("/members/{user_id}/role", status_code=status.HTTP_204_NO_CONTENT)
+async def set_member_role(
+    user_id: str,
+    body: SetRoleRequest,
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Change the role of a member in the current organization."""
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
+
+    membership_result = await db.execute(
+        select(Membership).where(
+            Membership.user_id == user_uuid,
+            Membership.organization_id == organization_id,
+        )
+    )
+    membership = membership_result.scalar_one_or_none()
+    if membership is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found in this organization")
+
+    if body.role_id:
+        try:
+            role_uuid = uuid.UUID(body.role_id)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role ID")
+        role_result = await db.execute(
+            select(Role).where(Role.id == role_uuid, Role.organization_id == organization_id)
+        )
+        if role_result.scalar_one_or_none() is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found in this organization")
+        membership.role_id = role_uuid
+    else:
+        membership.role_id = None
+
+    await db.commit()
+
+
 @router.post("/members/{user_id}/set-password", status_code=status.HTTP_204_NO_CONTENT)
 async def set_member_password(
     user_id: str,

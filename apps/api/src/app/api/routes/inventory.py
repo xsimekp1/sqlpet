@@ -35,6 +35,7 @@ async def create_inventory_item(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
     """Create a new inventory item."""
+    print(f"DEBUG create_inventory_item: user={current_user.id}, org={organization_id}, data={item_data}")
     inventory_service = InventoryService(db)
 
     try:

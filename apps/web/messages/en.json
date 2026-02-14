@@ -1095,5 +1095,22 @@
         "adopted": "Adopted"
       }
     }
+  },
+  "intake": {
+    "title": "Animal Intakes",
+    "new": "New Intake",
+    "reason": "Intake reason",
+    "reasons": {
+      "found": "Found",
+      "return": "Return from adoption",
+      "surrender": "Owner surrender",
+      "official": "Official placement",
+      "transfer": "Transfer",
+      "other": "Other"
+    },
+    "finder": "Finder",
+    "plannedEnd": "Planned end date",
+    "plannedPerson": "Planned adopter/foster",
+    "funding": "Funding source"
   }
 }

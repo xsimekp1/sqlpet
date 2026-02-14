@@ -1098,5 +1098,22 @@
         "adopted": "Adoptováno"
       }
     }
+  },
+  "intake": {
+    "title": "Příjmy zvířat",
+    "new": "Nový příjem",
+    "reason": "Důvod příjmu",
+    "reasons": {
+      "found": "Nález",
+      "return": "Návrat",
+      "surrender": "Odevzdání",
+      "official": "Úřední příděl",
+      "transfer": "Převod",
+      "other": "Jiné"
+    },
+    "finder": "Kdo nalezl",
+    "plannedEnd": "Plánovaný konec",
+    "plannedPerson": "Plánovaný adoptér/pěstoun",
+    "funding": "Způsob financování"
   }
 }
