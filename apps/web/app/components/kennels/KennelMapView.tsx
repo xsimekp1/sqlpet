@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   DndContext,
   useDraggable,
+  useDroppable,
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/components/ui/badge';
 import ApiClient, { Kennel, Animal } from '@/app/lib/api';
+import { getAnimalImageUrl } from '@/app/lib/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -19,19 +21,6 @@ interface KennelMapViewProps {
   onPositionSaved?: () => void;
 }
 
-// Box dimensions by size_category (px)
-const SIZE_DIMS: Record<string, { w: number; h: number }> = {
-  small:  { w: 100, h: 80  },
-  medium: { w: 160, h: 120 },
-  large:  { w: 240, h: 160 },
-  xlarge: { w: 320, h: 200 },
-};
-
-const CANVAS_MIN_W = 1200;
-const CANVAS_MIN_H = 700;
-const GAP = 24;
-const COLS = 5;
-
 interface KennelPos {
   x: number;
   y: number;
@@ -39,9 +28,37 @@ interface KennelPos {
   h: number;
 }
 
+interface FreeAnimalPos {
+  x: number;
+  y: number;
+}
+
+const FREE_ANIMALS_LS_KEY = 'kennel-map-free-animals';
+
+// 1 meter = 60 pixels on the map canvas
+const PIXELS_PER_METER = 60;
+// Default size if kennel has no dimensions specified
+const DEFAULT_KENNEL_M = 2;
+// Minimum pixel size so tiny kennels are still usable
+const MIN_KENNEL_PX_W = 80;
+const MIN_KENNEL_PX_H = 70;
+
+const CANVAS_MIN_W = 1200;
+const CANVAS_MIN_H = 700;
+const GAP = 24;
+const COLS = 5;
+
+function getKennelDims(kennel: Kennel): { w: number; h: number } {
+  const length = kennel.dimensions?.length ?? DEFAULT_KENNEL_M;
+  const width  = kennel.dimensions?.width  ?? DEFAULT_KENNEL_M;
+  return {
+    w: Math.max(MIN_KENNEL_PX_W, Math.round(length * PIXELS_PER_METER)),
+    h: Math.max(MIN_KENNEL_PX_H, Math.round(width  * PIXELS_PER_METER)),
+  };
+}
+
 function getDefaultPos(kennel: Kennel, index: number): KennelPos {
-  const dims = SIZE_DIMS[kennel.size_category] ?? SIZE_DIMS.medium;
-  // If DB has explicit map position, use it
+  const dims = getKennelDims(kennel);
   if (kennel.map_x !== 0 || kennel.map_y !== 0) {
     return {
       x: kennel.map_x,
@@ -50,7 +67,6 @@ function getDefaultPos(kennel: Kennel, index: number): KennelPos {
       h: kennel.map_h > 0 ? kennel.map_h : dims.h,
     };
   }
-  // Auto-layout grid
   const col = index % COLS;
   const row = Math.floor(index / COLS);
   return {
@@ -61,13 +77,44 @@ function getDefaultPos(kennel: Kennel, index: number): KennelPos {
   };
 }
 
-const STATUS_BORDER: Record<string, string> = {
-  available:   'border-l-green-500',
-  maintenance: 'border-l-yellow-500',
-  closed:      'border-l-red-500',
-};
+// ---- Animal avatar circle (draggable) ----
+function AnimalAvatar({ animal }: { animal: Animal }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `animal-${animal.id}`,
+    data: { type: 'animal', animal },
+  });
 
-// ---- Single draggable kennel box ----
+  const style = {
+    transform: transform ? CSS.Translate.toString(transform) : undefined,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 200 : undefined,
+    cursor: isDragging ? 'grabbing' : 'grab',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className="flex flex-col items-center gap-0.5 touch-none select-none"
+      title={animal.name}
+    >
+      <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-background shadow-sm ring-1 ring-border">
+        <img
+          src={getAnimalImageUrl(animal)}
+          alt={animal.name}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <span className="text-[9px] font-medium max-w-[44px] truncate text-center leading-tight">
+        {animal.name}
+      </span>
+    </div>
+  );
+}
+
+// ---- Kennel box (draggable header + droppable body) ----
 function DraggableKennelBox({
   kennel,
   pos,
@@ -77,9 +124,20 @@ function DraggableKennelBox({
   pos: KennelPos;
   animalsInKennel: Animal[];
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDragRef,
+    transform,
+    isDragging,
+  } = useDraggable({
     id: kennel.id,
-    data: { kennel },
+    data: { type: 'kennel', kennel },
+  });
+
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `kennel-drop-${kennel.id}`,
+    data: { type: 'kennel-drop', kennelId: kennel.id },
   });
 
   const style = {
@@ -91,24 +149,32 @@ function DraggableKennelBox({
     transform: transform ? CSS.Translate.toString(transform) : undefined,
     opacity: isDragging ? 0.6 : 1,
     zIndex: isDragging ? 50 : 1,
-    cursor: isDragging ? 'grabbing' : 'grab',
   };
 
-  const borderClass = STATUS_BORDER[kennel.status] ?? 'border-l-gray-400';
-  const occupancyPct = kennel.capacity > 0
-    ? Math.min(100, Math.round((kennel.occupied_count / kennel.capacity) * 100))
-    : 0;
+  const borderClass =
+    kennel.status === 'maintenance'
+      ? 'border-l-yellow-500'
+      : kennel.status === 'closed'
+      ? 'border-l-red-500'
+      : 'border-l-green-500';
+
+  const occupancyPct =
+    kennel.capacity > 0
+      ? Math.min(100, Math.round((kennel.occupied_count / kennel.capacity) * 100))
+      : 0;
 
   return (
     <div
+      ref={setDragRef}
       style={style}
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className={`rounded-lg border border-l-4 bg-card shadow-md select-none flex flex-col overflow-hidden ${borderClass}`}
+      className={`rounded-lg border border-l-4 bg-card shadow-md flex flex-col overflow-hidden ${borderClass} ${isOver ? 'ring-2 ring-primary ring-offset-1' : ''}`}
     >
-      {/* Header */}
-      <div className="px-2 py-1.5 flex items-center justify-between gap-1 border-b bg-muted/40">
+      {/* Header — kennel drag handle only */}
+      <div
+        {...listeners}
+        {...attributes}
+        className="px-2 py-1.5 flex items-center justify-between gap-1 border-b bg-muted/40 cursor-grab active:cursor-grabbing"
+      >
         <Link
           href={`/dashboard/kennels/${kennel.id}`}
           className="text-sm font-bold hover:underline hover:text-primary truncate"
@@ -117,41 +183,85 @@ function DraggableKennelBox({
           {kennel.code}
         </Link>
         <div className="flex items-center gap-1 shrink-0">
-          {animalsInKennel.length > 0 && (
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold">
-              {animalsInKennel.length}
-            </span>
-          )}
           <Badge className="text-xs px-1.5 py-0">
             {kennel.occupied_count}/{kennel.capacity}
           </Badge>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="flex-1 px-2 py-1 flex flex-col justify-between min-h-0">
-        <p className="text-xs text-muted-foreground truncate">{kennel.name}</p>
+      {/* Body — animal photo circles + droppable */}
+      <div
+        ref={setDropRef}
+        className="flex-1 px-2 py-1.5 flex flex-col min-h-0 overflow-hidden"
+      >
+        {animalsInKennel.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 content-start overflow-hidden">
+            {animalsInKennel.map(a => (
+              <AnimalAvatar key={a.id} animal={a} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground truncate">{kennel.name}</p>
+        )}
 
-        {/* Mini occupancy bar */}
-        <div className="mt-auto">
-          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+        {/* Occupancy bar */}
+        <div className="mt-auto pt-1">
+          <div className="h-1 rounded-full bg-muted overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${
-                occupancyPct >= 100 ? 'bg-red-500' :
-                occupancyPct >= 80  ? 'bg-yellow-500' :
-                occupancyPct > 0    ? 'bg-green-500' : 'bg-gray-300'
+                occupancyPct >= 100
+                  ? 'bg-red-500'
+                  : occupancyPct >= 80
+                  ? 'bg-yellow-500'
+                  : occupancyPct > 0
+                  ? 'bg-green-500'
+                  : 'bg-gray-300'
               }`}
               style={{ width: `${occupancyPct}%` }}
             />
           </div>
-          {animalsInKennel.length > 0 && (
-            <p className="text-xs font-medium mt-0.5 truncate">
-              {animalsInKennel.slice(0, 2).map(a => a.name).join(', ')}
-              {animalsInKennel.length > 2 && <span className="text-muted-foreground"> +{animalsInKennel.length - 2}</span>}
-            </p>
-          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ---- Free animal token on canvas ----
+function FreeAnimalToken({ animal, pos }: { animal: Animal; pos: FreeAnimalPos }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `animal-${animal.id}`,
+    data: { type: 'animal', animal },
+  });
+
+  const style = {
+    position: 'absolute' as const,
+    left: pos.x,
+    top: pos.y,
+    transform: transform ? CSS.Translate.toString(transform) : undefined,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 200 : 10,
+    cursor: isDragging ? 'grabbing' : 'grab',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className="flex flex-col items-center gap-0.5 touch-none select-none"
+      title={animal.name}
+    >
+      <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-background shadow-md ring-1 ring-border">
+        <img
+          src={getAnimalImageUrl(animal)}
+          alt={animal.name}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <span className="text-[9px] font-medium max-w-[52px] truncate text-center leading-tight bg-background/80 px-1 rounded">
+        {animal.name}
+      </span>
     </div>
   );
 }
@@ -159,7 +269,7 @@ function DraggableKennelBox({
 // ---- Main map view ----
 export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: KennelMapViewProps) {
   const t = useTranslations('kennels.map');
-  // Build local position state from kennel data
+
   const [positions, setPositions] = useState<Record<string, KennelPos>>(() => {
     const init: Record<string, KennelPos> = {};
     kennels.forEach((k, i) => {
@@ -168,43 +278,102 @@ export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: 
     return init;
   });
 
+  // Free animal positions (visually placed outside their kennel box on the canvas)
+  const [freeAnimalPositions, setFreeAnimalPositions] = useState<Record<string, FreeAnimalPos>>({});
+
+  // Load free positions from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(FREE_ANIMALS_LS_KEY);
+      if (stored) setFreeAnimalPositions(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  // Persist free positions to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(FREE_ANIMALS_LS_KEY, JSON.stringify(freeAnimalPositions));
+    } catch {}
+  }, [freeAnimalPositions]);
+
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, delta } = event;
-    const kennelId = active.id as string;
+    const { active, delta, over } = event;
+    const dragType = (active.data.current as any)?.type;
 
-    // Use functional update to get current position and compute new position atomically
-    let savedPos: KennelPos | null = null;
-    setPositions(prev => {
-      const old = prev[kennelId];
-      if (!old) return prev;
-      const updated: KennelPos = {
-        ...old,
-        x: Math.max(0, Math.round(old.x + delta.x)),
-        y: Math.max(0, Math.round(old.y + delta.y)),
-      };
-      savedPos = updated;
-      return { ...prev, [kennelId]: updated };
-    });
+    if (dragType === 'kennel') {
+      // Reposition kennel box
+      const kennelId = active.id as string;
+      let savedPos: KennelPos | null = null;
+      setPositions(prev => {
+        const old = prev[kennelId];
+        if (!old) return prev;
+        const updated: KennelPos = {
+          ...old,
+          x: Math.max(0, Math.round(old.x + delta.x)),
+          y: Math.max(0, Math.round(old.y + delta.y)),
+        };
+        savedPos = updated;
+        return { ...prev, [kennelId]: updated };
+      });
+      setTimeout(async () => {
+        if (!savedPos) return;
+        try {
+          await ApiClient.updateKennelMapPosition(kennelId, {
+            map_x: savedPos.x,
+            map_y: savedPos.y,
+            map_w: savedPos.w,
+            map_h: savedPos.h,
+          });
+          toast.success(t('positionSaved'));
+          onPositionSaved?.();
+        } catch {
+          toast.error(t('positionError'));
+        }
+      }, 0);
+    } else if (dragType === 'animal') {
+      // Animal repositioning
+      const animal = (active.data.current as any).animal as Animal;
+      const animalId = animal.id;
+      const overDropType = (over?.data?.current as any)?.type;
 
-    // Save after state update using the computed position
-    setTimeout(async () => {
-      if (!savedPos) return;
-      try {
-        await ApiClient.updateKennelMapPosition(kennelId, {
-          map_x: savedPos.x,
-          map_y: savedPos.y,
-          map_w: savedPos.w,
-          map_h: savedPos.h,
+      if (overDropType === 'kennel-drop') {
+        // Dropped back onto a kennel box → remove from free positions
+        setFreeAnimalPositions(prev => {
+          const next = { ...prev };
+          delete next[animalId];
+          return next;
         });
-        toast.success(t('positionSaved'));
-        onPositionSaved?.();
-      } catch {
-        toast.error(t('positionError'));
+      } else {
+        // Dropped on canvas → set/update free position
+        setFreeAnimalPositions(prev => {
+          const existing = prev[animalId];
+          if (existing) {
+            // Update existing free position
+            return {
+              ...prev,
+              [animalId]: {
+                x: Math.max(0, Math.round(existing.x + delta.x)),
+                y: Math.max(0, Math.round(existing.y + delta.y)),
+              },
+            };
+          }
+          // First time dragging out — calculate absolute position from kennel
+          const kennel = kennels.find(k => k.id === animal.current_kennel_id);
+          const kennelPos = kennel ? positions[kennel.id] : null;
+          const startX = kennelPos ? kennelPos.x + 20 : 100;
+          const startY = kennelPos ? kennelPos.y + kennelPos.h + 10 : 100;
+          return {
+            ...prev,
+            [animalId]: {
+              x: Math.max(0, Math.round(startX + delta.x)),
+              y: Math.max(0, Math.round(startY + delta.y)),
+            },
+          };
+        });
       }
-    }, 0);
-  }, [onPositionSaved]);
+    }
+  }, [kennels, positions, onPositionSaved, t]);
 
-  // Compute canvas size to fit all boxes
   const canvasW = Math.max(
     CANVAS_MIN_W,
     ...Object.values(positions).map(p => p.x + p.w + GAP)
@@ -231,12 +400,16 @@ export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: 
           }}
         />
 
-        {/* Kennel boxes */}
+        {/* Canvas */}
         <div style={{ position: 'relative', width: canvasW, height: canvasH }}>
-          {kennels.map(kennel => {
+          {/* Kennel boxes */}
+          {kennels.map((kennel) => {
             const pos = positions[kennel.id];
             if (!pos) return null;
-            const animalsInKennel = allAnimals.filter(a => a.current_kennel_id === kennel.id);
+            // Animals in this kennel that are not currently "ejected" to free canvas
+            const animalsInKennel = allAnimals.filter(
+              a => a.current_kennel_id === kennel.id && !freeAnimalPositions[a.id]
+            );
             return (
               <DraggableKennelBox
                 key={kennel.id}
@@ -245,6 +418,13 @@ export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: 
                 animalsInKennel={animalsInKennel}
               />
             );
+          })}
+
+          {/* Free animal tokens (ejected from kennel boxes) */}
+          {Object.entries(freeAnimalPositions).map(([animalId, freePos]) => {
+            const animal = allAnimals.find(a => a.id === animalId);
+            if (!animal) return null;
+            return <FreeAnimalToken key={animalId} animal={animal} pos={freePos} />;
           })}
         </div>
       </div>
