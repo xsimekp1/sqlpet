@@ -112,7 +112,7 @@ async def create_animal(
 )
 async def list_animals(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=500),
     species: str | None = Query(None),
     status_filter: str | None = Query(None, alias="status"),
     sex: str | None = Query(None),
