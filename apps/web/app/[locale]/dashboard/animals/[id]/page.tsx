@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import {
   ArrowLeft, Trash2, MapPin, Loader2, Stethoscope,
   CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors,
-  ChevronLeft, ChevronRight, Baby, Scale, Accessibility, Home,
+  ChevronLeft, ChevronRight, Baby, Scale, Accessibility, Home, Camera,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -132,6 +132,7 @@ export default function AnimalDetailPage() {
   const [savingBehaviorNotes, setSavingBehaviorNotes] = useState(false);
   const [togglingSpecialNeeds, setTogglingSpecialNeeds] = useState(false);
   const [requestingAbortion, setRequestingAbortion] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Nav arrows
   const [animalIds, setAnimalIds] = useState<string[]>([]);
@@ -152,6 +153,23 @@ export default function AnimalDetailPage() {
 
   const queryClient = useQueryClient();
   const animalId = params.id as string;
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !animal) return;
+    setUploadingPhoto(true);
+    try {
+      const result = await ApiClient.uploadAnimalPhoto(animal.id, file);
+      setAnimal(prev => prev ? { ...prev, primary_photo_url: result.file_url } : prev);
+      toast.success('Fotka nahrána');
+    } catch (err: any) {
+      toast.error('Nepodařilo se nahrát fotku: ' + (err.message || ''));
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = '';
+    }
+  };
 
   // Load animal + sibling IDs + weight history
   useEffect(() => {
@@ -269,6 +287,14 @@ export default function AnimalDetailPage() {
       const updated = await ApiClient.updateAnimal(animal.id, { status: newStatus } as any);
       setAnimal(updated);
       toast.success(t('overview.statusChanged', { status: newStatus }));
+      // Escaped animals are automatically removed from their kennel
+      if (newStatus === 'escaped' && animal.current_kennel_id) {
+        try {
+          await ApiClient.moveAnimal({ animal_id: animal.id, target_kennel_id: null });
+          setAnimal(prev => prev ? { ...prev, current_kennel_id: null, current_kennel_name: null, current_kennel_code: null } : prev);
+          toast.info(t('overview.removedFromKennel'));
+        } catch { /* kennel removal failed silently — not critical */ }
+      }
     } catch { toast.error(t('overview.statusChangeError')); }
     finally { setChangingStatus(false); }
   };
@@ -419,13 +445,29 @@ export default function AnimalDetailPage() {
 
         {/* Photo + nav arrows */}
         <div className="flex-shrink-0 flex flex-col items-center gap-2">
-          <div className="relative w-full max-w-xs aspect-square rounded-xl overflow-hidden bg-muted mx-auto">
+          <div className="relative w-full max-w-xs aspect-square rounded-xl overflow-hidden bg-muted mx-auto group">
             <Image
               src={getAnimalImageUrl(animal)}
               alt={animal.name}
               fill
               className="object-cover object-center"
               unoptimized
+            />
+            {/* Upload overlay */}
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-white"
+            >
+              {uploadingPhoto ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+              <span className="text-xs font-medium">Nahrát foto</span>
+            </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
             />
           </div>
           {/* Prev / Next arrows */}

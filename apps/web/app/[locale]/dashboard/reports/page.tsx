@@ -48,19 +48,26 @@ function DailyCountChart({ data }: { data: { date: string; count: number }[] }) 
         </text>
       ))}
 
-      {/* Polyline */}
+      {/* Area fill */}
+      <polygon
+        points={`${padL},${H - padB} ${polyline} ${W - padR},${H - padB}`}
+        fill="hsl(var(--primary))"
+        fillOpacity="0.08"
+      />
+
+      {/* Line */}
       <polyline
         points={polyline}
         fill="none"
         stroke="hsl(var(--primary))"
-        strokeWidth="2"
+        strokeWidth="2.5"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
 
-      {/* Dots */}
-      {data.map((d, i) => (
-        <circle key={i} cx={toX(i)} cy={toY(d.count)} r="2.5" fill="hsl(var(--primary))">
+      {/* Dots — only for small datasets, hidden when many points */}
+      {data.length <= 30 && data.map((d, i) => (
+        <circle key={i} cx={toX(i)} cy={toY(d.count)} r="3" fill="hsl(var(--primary))" stroke="white" strokeWidth="1">
           <title>{`${d.date}: ${d.count} zvířat`}</title>
         </circle>
       ))}

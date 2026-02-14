@@ -3,6 +3,7 @@
 import { LogOut, User as UserIcon, Settings } from 'lucide-react'
 import { useAuth } from '@/app/context/AuthContext'
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,11 +13,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export function UserMenu() {
   const { user, logout } = useAuth()
   const t = useTranslations('topbar')
+  const router = useRouter()
 
   const initials = user?.name
     ?.split(' ')
@@ -30,6 +32,7 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-9 w-9 rounded-full">
           <Avatar className="h-9 w-9">
+            <AvatarImage src={(user as any)?.profile_photo_url ?? undefined} alt={user?.name} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>
@@ -42,7 +45,7 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/dashboard/people?tab=members&search=' + encodeURIComponent(user?.name || user?.email || ''))}>
           <UserIcon className="mr-2 h-4 w-4" />
           {t('profile')}
         </DropdownMenuItem>

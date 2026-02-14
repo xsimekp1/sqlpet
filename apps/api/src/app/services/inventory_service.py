@@ -50,13 +50,13 @@ class InventoryService:
         self.db.add(item)
         await self.db.flush()
 
-        await self.audit.log(
+        await self.audit.log_action(
             organization_id=organization_id,
+            actor_user_id=created_by_id,
+            action="create",
             entity_type="inventory_item",
             entity_id=item.id,
-            action="create",
-            actor_id=created_by_id,
-            changes={"name": name, "category": category.value},
+            after={"name": name, "category": category.value},
         )
 
         return item
@@ -90,13 +90,13 @@ class InventoryService:
 
         if changes:
             await self.db.flush()
-            await self.audit.log(
+            await self.audit.log_action(
                 organization_id=organization_id,
+                actor_user_id=user_id,
+                action="update",
                 entity_type="inventory_item",
                 entity_id=item.id,
-                action="update",
-                actor_id=user_id,
-                changes=changes,
+                after=changes,
             )
 
         return item
@@ -148,13 +148,13 @@ class InventoryService:
             user_id=created_by_id,
         )
 
-        await self.audit.log(
+        await self.audit.log_action(
             organization_id=organization_id,
+            actor_user_id=created_by_id,
+            action="create",
             entity_type="inventory_lot",
             entity_id=lot.id,
-            action="create",
-            actor_id=created_by_id,
-            changes={"item_id": str(item_id), "quantity": quantity},
+            after={"item_id": str(item_id), "quantity": quantity},
         )
 
         return lot
@@ -188,13 +188,13 @@ class InventoryService:
 
         if changes:
             await self.db.flush()
-            await self.audit.log(
+            await self.audit.log_action(
                 organization_id=organization_id,
+                actor_user_id=user_id,
+                action="update",
                 entity_type="inventory_lot",
                 entity_id=lot.id,
-                action="update",
-                actor_id=user_id,
-                changes=changes,
+                after=changes,
             )
 
         return lot
@@ -243,13 +243,13 @@ class InventoryService:
         await self.db.flush()
 
         if user_id:
-            await self.audit.log(
+            await self.audit.log_action(
                 organization_id=organization_id,
+                actor_user_id=user_id,
+                action="create",
                 entity_type="inventory_transaction",
                 entity_id=transaction.id,
-                action="create",
-                actor_id=user_id,
-                changes={
+                after={
                     "type": transaction_type.value,
                     "quantity": quantity,
                     "item_id": str(item_id),

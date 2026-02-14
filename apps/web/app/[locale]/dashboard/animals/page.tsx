@@ -50,8 +50,13 @@ const AGE_LABELS: Record<string, string> = {
   young: 'Mladé',
   adult: 'Dospělé',
   senior: 'Senior',
-  unknown: 'Neznámý',
 };
+
+function formatBreedName(b: { display_name?: string; breed_name: string }): string {
+  if (b.display_name) return b.display_name;
+  // Prettify slug: "akita-inu" → "Akita Inu"
+  return b.breed_name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
 export default function AnimalsPage() {
   const router = useRouter();
@@ -198,7 +203,7 @@ export default function AnimalsPage() {
                   <p className="font-bold text-base leading-tight truncate">{animal.name}</p>
                   <p className="text-xs text-muted-foreground truncate">
                     {animal.current_kennel_code && <span className="font-mono mr-1">{animal.current_kennel_code}</span>}
-                    {AGE_LABELS[animal.age_group] ?? ''}
+                    {animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '' : ''}
                   </p>
                   <div className="flex items-center gap-1 flex-wrap">
                     {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
@@ -266,11 +271,11 @@ export default function AnimalsPage() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {animal.breeds && animal.breeds.length > 0
-                        ? animal.breeds.map(b => b.display_name || b.breed_name).join(', ')
+                        ? animal.breeds.map(b => formatBreedName(b)).join(', ')
                         : '—'}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {AGE_LABELS[animal.age_group] ?? '—'}
+                      {animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '—' : '—'}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1 flex-wrap">

@@ -1034,6 +1034,17 @@ class ApiClient {
     );
     return response.data;
   }
+
+  static async uploadAnimalPhoto(animalId: string, file: File): Promise<{ file_url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post<{ file_url: string }>(
+      `${API_URL}/files/animal/${animalId}/upload-primary-photo`,
+      formData,
+      { headers: { ...this.getAuthHeaders() } }
+    );
+    return response.data;
+  }
 }
 
 export { ApiClient };

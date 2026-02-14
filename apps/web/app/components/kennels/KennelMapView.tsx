@@ -8,7 +8,6 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import ApiClient, { Kennel, Animal } from '@/app/lib/api';
 import { toast } from 'sonner';
@@ -101,8 +100,7 @@ function DraggableKennelBox({
     : 0;
 
   return (
-    <motion.div
-      layoutId={`kennel-${kennel.id}`}
+    <div
       style={style}
       ref={setNodeRef}
       {...listeners}
@@ -154,7 +152,7 @@ function DraggableKennelBox({
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 

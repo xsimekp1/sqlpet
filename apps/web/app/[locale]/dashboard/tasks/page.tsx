@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient, Task } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, Circle, Clock, XCircle, AlertCircle, Plus } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, XCircle, AlertCircle, Plus, Ban } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
@@ -54,17 +54,23 @@ export default function TasksPage() {
     if (type && type !== typeFilter) setTypeFilter(type);
   }, [searchParams]);
 
-  // Fetch tasks
+  // Fetch ALL tasks once — filter on frontend to avoid re-fetching on every filter change
   const { data: taskData, isLoading } = useQuery({
-    queryKey: ['tasks', statusFilter, typeFilter],
-    queryFn: () =>
-      ApiClient.getTasks({
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-        type: typeFilter !== 'all' ? typeFilter : undefined,
-      }),
+    queryKey: ['tasks'],
+    queryFn: () => ApiClient.getTasks({ page_size: 500 }),
+    staleTime: 30_000,
   });
 
-  const tasks = taskData?.items || [];
+  const allTasks = taskData?.items || [];
+
+  // Frontend filtering — instant, no API calls
+  const tasks = useMemo(() => {
+    return allTasks.filter(task => {
+      if (statusFilter !== 'all' && task.status !== statusFilter) return false;
+      if (typeFilter !== 'all' && task.type !== typeFilter) return false;
+      return true;
+    });
+  }, [allTasks, statusFilter, typeFilter]);
 
   // Complete task mutation
   const completeTaskMutation = useMutation({
@@ -77,25 +83,26 @@ export default function TasksPage() {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-
       if (variables.isFeedingTask) {
-        toast({
-          title: 'Feeding task completed',
-          description: 'Feeding log created and inventory deducted automatically',
-        });
+        toast({ title: 'Krmný úkol splněn', description: 'Záznam krmení a odečet skladu provedeny.' });
       } else {
-        toast({
-          title: 'Task completed',
-          description: 'The task has been marked as completed',
-        });
+        toast({ title: 'Úkol splněn' });
       }
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Chyba', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  // Reject/cancel task mutation
+  const rejectTaskMutation = useMutation({
+    mutationFn: (taskId: string) => ApiClient.cancelTask(taskId, 'rejected'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast({ title: 'Úkol zamítnut' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Chyba', description: error.message, variant: 'destructive' });
     },
   });
 
@@ -112,6 +119,22 @@ export default function TasksPage() {
     }
   };
 
+  const STATUS_LABELS: Record<string, string> = {
+    pending: 'Čeká',
+    in_progress: 'Probíhá',
+    completed: 'Splněno',
+    cancelled: 'Zrušeno',
+  };
+
+  const TYPE_LABELS: Record<string, string> = {
+    feeding: 'Krmení',
+    medical: 'Medicínský',
+    cleaning: 'Úklid',
+    maintenance: 'Údržba',
+    administrative: 'Administrativní',
+    general: 'Obecný',
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       pending: 'outline',
@@ -121,7 +144,7 @@ export default function TasksPage() {
     };
     return (
       <Badge variant={variants[status] || 'outline'}>
-        {status.replace('_', ' ')}
+        {STATUS_LABELS[status] || status.replace('_', ' ')}
       </Badge>
     );
   };
@@ -135,12 +158,18 @@ export default function TasksPage() {
       administrative: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
       general: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     };
-
     return (
       <Badge className={colors[type] || colors.general} variant="outline">
-        {type}
+        {TYPE_LABELS[type] || type}
       </Badge>
     );
+  };
+
+  const PRIORITY_LABELS: Record<string, string> = {
+    low: 'Nízká',
+    medium: 'Střední',
+    high: 'Vysoká',
+    urgent: 'Urgentní',
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -150,12 +179,16 @@ export default function TasksPage() {
       high: 'default',
       urgent: 'destructive',
     };
-    return <Badge variant={variants[priority] || 'outline'}>{priority}</Badge>;
+    return <Badge variant={variants[priority] || 'outline'}>{PRIORITY_LABELS[priority] || priority}</Badge>;
   };
 
   const handleCompleteTask = (task: Task) => {
     const isFeedingTask = task.type === 'feeding';
     completeTaskMutation.mutate({ taskId: task.id, isFeedingTask });
+  };
+
+  const handleRejectTask = (task: Task) => {
+    rejectTaskMutation.mutate(task.id);
   };
 
   // Create task mutation
@@ -181,7 +214,7 @@ export default function TasksPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading tasks...</div>
+        <div className="text-muted-foreground">Načítám úkoly...</div>
       </div>
     );
   }
@@ -190,14 +223,12 @@ export default function TasksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
-          <p className="text-muted-foreground">
-            Manage and complete tasks for your organization
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Úkoly</h1>
+          <p className="text-muted-foreground">Správa a plnění úkolů organizace</p>
         </div>
         <Button onClick={() => setShowNewTaskForm((v) => !v)}>
           <Plus className="h-4 w-4 mr-2" />
-          New Task
+          Nový úkol
         </Button>
       </div>
 
@@ -205,7 +236,7 @@ export default function TasksPage() {
       {showNewTaskForm && (
         <div className="flex gap-2 items-center border rounded-lg p-3 bg-muted/30">
           <Input
-            placeholder="Task title..."
+            placeholder="Název úkolu..."
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCreateTask()}
@@ -220,24 +251,24 @@ export default function TasksPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="low">Nízká</SelectItem>
+              <SelectItem value="medium">Střední</SelectItem>
+              <SelectItem value="high">Vysoká</SelectItem>
             </SelectContent>
           </Select>
           <Button
             onClick={handleCreateTask}
             disabled={!newTaskTitle.trim() || createTaskMutation.isPending}
           >
-            Add
+            Přidat
           </Button>
           <Button variant="outline" onClick={() => { setShowNewTaskForm(false); setNewTaskTitle(''); }}>
-            Cancel
+            Zrušit
           </Button>
         </div>
       )}
 
-      {/* Filters */}
+      {/* Filters — instant frontend filtering, no API calls */}
       <div className="flex gap-4">
         <div className="w-48">
           <Select
@@ -245,14 +276,14 @@ export default function TasksPage() {
             onValueChange={(value) => setStatusFilter(value as TaskStatus)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder="Filtr stavu" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="all">Všechny stavy</SelectItem>
+              <SelectItem value="pending">Čeká</SelectItem>
+              <SelectItem value="in_progress">Probíhá</SelectItem>
+              <SelectItem value="completed">Splněno</SelectItem>
+              <SelectItem value="cancelled">Zrušeno</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -263,19 +294,25 @@ export default function TasksPage() {
             onValueChange={(value) => setTypeFilter(value as TaskType)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Filter by type" />
+              <SelectValue placeholder="Filtr typu" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="general">General</SelectItem>
-              <SelectItem value="feeding">Feeding</SelectItem>
-              <SelectItem value="medical">Medical</SelectItem>
-              <SelectItem value="cleaning">Cleaning</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-              <SelectItem value="administrative">Administrative</SelectItem>
+              <SelectItem value="all">Všechny typy</SelectItem>
+              <SelectItem value="general">Obecný</SelectItem>
+              <SelectItem value="feeding">Krmení</SelectItem>
+              <SelectItem value="medical">Medicínský</SelectItem>
+              <SelectItem value="cleaning">Úklid</SelectItem>
+              <SelectItem value="maintenance">Údržba</SelectItem>
+              <SelectItem value="administrative">Administrativní</SelectItem>
             </SelectContent>
           </Select>
         </div>
+
+        {(statusFilter !== 'all' || typeFilter !== 'all') && (
+          <div className="flex items-center text-sm text-muted-foreground">
+            {tasks.length} z {allTasks.length} úkolů
+          </div>
+        )}
       </div>
 
       {/* Tasks Table */}
@@ -284,12 +321,12 @@ export default function TasksPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"></TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Název</TableHead>
+              <TableHead>Typ</TableHead>
+              <TableHead>Priorita</TableHead>
+              <TableHead>Stav</TableHead>
+              <TableHead>Termín</TableHead>
+              <TableHead className="text-right">Akce</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -299,7 +336,9 @@ export default function TasksPage() {
                   <div className="flex flex-col items-center gap-2">
                     <AlertCircle className="h-8 w-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
-                      No tasks found. Create your first task to get started.
+                      {allTasks.length === 0
+                        ? 'Žádné úkoly. Vytvořte první úkol.'
+                        : 'Žádné úkoly odpovídají filtru.'}
                     </p>
                   </div>
                 </TableCell>
@@ -324,25 +363,40 @@ export default function TasksPage() {
                   <TableCell>
                     {task.due_at ? (
                       <div className="text-sm">
-                        {format(new Date(task.due_at), 'MMM d, yyyy HH:mm')}
+                        {format(new Date(task.due_at), 'd. M. yyyy HH:mm')}
                       </div>
                     ) : (
-                      <span className="text-muted-foreground">-</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {task.status === 'pending' && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleCompleteTask(task)}
-                        disabled={completeTaskMutation.isPending}
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-1" />
-                        Complete
-                      </Button>
+                    {(task.status === 'pending' || task.status === 'in_progress') && (
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleCompleteTask(task)}
+                          disabled={completeTaskMutation.isPending || rejectTaskMutation.isPending}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                          Splnit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                          onClick={() => handleRejectTask(task)}
+                          disabled={completeTaskMutation.isPending || rejectTaskMutation.isPending}
+                        >
+                          <Ban className="h-4 w-4 mr-1" />
+                          Zamítnout
+                        </Button>
+                      </div>
                     )}
                     {task.status === 'completed' && (
-                      <span className="text-sm text-green-600">✓ Done</span>
+                      <span className="text-sm text-green-600">✓ Splněno</span>
+                    )}
+                    {task.status === 'cancelled' && (
+                      <span className="text-sm text-muted-foreground">Zamítnuto</span>
                     )}
                   </TableCell>
                 </TableRow>
@@ -353,18 +407,15 @@ export default function TasksPage() {
       </div>
 
       {/* Summary */}
-      {tasks.length > 0 && (
+      {allTasks.length > 0 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div>
-            Showing {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+            Zobrazeno {tasks.length} z {allTasks.length} úkolů
           </div>
           <div className="flex gap-4">
-            <span>
-              Pending: {tasks.filter((t) => t.status === 'pending').length}
-            </span>
-            <span>
-              Completed: {tasks.filter((t) => t.status === 'completed').length}
-            </span>
+            <span>Čeká: {allTasks.filter((t) => t.status === 'pending').length}</span>
+            <span>Splněno: {allTasks.filter((t) => t.status === 'completed').length}</span>
+            <span>Zamítnuto: {allTasks.filter((t) => t.status === 'cancelled').length}</span>
           </div>
         </div>
       )}

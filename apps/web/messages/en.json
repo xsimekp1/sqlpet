@@ -697,7 +697,8 @@
       "noNeuteringPregnant": "Neutering not possible for pregnant animal",
       "alreadyAltered": "Already altered",
       "statusChanged": "Status changed to {status}",
-      "statusChangeError": "Failed to change status"
+      "statusChangeError": "Failed to change status",
+      "removedFromKennel": "Animal removed from kennel"
     },
     "pregnancy": {
       "expectedLitter": "Expected litter date",

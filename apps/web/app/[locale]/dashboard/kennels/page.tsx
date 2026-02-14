@@ -719,7 +719,38 @@ export default function KennelsPage() {
                             }}
                           >
                             <Settings className="h-4 w-4 mr-2" />
-                            Set Maintenance
+                            Nastavit údržbu
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            onClick={async () => {
+                              if (kennel.occupied_count > 0) {
+                                const animalsStr = kennel.animals_preview?.map((a: KennelAnimal) => a.name).join(', ') || `${kennel.occupied_count} zvířat`;
+                                const ok = window.confirm(
+                                  `Kotec ${kennel.name} obsahuje ${kennel.occupied_count} zvíře/t (${animalsStr}).\n\nPro uzavření kotce budou všechna zvířata přesunuta do čekací zóny.\n\nPokračovat?`
+                                );
+                                if (!ok) return;
+                                // Move all animals to no-kennel
+                                try {
+                                  const animalIds = kennel.animals_preview?.map((a: KennelAnimal) => a.id) || [];
+                                  for (const animalId of animalIds) {
+                                    await ApiClient.moveAnimal({ animal_id: animalId, target_kennel_id: null });
+                                  }
+                                  toast.success(`${kennel.occupied_count} zvíře/t přesunuto do čekací zóny`);
+                                } catch (e: any) {
+                                  toast.error('Nelze přesunout zvířata: ' + (e.message || 'Neznámá chyba'));
+                                  return;
+                                }
+                              }
+                              try {
+                                await ApiClient.updateKennel(kennel.id, { status: 'closed' });
+                                toast.success(`${kennel.name} uzavřen`);
+                                fetchData(true);
+                              } catch (e: any) { toast.error(e.message || 'Chyba při uzavírání kotce'); }
+                            }}
+                          >
+                            <Settings className="h-4 w-4 mr-2" />
+                            Uzavřít kotec
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

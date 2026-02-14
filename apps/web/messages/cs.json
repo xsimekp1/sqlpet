@@ -638,7 +638,8 @@
       "noNeuteringPregnant": "Kastrace není možná u těhotného zvířete",
       "alreadyAltered": "Již kastrováno",
       "statusChanged": "Status změněn na {status}",
-      "statusChangeError": "Nepodařilo se změnit status"
+      "statusChangeError": "Nepodařilo se změnit status",
+      "removedFromKennel": "Zvíře bylo vyřazeno z kotce"
     },
     "pregnancy": {
       "expectedLitter": "Očekávaný termín vrhu",
