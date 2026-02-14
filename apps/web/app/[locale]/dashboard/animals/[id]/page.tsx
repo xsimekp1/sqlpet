@@ -549,7 +549,7 @@ export default function AnimalDetailPage() {
             {days !== null && (
               <span className="text-sm text-muted-foreground">
                 <MapPin className="inline h-3.5 w-3.5 mr-0.5 mb-0.5" />
-                {t('daysInShelterFull', { days, date: intakeDateFormatted })}
+                {t('daysInShelterFull', { days, date: intakeDateFormatted ?? '' })}
               </span>
             )}
             {animal.current_kennel_id ? (
