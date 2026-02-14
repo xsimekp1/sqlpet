@@ -382,7 +382,10 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
         </p>
         <p className="font-medium">
           {animal.breeds && animal.breeds.length > 0
-            ? animal.breeds.map(b => b.breed_name).join(', ')
+            ? animal.breeds.map(b => {
+                const found = breeds.find(br => br.id === b.breed_id);
+                return found?.display_name || found?.name || b.breed_name || '—';
+              }).join(', ')
             : <span className="text-muted-foreground">—</span>}
         </p>
       </div>
