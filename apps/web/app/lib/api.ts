@@ -607,8 +607,8 @@ class ApiClient {
     pos: { map_x: number; map_y: number; map_w: number; map_h: number }
   ): Promise<void> {
     try {
-      await axios.put(
-        `${API_URL}/kennels/${id}/map-position`,
+      await axios.patch(
+        `${API_URL}/kennels/${id}/layout`,
         pos,
         { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
       );
