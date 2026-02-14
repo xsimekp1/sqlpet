@@ -21,7 +21,7 @@ def mock_db():
 def mock_audit():
     """Mock audit service"""
     audit = MagicMock()
-    audit.log = AsyncMock()
+    audit.log_action = AsyncMock()
     return audit
 
 
@@ -101,7 +101,7 @@ class TestTaskService:
         assert result.status == TaskStatus.PENDING
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -124,7 +124,7 @@ class TestTaskService:
         assert result.status == TaskStatus.COMPLETED
         assert result.completed_at is not None
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -150,7 +150,7 @@ class TestTaskService:
         # Assert
         assert result.status == TaskStatus.COMPLETED
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -172,7 +172,7 @@ class TestTaskService:
         # Assert
         assert result.assigned_to_id == sample_user.id
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -194,7 +194,7 @@ class TestTaskService:
         # Assert
         assert result.status == TaskStatus.CANCELLED
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio

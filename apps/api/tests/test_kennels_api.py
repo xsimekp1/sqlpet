@@ -330,3 +330,29 @@ async def test_list_animals_includes_current_kennel(client, kennel_test_env):
     assert animal_data is not None
     assert animal_data["current_kennel_id"] == str(env["kennel"].id)
     assert animal_data["current_kennel_code"] == "K1"
+
+
+# ---------------------------------------------------------------------------
+# GET /animals/{id}/kennel-history
+# ---------------------------------------------------------------------------
+
+@pytest.mark.anyio
+async def test_get_animal_kennel_history_returns_stay(client, kennel_test_env):
+    """GET /animals/{id}/kennel-history returns kennel_code and assigned_at for active stay."""
+    env = kennel_test_env
+    resp = await client.get(f"/animals/{env['animal'].id}/kennel-history", headers=env["headers"])
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+    assert len(data) >= 1
+    entry = data[0]
+    assert entry["kennel_code"] == "K1"
+    assert entry["assigned_at"] is not None
+
+
+@pytest.mark.anyio
+async def test_get_animal_kennel_history_unknown_animal_returns_404(client, kennel_test_env):
+    """GET /animals/{unknown_id}/kennel-history should return 404."""
+    env = kennel_test_env
+    resp = await client.get(f"/animals/{uuid.uuid4()}/kennel-history", headers=env["headers"])
+    assert resp.status_code == 404

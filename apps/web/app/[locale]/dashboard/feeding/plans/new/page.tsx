@@ -66,6 +66,12 @@ export default function NewFeedingPlanPage() {
   const animals = animalsData?.items || [];
   const foods = foodsData?.items || [];
 
+  const watchedAnimalId = watch('animal_id');
+  const selectedAnimal = animals.find((a: any) => a.id === watchedAnimalId);
+  const filteredFoods = foods.filter(
+    (f: any) => !f.species || !selectedAnimal || f.species === selectedAnimal.species
+  );
+
   // Create plan mutation
   const createPlanMutation = useMutation({
     mutationFn: async (data: FeedingPlanFormData) => {
@@ -156,7 +162,7 @@ export default function NewFeedingPlanPage() {
               <SelectValue placeholder="Select food (optional)" />
             </SelectTrigger>
             <SelectContent>
-              {foods.map((food: any) => (
+              {filteredFoods.map((food: any) => (
                 <SelectItem key={food.id} value={food.id}>
                   {food.name} {food.brand && `(${food.brand})`}
                 </SelectItem>
@@ -166,7 +172,7 @@ export default function NewFeedingPlanPage() {
           <p className="text-sm text-muted-foreground">
             Link to a specific food for automatic inventory deduction
           </p>
-          {selectedAnimalId && foods.length === 0 && (
+          {selectedAnimal && filteredFoods.length === 0 && (
             <Alert variant="destructive" className="mt-2">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>

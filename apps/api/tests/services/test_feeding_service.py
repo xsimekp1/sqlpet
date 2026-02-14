@@ -26,7 +26,7 @@ def mock_db():
 def mock_audit():
     """Mock audit service"""
     audit = MagicMock()
-    audit.log = AsyncMock()
+    audit.log_action = AsyncMock()
     return audit
 
 
@@ -124,7 +124,7 @@ class TestFeedingService:
         assert result.is_active is True
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -148,7 +148,7 @@ class TestFeedingService:
         assert result.amount_text == "1 cup"
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -222,7 +222,7 @@ class TestFeedingService:
         # Assert
         assert result.is_active is False
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio

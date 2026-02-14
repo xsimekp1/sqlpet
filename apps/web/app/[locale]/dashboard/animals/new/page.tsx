@@ -158,11 +158,15 @@ export default function NewAnimalPage() {
       const newAnimal = await ApiClient.createAnimal(data);
       toast.success(t('success'));
       try {
-        const foodsData = await ApiClient.get('/feeding/foods');
-        if (!foodsData?.items?.length) {
-          toast.warning('Upozornění: V inventáři není žádné krmivo. Nezapomeňte ho přidat před prvním krmením.');
+        const foodsResp = await ApiClient.get('/feeding/foods');
+        const allFoods: any[] = foodsResp?.items ?? foodsResp ?? [];
+        const hasFood = allFoods.some(
+          (f: any) => !f.species || f.species === data.species
+        );
+        if (!hasFood) {
+          toast.warning('Upozornění: V inventáři není žádné krmivo vhodné pro tento druh zvířete.');
         }
-      } catch { /* nekritické */ }
+      } catch { /* non-critical */ }
       router.push(`/dashboard/animals/${newAnimal.id}`);
     } catch (error) {
       toast.error(t('error'));

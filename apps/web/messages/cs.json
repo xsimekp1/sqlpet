@@ -371,7 +371,8 @@
       "differentSpecies": "{name} ({species}) a zvíře v kotci {kennel} jsou různé druhy! 🐾",
       "notSuitable": "{name} ({species}) nemá být v kotci pro {allowed}!",
       "removeError": "Nelze odebrat z kotce: {msg}",
-      "moveError": "Nelze přesunout do kotce: {msg}"
+      "moveError": "Nelze přesunout do kotce: {msg}",
+      "escapedCannotMove": "{name} uteklo — přiřazení do kotce není možné"
     },
     "loadError": "Nepodařilo se načíst kotce",
     "detail": {

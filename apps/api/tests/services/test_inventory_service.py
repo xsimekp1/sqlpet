@@ -24,7 +24,7 @@ def mock_db():
 def mock_audit():
     """Mock audit service"""
     audit = MagicMock()
-    audit.log = AsyncMock()
+    audit.log_action = AsyncMock()
     return audit
 
 
@@ -102,7 +102,7 @@ class TestInventoryService:
         assert result.unit == "kg"
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -127,7 +127,7 @@ class TestInventoryService:
         assert result.quantity == 100
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -157,7 +157,7 @@ class TestInventoryService:
         assert sample_lot.quantity == Decimal("75.00")  # 50 + 25
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio
@@ -187,7 +187,7 @@ class TestInventoryService:
         assert sample_lot.quantity == Decimal("40.00")  # 50 - 10
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
-        mock_audit.log.assert_called_once()
+        mock_audit.log_action.assert_called_once()
 
 
     @pytest.mark.asyncio

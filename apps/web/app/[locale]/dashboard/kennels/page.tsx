@@ -60,9 +60,11 @@ const generateKennelCode = (kennel: Kennel): string => {
 
 // ---- Draggable chip (small animal pill) ----
 function DraggableAnimalChip({ animal }: { animal: Animal }) {
+  const isEscaped = animal.status === 'escaped';
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: animal.id,
     data: { animal },
+    disabled: isEscaped,
   });
 
   const style = transform
@@ -70,6 +72,29 @@ function DraggableAnimalChip({ animal }: { animal: Animal }) {
     : undefined;
 
   const imageUrl = getAnimalImageUrl(animal);
+
+  if (isEscaped) {
+    return (
+      <div
+        title="Zvíře uteklo — nelze přiřadit do kotce"
+        className="flex items-center gap-2 px-2.5 py-1.5 bg-muted/60 border border-dashed border-muted-foreground/30 rounded-lg select-none cursor-not-allowed opacity-60"
+      >
+        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-muted">
+          <Image
+            src={imageUrl}
+            alt={animal.name}
+            width={32}
+            height={32}
+            className="object-cover w-full h-full grayscale"
+          />
+        </div>
+        <span className="text-sm font-medium max-w-[100px] truncate text-muted-foreground">{animal.name}</span>
+        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-amber-600 bg-amber-100 px-1 rounded">
+          uteklo
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -342,6 +367,9 @@ export default function KennelsPage() {
     const animal = allAnimals.find(a => a.id === animalId);
     if (!animal) return;
 
+    // Escaped animals cannot be assigned to a kennel
+    if (animal.status === 'escaped') return;
+
     // ── Drop on "no kennel" zone → remove from kennel ──────────────────────
     if (over.id === UNHOUSED_ZONE_ID) {
       if (!animal.current_kennel_id) return; // already unhoused
@@ -482,8 +510,9 @@ export default function KennelsPage() {
     return matchesSearch && matchesZone && matchesStatus && matchesType && matchesSize && matchesOccupancy;
   });
 
-  // Animals without a kennel assignment
-  const unhousedAnimals = allAnimals.filter(a => !a.current_kennel_id);
+  // Animals without a kennel assignment (excludes escaped — shown separately)
+  const unhousedAnimals = allAnimals.filter(a => !a.current_kennel_id && a.status !== 'escaped');
+  const escapedAnimals = allAnimals.filter(a => a.status === 'escaped');
 
   if (loading) {
     return (
@@ -617,6 +646,20 @@ export default function KennelsPage() {
             </p>
             <DroppableUnhousedZone animals={unhousedAnimals} />
           </div>
+
+          {/* Escaped animals — shown but not draggable */}
+          {escapedAnimals.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-amber-600 mb-2">
+                Uteklá zvířata ({escapedAnimals.length}) — nelze přiřadit do kotce
+              </p>
+              <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-dashed border-amber-300 bg-amber-50/50 min-h-[56px]">
+                {escapedAnimals.map(animal => (
+                  <DraggableAnimalChip key={animal.id} animal={animal} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Kennel grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

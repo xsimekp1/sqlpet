@@ -369,7 +369,8 @@
       "differentSpecies": "{name} ({species}) and the animal in kennel {kennel} are different species! 🐾",
       "notSuitable": "{name} ({species}) should not be in a kennel for {allowed}!",
       "removeError": "Cannot remove from kennel: {msg}",
-      "moveError": "Cannot move to kennel: {msg}"
+      "moveError": "Cannot move to kennel: {msg}",
+      "escapedCannotMove": "{name} has escaped — kennel assignment is not possible"
     },
     "loadError": "Failed to load kennels",
     "detail": {
