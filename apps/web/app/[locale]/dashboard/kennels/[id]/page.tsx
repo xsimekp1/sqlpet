@@ -179,7 +179,7 @@ export default function KennelDetailPage() {
     if (!kennel) return;
     setSavingType(true);
     try {
-      const updated = await ApiClient.updateKennel(kennel.id, { type: newType });
+      const updated = await ApiClient.updateKennel(kennel.id, { type: newType as 'indoor' | 'outdoor' | 'isolation' | 'quarantine' });
       setKennel(prev => prev ? { ...prev, type: updated.type } : null);
       toast.success(t('detail.updateSuccess'));
       setEditingType(false);
