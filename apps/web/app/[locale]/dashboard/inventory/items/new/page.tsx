@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,6 +46,7 @@ export default function NewInventoryItemPage() {
   const { toast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
 
   const { register, handleSubmit, setValue, control, formState: { errors } } = useForm<InventoryItemFormData>();
   const category = useWatch({ control, name: 'category' });
@@ -53,6 +54,18 @@ export default function NewInventoryItemPage() {
 
   // Species selection state
   const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
+
+  // Pre-fill from URL params (e.g. ?category=food&species=dog)
+  useEffect(() => {
+    const defaultCategory = searchParams.get('category');
+    const defaultSpecies = searchParams.get('species');
+    if (defaultCategory) {
+      setValue('category', defaultCategory as any);
+    }
+    if (defaultSpecies) {
+      setSelectedSpecies([defaultSpecies]);
+    }
+  }, []);
 
   const toggleSpecies = (sp: string) => {
     setSelectedSpecies(prev =>

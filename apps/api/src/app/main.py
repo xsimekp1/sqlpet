@@ -66,15 +66,7 @@ app.add_middleware(
     allow_origin_regex=r"https://.*\.vercel\.app",  # All Vercel preview deployments
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=[
-        "authorization",
-        "content-type",
-        "x-organization-id",
-        "accept",
-        "accept-language",
-        "accept-encoding",
-        "origin",
-    ],
+    allow_headers=["*"],
     expose_headers=["*"],
 )
 

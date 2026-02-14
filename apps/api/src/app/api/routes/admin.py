@@ -2,17 +2,20 @@ import uuid
 from io import BytesIO
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.auth import get_current_user
+from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
 from src.app.api.dependencies.db import get_db
 from src.app.models.breed import Breed
 from src.app.models.breed_i18n import BreedI18n
 from src.app.models.file import DefaultAnimalImage
 from src.app.models.user import User
+from src.app.models.membership import Membership, MembershipStatus
+from src.app.models.role import Role
+from src.app.core.security import hash_password
 from src.app.services.supabase_storage_service import supabase_storage_service
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
@@ -428,4 +431,153 @@ async def delete_default_image(
 
     # Delete from DB
     await db.delete(image)
+    await db.commit()
+
+
+# ── Member management ─────────────────────────────────────────────────────────
+
+class MemberCreateRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    role_id: Optional[str] = None
+
+
+class MemberCreateResponse(BaseModel):
+    user_id: str
+    email: str
+    name: str
+
+
+class SetPasswordRequest(BaseModel):
+    new_password: str
+
+
+class MemberListItem(BaseModel):
+    user_id: str
+    email: str
+    name: str
+    role_id: Optional[str] = None
+    role_name: Optional[str] = None
+    status: str
+
+
+@router.get("/members", response_model=List[MemberListItem])
+async def list_members(
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all members of the current organization."""
+    result = await db.execute(
+        select(Membership, User, Role)
+        .join(User, User.id == Membership.user_id)
+        .outerjoin(Role, Role.id == Membership.role_id)
+        .where(Membership.organization_id == organization_id)
+        .order_by(User.name)
+    )
+    rows = result.all()
+    return [
+        MemberListItem(
+            user_id=str(row.User.id),
+            email=row.User.email,
+            name=row.User.name,
+            role_id=str(row.Membership.role_id) if row.Membership.role_id else None,
+            role_name=row.Role.name if row.Role else None,
+            status=row.Membership.status.value,
+        )
+        for row in rows
+    ]
+
+
+@router.post("/members/create", response_model=MemberCreateResponse, status_code=status.HTTP_201_CREATED)
+async def create_member(
+    data: MemberCreateRequest,
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new user and add them to the current organization."""
+    # Check if email already exists
+    existing = await db.execute(select(User).where(User.email == data.email))
+    if existing.scalar_one_or_none() is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+
+    # Create user
+    new_user = User(
+        id=uuid.uuid4(),
+        email=data.email,
+        password_hash=hash_password(data.password),
+        name=data.name,
+        is_superadmin=False,
+    )
+    db.add(new_user)
+    await db.flush()
+
+    # Parse role_id if provided and validate it belongs to this org
+    role_id = None
+    if data.role_id:
+        try:
+            role_uuid = uuid.UUID(data.role_id)
+            role_result = await db.execute(
+                select(Role).where(Role.id == role_uuid, Role.organization_id == organization_id)
+            )
+            role = role_result.scalar_one_or_none()
+            if role:
+                role_id = role_uuid
+        except ValueError:
+            pass
+
+    # Create membership
+    membership = Membership(
+        id=uuid.uuid4(),
+        user_id=new_user.id,
+        organization_id=organization_id,
+        role_id=role_id,
+        status=MembershipStatus.ACTIVE,
+    )
+    db.add(membership)
+    await db.commit()
+
+    return MemberCreateResponse(
+        user_id=str(new_user.id),
+        email=new_user.email,
+        name=new_user.name,
+    )
+
+
+@router.post("/members/{user_id}/set-password", status_code=status.HTTP_204_NO_CONTENT)
+async def set_member_password(
+    user_id: str,
+    data: SetPasswordRequest,
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Reset a member's password. Requires the target user to be in the same organization."""
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
+
+    # Verify target user is a member of this org
+    membership_result = await db.execute(
+        select(Membership).where(
+            Membership.user_id == user_uuid,
+            Membership.organization_id == organization_id,
+        )
+    )
+    if membership_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found in this organization")
+
+    # Update password
+    user_result = await db.execute(select(User).where(User.id == user_uuid))
+    target_user = user_result.scalar_one_or_none()
+    if target_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    target_user.password_hash = hash_password(data.new_password)
     await db.commit()

@@ -64,6 +64,7 @@ export default function AnimalsPage() {
   const tSpecies = useTranslations('animals.species');
   const [search, setSearch] = useState('');
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'active' | 'available' | 'all'>('active');
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'table'>('grid');
@@ -91,10 +92,16 @@ export default function AnimalsPage() {
     [animals]
   );
 
+  const INACTIVE_STATUSES = ['deceased', 'escaped', 'adopted', 'transferred', 'returned_to_owner', 'euthanized'];
+
   const filtered = animals.filter((a) => {
     const matchesSearch = a.name.toLowerCase().includes(search.toLowerCase());
     const matchesSpecies = !speciesFilter || a.species === speciesFilter;
-    return matchesSearch && matchesSpecies;
+    const matchesStatus =
+      statusFilter === 'all' ? true :
+      statusFilter === 'available' ? a.status === 'available' :
+      /* active */ !INACTIVE_STATUSES.includes(a.status);
+    return matchesSearch && matchesSpecies && matchesStatus;
   });
 
   return (
@@ -147,6 +154,33 @@ export default function AnimalsPage() {
                 className="pl-8"
               />
             </div>
+          </div>
+          {/* Status filter chips */}
+          <div className="flex gap-1.5 flex-wrap">
+            <Button
+              variant={statusFilter === 'active' ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs px-2.5 rounded-full"
+              onClick={() => setStatusFilter('active')}
+            >
+              {t('animals.statusFilter.active')}
+            </Button>
+            <Button
+              variant={statusFilter === 'available' ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs px-2.5 rounded-full"
+              onClick={() => setStatusFilter('available')}
+            >
+              {t('animals.statusFilter.available')}
+            </Button>
+            <Button
+              variant={statusFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs px-2.5 rounded-full"
+              onClick={() => setStatusFilter('all')}
+            >
+              {t('animals.statusFilter.all')}
+            </Button>
           </div>
           {availableSpecies.length > 1 && (
             <div className="flex gap-1.5 flex-wrap">
@@ -286,13 +320,15 @@ export default function AnimalsPage() {
                         >
                           <Scissors className={`h-3.5 w-3.5 ${animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? 'text-green-600' : 'text-gray-300'}`} />
                         </div>
-                        {/* Dewormed */}
-                        <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center ${animal.is_dewormed ? 'bg-green-100' : 'bg-gray-100'}`}
-                          title={t('animals.health.dewormed')}
-                        >
-                          <Pill className={`h-3.5 w-3.5 ${animal.is_dewormed ? 'text-green-600' : 'text-gray-300'}`} />
-                        </div>
+                        {/* Dewormed — only shown when true */}
+                        {animal.is_dewormed && (
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-green-100"
+                            title={t('animals.health.dewormed')}
+                          >
+                            <Pill className="h-3.5 w-3.5 text-green-600" />
+                          </div>
+                        )}
                         {/* Aggressive */}
                         {animal.is_aggressive && (
                           <div
@@ -328,7 +364,15 @@ export default function AnimalsPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
-                      {animal.current_kennel_code ?? '—'}
+                      {animal.current_kennel_id ? (
+                        <Link
+                          href={`/dashboard/kennels/${animal.current_kennel_id}`}
+                          className="hover:underline text-primary font-mono"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          {animal.current_kennel_code}
+                        </Link>
+                      ) : '—'}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {new Date(animal.intake_date).toLocaleDateString()}

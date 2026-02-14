@@ -176,8 +176,11 @@ export default function NewFeedingPlanPage() {
             <Alert variant="destructive" className="mt-2">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Sklad neobsahuje žádné krmivo. {' '}
-                <Link href="/dashboard/inventory/items/new" className="underline">
+                Sklad neobsahuje žádné krmivo vhodné pro druh &ldquo;{selectedAnimal.species}&rdquo;.{' '}
+                <Link
+                  href={`/dashboard/inventory/items/new?category=food&species=${selectedAnimal.species}`}
+                  className="underline font-medium"
+                >
                   Přidat krmivo
                 </Link>
               </AlertDescription>

@@ -64,7 +64,7 @@ export function RecentlyAdmittedWidget({ editMode, onRemove, dragHandleProps }: 
             {animal.intake_date && (
               <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400">
                 <Calendar className="h-3 w-3" />
-                <span>{daysSince(animal.intake_date)} dní v útulku</span>
+                <span>{t('daysInShelter', { days: daysSince(animal.intake_date) })}</span>
               </div>
             )}
           </div>

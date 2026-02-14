@@ -6,7 +6,7 @@ import { useUIStore } from '@/app/stores/uiStore'
 import { Button } from '@/components/ui/button'
 import { useEffect } from 'react'
 
-export function GlobalSearchTrigger() {
+export function GlobalSearchTrigger({ className }: { className?: string }) {
   const t = useTranslations('topbar')
   const { searchOpen, setSearchOpen } = useUIStore()
 
@@ -27,12 +27,12 @@ export function GlobalSearchTrigger() {
     <>
       <Button
         variant="outline"
-        className="hidden md:flex items-center gap-2 w-full max-w-sm justify-start bg-primary/5 border-primary/20 text-muted-foreground hover:bg-primary/10 hover:border-primary/30 hover:text-foreground transition-colors"
+        className={`hidden md:flex items-center gap-2 w-full max-w-sm justify-start bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:border-slate-500 hover:text-white transition-colors${className ? ` ${className}` : ''}`}
         onClick={() => setSearchOpen(true)}
       >
-        <Search className="h-4 w-4 text-primary/70" />
+        <Search className="h-4 w-4 text-slate-400" />
         <span className="flex-1 text-left">{t('search')}</span>
-        <kbd className="pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-primary/20 bg-primary/5 px-1.5 font-mono text-[10px] font-medium opacity-100">
+        <kbd className="pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-slate-500 bg-slate-700 px-1.5 font-mono text-[10px] font-medium text-slate-300 opacity-100">
           <span className="text-xs">⌘</span>K
         </kbd>
       </Button>
@@ -40,7 +40,7 @@ export function GlobalSearchTrigger() {
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden"
+        className="md:hidden text-slate-200 hover:text-white hover:bg-slate-700"
         onClick={() => setSearchOpen(true)}
       >
         <Search className="h-5 w-5" />

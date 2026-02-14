@@ -337,24 +337,24 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
       )}
 
       {/* Estimated Age - editable */}
-      {animal.estimated_age_years !== null && (
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            Estimated Age
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={startEdit}
-              className="h-6 w-6 p-0"
-            >
-              <Edit className="h-3 w-3" />
-            </Button>
-          </p>
-          <p className="font-medium">
-            {animal.estimated_age_years} {animal.estimated_age_years === 1 ? 'year' : 'years'}
-          </p>
-        </div>
-      )}
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground flex items-center gap-2">
+          Estimated Age
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={startEdit}
+            className="h-6 w-6 p-0"
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+        </p>
+        <p className="font-medium">
+          {animal.estimated_age_years
+            ? `${animal.estimated_age_years} ${animal.estimated_age_years === 1 ? 'year' : 'years'}`
+            : '—'}
+        </p>
+      </div>
 
       {/* Intake Date - read-only (from stays data) */}
       <div className="space-y-1">

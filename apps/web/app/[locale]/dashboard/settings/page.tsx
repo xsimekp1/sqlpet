@@ -10,6 +10,9 @@ import {
   AlertTriangle,
   Loader2,
   Save,
+  Plus,
+  KeyRound,
+  Users,
 } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -25,6 +28,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { useUIStore } from '@/app/stores/uiStore';
 import ApiClient from '@/app/lib/api';
 
@@ -112,6 +122,17 @@ export default function SettingsPage() {
   const [isLoadingColorsAdmin, setIsLoadingColorsAdmin] = useState(false);
   const [colorEdits, setColorEdits] = useState<Record<string, { cs: string; en: string }>>({});
   const [savingColorCode, setSavingColorCode] = useState<string | null>(null);
+
+  // Members state
+  interface MemberListItem { user_id: string; email: string; name: string; role_name?: string | null; status: string }
+  const [members, setMembers] = useState<MemberListItem[]>([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [addUserOpen, setAddUserOpen] = useState(false);
+  const [addUserForm, setAddUserForm] = useState({ name: '', email: '', password: '' });
+  const [addingUser, setAddingUser] = useState(false);
+  const [setPasswordTarget, setSetPasswordTarget] = useState<MemberListItem | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [settingPassword, setSettingPassword] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -337,6 +358,62 @@ export default function SettingsPage() {
     }
   }, []);
 
+  const loadMembers = useCallback(async () => {
+    setIsLoadingMembers(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/members`, { headers: getAuthHeaders() });
+      if (!res.ok) return;
+      setMembers(await res.json());
+    } catch { /* ignore */ } finally {
+      setIsLoadingMembers(false);
+    }
+  }, []);
+
+  const handleAddUser = async () => {
+    if (!addUserForm.name || !addUserForm.email || !addUserForm.password) {
+      toast.error('Vyplňte všechna pole');
+      return;
+    }
+    setAddingUser(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/members/create`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(addUserForm),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'Chyba' }));
+        toast.error(err.detail || 'Nepodařilo se vytvořit uživatele');
+        return;
+      }
+      toast.success('Uživatel byl vytvořen');
+      setAddUserOpen(false);
+      setAddUserForm({ name: '', email: '', password: '' });
+      await loadMembers();
+    } catch { toast.error('Nepodařilo se vytvořit uživatele'); }
+    finally { setAddingUser(false); }
+  };
+
+  const handleSetPassword = async () => {
+    if (!setPasswordTarget || !newPassword) return;
+    setSettingPassword(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/members/${setPasswordTarget.user_id}/set-password`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_password: newPassword }),
+      });
+      if (!res.ok) {
+        toast.error('Nepodařilo se změnit heslo');
+        return;
+      }
+      toast.success('Heslo bylo změněno');
+      setSetPasswordTarget(null);
+      setNewPassword('');
+    } catch { toast.error('Nepodařilo se změnit heslo'); }
+    finally { setSettingPassword(false); }
+  };
+
   const saveColorTranslations = async (code: string) => {
     const edits = colorEdits[code];
     if (!edits) return;
@@ -366,12 +443,17 @@ export default function SettingsPage() {
       <Tabs defaultValue="general" onValueChange={(v) => {
         if (v === 'breeds') loadBreedsAdmin();
         if (v === 'colors') loadColorsAdmin();
+        if (v === 'members') loadMembers();
       }}>
         <TabsList>
           <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
           <TabsTrigger value="defaultImages">{t('tabs.defaultImages')}</TabsTrigger>
           <TabsTrigger value="breeds">{t('tabs.breeds')}</TabsTrigger>
           <TabsTrigger value="colors">{t('tabs.colors')}</TabsTrigger>
+          <TabsTrigger value="members">
+            <Users className="h-4 w-4 mr-1.5" />
+            Členové
+          </TabsTrigger>
         </TabsList>
 
         {/* ── General tab ── */}
@@ -809,7 +891,127 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ── Members tab ── */}
+        <TabsContent value="members" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Členové organizace
+              </CardTitle>
+              <Button size="sm" onClick={() => setAddUserOpen(true)}>
+                <Plus className="h-4 w-4 mr-1.5" />
+                Přidat uživatele
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {isLoadingMembers ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : members.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Žádní členové</p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {members.map((member) => (
+                    <div key={member.user_id} className="flex items-center justify-between py-3">
+                      <div>
+                        <p className="font-medium text-sm">{member.name}</p>
+                        <p className="text-xs text-muted-foreground">{member.email}</p>
+                        {member.role_name && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{member.role_name}</p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => { setSetPasswordTarget(member); setNewPassword(''); }}
+                      >
+                        <KeyRound className="h-3.5 w-3.5 mr-1.5" />
+                        Změnit heslo
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Add user dialog */}
+      <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Přidat uživatele</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="space-y-1">
+              <Label>Jméno *</Label>
+              <Input
+                value={addUserForm.name}
+                onChange={e => setAddUserForm(p => ({ ...p, name: e.target.value }))}
+                placeholder="Jan Novák"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>E-mail *</Label>
+              <Input
+                type="email"
+                value={addUserForm.email}
+                onChange={e => setAddUserForm(p => ({ ...p, email: e.target.value }))}
+                placeholder="jan@priklad.cz"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Heslo *</Label>
+              <Input
+                type="password"
+                value={addUserForm.password}
+                onChange={e => setAddUserForm(p => ({ ...p, password: e.target.value }))}
+                placeholder="Zadejte heslo"
+              />
+            </div>
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => setAddUserOpen(false)} disabled={addingUser}>
+                Zrušit
+              </Button>
+              <Button onClick={handleAddUser} disabled={addingUser}>
+                {addingUser ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vytvořit'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Set password dialog */}
+      <Dialog open={!!setPasswordTarget} onOpenChange={(open) => !open && setSetPasswordTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Změnit heslo — {setPasswordTarget?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div className="space-y-1">
+              <Label>Nové heslo *</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Zadejte nové heslo"
+              />
+            </div>
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => setSetPasswordTarget(null)} disabled={settingPassword}>
+                Zrušit
+              </Button>
+              <Button onClick={handleSetPassword} disabled={settingPassword || !newPassword}>
+                {settingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Uložit heslo'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete confirmation inline dialog */}
       {deleteTarget && (

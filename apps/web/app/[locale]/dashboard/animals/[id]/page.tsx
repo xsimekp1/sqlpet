@@ -175,13 +175,24 @@ export default function AnimalDetailPage() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        setLoading(true);
+        // Check cache first — show immediately if available
+        const cached = queryClient.getQueryData<Animal>(['animal', animalId]);
+        if (cached) {
+          setAnimal(cached);
+          setBehaviorNotes(cached.behavior_notes ?? '');
+          setLoading(false);
+        } else {
+          setLoading(true);
+        }
+
         const [data, listData, wLogs, kHistory] = await Promise.all([
           ApiClient.getAnimal(animalId),
           ApiClient.getAnimals({ page_size: 200 }),
           ApiClient.getWeightHistory(animalId),
           ApiClient.getAnimalKennelHistory(animalId).catch(() => []),
         ]);
+        // Store fresh data back in cache
+        queryClient.setQueryData(['animal', data.id], data);
         setAnimal(data);
         setAnimalIds(listData.items.map(a => a.id));
         setWeightLogs(wLogs);
@@ -267,6 +278,7 @@ export default function AnimalDetailPage() {
 
   const togglePregnant = async () => {
     if (!animal) return;
+    if (animal.sex === 'male') return;
     setTogglingPregnant(true);
     try {
       const newVal = !animal.is_pregnant;
@@ -445,7 +457,7 @@ export default function AnimalDetailPage() {
 
         {/* Photo + nav arrows */}
         <div className="flex-shrink-0 flex flex-col items-center gap-2">
-          <div className="relative w-full max-w-xs aspect-square rounded-xl overflow-hidden bg-muted mx-auto group">
+          <div className="relative w-full max-w-sm aspect-square rounded-xl overflow-hidden bg-muted mx-auto group">
             <Image
               src={getAnimalImageUrl(animal)}
               alt={animal.name}
@@ -453,6 +465,11 @@ export default function AnimalDetailPage() {
               className="object-cover object-center"
               unoptimized
             />
+            {!animal.primary_photo_url && (
+              <span className="absolute bottom-1.5 inset-x-0 text-center text-[10px] text-white/60 pointer-events-none select-none">
+                ilustrační foto
+              </span>
+            )}
             {/* Upload overlay */}
             <button
               onClick={() => photoInputRef.current?.click()}
@@ -532,7 +549,7 @@ export default function AnimalDetailPage() {
             {days !== null && (
               <span className="text-sm text-muted-foreground">
                 <MapPin className="inline h-3.5 w-3.5 mr-0.5 mb-0.5" />
-                {days} {days === 1 ? 'den' : days < 5 ? 'dny' : 'dní'} v útulku · od {intakeDateFormatted}
+                {t('daysInShelterFull', { days, date: intakeDateFormatted })}
               </span>
             )}
             {animal.current_kennel_id ? (
@@ -687,14 +704,16 @@ export default function AnimalDetailPage() {
                   {togglingAggressive ? '...' : (animal.is_aggressive ? '⚠ ' + t('health.aggressive') : t('health.aggressive') + '?')}
                 </button>
 
-                <button
-                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
-                  onClick={togglePregnant}
-                  disabled={togglingPregnant}
-                  title={t('health.togglePregnant')}
-                >
-                  {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('health.pregnant') : t('health.pregnant') + '?')}
-                </button>
+                {animal.sex !== 'male' && (
+                  <button
+                    className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                    onClick={togglePregnant}
+                    disabled={togglingPregnant}
+                    title={t('health.togglePregnant')}
+                  >
+                    {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('health.pregnant') : t('health.pregnant') + '?')}
+                  </button>
+                )}
 
                 <button
                   className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"

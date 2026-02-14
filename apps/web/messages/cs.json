@@ -43,7 +43,8 @@
     "hiddenWidgets": "Skrytá okna — klikněte pro obnovení",
     "totalCapacity": "celková kapacita",
     "overall": "Celkově",
-    "noKennels": "Žádná data o kotcích"
+    "noKennels": "Žádná data o kotcích",
+    "daysInShelter": "{days, plural, =1 {# den} =2 {# dny} =3 {# dny} =4 {# dny} other {# dní}} v útulku"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -496,6 +497,11 @@
       "grid": "Kartičky",
       "table": "Tabulka"
     },
+    "statusFilter": {
+      "active": "Aktivní",
+      "available": "Dostupná",
+      "all": "Všechna"
+    },
     "species": {
       "dog": "Pes",
       "cat": "Kočka",
@@ -557,6 +563,7 @@
       "toggleAggressive": "Přepnout stav agresivity",
       "pregnant": "Těhotenství",
       "togglePregnant": "Přepnout stav těhotenství",
+      "pregnantMaleBlocked": "Samci nemohou být těhotní",
       "markIntact": "Označit jako nekastrované",
       "markAltered": "Označit jako kastrované",
       "toggleAltered": "Přepnout kastraci",
@@ -696,6 +703,7 @@
       "tabDesc": "Vědecky podložené doporučení dávkování krmiva na základě váhy, věku, kastrace a podmínek chovu."
     },
     "daysInShelter": "{days, plural, =1 {# den} =2 {# dny} =3 {# dny} =4 {# dny} other {# dní}}",
+    "daysInShelterFull": "{days, plural, =1 {# den} =2 {# dny} =3 {# dny} =4 {# dny} other {# dní}} v útulku · od {date}",
     "since": "od {date}",
     "healthEvents": {
       "dewormedOn": "Odčervení: označeno jako provedené",

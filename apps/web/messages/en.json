@@ -43,7 +43,8 @@
     "hiddenWidgets": "Hidden widgets — click to restore",
     "totalCapacity": "total capacity",
     "overall": "Overall",
-    "noKennels": "No kennel data available"
+    "noKennels": "No kennel data available",
+    "daysInShelter": "{days, plural, =1 {# day} other {# days}} in shelter"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -556,6 +557,11 @@
       "grid": "Cards",
       "table": "Table"
     },
+    "statusFilter": {
+      "active": "Active",
+      "available": "Available",
+      "all": "All"
+    },
     "species": {
       "dog": "Dog",
       "cat": "Cat",
@@ -617,6 +623,7 @@
       "toggleAggressive": "Toggle aggression status",
       "pregnant": "Pregnancy",
       "togglePregnant": "Toggle pregnancy status",
+      "pregnantMaleBlocked": "Males cannot be pregnant",
       "markIntact": "Mark as intact",
       "markAltered": "Mark as altered",
       "toggleAltered": "Toggle altered status",
@@ -755,6 +762,7 @@
       "tabDesc": "Science-based feeding recommendations based on weight, age, neutering status and housing conditions."
     },
     "daysInShelter": "{days, plural, =1 {# day} other {# days}}",
+    "daysInShelterFull": "{days, plural, =1 {# day} other {# days}} in shelter · since {date}",
     "since": "since {date}",
     "healthEvents": {
       "dewormedOn": "Deworming: marked as done",
