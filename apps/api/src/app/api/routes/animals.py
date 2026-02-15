@@ -55,41 +55,51 @@ async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
     resp.identifiers = identifiers
     breed_id = animal.animal_breeds[0].breed_id if animal.animal_breeds else None
     svc = DefaultImageService(db)
-    default_img = await svc.get_default_image_for_animal(
-        species=animal.species, breed_id=breed_id, color=animal.color,
-    )
-    resp.default_image_url = default_img.public_url if default_img else None
-    stay_result = await db.execute(
-        text("""
-            SELECT ks.kennel_id::text, k.name, k.code
-            FROM kennel_stays ks
-            JOIN kennels k ON k.id = ks.kennel_id
-            WHERE ks.animal_id = :animal_id AND ks.end_at IS NULL
-            LIMIT 1
-        """),
-        {"animal_id": str(animal.id)},
-    )
-    stay_row = stay_result.first()
-    if stay_row:
-        resp.current_kennel_id = stay_row[0]
-        resp.current_kennel_name = stay_row[1]
-        resp.current_kennel_code = stay_row[2]
-    # Populate current_intake_date from latest active (non-deleted) intake
     try:
-        intake_result = await db.execute(
-            text("""
-                SELECT intake_date FROM intakes
-                WHERE animal_id = :animal_id AND deleted_at IS NULL
-                ORDER BY intake_date DESC
-                LIMIT 1
-            """),
-            {"animal_id": str(animal.id)},
-        )
-        intake_row = intake_result.first()
-        if intake_row:
-            resp.current_intake_date = intake_row[0]
+        async with db.begin_nested():
+            default_img = await svc.get_default_image_for_animal(
+                species=animal.species, breed_id=breed_id, color=animal.color,
+            )
+            resp.default_image_url = default_img.public_url if default_img else None
     except Exception:
-        pass  # intakes table may not exist yet
+        pass  # savepoint rolled back; default image is optional
+    # Use savepoints so a failing raw-SQL query can't abort the outer transaction
+    # and poison subsequent queries for other animals in the same request.
+    try:
+        async with db.begin_nested():
+            stay_result = await db.execute(
+                text("""
+                    SELECT ks.kennel_id::text, k.name, k.code
+                    FROM kennel_stays ks
+                    JOIN kennels k ON k.id = ks.kennel_id
+                    WHERE ks.animal_id = :animal_id AND ks.end_at IS NULL
+                    LIMIT 1
+                """),
+                {"animal_id": str(animal.id)},
+            )
+            stay_row = stay_result.first()
+            if stay_row:
+                resp.current_kennel_id = stay_row[0]
+                resp.current_kennel_name = stay_row[1]
+                resp.current_kennel_code = stay_row[2]
+    except Exception:
+        pass  # savepoint rolled back; outer transaction continues
+    try:
+        async with db.begin_nested():
+            intake_result = await db.execute(
+                text("""
+                    SELECT intake_date FROM intakes
+                    WHERE animal_id = :animal_id AND deleted_at IS NULL
+                    ORDER BY intake_date DESC
+                    LIMIT 1
+                """),
+                {"animal_id": str(animal.id)},
+            )
+            intake_row = intake_result.first()
+            if intake_row:
+                resp.current_intake_date = intake_row[0]
+    except Exception:
+        pass  # savepoint rolled back; outer transaction continues
     return resp
 
 
@@ -532,28 +542,27 @@ async def get_daily_animal_count(
     today = date.today()
     result = []
 
-    try:
-        for i in range(days - 1, -1, -1):
-            day = today - timedelta(days=i)
-            count_result = await db.execute(
-                text("""
-                    SELECT COUNT(DISTINCT a.id)
-                    FROM animals a
-                    JOIN intakes i ON i.animal_id = a.id
-                    WHERE a.organization_id = :org_id
-                      AND a.deleted_at IS NULL
-                      AND i.intake_date <= :day
-                      AND (i.deleted_at IS NULL OR i.deleted_at > :day)
-                """),
-                {"org_id": str(organization_id), "day": day},
-            )
-            count = count_result.scalar() or 0
-            result.append({"date": day.isoformat(), "count": count})
-    except Exception:
-        # intakes table may not exist yet (e.g. Railway before migration)
-        for i in range(days - 1, -1, -1):
-            day = today - timedelta(days=i)
-            result.append({"date": day.isoformat(), "count": 0})
+    for i in range(days - 1, -1, -1):
+        day = today - timedelta(days=i)
+        count = 0
+        try:
+            async with db.begin_nested():
+                count_result = await db.execute(
+                    text("""
+                        SELECT COUNT(DISTINCT a.id)
+                        FROM animals a
+                        JOIN intakes i ON i.animal_id = a.id
+                        WHERE a.organization_id = :org_id
+                          AND a.deleted_at IS NULL
+                          AND i.intake_date <= :day
+                          AND (i.deleted_at IS NULL OR i.deleted_at > :day)
+                    """),
+                    {"org_id": str(organization_id), "day": day},
+                )
+                count = count_result.scalar() or 0
+        except Exception:
+            pass  # savepoint rolled back; intakes table may not exist yet
+        result.append({"date": day.isoformat(), "count": count})
 
     return result
 
