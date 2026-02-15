@@ -67,8 +67,8 @@ export default function InventoryItemDetailPage() {
     queryFn: () => ApiClient.get('/inventory/transactions', { item_id: itemId }),
   });
 
-  const lots = lotsData?.items || [];
-  const transactions = transactionsData?.items || [];
+  const lots = Array.isArray(lotsData) ? lotsData : (lotsData?.items ?? []);
+  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.items ?? []);
 
   // Add lot mutation
   const addLotMutation = useMutation({
