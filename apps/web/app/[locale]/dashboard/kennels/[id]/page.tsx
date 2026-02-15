@@ -232,8 +232,8 @@ export default function KennelDetailPage() {
     if (isNaN(length) || isNaN(width)) return;
     setSavingDimensions(true);
     try {
-      const dims: { length: number; width: number; height?: number } = { length, width };
-      if (height !== undefined && !isNaN(height)) dims.height = height;
+      const dims: { length: number; width: number; height?: number } = { length: Math.round(length * 100), width: Math.round(width * 100) };
+      if (height !== undefined && !isNaN(height)) dims.height = Math.round(height * 100);
       const updated = await ApiClient.updateKennel(kennel.id, { dimensions: dims });
       setKennel(prev => prev ? { ...prev, dimensions: updated.dimensions } : null);
       toast.success(t('detail.updateSuccess'));
@@ -599,9 +599,9 @@ export default function KennelDetailPage() {
                         variant="ghost"
                         className="h-6 w-6"
                         onClick={() => {
-                          setDimLength(String(kennel.dimensions?.length ?? ''));
-                          setDimWidth(String(kennel.dimensions?.width ?? ''));
-                          setDimHeight(String(kennel.dimensions?.height ?? ''));
+                          setDimLength(kennel.dimensions?.length ? (kennel.dimensions.length / 100).toString() : '');
+                          setDimWidth(kennel.dimensions?.width ? (kennel.dimensions.width / 100).toString() : '');
+                          setDimHeight(kennel.dimensions?.height ? (kennel.dimensions.height / 100).toString() : '');
                           setEditingDimensions(true);
                         }}
                       >
@@ -890,10 +890,10 @@ function DimensionsDisplay({ dimensions }: { dimensions: NonNullable<Kennel['dim
   const h = dimensions.height;
   if (!l || !w) return null;
 
-  const lm = l.toFixed(1);
-  const wm = w.toFixed(1);
-  const hm = h ? h.toFixed(1) : null;
-  const area = (l * w).toFixed(2);
+  const lm = (l / 100).toFixed(2);
+  const wm = (w / 100).toFixed(2);
+  const hm = h ? (h / 100).toFixed(2) : null;
+  const area = ((l / 100) * (w / 100)).toFixed(2);
 
   const label = hm
     ? `${lm} × ${wm} × ${hm} m (výška)`

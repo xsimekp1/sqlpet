@@ -509,24 +509,35 @@ async def create_member(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new user and add them to the current organization."""
-    # Check if email already exists
-    existing = await db.execute(select(User).where(User.email == data.email))
-    if existing.scalar_one_or_none() is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
-        )
+    # Check if user with this email already exists
+    existing_user = (await db.execute(select(User).where(User.email == data.email))).scalar_one_or_none()
 
-    # Create user
-    new_user = User(
-        id=uuid.uuid4(),
-        email=data.email,
-        password_hash=hash_password(data.password),
-        name=data.name,
-        is_superadmin=False,
-    )
-    db.add(new_user)
-    await db.flush()
+    if existing_user:
+        # Check if already a member of this org
+        existing_membership = (await db.execute(
+            select(Membership).where(
+                Membership.user_id == existing_user.id,
+                Membership.organization_id == organization_id,
+            )
+        )).scalar_one_or_none()
+        if existing_membership:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User is already a member of this organization",
+            )
+        # Add existing user to org — skip creating a new User
+        target_user = existing_user
+    else:
+        # Create new user
+        target_user = User(
+            id=uuid.uuid4(),
+            email=data.email,
+            password_hash=hash_password(data.password),
+            name=data.name,
+            is_superadmin=False,
+        )
+        db.add(target_user)
+        await db.flush()
 
     # Parse role_id if provided and validate it belongs to this org
     role_id = None
@@ -542,10 +553,10 @@ async def create_member(
         except ValueError:
             pass
 
-    # Create membership
+    # Create membership for target_user (existing or new)
     membership = Membership(
         id=uuid.uuid4(),
-        user_id=new_user.id,
+        user_id=target_user.id,
         organization_id=organization_id,
         role_id=role_id,
         status=MembershipStatus.ACTIVE,
@@ -554,9 +565,9 @@ async def create_member(
     await db.commit()
 
     return MemberCreateResponse(
-        user_id=str(new_user.id),
-        email=new_user.email,
-        name=new_user.name,
+        user_id=str(target_user.id),
+        email=target_user.email,
+        name=target_user.name,
     )
 
 

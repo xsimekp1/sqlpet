@@ -35,8 +35,8 @@ interface FreeAnimalPos {
 
 const FREE_ANIMALS_LS_KEY = 'kennel-map-free-animals';
 
-// 1 meter = 80 pixels on the map canvas
-const PIXELS_PER_METER = 80;
+// 1 meter = 40 pixels on the map canvas
+const PIXELS_PER_METER = 40;
 // Default size if kennel has no dimensions specified
 const DEFAULT_KENNEL_M = 2;
 // Minimum pixel size so tiny kennels are still usable
