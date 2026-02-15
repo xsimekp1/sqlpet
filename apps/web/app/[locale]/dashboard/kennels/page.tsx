@@ -22,6 +22,12 @@ import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Card,
   CardContent,
   CardHeader,
@@ -341,7 +347,7 @@ export default function KennelsPage() {
         ApiClient.getAnimals({ page_size: 100 }),
       ]);
       setKennels(kennelsData);
-      setAllAnimals(animalsData.items.filter((a: Animal) => !isTerminal(a.status)));
+      setAllAnimals(animalsData.items.filter((a: Animal) => !isTerminal(a.status) && a.current_intake_date !== null));
     } catch (error) {
       toast.error(t('loadError'));
       console.error(error);
@@ -558,10 +564,19 @@ export default function KennelsPage() {
               <Map className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline" className="gap-2">
-            <Settings className="h-4 w-4" />
-            {t('quickActions.manageZones')}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>
+                  <Button variant="outline" className="gap-2" disabled>
+                    <Settings className="h-4 w-4" />
+                    {t('quickActions.manageZones')}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{t('quickActions.manageZonesComingSoon')}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <Button variant="outline" className="gap-2">
             <Footprints className="h-4 w-4" />
             {t('quickActions.walkMode')}

@@ -35,8 +35,8 @@ interface FreeAnimalPos {
 
 const FREE_ANIMALS_LS_KEY = 'kennel-map-free-animals';
 
-// 1 meter = 60 pixels on the map canvas
-const PIXELS_PER_METER = 60;
+// 1 meter = 80 pixels on the map canvas
+const PIXELS_PER_METER = 80;
 // Default size if kennel has no dimensions specified
 const DEFAULT_KENNEL_M = 2;
 // Minimum pixel size so tiny kennels are still usable
@@ -60,14 +60,9 @@ function getKennelDims(kennel: Kennel): { w: number; h: number } {
 }
 
 function getDefaultPos(kennel: Kennel, index: number): KennelPos {
-  const dims = getKennelDims(kennel);
+  const dims = getKennelDims(kennel); // always derive size from current dimensions
   if (kennel.map_x !== 0 || kennel.map_y !== 0) {
-    return {
-      x: kennel.map_x,
-      y: kennel.map_y,
-      w: kennel.map_w > 0 ? kennel.map_w : dims.w,
-      h: kennel.map_h > 0 ? kennel.map_h : dims.h,
-    };
+    return { x: kennel.map_x, y: kennel.map_y, w: dims.w, h: dims.h };
   }
   const col = index % COLS;
   const row = Math.floor(index / COLS);

@@ -284,8 +284,10 @@
     "quickActions": {
       "addKennel": "Add Kennel",
       "manageZones": "Manage Zones",
+      "manageZonesComingSoon": "Zone management coming soon",
       "walkMode": "Walk Mode"
     },
+    "noSpeciesRestriction": "Not specified — suitable for all animals",
     "view": {
       "table": "Table",
       "grid": "Grid"
@@ -796,6 +798,7 @@
     },
     "intake": {
       "closeIntake": "Close Intake",
+      "registerIntake": "Register intake",
       "outcome": "Outcome",
       "notesOptional": "Notes (optional)",
       "notesPlaceholder": "Reason for closing...",
@@ -823,8 +826,15 @@
       "notesPlaceholder": "Circumstances, last seen location...",
       "confirm": "Record escape",
       "recorded": "Escape recorded",
-      "recordError": "Failed to record escape"
+      "recordError": "Failed to record escape",
+      "foundButton": "Animal found (return to shelter)",
+      "foundTitle": "Record: Animal Found",
+      "foundDescription": "This will record the animal as found and return it to intake status.",
+      "foundDate": "Date found",
+      "foundConfirm": "Record as found",
+      "foundRecorded": "Animal recorded as found"
     },
+    "markAvailable": "Mark as available (ready for adoption)",
     "noActiveIntakeWarning": "No active intake — create an intake first",
     "healthEvents": {
       "dewormedOn": "Deworming: marked as done",
@@ -1117,6 +1127,7 @@
     },
     "units": {
       "can": "Can",
+      "Konzerva": "Can",
       "pouch": "Pouch",
       "bag": "Bag",
       "bottle": "Bottle",
@@ -1127,6 +1138,9 @@
       "g": "Gram",
       "l": "Litre",
       "ml": "Millilitre"
+    },
+    "transactions": {
+      "comingSoon": "Transaction history coming in a future update"
     },
     "messages": {
       "itemCreated": "Item created",
@@ -1254,6 +1268,9 @@
     "intakeStart": "Intake",
     "expectedLitter": "Expected litter",
     "escaped": "Escaped",
+    "plannedAdoption": "Planned adoption",
+    "vetVisit": "Vet visit",
+    "vetVisitComingSoon": "Vet visits coming soon",
     "noEvents": "No events this day",
     "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
   }

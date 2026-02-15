@@ -284,6 +284,7 @@
     "quickActions": {
       "addKennel": "Přidat kotec/voliéru",
       "manageZones": "Spravovat zóny",
+      "manageZonesComingSoon": "Správa zón bude přidána brzy",
       "walkMode": "Režim obchůzky",
       "title": "Rychlé akce",
       "description": "Označit všechny úkoly jako hotové nebo přidat poznámky o tomto kotci..."
@@ -385,6 +386,7 @@
       "moveError": "Nelze přesunout do kotce: {msg}",
       "escapedCannotMove": "{name} uteklo — přiřazení do kotce není možné"
     },
+    "noSpeciesRestriction": "Nevyplněno — vhodný pro všechna zvířata",
     "loadError": "Nepodařilo se načíst kotce",
     "detail": {
       "backToKennels": "Zpět na kotce",
@@ -736,6 +738,7 @@
     },
     "intake": {
       "closeIntake": "Ukončit pobyt",
+      "registerIntake": "Zaregistrovat příjem",
       "outcome": "Výsledek",
       "notesOptional": "Poznámky (volitelné)",
       "notesPlaceholder": "Důvod ukončení...",
@@ -763,8 +766,15 @@
       "notesPlaceholder": "Okolnosti, místo posledního výskytu...",
       "confirm": "Zaznamenat útěk",
       "recorded": "Útěk zaznamenán",
-      "recordError": "Nepodařilo se zaznamenat útěk"
+      "recordError": "Nepodařilo se zaznamenat útěk",
+      "foundButton": "Zvíře nalezeno (vrátit do útulku)",
+      "foundTitle": "Zaznamenat: Zvíře nalezeno",
+      "foundDescription": "Toto zaznamená nález zvířete a vrátí jej do stavu příjmu.",
+      "foundDate": "Datum nálezu",
+      "foundConfirm": "Zaznamenat jako nalezené",
+      "foundRecorded": "Zvíře zaznamenáno jako nalezené"
     },
+    "markAvailable": "Označit jako dostupné (připraveno k adopci)",
     "noActiveIntakeWarning": "Žádný aktivní příjem — nejprve vytvořte příjem",
     "healthEvents": {
       "dewormedOn": "Odčervení: označeno jako provedené",
@@ -1057,6 +1067,7 @@
     },
     "units": {
       "can": "Konzerva",
+      "Konzerva": "Konzerva",
       "pouch": "Kapsička",
       "bag": "Pytel",
       "bottle": "Láhev",
@@ -1067,6 +1078,9 @@
       "g": "Gram",
       "l": "Litr",
       "ml": "Mililitr"
+    },
+    "transactions": {
+      "comingSoon": "Historie transakcí bude přidána v budoucí verzi"
     },
     "messages": {
       "itemCreated": "Položka vytvořena",
@@ -1257,6 +1271,9 @@
     "intakeStart": "Příjem",
     "expectedLitter": "Očekávaný porod",
     "escaped": "Útěk",
+    "plannedAdoption": "Plánovaná adopce",
+    "vetVisit": "Návštěva veterináře",
+    "vetVisitComingSoon": "Návštěvy veterináře budou přidány brzy",
     "noEvents": "Žádné události",
     "weekdays": ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"]
   }

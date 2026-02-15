@@ -22,6 +22,8 @@ import { toast } from 'sonner';
 interface IntakeRecord {
   id: string;
   animal_id: string;
+  animal_name: string | null;
+  animal_species: string | null;
   reason: string;
   intake_date: string;
   planned_end_date: string | null;
@@ -136,10 +138,13 @@ export default function IntakePage() {
                     <td className="px-4 py-3">
                       <Link
                         href={`/dashboard/animals/${intake.animal_id}`}
-                        className="text-primary hover:underline font-mono text-xs"
+                        className="text-primary hover:underline font-medium text-sm"
                       >
-                        {intake.animal_id.slice(0, 8)}…
+                        {intake.animal_name ?? `${intake.animal_id.slice(0, 8)}…`}
                       </Link>
+                      {intake.animal_species && (
+                        <span className="ml-2 text-xs text-muted-foreground capitalize">{intake.animal_species}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <Badge className={`text-xs ${REASON_COLORS[intake.reason] ?? ''}`}>

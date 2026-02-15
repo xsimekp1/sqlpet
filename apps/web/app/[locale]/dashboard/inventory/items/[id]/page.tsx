@@ -28,7 +28,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
@@ -405,55 +405,10 @@ export default function InventoryItemDetailPage() {
         </TabsContent>
 
         {/* Transactions Tab */}
-        <TabsContent value="transactions" className="space-y-4">
-          <h2 className="text-lg font-semibold">Transaction History</h2>
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Lot</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>User</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No transactions found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  transactions.map((transaction: any) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>{getTransactionIcon(transaction.type)}</TableCell>
-                      <TableCell>{getTransactionBadge(transaction.type)}</TableCell>
-                      <TableCell>
-                        <span className={transaction.type === 'out' ? 'text-red-600' : 'text-green-600'}>
-                          {transaction.quantity > 0 ? '+' : ''}{transaction.quantity?.toFixed(2)} {item.unit || ''}
-                        </span>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {transaction.reason}
-                      </TableCell>
-                      <TableCell>
-                        {transaction.lot?.lot_number || '-'}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {format(new Date(transaction.created_at), 'MMM d, yyyy HH:mm')}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {transaction.created_by_user?.full_name || '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+        <TabsContent value="transactions">
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
+            <Receipt className="h-10 w-10 opacity-30" />
+            <p className="text-sm">{t('transactions.comingSoon' as any)}</p>
           </div>
         </TabsContent>
       </Tabs>

@@ -740,7 +740,7 @@ export default function KennelDetailPage() {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Nevyplněno — vhodný pro všechna zvířata</p>
+                <p className="text-sm text-muted-foreground">{t('noSpeciesRestriction')}</p>
               )}
             </CardContent>
           </Card>

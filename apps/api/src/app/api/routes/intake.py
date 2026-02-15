@@ -49,6 +49,8 @@ class IntakeResponse(BaseModel):
     id: str
     organization_id: str
     animal_id: str
+    animal_name: Optional[str] = None
+    animal_species: Optional[str] = None
     reason: str
     intake_date: date
     finder_person_id: Optional[str] = None
@@ -63,11 +65,13 @@ class IntakeResponse(BaseModel):
     updated_at: datetime
 
 
-def _to_response(i: Intake) -> IntakeResponse:
+def _to_response(i: Intake, animal=None) -> IntakeResponse:
     return IntakeResponse(
         id=str(i.id),
         organization_id=str(i.organization_id),
         animal_id=str(i.animal_id),
+        animal_name=animal.name if animal else None,
+        animal_species=animal.species if animal else None,
         reason=i.reason.value if isinstance(i.reason, IntakeReason) else str(i.reason),
         intake_date=i.intake_date,
         finder_person_id=str(i.finder_person_id) if i.finder_person_id else None,
@@ -94,9 +98,14 @@ async def list_intakes(
     db: AsyncSession = Depends(get_db),
 ):
     """List intakes for the current organization."""
-    q = select(Intake).where(
-        Intake.organization_id == organization_id,
-        Intake.deleted_at.is_(None),
+    from src.app.models.animal import Animal as AnimalModel
+    q = (
+        select(Intake, AnimalModel)
+        .outerjoin(AnimalModel, AnimalModel.id == Intake.animal_id)
+        .where(
+            Intake.organization_id == organization_id,
+            Intake.deleted_at.is_(None),
+        )
     )
     if reason:
         q = q.where(Intake.reason == reason)
@@ -107,7 +116,7 @@ async def list_intakes(
             pass
     q = q.order_by(Intake.intake_date.desc())
     result = await db.execute(q)
-    return [_to_response(i) for i in result.scalars().all()]
+    return [_to_response(i, a) for i, a in result.all()]
 
 
 @router.post("", response_model=IntakeResponse, status_code=status.HTTP_201_CREATED)

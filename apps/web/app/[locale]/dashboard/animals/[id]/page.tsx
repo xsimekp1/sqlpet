@@ -8,7 +8,7 @@ import {
   ArrowLeft, Trash2, MapPin, Loader2, Stethoscope,
   CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors,
   ChevronLeft, ChevronRight, Baby, Scale, Accessibility, Home, Camera,
-  PersonStanding,
+  PersonStanding, LogIn, CheckCheck,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -157,6 +157,12 @@ export default function AnimalDetailPage() {
   const [escapeNotes, setEscapeNotes] = useState('');
   const [escapeDate, setEscapeDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [recordingEscape, setRecordingEscape] = useState(false);
+
+  // Found after escape dialog
+  const [foundOpen, setFoundOpen] = useState(false);
+  const [foundNotes, setFoundNotes] = useState('');
+  const [foundDate, setFoundDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [recordingFound, setRecordingFound] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -486,6 +492,29 @@ export default function AnimalDetailPage() {
     }
   };
 
+  const handleFound = async () => {
+    if (!animal) return;
+    setRecordingFound(true);
+    try {
+      await ApiClient.createIncident({
+        animal_id: animal.id,
+        incident_type: 'found',
+        incident_date: foundDate,
+        description: foundNotes || undefined,
+      });
+      await ApiClient.updateAnimal(animal.id, { status: 'intake' } as any);
+      toast.success(t('escape.foundRecorded'));
+      setFoundOpen(false);
+      setFoundNotes('');
+      const updated = await ApiClient.getAnimal(animalId);
+      setAnimal(updated);
+    } catch {
+      toast.error(t('escape.recordError'));
+    } finally {
+      setRecordingFound(false);
+    }
+  };
+
   // Derived
   const days = animal?.current_intake_date
     ? Math.floor((Date.now() - new Date(animal.current_intake_date).getTime()) / (1000 * 60 * 60 * 24))
@@ -603,42 +632,10 @@ export default function AnimalDetailPage() {
             <div className="flex-1 min-w-0">
               <EditableAnimalName animal={animal} onAnimalUpdate={handleAnimalUpdate} />
             </div>
-            {/* Inline status select — 'escaped' excluded; use the escape button */}
-            <Select
-              value={animal.status === 'escaped' ? 'escaped' : animal.status}
-              onValueChange={handleStatusChange}
-              disabled={changingStatus || animal.status === 'escaped'}
-            >
-              <SelectTrigger className={`h-7 text-xs px-2 py-0 rounded-full border-0 w-auto min-w-[90px] ${getStatusColor(animal.status)}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {animal.status === 'escaped' && (
-                  <SelectItem value="escaped" className="text-xs text-red-600">{t('status.escaped')}</SelectItem>
-                )}
-                {STATUSES.map(s => (
-                  <SelectItem key={s} value={s} className="text-xs">{t(`status.${s}`)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* Escape button — only for non-terminal, non-escaped animals */}
-            {!['escaped', 'adopted', 'deceased', 'transferred', 'returned_to_owner', 'euthanized'].includes(animal.status) && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                      onClick={() => setEscapeOpen(true)}
-                    >
-                      <PersonStanding className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('escape.button')}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            {/* Status badge — non-interactive; changes via action buttons */}
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(animal.status)}`}>
+              {t(`status.${animal.status}`)}
+            </span>
           </div>
 
           {/* Code + species */}
@@ -678,21 +675,33 @@ export default function AnimalDetailPage() {
 
           {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-2 justify-center sm:justify-start flex-wrap">
-            <AssignKennelButton
-              animal={animal}
-              onAssigned={(kennel) => {
-                setAnimal(prev => prev ? {
-                  ...prev,
-                  current_kennel_id: kennel?.id ?? null,
-                  current_kennel_name: kennel?.name ?? null,
-                  current_kennel_code: kennel?.code ?? null,
-                } : null);
-              }}
-            />
-            <Button variant="outline" size="sm" onClick={() => setMedicalDialogOpen(true)}>
-              <Stethoscope className="h-4 w-4 mr-2" />
-              {t('medical.requestProcedure')}
-            </Button>
+            {animal.current_intake_date === null ? (
+              /* No active intake — show only intake button */
+              <Link href={`/dashboard/intake/new?animal_id=${animal.id}`}>
+                <Button variant="default" size="sm">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  {t('intake.registerIntake')}
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <AssignKennelButton
+                  animal={animal}
+                  onAssigned={(kennel) => {
+                    setAnimal(prev => prev ? {
+                      ...prev,
+                      current_kennel_id: kennel?.id ?? null,
+                      current_kennel_name: kennel?.name ?? null,
+                      current_kennel_code: kennel?.code ?? null,
+                    } : null);
+                  }}
+                />
+                <Button variant="outline" size="sm" onClick={() => setMedicalDialogOpen(true)}>
+                  <Stethoscope className="h-4 w-4 mr-2" />
+                  {t('medical.requestProcedure')}
+                </Button>
+              </>
+            )}
             {animal.is_pregnant && (
               <Button
                 variant="outline"
@@ -1187,9 +1196,57 @@ export default function AnimalDetailPage() {
         </TabsContent>
       </Tabs>
 
-      {/* ── Deceased zone – de-emphasized, at the bottom ── */}
-      {animal.status !== 'deceased' && (
-        <div className="pt-8 border-t border-dashed">
+      {/* ── Action zone – de-emphasized, at the bottom ── */}
+      {!['deceased', 'adopted', 'euthanized'].includes(animal.status) && (
+        <div className="pt-8 border-t border-dashed flex flex-wrap gap-3 items-center">
+
+          {/* Mark as available — for intake animals */}
+          {animal.status === 'intake' && (
+            <div className="relative inline-block">
+              <button
+                className="text-xs text-muted-foreground/50 hover:text-green-600 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-green-400"
+                onClick={async () => {
+                  if (!confirm(`Označit ${animal.name} jako dostupné k adopci?`)) return;
+                  try {
+                    const updated = await ApiClient.updateAnimal(animal.id, { status: 'available' } as any);
+                    setAnimal(updated);
+                    toast.success(t('overview.statusChanged', { status: t('status.available') }));
+                  } catch { toast.error(t('overview.statusChangeError')); }
+                }}
+              >
+                <CheckCheck className="inline h-3 w-3 mr-1" />
+                {t('markAvailable')}
+              </button>
+            </div>
+          )}
+
+          {/* Escape — only for non-terminal, non-escaped animals */}
+          {!['escaped', 'transferred', 'returned_to_owner'].includes(animal.status) && (
+            <div className="relative inline-block">
+              <button
+                className="text-xs text-muted-foreground/50 hover:text-orange-500 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-orange-300"
+                onClick={() => setEscapeOpen(true)}
+              >
+                <PersonStanding className="inline h-3 w-3 mr-1" />
+                {t('escape.button')}
+              </button>
+            </div>
+          )}
+
+          {/* Found after escape */}
+          {animal.status === 'escaped' && (
+            <div className="relative inline-block">
+              <button
+                className="text-xs text-muted-foreground/50 hover:text-blue-600 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-blue-300"
+                onClick={() => setFoundOpen(true)}
+              >
+                <LogIn className="inline h-3 w-3 mr-1" />
+                {t('escape.foundButton')}
+              </button>
+            </div>
+          )}
+
+          {/* Record death */}
           <div className="relative inline-block">
             <button
               className="text-xs text-muted-foreground/50 hover:text-red-500 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-red-300"
@@ -1218,6 +1275,7 @@ export default function AnimalDetailPage() {
               />
             </span>
           </div>
+
         </div>
       )}
 
@@ -1281,6 +1339,49 @@ export default function AnimalDetailPage() {
             <Button variant="outline" onClick={() => setCloseIntakeOpen(false)}>{t('cancel')}</Button>
             <Button onClick={handleCloseIntake} disabled={closingIntake}>
               {closingIntake ? t('saving') : t('intake.closeIntake')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Found after escape Dialog */}
+      <Dialog open={foundOpen} onOpenChange={setFoundOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <LogIn className="h-5 w-5 text-blue-500" />
+              {t('escape.foundTitle')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">{t('escape.foundDescription')}</p>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('escape.foundDate')}</label>
+              <Input
+                type="date"
+                value={foundDate}
+                onChange={e => setFoundDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('escape.notesOptional')}</label>
+              <Textarea
+                value={foundNotes}
+                onChange={e => setFoundNotes(e.target.value)}
+                placeholder={t('escape.notesPlaceholder')}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFoundOpen(false)}>{t('cancel')}</Button>
+            <Button
+              onClick={handleFound}
+              disabled={recordingFound}
+            >
+              <LogIn className="h-4 w-4 mr-2" />
+              {recordingFound ? t('saving') : t('escape.foundConfirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

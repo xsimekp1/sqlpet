@@ -63,7 +63,7 @@ export function CreateTaskDialog({ open, onOpenChange, onCreated }: CreateTaskDi
       title: '',
       type: 'general',
       priority: 'medium',
-      due_at: '',
+      due_at: new Date().toISOString().split('T')[0],
       description: '',
       entity_kind: 'none',
       entity_id: '',

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { ApiClient } from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Baby, LogIn, PersonStanding } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Baby, LogIn, PersonStanding, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -16,6 +16,8 @@ interface CalendarAnimal {
   current_intake_date: string | null;
   expected_litter_date: string | null;
   status: string;
+  sex: string;
+  is_pregnant: boolean;
 }
 
 interface Incident {
@@ -27,7 +29,7 @@ interface Incident {
 
 interface CalendarEvent {
   date: string;
-  type: 'intake' | 'litter' | 'escaped';
+  type: 'intake' | 'litter' | 'escaped' | 'planned_adoption';
   animal: CalendarAnimal;
 }
 
@@ -42,10 +44,10 @@ function AnimalMedallion({ animal, title }: { animal: CalendarAnimal; title: str
         <img
           src={animal.primary_photo_url}
           alt={animal.name}
-          className="w-7 h-7 rounded-full object-cover border-2 border-white shadow group-hover:scale-110 transition-transform"
+          className="w-8 h-8 rounded-full object-cover border-2 border-white shadow group-hover:scale-110 transition-transform"
         />
       ) : (
-        <div className="w-7 h-7 rounded-full bg-primary/20 border-2 border-white shadow flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div className="w-8 h-8 rounded-full bg-primary/20 border-2 border-white shadow flex items-center justify-center group-hover:scale-110 transition-transform">
           <span className="text-[8px] font-bold text-primary">
             {animal.name.slice(0, 2).toUpperCase()}
           </span>
@@ -76,6 +78,13 @@ export default function CalendarPage() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // Fetch intakes for planned_adoption events
+  const { data: intakesData = [] } = useQuery({
+    queryKey: ['intakes-calendar'],
+    queryFn: () => ApiClient.get('/intakes'),
+    staleTime: 2 * 60 * 1000,
+  });
+
   const animals: CalendarAnimal[] = animalsData?.items ?? [];
 
   // Build animal lookup map for incidents
@@ -97,7 +106,9 @@ export default function CalendarPage() {
 
     for (const animal of animals) {
       addEvent(animal.current_intake_date, 'intake', animal);
-      addEvent(animal.expected_litter_date, 'litter', animal);
+      if (animal.expected_litter_date && animal.sex === 'female' && animal.is_pregnant) {
+        addEvent(animal.expected_litter_date, 'litter', animal);
+      }
     }
 
     // Add escape incidents
@@ -108,8 +119,16 @@ export default function CalendarPage() {
       }
     }
 
+    // Add planned adoption events
+    for (const intake of intakesData as any[]) {
+      const animal = animalById[intake.animal_id];
+      if (animal && intake.planned_end_date) {
+        addEvent(intake.planned_end_date, 'planned_adoption', animal);
+      }
+    }
+
     return map;
-  }, [animals, incidents, animalById]);
+  }, [animals, incidents, intakesData, animalById]);
 
   // Calendar grid calculation
   const firstDay = new Date(year, month, 1);
@@ -168,13 +187,16 @@ export default function CalendarPage() {
       {/* Legend */}
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
-          <LogIn className="h-3.5 w-3.5 text-blue-500" /> {t('intakeStart')}
+          <LogIn className="h-4 w-4 text-blue-500" /> {t('intakeStart')}
         </span>
         <span className="flex items-center gap-1">
-          <Baby className="h-3.5 w-3.5 text-pink-500" /> {t('expectedLitter')}
+          <Baby className="h-4 w-4 text-pink-500" /> {t('expectedLitter')}
         </span>
         <span className="flex items-center gap-1">
-          <PersonStanding className="h-3.5 w-3.5 text-orange-500" /> {t('escaped')}
+          <PersonStanding className="h-4 w-4 text-orange-500" /> {t('escaped')}
+        </span>
+        <span className="flex items-center gap-1">
+          <Heart className="h-4 w-4 text-green-500" /> {t('plannedAdoption')}
         </span>
       </div>
 
@@ -210,6 +232,7 @@ export default function CalendarPage() {
             const intakes = events.filter(e => e.type === 'intake');
             const litters = events.filter(e => e.type === 'litter');
             const escaped = events.filter(e => e.type === 'escaped');
+            const plannedAdoptions = events.filter(e => e.type === 'planned_adoption');
 
             return (
               <div
@@ -250,16 +273,30 @@ export default function CalendarPage() {
                     {intakes.slice(0, 5).map((ev, i) => (
                       <div key={i} className="relative" title={`${ev.animal.name} — ${t('intakeStart')}`}>
                         <AnimalMedallion animal={ev.animal} title={t('intakeStart')} />
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-blue-500 border border-white flex items-center justify-center">
-                          <LogIn className="h-1.5 w-1.5 text-white" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-blue-500 border border-white flex items-center justify-center">
+                          <LogIn className="h-2 w-2 text-white" />
                         </div>
                       </div>
                     ))}
                     {intakes.length > 5 && (
-                      <div className="w-7 h-7 rounded-full bg-muted border-2 border-white shadow flex items-center justify-center text-[9px] text-muted-foreground font-bold">
+                      <div className="w-8 h-8 rounded-full bg-muted border-2 border-white shadow flex items-center justify-center text-[9px] text-muted-foreground font-bold">
                         +{intakes.length - 5}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Planned adoption medallions */}
+                {plannedAdoptions.length > 0 && (
+                  <div className="flex flex-wrap gap-0.5">
+                    {plannedAdoptions.slice(0, 3).map((ev, i) => (
+                      <div key={i} className="relative" title={`${ev.animal.name} — ${t('plannedAdoption')}`}>
+                        <AnimalMedallion animal={ev.animal} title={t('plannedAdoption')} />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border border-white flex items-center justify-center">
+                          <Heart className="h-2 w-2 text-white" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -269,8 +306,8 @@ export default function CalendarPage() {
                     {escaped.slice(0, 3).map((ev, i) => (
                       <div key={i} className="relative" title={`${ev.animal.name} — ${t('escaped')}`}>
                         <AnimalMedallion animal={ev.animal} title={t('escaped')} />
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-orange-500 border border-white flex items-center justify-center">
-                          <PersonStanding className="h-1.5 w-1.5 text-white" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-orange-500 border border-white flex items-center justify-center">
+                          <PersonStanding className="h-2 w-2 text-white" />
                         </div>
                       </div>
                     ))}
