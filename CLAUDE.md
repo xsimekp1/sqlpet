@@ -53,6 +53,39 @@ cd apps/api
 pytest
 ```
 
+### Alembic migrations
+
+**CRITICAL: There are TWO migration directories. Only ONE is used by alembic.**
+
+- `apps/api/alembic.ini` has `script_location = migrations` → alembic reads from `apps/api/migrations/versions/`
+- `apps/api/alembic/versions/` is a **dead directory** — alembic does NOT read from it
+- **Always create and edit migration files in `apps/api/migrations/versions/`**
+- Never create migrations in `apps/api/alembic/versions/` — they will be silently ignored
+
+Create a new migration:
+```
+cd apps/api
+alembic revision -m "describe_change"   # creates in migrations/versions/
+```
+
+Run migrations locally (uses local DB):
+```
+cd apps/api
+alembic upgrade head
+```
+
+Run migrations against Railway production:
+```
+cd apps/api
+railway run alembic upgrade head
+```
+
+Check current DB version:
+```
+cd apps/api
+railway run alembic current
+```
+
 ## CLI Tools & Deployment Debugging
 
 ### Railway CLI Setup
