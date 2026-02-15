@@ -35,6 +35,18 @@ from src.app.db.session import async_engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Run database migrations on startup
+    try:
+        from alembic.config import Config
+        from alembic import command as alembic_command
+        import asyncio
+
+        alembic_cfg = Config("alembic.ini")
+        await asyncio.to_thread(alembic_command.upgrade, alembic_cfg, "head")
+        print("✓ Database migrations applied")
+    except Exception as e:
+        print(f"✗ Migration failed: {e}")
+
     # Seed permissions and role templates on startup
     try:
         from src.app.db.seed_data import (
