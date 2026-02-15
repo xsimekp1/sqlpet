@@ -61,10 +61,10 @@ export function RecentlyAdmittedWidget({ editMode, onRemove, dragHandleProps }: 
           <div className="space-y-1.5">
             <p className="text-lg font-bold leading-tight">{animal.name}</p>
             <p className="text-sm text-muted-foreground capitalize">{animal.species}</p>
-            {animal.intake_date && (
+            {animal.current_intake_date && (
               <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400">
                 <Calendar className="h-3 w-3" />
-                <span>{t('daysInShelter', { days: daysSince(animal.intake_date) })}</span>
+                <span>{t('daysInShelter', { days: daysSince(animal.current_intake_date) })}</span>
               </div>
             )}
           </div>

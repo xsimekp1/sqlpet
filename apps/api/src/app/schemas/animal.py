@@ -85,7 +85,6 @@ class AnimalCreate(BaseModel):
     weight_current_kg: Decimal | None = None
     weight_estimated_kg: Decimal | None = None
     status_reason: str | None = None
-    intake_date: date | None = None
     outcome_date: date | None = None
     description: str | None = None
     public_visibility: bool = False
@@ -115,7 +114,6 @@ class AnimalUpdate(BaseModel):
     weight_current_kg: Decimal | None = None
     weight_estimated_kg: Decimal | None = None
     status_reason: str | None = None
-    intake_date: date | None = None
     outcome_date: date | None = None
     description: str | None = None
     public_visibility: bool | None = None
@@ -148,9 +146,9 @@ class AnimalResponse(BaseModel):
     weight_current_kg: Decimal | None = None
     weight_estimated_kg: Decimal | None = None
     status_reason: str | None = None
-    intake_date: date | None = None
     outcome_date: date | None = None
     description: str | None = None
+    current_intake_date: date | None = None  # Populated from latest active intake
     public_visibility: bool
     featured: bool
     is_dewormed: bool

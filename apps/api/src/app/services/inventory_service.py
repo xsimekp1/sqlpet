@@ -61,6 +61,21 @@ class InventoryService:
 
         return item
 
+    async def get_item_by_id(
+        self,
+        item_id: uuid.UUID,
+        organization_id: uuid.UUID,
+    ) -> Optional[InventoryItem]:
+        """Fetch a single inventory item by ID scoped to organization."""
+        stmt = select(InventoryItem).where(
+            and_(
+                InventoryItem.id == item_id,
+                InventoryItem.organization_id == organization_id,
+            )
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def update_item(
         self,
         item_id: uuid.UUID,

@@ -138,7 +138,6 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         Numeric(6, 2), nullable=True
     )
     status_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    intake_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     outcome_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     public_visibility: Mapped[bool] = mapped_column(

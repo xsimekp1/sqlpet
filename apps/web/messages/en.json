@@ -66,7 +66,8 @@
     "walkMode": "Walk Mode",
     "alerts": "Alerts",
     "menu": "Menu",
-    "help": "Help"
+    "help": "Help",
+    "calendar": "Calendar"
   },
   "topbar": {
     "search": "Search animals, people, tasks...",
@@ -773,6 +774,54 @@
     "daysInShelter": "{days, plural, =1 {# day} other {# days}}",
     "daysInShelterFull": "{days, plural, =1 {# day} other {# days}} in shelter · since {date}",
     "since": "since {date}",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "status": {
+      "intake": "Intake",
+      "available": "Available",
+      "reserved": "Reserved",
+      "adopted": "Adopted",
+      "fostered": "Fostered",
+      "returned": "Returned",
+      "deceased": "Deceased",
+      "transferred": "Transferred",
+      "hold": "On Hold",
+      "quarantine": "Quarantine",
+      "returned_to_owner": "Returned to Owner",
+      "euthanized": "Euthanized",
+      "escaped": "Escaped"
+    },
+    "intake": {
+      "closeIntake": "Close Intake",
+      "outcome": "Outcome",
+      "notesOptional": "Notes (optional)",
+      "notesPlaceholder": "Reason for closing...",
+      "closeSuccess": "Intake closed successfully",
+      "closeError": "Failed to close intake",
+      "outcomes": {
+        "adopted": "Adopted",
+        "deceased": "Deceased",
+        "lost": "Lost (not found)"
+      }
+    },
+    "createChoice": {
+      "title": "Add Animal",
+      "animalOnly": "Animal record only",
+      "animalOnlyDesc": "Animal expected but not yet arrived",
+      "withIntake": "Register intake",
+      "withIntakeDesc": "Animal is in the shelter now"
+    },
+    "escape": {
+      "button": "Record escape",
+      "title": "Record Escape",
+      "description": "This will mark the animal as escaped and record an incident. The animal's intake remains open until found.",
+      "date": "Escape date",
+      "notesOptional": "Notes (optional)",
+      "notesPlaceholder": "Circumstances, last seen location...",
+      "confirm": "Record escape",
+      "recorded": "Escape recorded",
+      "recordError": "Failed to record escape"
+    },
     "healthEvents": {
       "dewormedOn": "Deworming: marked as done",
       "dewormedOff": "Deworming: marked as not done",
@@ -943,6 +992,13 @@
   "people": {
     "title": "People",
     "description": "Manage contacts and relationships",
+    "backToPeople": "Back to People",
+    "contactDetails": "Contact Details",
+    "noContactInfo": "No contact information available",
+    "notes": "Notes",
+    "uploadAvatar": "Upload photo",
+    "avatarUploaded": "Photo uploaded",
+    "avatarUploadError": "Failed to upload photo",
     "members": "Team Members",
     "contacts": "Contacts",
     "donors": "Donors",
@@ -1142,11 +1198,43 @@
       "surrender": "Owner surrender",
       "official": "Official placement",
       "transfer": "Transfer",
+      "birth": "Born in shelter",
       "other": "Other"
     },
     "finder": "Finder",
     "plannedEnd": "Planned end date",
     "plannedPerson": "Planned adopter/foster",
     "funding": "Funding source"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "description": "Customize keyboard shortcuts for quick navigation",
+    "shortcuts": "Shortcuts",
+    "clickToEdit": "Click a shortcut to change it",
+    "pressKeys": "Press keys...",
+    "action": "Action",
+    "shortcut": "Shortcut",
+    "resetDefault": "Reset to default",
+    "back": "Back",
+    "saved": "Shortcut saved",
+    "saveError": "Failed to save shortcut",
+    "actions": {
+      "open_search": "Open search",
+      "open_animals": "Open animals",
+      "open_kennels": "Open kennels",
+      "open_tasks": "Open tasks",
+      "open_inventory": "Open inventory",
+      "open_feeding": "Open feeding"
+    },
+    "resetToDefault": "Reset to default"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "today": "Today",
+    "intakeStart": "Intake",
+    "expectedLitter": "Expected litter",
+    "escaped": "Escaped",
+    "noEvents": "No events this day",
+    "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
   }
 }

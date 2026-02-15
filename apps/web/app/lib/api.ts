@@ -107,7 +107,7 @@ export interface Animal {
   altered_status: 'intact' | 'neutered' | 'spayed' | 'unknown';
   color: string | null;
   estimated_age_years: number | null;
-  intake_date: string;
+  current_intake_date: string | null;
   status: 'intake' | 'available' | 'reserved' | 'adopted' | 'fostered' | 'returned' | 'deceased' | 'transferred' | 'hold' | 'quarantine' | 'returned_to_owner' | 'euthanized' | 'escaped';
   primary_photo_url: string | null;
   default_image_url: string | null;
@@ -196,7 +196,6 @@ export interface CreateAnimalRequest {
   species: 'dog' | 'cat' | 'rabbit' | 'bird' | 'other';
   sex: 'male' | 'female' | 'unknown';
   color?: string | null;
-  intake_date: string;
   status?: string;
   // Note: Backend uses birth_date_estimated and age_group instead of estimated_age_years
   // For now, omit age fields - will be added in future milestone
@@ -1053,11 +1052,46 @@ class ApiClient {
     return response.data;
   }
 
+  static async closeIntake(
+    intakeId: string,
+    data: { outcome: 'adopted' | 'deceased' | 'lost'; notes?: string },
+  ): Promise<any> {
+    return this.post(`/intakes/${intakeId}/close`, data);
+  }
+
+  static async createIncident(data: {
+    animal_id: string;
+    incident_type: string;
+    incident_date: string;
+    description?: string;
+  }): Promise<any> {
+    return this.post('/incidents', data);
+  }
+
+  static async getIncidents(params?: { animal_id?: string; incident_type?: string }): Promise<any[]> {
+    return this.get('/incidents', params);
+  }
+
   static async uploadAnimalPhoto(animalId: string, file: File): Promise<{ file_url: string }> {
     const formData = new FormData();
     formData.append('file', file);
     const response = await axios.post<{ file_url: string }>(
       `${API_URL}/files/animal/${animalId}/upload-primary-photo`,
+      formData,
+      { headers: { ...this.getAuthHeaders() } }
+    );
+    return response.data;
+  }
+
+  static async getOrganizationInfo(): Promise<{ id: string; name: string; slug: string; timezone: string; logo_url: string | null }> {
+    return this.get('/organization/current');
+  }
+
+  static async uploadOrgLogo(file: File): Promise<{ file_url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post<{ file_url: string }>(
+      `${API_URL}/files/organization/logo`,
       formData,
       { headers: { ...this.getAuthHeaders() } }
     );

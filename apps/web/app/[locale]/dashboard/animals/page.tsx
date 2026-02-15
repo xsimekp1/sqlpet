@@ -38,6 +38,8 @@ const getStatusColor = (status: string) => {
   switch (status) {
     case 'available':
       return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+    case 'reserved':
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
     case 'adopted':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
     case 'fostered':
@@ -89,6 +91,7 @@ export default function AnimalsPage() {
   const [bulkTaskOpen, setBulkTaskOpen] = useState(false);
   const [bulkTaskForm, setBulkTaskForm] = useState({ title: '', task_type: 'medical', priority: 'high', due_at: '', notes: '' });
   const [creatingBulkTask, setCreatingBulkTask] = useState(false);
+  const [createChoiceOpen, setCreateChoiceOpen] = useState(false);
 
   // Fetch animals from API
   useEffect(() => {
@@ -192,12 +195,10 @@ export default function AnimalsPage() {
               <><LayoutGrid className="h-4 w-4 mr-2" />{t('animals.view.grid')}</>
             )}
           </Button>
-          <Link href="/dashboard/animals/new">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Animal
-            </Button>
-          </Link>
+          <Button className="gap-2" onClick={() => setCreateChoiceOpen(true)}>
+            <Plus className="h-4 w-4" />
+            {t('animals.createChoice.withIntake')}
+          </Button>
         </div>
       </div>
 
@@ -487,7 +488,7 @@ export default function AnimalsPage() {
                       ) : '—'}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(animal.intake_date).toLocaleDateString()}
+                      {animal.current_intake_date ? new Date(animal.current_intake_date).toLocaleDateString() : '—'}
                     </td>
                     <td className="px-4 py-3">
                       <Link href={`/dashboard/animals/${animal.id}`}>
@@ -597,6 +598,37 @@ export default function AnimalsPage() {
                 {creatingBulkTask ? <Loader2 className="h-4 w-4 animate-spin" /> : `Vytvořit ${selectedIds.size} úkolů`}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create choice dialog */}
+      <Dialog open={createChoiceOpen} onOpenChange={setCreateChoiceOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('animals.createChoice.title')}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button
+              onClick={() => { setCreateChoiceOpen(false); router.push('/dashboard/animals/new'); }}
+              className="flex flex-col items-center gap-2 rounded-lg border-2 border-border p-4 text-left hover:border-primary hover:bg-accent transition-colors"
+            >
+              <div className="text-2xl">📋</div>
+              <div>
+                <p className="font-semibold text-sm">{t('animals.createChoice.animalOnly')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('animals.createChoice.animalOnlyDesc')}</p>
+              </div>
+            </button>
+            <button
+              onClick={() => { setCreateChoiceOpen(false); router.push('/dashboard/intake/new'); }}
+              className="flex flex-col items-center gap-2 rounded-lg border-2 border-border p-4 text-left hover:border-primary hover:bg-accent transition-colors"
+            >
+              <div className="text-2xl">🏠</div>
+              <div>
+                <p className="font-semibold text-sm">{t('animals.createChoice.withIntake')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('animals.createChoice.withIntakeDesc')}</p>
+              </div>
+            </button>
           </div>
         </DialogContent>
       </Dialog>

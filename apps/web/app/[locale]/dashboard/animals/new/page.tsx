@@ -146,7 +146,6 @@ export default function NewAnimalPage() {
       species: formData.get('species') as string,
       sex: formData.get('sex') as string,
       color: selectedColor || null,
-      intake_date: formData.get('intake_date') as string,
       status: 'available',
     };
 
@@ -299,18 +298,6 @@ export default function NewAnimalPage() {
                     )}
                   </div>
                 )}
-
-                {/* Intake Date */}
-                <div className="space-y-2">
-                  <Label htmlFor="intake_date">{t('intakeDate')}</Label>
-                  <Input
-                    id="intake_date"
-                    name="intake_date"
-                    type="date"
-                    required
-                    defaultValue={new Date().toISOString().split('T')[0]}
-                  />
-                </div>
 
                 {/* Buttons */}
                 <div className="flex gap-2 pt-4">

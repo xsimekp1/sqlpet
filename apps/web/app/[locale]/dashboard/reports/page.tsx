@@ -30,20 +30,35 @@ function DailyCountChart({ data }: { data: { date: string; count: number }[] }) 
   // Show ~6 date labels
   const labelStep = Math.max(1, Math.floor(data.length / 6));
 
+  // Grid line values: multiples of 5 within chart range
+  const gridStep = 5;
+  const gridValues = Array.from(
+    { length: Math.ceil((maxC + gridStep) / gridStep) },
+    (_, i) => i * gridStep,
+  ).filter(v => v >= minC && v <= maxC);
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }} aria-hidden>
+      {/* Horizontal dotted grid lines every 5 animals */}
+      {gridValues.map(v => (
+        <line key={v}
+          x1={padL} y1={toY(v)} x2={W - padR} y2={toY(v)}
+          stroke="hsl(var(--border))" strokeDasharray="3 3" strokeWidth="1" opacity="0.6"
+        />
+      ))}
+
       {/* Average reference line */}
       <line
         x1={padL} y1={avgY} x2={W - padR} y2={avgY}
         stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth="1" opacity="0.5"
       />
       <text x={W - padR + 2} y={avgY + 4} fontSize="10" fill="hsl(var(--muted-foreground))">
-        ⌀{avg.toFixed(0)}
+        avg {avg.toFixed(0)}
       </text>
 
-      {/* Y-axis labels */}
-      {[minC, Math.round((minC + maxC) / 2), maxC].map((v, i) => (
-        <text key={i} x={padL - 4} y={toY(v) + 4} fontSize="10" fill="hsl(var(--muted-foreground))" textAnchor="end">
+      {/* Y-axis labels for grid lines */}
+      {gridValues.map(v => (
+        <text key={v} x={padL - 4} y={toY(v) + 4} fontSize="9" fill="hsl(var(--muted-foreground))" textAnchor="end">
           {v}
         </text>
       ))}

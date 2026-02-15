@@ -363,7 +363,7 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
         </p>
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
-          <p className="font-medium">{new Date(animal.intake_date).toLocaleDateString()}</p>
+          <p className="font-medium">{animal.current_intake_date ? new Date(animal.current_intake_date).toLocaleDateString() : '—'}</p>
         </div>
       </div>
 

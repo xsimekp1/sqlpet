@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
+import { getUnitLabel } from '@/app/lib/constants';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -186,7 +187,7 @@ export default function InventoryItemDetailPage() {
             {getCategoryBadge(item.category)}
           </div>
           <p className="text-muted-foreground">
-            Total stock: <span className="font-semibold">{item.total_quantity?.toFixed(2) || '0.00'}</span> {item.unit || 'units'}
+            Total stock: <span className="font-semibold">{item.total_quantity?.toFixed(2) || '0.00'}</span> {getUnitLabel(item.unit)}
           </p>
         </div>
       </div>

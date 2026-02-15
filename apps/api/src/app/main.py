@@ -1,8 +1,11 @@
 import os
+import re
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from src.app.api.routes.health import router as health_router
 from src.app.api.routes.auth import router as auth_router
@@ -21,6 +24,9 @@ from src.app.api.routes.admin import router as admin_router
 from src.app.api.routes.contacts import router as contacts_router
 from src.app.api.routes.intake import router as intake_router
 from src.app.api.routes.search import router as search_router
+from src.app.api.routes.shortcuts import router as shortcuts_router
+from src.app.api.routes.incidents import router as incidents_router
+from src.app.api.routes.organization import router as organization_router
 
 # Files router is now working properly after fixing import issues
 
@@ -67,6 +73,23 @@ ALLOWED_ORIGINS = [
     *EXTRA_ORIGINS,
 ]
 
+@app.exception_handler(HTTPException)
+async def cors_aware_http_exception_handler(request: Request, exc: HTTPException):
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin and (
+        origin in ALLOWED_ORIGINS or
+        re.match(r"https://.*\.vercel\.app", origin)
+    ):
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=headers,
+    )
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -94,3 +117,6 @@ app.include_router(admin_router)
 app.include_router(contacts_router)
 app.include_router(intake_router)
 app.include_router(search_router)
+app.include_router(shortcuts_router)
+app.include_router(incidents_router)
+app.include_router(organization_router)

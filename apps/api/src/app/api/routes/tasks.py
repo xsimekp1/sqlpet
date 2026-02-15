@@ -150,16 +150,19 @@ async def list_tasks(
 
     related_entity_uuid = uuid.UUID(related_entity_id) if related_entity_id else None
 
-    tasks, total = await task_service.get_tasks_for_organization(
-        organization_id=organization_id,
-        status=status,  # Pass raw string; service handles 'active' pseudo-status
-        task_type=type_enum,
-        assigned_to_id=assigned_to_id,
-        due_date=due_date,
-        related_entity_id=related_entity_uuid,
-        skip=(page - 1) * page_size,
-        limit=page_size,
-    )
+    try:
+        tasks, total = await task_service.get_tasks_for_organization(
+            organization_id=organization_id,
+            status=status,  # Pass raw string; service handles 'active' pseudo-status
+            task_type=type_enum,
+            assigned_to_id=assigned_to_id,
+            due_date=due_date,
+            related_entity_id=related_entity_uuid,
+            skip=(page - 1) * page_size,
+            limit=page_size,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch tasks: {str(e)}")
 
     return TaskListResponse(
         items=tasks,

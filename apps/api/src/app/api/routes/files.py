@@ -10,11 +10,13 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.auth import get_current_user
+from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
 from src.app.api.dependencies.db import get_db
 from src.app.models.user import User
 from src.app.models.file import File as FileModel, EntityFile, StorageProvider
 from src.app.models.animal import Animal
+from src.app.models.contact import Contact
+from src.app.models.organization import Organization
 from src.app.services.file_upload_service import file_upload_service
 from src.app.services.supabase_storage_service import supabase_storage_service
 from src.app.core.config import settings
@@ -260,3 +262,72 @@ async def upload_primary_animal_photo(
         "file_url": file_url,
         "storage_path": storage_path,
     }
+
+
+@router.post("/contact/{contact_id}/upload-avatar")
+async def upload_contact_avatar(
+    contact_id: str,
+    file: UploadFile = FastAPIFile(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload avatar photo for a contact."""
+    contact = await db.get(Contact, UUID(contact_id))
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+
+    file_content, content_type = await file_upload_service.process_upload(
+        file=file,
+        organization_id=str(contact.organization_id),
+        is_public=True,
+    )
+
+    from io import BytesIO
+    file_stream = BytesIO(file_content)
+
+    file_url, storage_path = await supabase_storage_service.upload_file(
+        file_content=file_stream,
+        filename=file.filename or "unknown",
+        content_type=content_type,
+        organization_id=str(contact.organization_id),
+    )
+
+    # Update contact's avatar_url
+    contact.avatar_url = file_url
+    await db.commit()
+
+    return {"file_url": file_url}
+
+
+@router.post("/organization/logo")
+async def upload_organization_logo(
+    file: UploadFile = FastAPIFile(...),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload logo for the current organization."""
+    org = await db.get(Organization, organization_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    file_content, content_type = await file_upload_service.process_upload(
+        file=file,
+        organization_id=str(organization_id),
+        is_public=True,
+    )
+
+    from io import BytesIO
+    file_stream = BytesIO(file_content)
+
+    file_url, storage_path = await supabase_storage_service.upload_file(
+        file_content=file_stream,
+        filename=file.filename or "logo",
+        content_type=content_type,
+        organization_id=str(organization_id),
+    )
+
+    org.logo_url = file_url
+    await db.commit()
+
+    return {"file_url": file_url}

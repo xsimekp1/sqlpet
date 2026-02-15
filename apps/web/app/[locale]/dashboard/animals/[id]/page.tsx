@@ -8,6 +8,7 @@ import {
   ArrowLeft, Trash2, MapPin, Loader2, Stethoscope,
   CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors,
   ChevronLeft, ChevronRight, Baby, Scale, Accessibility, Home, Camera,
+  PersonStanding,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -29,6 +30,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import {
   Tooltip,
   TooltipContent,
@@ -46,14 +55,16 @@ import { calcMER, calcRER, getMERFactor, getMERFactorLabel } from '@/app/lib/ene
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
+// 'escaped' is intentionally excluded — use the Escape button to record an escape incident
 const STATUSES = [
-  'available', 'adopted', 'fostered', 'transferred',
-  'deceased', 'escaped', 'quarantine', 'intake', 'hold',
+  'available', 'reserved', 'adopted', 'fostered', 'transferred',
+  'deceased', 'quarantine', 'intake', 'hold',
 ] as const;
 
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'available':   return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+    case 'reserved':    return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
     case 'adopted':     return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
     case 'fostered':    return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
     case 'transferred': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
@@ -134,6 +145,19 @@ export default function AnimalDetailPage() {
   const [requestingAbortion, setRequestingAbortion] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
+  // Close intake dialog
+  const [closeIntakeOpen, setCloseIntakeOpen] = useState(false);
+  const [closeIntakeOutcome, setCloseIntakeOutcome] = useState<'adopted' | 'deceased' | 'lost'>('adopted');
+  const [closeIntakeNotes, setCloseIntakeNotes] = useState('');
+  const [closingIntake, setClosingIntake] = useState(false);
+  const [activeIntakeId, setActiveIntakeId] = useState<string | null>(null);
+
+  // Escape dialog
+  const [escapeOpen, setEscapeOpen] = useState(false);
+  const [escapeNotes, setEscapeNotes] = useState('');
+  const [escapeDate, setEscapeDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [recordingEscape, setRecordingEscape] = useState(false);
+
   const queryClient = useQueryClient();
 
   // Nav arrows — initialise from cache so arrows are visible immediately on navigation
@@ -187,11 +211,12 @@ export default function AnimalDetailPage() {
           setLoading(true);
         }
 
-        const [data, listData, wLogs, kHistory] = await Promise.all([
+        const [data, listData, wLogs, kHistory, intakes] = await Promise.all([
           ApiClient.getAnimal(animalId),
           ApiClient.getAnimals({ page_size: 200 }),
           ApiClient.getWeightHistory(animalId),
           ApiClient.getAnimalKennelHistory(animalId).catch(() => []),
+          ApiClient.get('/intakes', { animal_id: animalId }).catch(() => []),
         ]);
         // Store fresh data back in cache
         queryClient.setQueryData(['animal', data.id], data);
@@ -202,6 +227,9 @@ export default function AnimalDetailPage() {
         setWeightLogs(wLogs);
         setKennelHistory(kHistory);
         setBehaviorNotes(data.behavior_notes ?? '');
+        // Set active intake id (first non-deleted intake)
+        const activeIntake = Array.isArray(intakes) ? intakes[0] : null;
+        setActiveIntakeId(activeIntake?.id ?? null);
       } catch (error) {
         toast.error(t('loadError'));
         console.error(error);
@@ -417,12 +445,53 @@ export default function AnimalDetailPage() {
     }
   };
 
+  const handleCloseIntake = async () => {
+    if (!activeIntakeId) return;
+    setClosingIntake(true);
+    try {
+      await ApiClient.closeIntake(activeIntakeId, { outcome: closeIntakeOutcome, notes: closeIntakeNotes || undefined });
+      toast.success(t('intake.closeSuccess'));
+      setCloseIntakeOpen(false);
+      setActiveIntakeId(null);
+      // Refresh animal to get updated status
+      const updated = await ApiClient.getAnimal(animalId);
+      setAnimal(updated);
+    } catch (err: any) {
+      toast.error(t('intake.closeError'));
+    } finally {
+      setClosingIntake(false);
+    }
+  };
+
+  const handleEscape = async () => {
+    if (!animal) return;
+    setRecordingEscape(true);
+    try {
+      await ApiClient.createIncident({
+        animal_id: animal.id,
+        incident_type: 'escape',
+        incident_date: escapeDate,
+        description: escapeNotes || undefined,
+      });
+      toast.success(t('escape.recorded'));
+      setEscapeOpen(false);
+      setEscapeNotes('');
+      // Refresh animal (status will be set to 'escaped' by the backend)
+      const updated = await ApiClient.getAnimal(animalId);
+      setAnimal(updated);
+    } catch {
+      toast.error(t('escape.recordError'));
+    } finally {
+      setRecordingEscape(false);
+    }
+  };
+
   // Derived
-  const days = animal?.intake_date
-    ? Math.floor((Date.now() - new Date(animal.intake_date).getTime()) / (1000 * 60 * 60 * 24))
+  const days = animal?.current_intake_date
+    ? Math.floor((Date.now() - new Date(animal.current_intake_date).getTime()) / (1000 * 60 * 60 * 24))
     : null;
-  const intakeDateFormatted = animal?.intake_date
-    ? new Date(animal.intake_date).toLocaleDateString()
+  const intakeDateFormatted = animal?.current_intake_date
+    ? new Date(animal.current_intake_date).toLocaleDateString()
     : null;
 
   const latestWeight = weightLogs.length > 0 ? weightLogs[0] : null;
@@ -534,17 +603,42 @@ export default function AnimalDetailPage() {
             <div className="flex-1 min-w-0">
               <EditableAnimalName animal={animal} onAnimalUpdate={handleAnimalUpdate} />
             </div>
-            {/* Inline status select */}
-            <Select value={animal.status} onValueChange={handleStatusChange} disabled={changingStatus}>
+            {/* Inline status select — 'escaped' excluded; use the escape button */}
+            <Select
+              value={animal.status === 'escaped' ? 'escaped' : animal.status}
+              onValueChange={handleStatusChange}
+              disabled={changingStatus || animal.status === 'escaped'}
+            >
               <SelectTrigger className={`h-7 text-xs px-2 py-0 rounded-full border-0 w-auto min-w-[90px] ${getStatusColor(animal.status)}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                {animal.status === 'escaped' && (
+                  <SelectItem value="escaped" className="text-xs text-red-600">escaped</SelectItem>
+                )}
                 {STATUSES.map(s => (
                   <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {/* Escape button — only for non-terminal, non-escaped animals */}
+            {!['escaped', 'adopted', 'deceased', 'transferred', 'returned_to_owner', 'euthanized'].includes(animal.status) && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                      onClick={() => setEscapeOpen(true)}
+                    >
+                      <PersonStanding className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('escape.button')}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
 
           {/* Code + species */}
@@ -608,6 +702,16 @@ export default function AnimalDetailPage() {
               >
                 <Baby className="h-4 w-4 mr-2" />
                 {t('birth')}
+              </Button>
+            )}
+            {activeIntakeId && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCloseIntakeOpen(true)}
+                className="border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-300"
+              >
+                {t('intake.closeIntake')}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={handleDelete}>
@@ -965,13 +1069,13 @@ export default function AnimalDetailPage() {
                   </div>
                 )}
 
-                {animal.intake_date && (
+                {animal.current_intake_date && (
                   <div className="relative mb-6">
                     <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-background" />
                     <div className="pl-2">
                       <p className="text-sm font-semibold">{t('timeline.intake')}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(animal.intake_date).toLocaleDateString()}
+                        {new Date(animal.current_intake_date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -1141,6 +1245,89 @@ export default function AnimalDetailPage() {
             ]);
           }}
         />
+
+      {/* Close Intake Dialog */}
+      <Dialog open={closeIntakeOpen} onOpenChange={setCloseIntakeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('intake.closeIntake')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('intake.outcome')}</label>
+              <Select value={closeIntakeOutcome} onValueChange={(v) => setCloseIntakeOutcome(v as any)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="adopted">{t('intake.outcomes.adopted')}</SelectItem>
+                  <SelectItem value="deceased">{t('intake.outcomes.deceased')}</SelectItem>
+                  <SelectItem value="lost">{t('intake.outcomes.lost')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('intake.notesOptional')}</label>
+              <Textarea
+                value={closeIntakeNotes}
+                onChange={e => setCloseIntakeNotes(e.target.value)}
+                placeholder={t('intake.notesPlaceholder')}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCloseIntakeOpen(false)}>{t('cancel')}</Button>
+            <Button onClick={handleCloseIntake} disabled={closingIntake}>
+              {closingIntake ? t('saving') : t('intake.closeIntake')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Escape Incident Dialog */}
+      <Dialog open={escapeOpen} onOpenChange={setEscapeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PersonStanding className="h-5 w-5 text-orange-500" />
+              {t('escape.title')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">{t('escape.description')}</p>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('escape.date')}</label>
+              <Input
+                type="date"
+                value={escapeDate}
+                onChange={e => setEscapeDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('escape.notesOptional')}</label>
+              <Textarea
+                value={escapeNotes}
+                onChange={e => setEscapeNotes(e.target.value)}
+                placeholder={t('escape.notesPlaceholder')}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEscapeOpen(false)}>{t('cancel')}</Button>
+            <Button
+              variant="destructive"
+              onClick={handleEscape}
+              disabled={recordingEscape}
+            >
+              <PersonStanding className="h-4 w-4 mr-2" />
+              {recordingEscape ? t('saving') : t('escape.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       )}
     </div>
   );

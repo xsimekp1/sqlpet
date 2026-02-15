@@ -74,6 +74,19 @@ async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
         resp.current_kennel_id = stay_row[0]
         resp.current_kennel_name = stay_row[1]
         resp.current_kennel_code = stay_row[2]
+    # Populate current_intake_date from latest active (non-deleted) intake
+    intake_result = await db.execute(
+        text("""
+            SELECT intake_date FROM intakes
+            WHERE animal_id = :animal_id AND deleted_at IS NULL
+            ORDER BY intake_date DESC
+            LIMIT 1
+        """),
+        {"animal_id": str(animal.id)},
+    )
+    intake_row = intake_result.first()
+    if intake_row:
+        resp.current_intake_date = intake_row[0]
     return resp
 
 
@@ -354,7 +367,6 @@ async def register_birth(
             altered_status=AlteredStatus.UNKNOWN,
             age_group=AgeGroup.BABY,
             birth_date_estimated=today,
-            intake_date=today,
             public_visibility=False,
             featured=False,
             is_dewormed=False,
@@ -363,6 +375,18 @@ async def register_birth(
         )
         db.add(offspring)
         await db.flush()
+
+        # Create intake record for offspring (reason: birth)
+        from src.app.models.intake import Intake, IntakeReason as IR
+        birth_intake = Intake(
+            organization_id=organization_id,
+            animal_id=offspring.id,
+            reason=IR.BIRTH,
+            intake_date=today,
+            notes=f"Narozeno – {mother.name}",
+            created_by_id=current_user.id,
+        )
+        db.add(birth_intake)
 
         # Copy breeds from mother
         for breed_id in breed_ids:

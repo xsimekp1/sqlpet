@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import {
   Home,
   PawPrint,
@@ -14,7 +15,10 @@ import {
   Heart,
   ChevronLeft,
   Package,
-  HelpCircle
+  HelpCircle,
+  CalendarDays,
+  Camera,
+  Loader2,
 } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
@@ -25,6 +29,10 @@ import { Separator } from '@/components/ui/separator'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { LucideIcon } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ApiClient } from '@/app/lib/api'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface NavItemConfig {
   label: string
@@ -42,6 +50,31 @@ export function Sidebar() {
   const { user } = useAuth()
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
   const t = useTranslations()
+  const queryClient = useQueryClient()
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+
+  const { data: orgInfo } = useQuery({
+    queryKey: ['org-info'],
+    queryFn: () => ApiClient.getOrganizationInfo(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingLogo(true)
+    try {
+      await ApiClient.uploadOrgLogo(file)
+      queryClient.invalidateQueries({ queryKey: ['org-info'] })
+      toast.success('Logo updated')
+    } catch {
+      toast.error('Failed to upload logo')
+    } finally {
+      setUploadingLogo(false)
+      if (logoInputRef.current) logoInputRef.current.value = ''
+    }
+  }
 
   // Define navigation structure
   const navSections: NavSection[] = [
@@ -60,6 +93,7 @@ export function Sidebar() {
         { label: 'nav.feeding', href: '/dashboard/feeding', icon: Bone, permission: 'feeding.view' },
         { label: 'nav.inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory.view' },
         { label: 'nav.tasks', href: '/dashboard/tasks', icon: CheckSquare, permission: 'tasks.view' },
+        { label: 'nav.calendar', href: '/dashboard/calendar', icon: CalendarDays, permission: null },
       ]
     },
     {
@@ -95,14 +129,40 @@ export function Sidebar() {
     >
       {/* Logo / Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b">
+        {/* Hidden file input (shared) */}
+        <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+
         {!sidebarCollapsed && (
-          <div className="flex items-center gap-2">
-            <PawPrint className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">PawShelter</span>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* Org logo — hover to upload */}
+            <div className="relative group shrink-0 cursor-pointer" onClick={() => logoInputRef.current?.click()}>
+              {orgInfo?.logo_url ? (
+                <img src={orgInfo.logo_url} alt="logo" className="h-8 w-8 rounded-md object-cover" />
+              ) : (
+                <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
+                  <PawPrint className="h-5 w-5 text-primary" />
+                </div>
+              )}
+              <div className="absolute inset-0 rounded-md bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {uploadingLogo ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Camera className="h-3 w-3 text-white" />}
+              </div>
+            </div>
+            <span className="font-bold text-lg truncate">{orgInfo?.name ?? 'PawShelter'}</span>
           </div>
         )}
         {sidebarCollapsed && (
-          <PawPrint className="h-6 w-6 text-primary mx-auto" />
+          <div className="relative group mx-auto cursor-pointer" onClick={() => logoInputRef.current?.click()}>
+            {orgInfo?.logo_url ? (
+              <img src={orgInfo.logo_url} alt="logo" className="h-8 w-8 rounded-md object-cover" />
+            ) : (
+              <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
+                <PawPrint className="h-5 w-5 text-primary" />
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-md bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploadingLogo ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Camera className="h-3 w-3 text-white" />}
+            </div>
+          </div>
         )}
       </div>
 

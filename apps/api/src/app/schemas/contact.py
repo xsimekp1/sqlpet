@@ -50,6 +50,7 @@ class ContactResponse(BaseModel):
     bank_account: str | None = None
     tax_id: str | None = None
     notes: str | None = None
+    avatar_url: str | None = None
     is_active: bool
     created_at: datetime
     updated_at: datetime

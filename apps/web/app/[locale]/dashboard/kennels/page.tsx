@@ -31,6 +31,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ApiClient, { Kennel, KennelAnimal, Animal } from '@/app/lib/api';
+import { isTerminal } from '@/app/lib/constants';
 import { getAnimalImageUrl } from '@/app/lib/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -340,7 +341,7 @@ export default function KennelsPage() {
         ApiClient.getAnimals({ page_size: 100 }),
       ]);
       setKennels(kennelsData);
-      setAllAnimals(animalsData.items);
+      setAllAnimals(animalsData.items.filter((a: Animal) => !isTerminal(a.status)));
     } catch (error) {
       toast.error(t('loadError'));
       console.error(error);

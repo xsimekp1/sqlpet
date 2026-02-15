@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, AlertTriangle, Package, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { getUnitSymbol } from '@/app/lib/constants';
 
 type CategoryFilter = 'all' | 'medication' | 'vaccine' | 'food' | 'supply' | 'other';
 
@@ -188,7 +189,7 @@ export default function InventoryPage() {
                       {stock.total_quantity?.toFixed(2) || '0.00'}
                     </span>
                   </TableCell>
-                  <TableCell>{stock.item.unit || '-'}</TableCell>
+                  <TableCell>{getUnitSymbol(stock.item.unit)}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">
                       {stock.lots_count || 0} lot(s)

@@ -66,7 +66,8 @@
     "walkMode": "Režim obchůzky",
     "alerts": "Upozornění",
     "menu": "Menu",
-    "help": "Nápověda"
+    "help": "Nápověda",
+    "calendar": "Kalendář"
   },
   "topbar": {
     "search": "Hledat zvířata, lidi, úkoly...",
@@ -713,6 +714,54 @@
     "daysInShelter": "{days, plural, =1 {# den} =2 {# dny} =3 {# dny} =4 {# dny} other {# dní}}",
     "daysInShelterFull": "{days, plural, =1 {# den} =2 {# dny} =3 {# dny} =4 {# dny} other {# dní}} v útulku · od {date}",
     "since": "od {date}",
+    "cancel": "Zrušit",
+    "saving": "Ukládám…",
+    "status": {
+      "intake": "Příjem",
+      "available": "Ke adopci",
+      "reserved": "Rezervováno",
+      "adopted": "Adoptováno",
+      "fostered": "V pěstounské péči",
+      "returned": "Vráceno",
+      "deceased": "Uhynulo",
+      "transferred": "Přemístěno",
+      "hold": "Pozastaveno",
+      "quarantine": "Karanténa",
+      "returned_to_owner": "Vráceno majiteli",
+      "euthanized": "Utraceno",
+      "escaped": "Uprchlé"
+    },
+    "intake": {
+      "closeIntake": "Ukončit pobyt",
+      "outcome": "Výsledek",
+      "notesOptional": "Poznámky (volitelné)",
+      "notesPlaceholder": "Důvod ukončení...",
+      "closeSuccess": "Pobyt byl úspěšně ukončen",
+      "closeError": "Nepodařilo se ukončit pobyt",
+      "outcomes": {
+        "adopted": "Adoptováno",
+        "deceased": "Uhynulo",
+        "lost": "Ztraceno (nenašlo se)"
+      }
+    },
+    "createChoice": {
+      "title": "Přidat zvíře",
+      "animalOnly": "Jen záznam zvířete",
+      "animalOnlyDesc": "Zvíře se očekává, ale ještě není v útulku",
+      "withIntake": "Zaregistrovat příjem",
+      "withIntakeDesc": "Zvíře je nyní v útulku"
+    },
+    "escape": {
+      "button": "Zaznamenat útěk",
+      "title": "Zaznamenat útěk",
+      "description": "Toto označí zvíře jako uprchlé a zaznamená incident. Pobyt zůstane otevřený do nálezu.",
+      "date": "Datum útěku",
+      "notesOptional": "Poznámky (volitelné)",
+      "notesPlaceholder": "Okolnosti, místo posledního výskytu...",
+      "confirm": "Zaznamenat útěk",
+      "recorded": "Útěk zaznamenán",
+      "recordError": "Nepodařilo se zaznamenat útěk"
+    },
     "healthEvents": {
       "dewormedOn": "Odčervení: označeno jako provedené",
       "dewormedOff": "Odčervení: označeno jako neprovedené",
@@ -883,6 +932,13 @@
   "people": {
     "title": "Lidé",
     "description": "Spravujte kontakty a vztahy",
+    "backToPeople": "Zpět na Lidé",
+    "contactDetails": "Kontaktní údaje",
+    "noContactInfo": "Žádné kontaktní informace",
+    "notes": "Poznámky",
+    "uploadAvatar": "Nahrát fotku",
+    "avatarUploaded": "Fotka nahrána",
+    "avatarUploadError": "Nepodařilo se nahrát fotku",
     "members": "Členové týmu",
     "contacts": "Kontakty",
     "donors": "Dárci",
@@ -1145,11 +1201,43 @@
       "surrender": "Odevzdání",
       "official": "Úřední příděl",
       "transfer": "Převod",
+      "birth": "Porod v útulku",
       "other": "Jiné"
     },
     "finder": "Kdo nalezl",
     "plannedEnd": "Plánovaný konec",
     "plannedPerson": "Plánovaný adoptér/pěstoun",
     "funding": "Způsob financování"
+  },
+  "shortcuts": {
+    "title": "Klávesové zkratky",
+    "description": "Přizpůsobte si klávesové zkratky pro rychlou navigaci",
+    "shortcuts": "Zkratky",
+    "clickToEdit": "Klikněte na zkratku pro změnu",
+    "pressKeys": "Stiskněte klávesy...",
+    "action": "Akce",
+    "shortcut": "Zkratka",
+    "resetDefault": "Obnovit výchozí",
+    "back": "Zpět",
+    "saved": "Zkratka uložena",
+    "saveError": "Nepodařilo se uložit zkratku",
+    "actions": {
+      "open_search": "Otevřít hledání",
+      "open_animals": "Otevřít zvířata",
+      "open_kennels": "Otevřít kotce",
+      "open_tasks": "Otevřít úkoly",
+      "open_inventory": "Otevřít sklad",
+      "open_feeding": "Otevřít krmení"
+    },
+    "resetToDefault": "Obnovit výchozí"
+  },
+  "calendar": {
+    "title": "Kalendář",
+    "today": "Dnes",
+    "intakeStart": "Příjem",
+    "expectedLitter": "Očekávaný porod",
+    "escaped": "Útěk",
+    "noEvents": "Žádné události",
+    "weekdays": ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"]
   }
 }

@@ -32,4 +32,5 @@ class Contact(Base, TimestampMixin):
     bank_account: Mapped[str | None] = mapped_column(String(100), nullable=True)
     tax_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

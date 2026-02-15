@@ -95,6 +95,21 @@ async def list_inventory_items(
     return items
 
 
+@router.get("/items/{item_id}", response_model=InventoryItemResponse)
+async def get_inventory_item(
+    item_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Get a single inventory item by ID."""
+    inventory_service = InventoryService(db)
+    item = await inventory_service.get_item_by_id(item_id, organization_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    return item
+
+
 @router.put("/items/{item_id}", response_model=InventoryItemResponse)
 async def update_inventory_item(
     item_id: uuid.UUID,

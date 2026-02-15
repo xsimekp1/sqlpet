@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
+import { isTerminal } from '@/app/lib/constants';
 
 interface FeedingPlanFormData {
   animal_id: string;
@@ -63,7 +64,7 @@ export default function NewFeedingPlanPage() {
     queryFn: () => ApiClient.get('/feeding/foods'),
   });
 
-  const animals = animalsData?.items || [];
+  const animals = (animalsData?.items || []).filter((a: any) => !isTerminal(a.status));
   const foods = foodsData?.items || [];
 
   const watchedAnimalId = watch('animal_id');

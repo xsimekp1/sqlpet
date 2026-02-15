@@ -1,5 +1,6 @@
 """API routes for intake management."""
 
+import enum
 import uuid
 from datetime import date, datetime
 from typing import List, Optional
@@ -149,8 +150,6 @@ async def create_intake(
     animal = animal_result.scalar_one_or_none()
     if animal:
         animal.status = "intake"  # type: ignore
-        if not animal.intake_date:
-            animal.intake_date = data.intake_date  # type: ignore
 
     await db.commit()
     await db.refresh(intake)
@@ -256,3 +255,70 @@ async def delete_intake(
     from datetime import datetime as dt
     intake.deleted_at = dt.utcnow()  # type: ignore
     await db.commit()
+
+
+# ── Close Intake ─────────────────────────────────────────────────────────────
+
+class IntakeOutcome(str, enum.Enum):
+    ADOPTED = "adopted"
+    DECEASED = "deceased"
+    LOST = "lost"
+
+
+class IntakeClose(BaseModel):
+    outcome: IntakeOutcome
+    notes: Optional[str] = None
+
+
+_OUTCOME_STATUS_MAP = {
+    IntakeOutcome.ADOPTED: "adopted",
+    IntakeOutcome.DECEASED: "deceased",
+    IntakeOutcome.LOST: "escaped",
+}
+
+
+@router.post("/{intake_id}/close", response_model=IntakeResponse)
+async def close_intake(
+    intake_id: str,
+    data: IntakeClose,
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Close an intake by setting the animal status and soft-deleting the intake."""
+    try:
+        intake_uuid = uuid.UUID(intake_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid intake_id")
+
+    result = await db.execute(
+        select(Intake).where(
+            Intake.id == intake_uuid,
+            Intake.organization_id == organization_id,
+            Intake.deleted_at.is_(None),
+        )
+    )
+    intake = result.scalar_one_or_none()
+    if not intake:
+        raise HTTPException(status_code=404, detail="Intake not found")
+
+    from src.app.models.animal import Animal as AnimalModel
+    animal_result = await db.execute(
+        select(AnimalModel).where(
+            AnimalModel.id == intake.animal_id,
+            AnimalModel.organization_id == organization_id,
+        )
+    )
+    animal = animal_result.scalar_one_or_none()
+    if animal:
+        animal.status = _OUTCOME_STATUS_MAP[data.outcome]  # type: ignore
+
+    if data.notes:
+        intake.notes = (intake.notes or "") + f"\n[Close] {data.notes}"
+
+    from datetime import datetime as dt
+    intake.deleted_at = dt.utcnow()  # type: ignore
+
+    await db.commit()
+    await db.refresh(intake)
+    return _to_response(intake)

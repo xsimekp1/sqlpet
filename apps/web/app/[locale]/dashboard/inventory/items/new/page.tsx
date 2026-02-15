@@ -18,7 +18,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
+import { UNIT_OPTIONS } from '@/app/lib/constants';
 
 const SPECIES_OPTIONS = [
   { value: 'dog',    label: '🐕 Pes' },
@@ -280,12 +281,24 @@ export default function NewInventoryItemPage() {
         {/* Unit */}
         <div className="space-y-2">
           <Label htmlFor="unit">{t('fields.unit')}</Label>
-          <Input
-            id="unit"
-            placeholder="e.g. kg, pcs, box, dose"
-            {...register('unit')}
+          <Controller
+            name="unit"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                <SelectTrigger id="unit">
+                  <SelectValue placeholder="Select unit..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNIT_OPTIONS.map(u => (
+                    <SelectItem key={u.value} value={u.value}>
+                      {u.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           />
-          <p className="text-sm text-muted-foreground">Unit of measurement for this item</p>
         </div>
 
         {/* Reorder Threshold */}

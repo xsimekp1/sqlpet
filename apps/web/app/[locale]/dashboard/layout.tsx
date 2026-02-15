@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/app/context/AuthContext';
 import { AppShell } from '@/app/components/app-shell/AppShell';
+import { useKeyboardShortcuts } from '@/app/hooks/useKeyboardShortcuts';
 
 export default function DashboardLayout({
   children,
@@ -14,6 +15,7 @@ export default function DashboardLayout({
   const { isAuthenticated, isLoading, selectedOrg } = useAuth();
   const router = useRouter();
   const t = useTranslations('common');
+  useKeyboardShortcuts();
 
   useEffect(() => {
     if (!isLoading) {
