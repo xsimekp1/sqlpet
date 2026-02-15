@@ -722,6 +722,7 @@
     "cancel": "Zrušit",
     "saving": "Ukládám…",
     "status": {
+      "registered": "Registrováno",
       "intake": "Příjem",
       "available": "Ke adopci",
       "reserved": "Rezervováno",

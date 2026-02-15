@@ -80,7 +80,7 @@ async def list_kennels(
                 k.status::text AS status, k.type::text AS type,
                 k.size_category::text AS size_category, k.capacity,
                 k.allowed_species, k.notes,
-                k.map_x, k.map_y, k.map_w, k.map_h, k.last_cleaned_at,
+                k.map_x, k.map_y, k.map_w, k.map_h, k.last_cleaned_at, k.dimensions,
                 COUNT(ks.id) FILTER (WHERE ks.end_at IS NULL) AS occupied_count,
                 COALESCE(
                   json_agg(
@@ -102,7 +102,7 @@ async def list_kennels(
             GROUP BY k.id, k.code, k.name, k.zone_id, z.name,
                      k.status, k.type, k.size_category, k.capacity,
                      k.allowed_species, k.notes,
-                     k.map_x, k.map_y, k.map_w, k.map_h, k.last_cleaned_at
+                     k.map_x, k.map_y, k.map_w, k.map_h, k.last_cleaned_at, k.dimensions
             ORDER BY k.name
         """)
 
@@ -137,6 +137,7 @@ async def list_kennels(
                 "map_w": row.map_w or 160,
                 "map_h": row.map_h or 120,
                 "last_cleaned_at": row.last_cleaned_at.isoformat() if row.last_cleaned_at else None,
+                "dimensions": row.dimensions,
             }
             kennels.append(kennel_dict)
 

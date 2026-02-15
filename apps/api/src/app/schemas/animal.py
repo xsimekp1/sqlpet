@@ -75,7 +75,7 @@ class AnimalCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     species: Species
     sex: Sex = "unknown"
-    status: AnimalStatus = "intake"
+    status: AnimalStatus = "registered"
     altered_status: AlteredStatus = "unknown"
     birth_date_estimated: date | None = None
     age_group: AgeGroup = "unknown"

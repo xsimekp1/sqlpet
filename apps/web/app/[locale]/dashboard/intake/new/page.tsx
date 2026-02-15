@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -60,6 +60,7 @@ interface FormState {
 
 export default function NewIntakePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
@@ -83,6 +84,22 @@ export default function NewIntakePage() {
   // Previous intakes for selected animal
   const [previousIntakes, setPreviousIntakes] = useState<IntakeRecord[]>([]);
   const [loadingPreviousIntakes, setLoadingPreviousIntakes] = useState(false);
+
+  // Pre-fill animal when animal_id is passed via URL (e.g. from animal detail page)
+  useEffect(() => {
+    const urlAnimalId = searchParams.get('animal_id');
+    if (!urlAnimalId) return;
+    (async () => {
+      try {
+        const a = await ApiClient.getAnimal(urlAnimalId);
+        if (a) {
+          await selectAnimal(a);
+          setStep(1);
+        }
+      } catch { /* silently ignore — user can search manually */ }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!animalSearch || animalSearch.length < 2) { setAnimals([]); return; }

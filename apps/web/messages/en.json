@@ -782,6 +782,7 @@
     "cancel": "Cancel",
     "saving": "Saving…",
     "status": {
+      "registered": "Registered",
       "intake": "Intake",
       "available": "Available",
       "reserved": "Reserved",

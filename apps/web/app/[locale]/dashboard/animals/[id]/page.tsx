@@ -63,6 +63,7 @@ const STATUSES = [
 
 const getStatusColor = (status: string) => {
   switch (status) {
+    case 'registered':  return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
     case 'available':   return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
     case 'reserved':    return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
     case 'adopted':     return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';

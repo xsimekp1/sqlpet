@@ -64,7 +64,9 @@ export default function NewFeedingPlanPage() {
     queryFn: () => ApiClient.get('/feeding/foods'),
   });
 
-  const animals = (animalsData?.items || []).filter((a: any) => !isTerminal(a.status));
+  const animals = (animalsData?.items || []).filter(
+    (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
+  );
   const foods = foodsData?.items || [];
 
   const watchedAnimalId = watch('animal_id');

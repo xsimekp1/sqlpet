@@ -24,6 +24,7 @@ class Sex(str, enum.Enum):
 
 
 class AnimalStatus(str, enum.Enum):
+    REGISTERED = "registered"
     INTAKE = "intake"
     AVAILABLE = "available"
     RESERVED = "reserved"
@@ -100,7 +101,7 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
             native_enum=False,
             values_callable=lambda x: [e.value for e in x],
         ),
-        default=AnimalStatus.INTAKE,
+        default=AnimalStatus.REGISTERED,
     )
     altered_status: Mapped[AlteredStatus] = mapped_column(
         Enum(
