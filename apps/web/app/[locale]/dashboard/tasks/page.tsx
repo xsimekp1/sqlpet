@@ -22,7 +22,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, Circle, Clock, XCircle, AlertCircle, Plus, Ban } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Plus, Ban } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Tooltip,
   TooltipContent,
@@ -52,6 +60,27 @@ export default function TasksPage() {
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
+
+  // Edit dialog state
+  const [editTask, setEditTask] = useState<Task | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editType, setEditType] = useState('');
+  const [editPriority, setEditPriority] = useState('');
+  const [editDueAt, setEditDueAt] = useState('');
+
+  const openEditDialog = (task: Task) => {
+    setEditTask(task);
+    setEditTitle(task.title);
+    setEditDescription(task.description || '');
+    setEditType(task.type);
+    setEditPriority(task.priority);
+    setEditDueAt(
+      task.due_at
+        ? format(new Date(task.due_at), "yyyy-MM-dd'T'HH:mm")
+        : ''
+    );
+  };
 
   // Update filters when URL params change
   useEffect(() => {
@@ -118,19 +147,6 @@ export default function TasksPage() {
       toast({ title: 'Chyba', description: error.message, variant: 'destructive' });
     },
   });
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-      case 'in_progress':
-        return <Clock className="h-4 w-4 text-blue-600" />;
-      case 'cancelled':
-        return <XCircle className="h-4 w-4 text-gray-400" />;
-      default:
-        return <Circle className="h-4 w-4 text-yellow-600" />;
-    }
-  };
 
   const STATUS_LABELS: Record<string, string> = {
     pending: 'Čeká',
@@ -224,6 +240,35 @@ export default function TasksPage() {
     if (!newTaskTitle.trim()) return;
     createTaskMutation.mutate(newTaskTitle.trim());
   };
+
+  // Update task mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: () =>
+      ApiClient.updateTask(editTask!.id, {
+        title: editTitle.trim(),
+        description: editDescription.trim() || undefined,
+        type: editType as Task['type'],
+        priority: editPriority as Task['priority'],
+        due_at: editDueAt ? new Date(editDueAt).toISOString() : undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setEditTask(null);
+      toast({ title: 'Úkol uložen' });
+    },
+    onError: (e: Error) => toast({ title: 'Chyba', description: e.message, variant: 'destructive' }),
+  });
+
+  // Delete (cancel) task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: () => ApiClient.cancelTask(editTask!.id, 'deleted'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setEditTask(null);
+      toast({ title: 'Úkol smazán' });
+    },
+    onError: (e: Error) => toast({ title: 'Chyba', description: e.message, variant: 'destructive' }),
+  });
 
   if (isLoading) {
     return (
@@ -335,7 +380,6 @@ export default function TasksPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12"></TableHead>
               <TableHead>Název</TableHead>
               <TableHead>Typ</TableHead>
               <TableHead>Priorita</TableHead>
@@ -348,7 +392,7 @@ export default function TasksPage() {
           <TableBody>
             {tasks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <AlertCircle className="h-8 w-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
@@ -360,12 +404,16 @@ export default function TasksPage() {
             ) : (
               tasks.map((task) => (
                 <TableRow key={task.id}>
-                  <TableCell>{getStatusIcon(task.status)}</TableCell>
                   <TableCell className="max-w-[240px]">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="font-medium truncate cursor-default">{task.title}</div>
+                          <div
+                            className="font-medium truncate cursor-pointer hover:underline"
+                            onClick={() => openEditDialog(task)}
+                          >
+                            {task.title}
+                          </div>
                         </TooltipTrigger>
                         {task.description && (
                           <TooltipContent side="bottom" className="max-w-xs text-sm">
@@ -439,6 +487,103 @@ export default function TasksPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Edit task dialog */}
+      <Dialog open={!!editTask} onOpenChange={(o) => !o && setEditTask(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Upravit úkol</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Název *</label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Název úkolu..."
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Popis</label>
+              <Textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Popis úkolu..."
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Typ</label>
+                <Select value={editType} onValueChange={setEditType}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">Obecný</SelectItem>
+                    <SelectItem value="feeding">Krmení</SelectItem>
+                    <SelectItem value="medical">Medicínský</SelectItem>
+                    <SelectItem value="cleaning">Úklid</SelectItem>
+                    <SelectItem value="maintenance">Údržba</SelectItem>
+                    <SelectItem value="administrative">Administrativní</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Priorita</label>
+                <Select value={editPriority} onValueChange={setEditPriority}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Nízká</SelectItem>
+                    <SelectItem value="medium">Střední</SelectItem>
+                    <SelectItem value="high">Vysoká</SelectItem>
+                    <SelectItem value="urgent">Urgentní</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Termín</label>
+              <input
+                type="datetime-local"
+                value={editDueAt}
+                onChange={(e) => setEditDueAt(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Stav</label>
+              <div className="pt-1">{editTask && getStatusBadge(editTask.status)}</div>
+            </div>
+          </div>
+          <DialogFooter className="flex-row justify-between gap-2 sm:justify-between">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (window.confirm('Opravdu smazat tento úkol?')) {
+                  deleteTaskMutation.mutate();
+                }
+              }}
+              disabled={deleteTaskMutation.isPending || updateTaskMutation.isPending}
+            >
+              Smazat
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditTask(null)}>
+                Zrušit
+              </Button>
+              <Button
+                onClick={() => updateTaskMutation.mutate()}
+                disabled={!editTitle.trim() || updateTaskMutation.isPending || deleteTaskMutation.isPending}
+              >
+                Uložit
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Pagination */}
       {totalTasks > 0 && (
