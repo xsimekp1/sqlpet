@@ -104,6 +104,9 @@ async def cors_aware_http_exception_handler(request: Request, exc: HTTPException
 
 @app.exception_handler(Exception)
 async def cors_aware_general_exception_handler(request: Request, exc: Exception):
+    import traceback
+    print(f"UNHANDLED EXCEPTION [{request.method} {request.url.path}]: {exc}")
+    print(traceback.format_exc())
     origin = request.headers.get("origin", "")
     headers = {}
     if origin and (origin in ALLOWED_ORIGINS or re.match(r"https://.*\.vercel\.app", origin)):

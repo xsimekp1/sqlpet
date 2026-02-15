@@ -35,7 +35,6 @@ def _animal_to_dict(animal: Animal) -> dict:
         if animal.weight_estimated_kg
         else None,
         "status_reason": animal.status_reason,
-        "intake_date": str(animal.intake_date) if animal.intake_date else None,
         "outcome_date": str(animal.outcome_date) if animal.outcome_date else None,
         "description": animal.description,
         "public_visibility": animal.public_visibility,
@@ -104,11 +103,15 @@ class AnimalService:
             is_dewormed=data.is_dewormed,
             is_aggressive=data.is_aggressive,
             status_reason=data.status_reason,
-            intake_date=data.intake_date,
             outcome_date=data.outcome_date,
             description=data.description,
             public_visibility=data.public_visibility,
             featured=data.featured,
+            is_pregnant=data.is_pregnant,
+            bcs=data.bcs,
+            expected_litter_date=data.expected_litter_date,
+            behavior_notes=data.behavior_notes,
+            is_special_needs=data.is_special_needs,
         )
         self.db.add(animal)
         await self.db.flush()

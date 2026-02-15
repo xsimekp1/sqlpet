@@ -12,7 +12,7 @@ from src.app.api.dependencies.auth import (
     require_permission,
 )
 from src.app.api.dependencies.db import get_db
-from src.app.models.animal import Species
+from src.app.models.animal import Animal, Species
 from src.app.models.animal_weight_log import AnimalWeightLog
 from src.app.models.animal_bcs_log import AnimalBCSLog
 from src.app.models.breed import Breed
@@ -118,18 +118,33 @@ async def create_animal(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-    svc = AnimalService(db)
-    animal = await svc.create_animal(
-        organization_id=organization_id,
-        data=data,
-        actor_id=current_user.id,
-        ip=request.client.host if request.client else None,
-        user_agent=request.headers.get("user-agent"),
-    )
-    await db.commit()
-    # Re-fetch to ensure relationships are loaded after commit
-    await db.refresh(animal)
-    return await _build_animal_response(animal, db)
+    try:
+        svc = AnimalService(db)
+        animal = await svc.create_animal(
+            organization_id=organization_id,
+            data=data,
+            actor_id=current_user.id,
+            ip=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+        await db.commit()
+        # Full ORM SELECT after commit — ensures selectin relationships load correctly
+        result = await db.execute(
+            select(Animal).where(
+                Animal.id == animal.id,
+                Animal.organization_id == organization_id,
+                Animal.deleted_at.is_(None),
+            )
+        )
+        animal = result.scalar_one()
+        return await _build_animal_response(animal, db)
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        print(f"ERROR in create_animal: {e}")
+        print(f"ERROR traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to create animal: {str(e)}")
 
 
 @router.get(
