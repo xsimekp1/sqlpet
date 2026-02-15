@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { MapPin, ChevronDown, Check, X, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import ApiClient, { Animal, Kennel } from '@/app/lib/api';
 import { toast } from 'sonner';
@@ -16,6 +17,7 @@ interface AssignKennelButtonProps {
 
 export function AssignKennelButton({ animal, onAssigned }: AssignKennelButtonProps) {
   const t = useTranslations('kennels');
+  const tAnimals = useTranslations('animals');
   const [open, setOpen] = useState(false);
   const [kennels, setKennels] = useState<Kennel[]>([]);
   const [loadingKennels, setLoadingKennels] = useState(false);
@@ -97,6 +99,27 @@ export function AssignKennelButton({ animal, onAssigned }: AssignKennelButtonPro
     if (kennel.status === 'closed') return <Badge variant="destructive" className="text-xs">{t('status.closed')}</Badge>;
     return null;
   };
+
+  if (animal.current_intake_date === null) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span tabIndex={0}>
+              <Button variant="outline" size="sm" className="gap-2" disabled>
+                <MapPin className="h-4 w-4" />
+                {t('assignButton.triggerEmpty')}
+                <ChevronDown className="h-3 w-3 opacity-60" />
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tAnimals('noActiveIntakeWarning')}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>

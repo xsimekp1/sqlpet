@@ -43,6 +43,17 @@ async def move_animal_endpoint(
     """Move an animal between kennels or remove from kennel."""
 
     try:
+        if request.target_kennel_id:
+            from sqlalchemy import text
+            intake_check = await session.execute(
+                text("SELECT 1 FROM intakes WHERE animal_id = :aid AND deleted_at IS NULL LIMIT 1"),
+                {"aid": uuid.UUID(request.animal_id)},
+            )
+            if not intake_check.first():
+                raise HTTPException(
+                    status_code=422,
+                    detail="Cannot assign kennel: animal has no active intake",
+                )
         result = await move_animal(
             session,
             organization_id=organization_id,

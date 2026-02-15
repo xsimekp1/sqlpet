@@ -825,6 +825,7 @@
       "recorded": "Escape recorded",
       "recordError": "Failed to record escape"
     },
+    "noActiveIntakeWarning": "No active intake — create an intake first",
     "healthEvents": {
       "dewormedOn": "Deworming: marked as done",
       "dewormedOff": "Deworming: marked as not done",

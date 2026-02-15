@@ -116,7 +116,7 @@ export default function AnimalsPage() {
     [animals]
   );
 
-  const INACTIVE_STATUSES = ['deceased', 'escaped', 'adopted', 'transferred', 'returned_to_owner', 'euthanized'];
+  const INACTIVE_STATUSES = ['deceased', 'adopted', 'transferred', 'returned_to_owner', 'euthanized'];
 
   const filtered = animals.filter((a) => {
     const matchesSearch = a.name.toLowerCase().includes(search.toLowerCase());

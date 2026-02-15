@@ -765,6 +765,7 @@
       "recorded": "Útěk zaznamenán",
       "recordError": "Nepodařilo se zaznamenat útěk"
     },
+    "noActiveIntakeWarning": "Žádný aktivní příjem — nejprve vytvořte příjem",
     "healthEvents": {
       "dewormedOn": "Odčervení: označeno jako provedené",
       "dewormedOff": "Odčervení: označeno jako neprovedené",

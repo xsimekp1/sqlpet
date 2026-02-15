@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 # revision identifiers
 revision = "add_inventory_food_fields"
-down_revision = "add_kennel_inv_food"
+down_revision = "add_contacts"
 branch_labels = None
 depends_on = None
 

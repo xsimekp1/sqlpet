@@ -16,7 +16,7 @@ depends_on = None
 
 
 def upgrade():
-    op.drop_column("animals", "intake_date")
+    op.execute("ALTER TABLE animals DROP COLUMN IF EXISTS intake_date")
 
 
 def downgrade():
