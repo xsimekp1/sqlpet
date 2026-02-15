@@ -75,7 +75,7 @@ export default function LoginPage() {
           <LanguageSwitcher />
         </div>
         <CardDescription>
-          PawShelter - Shelter Management System
+          {t('login.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -33,6 +33,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiClient } from '@/app/lib/api'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
 interface NavItemConfig {
   label: string
@@ -147,7 +148,11 @@ export function Sidebar() {
                 {uploadingLogo ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Camera className="h-3 w-3 text-white" />}
               </div>
             </div>
-            <span className="font-bold text-lg truncate">{orgInfo?.name ?? 'PawShelter'}</span>
+            {orgInfo?.logo_url ? (
+              <span className="font-bold text-lg truncate">{orgInfo.name}</span>
+            ) : (
+              <Image src="/petslog.png" alt="Petslog" width={100} height={27} className="object-contain" priority />
+            )}
           </div>
         )}
         {sidebarCollapsed && (

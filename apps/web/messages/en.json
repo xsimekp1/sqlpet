@@ -1,6 +1,7 @@
 {
   "login": {
-    "title": "Login",
+    "title": "Sign in",
+    "subtitle": "Shelter management system",
     "email": "Email",
     "password": "Password",
     "submit": "Sign In",

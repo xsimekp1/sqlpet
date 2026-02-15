@@ -1,6 +1,7 @@
 {
   "login": {
     "title": "Přihlášení",
+    "subtitle": "Systém správy útulku",
     "email": "E-mail",
     "password": "Heslo",
     "submit": "Přihlásit se",

@@ -57,7 +57,6 @@ function AnimalMedallion({ animal, title }: { animal: CalendarAnimal; title: str
 
 export default function CalendarPage() {
   const t = useTranslations('calendar');
-  const router = useRouter();
 
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
