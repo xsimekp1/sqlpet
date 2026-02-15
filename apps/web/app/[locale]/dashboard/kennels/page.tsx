@@ -639,27 +639,22 @@ export default function KennelsPage() {
       {/* Grid View with DnD */}
       {view === 'grid' && (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          {/* Unhoused animals bar — always visible, droppable */}
+          {/* Unhoused + escaped animals bar — always visible */}
           <div className="mb-4">
             <p className="text-sm font-medium text-muted-foreground mb-2">
-              Zvířata bez kotce ({unhousedAnimals.length})
+              {t('unhousedTitle')} ({unhousedAnimals.length + escapedAnimals.length})
             </p>
             <DroppableUnhousedZone animals={unhousedAnimals} />
-          </div>
-
-          {/* Escaped animals — shown but not draggable */}
-          {escapedAnimals.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm font-medium text-amber-600 mb-2">
-                Uteklá zvířata ({escapedAnimals.length}) — nelze přiřadit do kotce
-              </p>
-              <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-dashed border-amber-300 bg-amber-50/50 min-h-[56px]">
+            {escapedAnimals.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
                 {escapedAnimals.map(animal => (
-                  <DraggableAnimalChip key={animal.id} animal={animal} />
+                  <div key={animal.id} className="opacity-60 cursor-not-allowed">
+                    <DraggableAnimalChip animal={animal} />
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Kennel grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

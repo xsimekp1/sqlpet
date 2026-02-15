@@ -13,7 +13,8 @@ import {
   Inbox,
   Heart,
   ChevronLeft,
-  Package
+  Package,
+  HelpCircle
 } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
@@ -74,6 +75,7 @@ export function Sidebar() {
         { label: 'nav.intake', href: '/dashboard/intake', icon: Inbox, permission: 'intake.create' },
         { label: 'nav.reports', href: '/dashboard/reports', icon: BarChart3, permission: 'reports.view' },
         { label: 'nav.settings', href: '/dashboard/settings', icon: Settings, permission: 'settings.view' },
+        { label: 'nav.help', href: '/dashboard/help', icon: HelpCircle, permission: null },
       ]
     }
   ]

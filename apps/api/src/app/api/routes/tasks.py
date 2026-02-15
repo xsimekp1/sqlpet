@@ -104,6 +104,7 @@ async def create_task(
             task_metadata=task_data.task_metadata,
             related_entity_type=task_data.related_entity_type,
             related_entity_id=task_data.related_entity_id,
+            linked_inventory_item_id=task_data.linked_inventory_item_id,
         )
         print(f"[DEBUG] create_task: flush OK, task.id={task.id}")
         await db.commit()
@@ -136,15 +137,22 @@ async def list_tasks(
     """List tasks for the current user's organization with filters."""
     task_service = TaskService(db)
 
-    # Convert status/type strings to enums if provided
-    status_enum = TaskStatus(status) if status else None
-    type_enum = TaskType(type) if type else None
+    # Convert type string to enum if provided
+    type_enum = None
+    if type:
+        try:
+            type_enum = TaskType(type)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid task type: {type}",
+            )
 
     related_entity_uuid = uuid.UUID(related_entity_id) if related_entity_id else None
 
-    tasks = await task_service.get_tasks_for_organization(
+    tasks, total = await task_service.get_tasks_for_organization(
         organization_id=organization_id,
-        status=status_enum,
+        status=status,  # Pass raw string; service handles 'active' pseudo-status
         task_type=type_enum,
         assigned_to_id=assigned_to_id,
         due_date=due_date,
@@ -152,9 +160,6 @@ async def list_tasks(
         skip=(page - 1) * page_size,
         limit=page_size,
     )
-
-    # TODO: Add total count query for pagination
-    total = len(tasks)
 
     return TaskListResponse(
         items=tasks,
@@ -259,6 +264,43 @@ async def complete_task(
             completed_by_id=current_user.id,
             completion_data=complete_data.completion_data,
         )
+        # If medical task with linked inventory item → deduct 1 unit and log to timeline
+        if (
+            task.type == TaskType.MEDICAL
+            and task.linked_inventory_item_id
+            and task.related_entity_type == "animal"
+        ):
+            from src.app.services.inventory_service import InventoryService
+            from src.app.models.inventory_transaction import TransactionType
+            from src.app.models.inventory_item import InventoryItem as InvItem
+            from src.app.services.audit_service import AuditService as _AuditService
+            from sqlalchemy import select as _sel
+            inv_service = InventoryService(db)
+            try:
+                await inv_service.record_transaction(
+                    organization_id=organization_id,
+                    item_id=task.linked_inventory_item_id,
+                    transaction_type=TransactionType.OUT,
+                    quantity=1,
+                    reason=f"Vaccination task {task.id} for animal {task.related_entity_id}",
+                    user_id=current_user.id,
+                )
+                inv_result = await db.execute(
+                    _sel(InvItem).where(InvItem.id == task.linked_inventory_item_id)
+                )
+                inv_item = inv_result.scalar_one_or_none()
+                audit = _AuditService(db)
+                await audit.log_action(
+                    organization_id=organization_id,
+                    actor_user_id=current_user.id,
+                    action="vaccination",
+                    entity_type="animal",
+                    entity_id=task.related_entity_id,
+                    after={"vaccine": inv_item.name if inv_item else str(task.linked_inventory_item_id)},
+                )
+            except Exception as e:
+                print(f"[DEBUG] complete_task: inventory deduction failed: {e!r}")
+
         # If cleaning task linked to a kennel → update last_cleaned_at
         if (
             task.type == TaskType.CLEANING

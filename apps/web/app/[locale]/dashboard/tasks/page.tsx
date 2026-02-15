@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient, Task } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
@@ -23,11 +23,17 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle2, Circle, Clock, XCircle, AlertCircle, Plus, Ban } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
 
-type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'all';
+type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'all' | 'active';
 type TaskType = 'general' | 'feeding' | 'medical' | 'cleaning' | 'maintenance' | 'administrative' | 'all';
 
 export default function TasksPage() {
@@ -36,12 +42,13 @@ export default function TasksPage() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
 
-  // Initialize filters from URL query params
-  const initialStatus = (searchParams.get('status') as TaskStatus) || 'all';
+  // Initialize filters from URL query params — default to 'active' (pending + in_progress)
+  const initialStatus = (searchParams.get('status') as TaskStatus) || 'active';
   const initialType = (searchParams.get('type') as TaskType) || 'all';
 
   const [statusFilter, setStatusFilter] = useState<TaskStatus>(initialStatus);
   const [typeFilter, setTypeFilter] = useState<TaskType>(initialType);
+  const [page, setPage] = useState(1);
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
@@ -54,23 +61,26 @@ export default function TasksPage() {
     if (type && type !== typeFilter) setTypeFilter(type);
   }, [searchParams]);
 
-  // Fetch ALL tasks once — filter on frontend to avoid re-fetching on every filter change
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, typeFilter]);
+
+  // Server-side pagination: 10 tasks per page, filters sent to API
   const { data: taskData, isLoading } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: () => ApiClient.getTasks({ page_size: 500 }),
+    queryKey: ['tasks', statusFilter, typeFilter, page],
+    queryFn: () => ApiClient.getTasks({
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      type: typeFilter === 'all' ? undefined : typeFilter,
+      page,
+      page_size: 10,
+    }),
     staleTime: 30_000,
   });
 
-  const allTasks = taskData?.items || [];
-
-  // Frontend filtering — instant, no API calls
-  const tasks = useMemo(() => {
-    return allTasks.filter(task => {
-      if (statusFilter !== 'all' && task.status !== statusFilter) return false;
-      if (typeFilter !== 'all' && task.type !== typeFilter) return false;
-      return true;
-    });
-  }, [allTasks, statusFilter, typeFilter]);
+  const tasks = taskData?.items || [];
+  const totalTasks = taskData?.total ?? 0;
+  const totalPages = Math.ceil(totalTasks / 10);
 
   // Complete task mutation
   const completeTaskMutation = useMutation({
@@ -85,6 +95,9 @@ export default function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       if (variables.isFeedingTask) {
         toast({ title: 'Krmný úkol splněn', description: 'Záznam krmení a odečet skladu provedeny.' });
+      } else if (data.linked_inventory_item_id) {
+        toast({ title: 'Úkol splněn', description: '1 ks vakcíny odečteno ze skladu.' });
+        queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       } else {
         toast({ title: 'Úkol splněn' });
       }
@@ -99,7 +112,7 @@ export default function TasksPage() {
     mutationFn: (taskId: string) => ApiClient.cancelTask(taskId, 'rejected'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({ title: 'Úkol zamítnut' });
+      toast({ title: 'Úkol zamítnut/a' });
     },
     onError: (error: Error) => {
       toast({ title: 'Chyba', description: error.message, variant: 'destructive' });
@@ -199,6 +212,7 @@ export default function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setNewTaskTitle('');
       setShowNewTaskForm(false);
+      setPage(1);
       toast({ title: 'Úkol vytvořen' });
     },
     onError: (error: Error) => {
@@ -279,6 +293,7 @@ export default function TasksPage() {
               <SelectValue placeholder="Filtr stavu" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="active">Aktivní (čeká + probíhá)</SelectItem>
               <SelectItem value="all">Všechny stavy</SelectItem>
               <SelectItem value="pending">Čeká</SelectItem>
               <SelectItem value="in_progress">Probíhá</SelectItem>
@@ -308,9 +323,9 @@ export default function TasksPage() {
           </Select>
         </div>
 
-        {(statusFilter !== 'all' || typeFilter !== 'all') && (
+        {totalTasks > 0 && (
           <div className="flex items-center text-sm text-muted-foreground">
-            {tasks.length} z {allTasks.length} úkolů
+            {totalTasks} úkolů celkem
           </div>
         )}
       </div>
@@ -326,19 +341,18 @@ export default function TasksPage() {
               <TableHead>Priorita</TableHead>
               <TableHead>Stav</TableHead>
               <TableHead>Termín</TableHead>
+              <TableHead className="w-10">Zadal</TableHead>
               <TableHead className="text-right">Akce</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {tasks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <AlertCircle className="h-8 w-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
-                      {allTasks.length === 0
-                        ? 'Žádné úkoly. Vytvořte první úkol.'
-                        : 'Žádné úkoly odpovídají filtru.'}
+                      Žádné úkoly. Vytvořte první úkol.
                     </p>
                   </div>
                 </TableCell>
@@ -347,15 +361,19 @@ export default function TasksPage() {
               tasks.map((task) => (
                 <TableRow key={task.id}>
                   <TableCell>{getStatusIcon(task.status)}</TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{task.title}</div>
-                      {task.description && (
-                        <div className="text-sm text-muted-foreground line-clamp-1">
-                          {task.description}
-                        </div>
-                      )}
-                    </div>
+                  <TableCell className="max-w-[240px]">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="font-medium truncate cursor-default">{task.title}</div>
+                        </TooltipTrigger>
+                        {task.description && (
+                          <TooltipContent side="bottom" className="max-w-xs text-sm">
+                            {task.description}
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                   </TableCell>
                   <TableCell>{getTypeBadge(task.type)}</TableCell>
                   <TableCell>{getPriorityBadge(task.priority)}</TableCell>
@@ -365,6 +383,22 @@ export default function TasksPage() {
                       <div className="text-sm">
                         {format(new Date(task.due_at), 'd. M. yyyy HH:mm')}
                       </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {task.created_by_name ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold cursor-default select-none">
+                              {task.created_by_name.charAt(0).toUpperCase()}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">{task.created_by_name}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
@@ -406,16 +440,30 @@ export default function TasksPage() {
         </Table>
       </div>
 
-      {/* Summary */}
-      {allTasks.length > 0 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div>
-            Zobrazeno {tasks.length} z {allTasks.length} úkolů
+      {/* Pagination */}
+      {totalTasks > 0 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Strana {page} z {totalPages || 1}
+            &nbsp;· {totalTasks} úkolů celkem
           </div>
-          <div className="flex gap-4">
-            <span>Čeká: {allTasks.filter((t) => t.status === 'pending').length}</span>
-            <span>Splněno: {allTasks.filter((t) => t.status === 'completed').length}</span>
-            <span>Zamítnuto: {allTasks.filter((t) => t.status === 'cancelled').length}</span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 1}
+            >
+              ← Předchozí
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => p + 1)}
+              disabled={page >= totalPages}
+            >
+              Další →
+            </Button>
           </div>
         </div>
       )}

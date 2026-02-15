@@ -119,7 +119,7 @@ class BackendTester:
             return
 
         # Get tasks
-        tasks = await task_service.get_tasks_for_organization(self.test_org_id)
+        tasks, _total = await task_service.get_tasks_for_organization(self.test_org_id)
         if len(tasks) > 0:
             print(f"  ✓ Retrieved {len(tasks)} tasks")
             self.results.append(("Task Retrieval", True, None))

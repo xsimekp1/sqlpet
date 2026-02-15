@@ -42,7 +42,7 @@ export default function InventoryPage() {
       }),
   });
 
-  const items = itemsData?.items || [];
+  const items = Array.isArray(itemsData) ? itemsData : [];
 
   const getCategoryBadge = (category: string) => {
     const colors: Record<string, string> = {

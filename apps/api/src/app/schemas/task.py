@@ -14,6 +14,7 @@ class TaskBase(BaseModel):
     task_metadata: Optional[Dict[str, Any]] = None
     related_entity_type: Optional[str] = None
     related_entity_id: Optional[uuid.UUID] = None
+    linked_inventory_item_id: Optional[uuid.UUID] = None
 
 
 class TaskCreate(TaskBase):
@@ -55,6 +56,7 @@ class TaskResponse(TaskBase):
     completed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+    created_by_name: Optional[str] = None
 
     class Config:
         from_attributes = True

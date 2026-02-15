@@ -111,3 +111,6 @@ class InventoryStockResponse(BaseModel):
     total_quantity: float
     lots_count: int
     oldest_expiry: Optional[date]
+
+    class Config:
+        from_attributes = True

@@ -49,11 +49,13 @@ const GAP = 24;
 const COLS = 5;
 
 function getKennelDims(kennel: Kennel): { w: number; h: number } {
-  const length = kennel.dimensions?.length ?? DEFAULT_KENNEL_M;
-  const width  = kennel.dimensions?.width  ?? DEFAULT_KENNEL_M;
+  const lengthCm = kennel.dimensions?.length;
+  const widthCm  = kennel.dimensions?.width;
+  const lengthM  = lengthCm !== undefined ? lengthCm / 100 : DEFAULT_KENNEL_M;
+  const widthM   = widthCm  !== undefined ? widthCm  / 100 : DEFAULT_KENNEL_M;
   return {
-    w: Math.max(MIN_KENNEL_PX_W, Math.round(length * PIXELS_PER_METER)),
-    h: Math.max(MIN_KENNEL_PX_H, Math.round(width  * PIXELS_PER_METER)),
+    w: Math.max(MIN_KENNEL_PX_W, Math.round(lengthM * PIXELS_PER_METER)),
+    h: Math.max(MIN_KENNEL_PX_H, Math.round(widthM  * PIXELS_PER_METER)),
   };
 }
 
@@ -163,6 +165,7 @@ function DraggableKennelBox({
       ref={setDragRef}
       style={style}
       className={`rounded-lg border border-l-4 bg-card shadow-md flex flex-col overflow-hidden ${borderClass} ${isOver ? 'ring-2 ring-primary ring-offset-1' : ''}`}
+      title={`${kennel.dimensions?.length ?? '?'}cm × ${kennel.dimensions?.width ?? '?'}cm`}
     >
       {/* Header — kennel drag handle only */}
       <div
@@ -302,7 +305,6 @@ export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: 
             map_w: savedPos.w,
             map_h: savedPos.h,
           });
-          toast.success(t('positionSaved'));
           onPositionSaved?.();
         } catch {
           toast.error(t('positionError'));
@@ -315,12 +317,15 @@ export default function KennelMapView({ kennels, allAnimals, onPositionSaved }: 
       const overDropType = (over?.data?.current as any)?.type;
 
       if (overDropType === 'kennel-drop') {
-        // Dropped back onto a kennel box → remove from free positions
-        setFreeAnimalPositions(prev => {
-          const next = { ...prev };
-          delete next[animalId];
-          return next;
-        });
+        const targetKennelId = (over?.data?.current as any)?.kennelId as string;
+        setFreeAnimalPositions(prev => { const next = { ...prev }; delete next[animalId]; return next; });
+        try {
+          await ApiClient.moveAnimal({ animal_id: animalId, target_kennel_id: targetKennelId });
+          toast.success(t('animalMoved'));
+          onPositionSaved?.();
+        } catch {
+          toast.error(t('animalMoveError'));
+        }
       } else {
         // Dropped on canvas → set/update free position
         setFreeAnimalPositions(prev => {

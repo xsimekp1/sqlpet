@@ -73,6 +73,7 @@ async def list_inventory_items(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
     """List inventory items with stock information."""
+    print(f"DEBUG list_inventory: org={organization_id}, category={category}, low_stock={low_stock_only}")
     inventory_service = InventoryService(db)
 
     category_enum = None

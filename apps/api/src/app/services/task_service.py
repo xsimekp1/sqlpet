@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from typing import List, Optional, Dict, Any
+from sqlalchemy import select, and_, func
+from sqlalchemy.orm import selectinload
+from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime, timezone
 import uuid
 
@@ -26,6 +27,7 @@ class TaskService:
         task_metadata: Optional[Dict[str, Any]] = None,
         related_entity_type: Optional[str] = None,
         related_entity_id: Optional[uuid.UUID] = None,
+        linked_inventory_item_id: Optional[uuid.UUID] = None,
     ) -> Task:
         """Create a new task."""
         task = Task(
@@ -42,6 +44,7 @@ class TaskService:
             task_metadata=task_metadata,
             related_entity_type=related_entity_type,
             related_entity_id=related_entity_id,
+            linked_inventory_item_id=linked_inventory_item_id,
         )
         self.db.add(task)
         await self.db.flush()
@@ -189,22 +192,27 @@ class TaskService:
     async def get_tasks_for_organization(
         self,
         organization_id: uuid.UUID,
-        status: Optional[TaskStatus] = None,
+        status: Optional[str] = None,
         task_type: Optional[TaskType] = None,
         assigned_to_id: Optional[uuid.UUID] = None,
         due_date: Optional[str] = None,
         related_entity_id: Optional[uuid.UUID] = None,
         skip: int = 0,
         limit: int = 100,
-    ) -> List[Task]:
-        """Get tasks for an organization with filters."""
+    ) -> Tuple[List[Task], int]:
+        """Get tasks for an organization with filters. Returns (tasks, total_count)."""
         conditions = [
             Task.organization_id == organization_id,
             Task.deleted_at.is_(None),
         ]
 
-        if status:
-            conditions.append(Task.status == status)
+        if status == 'active':
+            conditions.append(Task.status.in_([TaskStatus.PENDING, TaskStatus.IN_PROGRESS]))
+        elif status:
+            try:
+                conditions.append(Task.status == TaskStatus(status))
+            except ValueError:
+                pass  # Ignore invalid status values
         if task_type:
             conditions.append(Task.type == task_type)
         if assigned_to_id:
@@ -220,16 +228,25 @@ class TaskService:
         if related_entity_id:
             conditions.append(Task.related_entity_id == related_entity_id)
 
+        where_clause = and_(*conditions)
+
+        # Count query
+        count_stmt = select(func.count()).select_from(Task).where(where_clause)
+        count_result = await self.db.execute(count_stmt)
+        total = count_result.scalar_one()
+
+        # Data query with eager loading of creator
         stmt = (
             select(Task)
-            .where(and_(*conditions))
+            .options(selectinload(Task.created_by))
+            .where(where_clause)
             .order_by(Task.due_at.asc().nullslast(), Task.created_at.desc())
             .offset(skip)
             .limit(limit)
         )
 
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return result.scalars().all(), total
 
     async def get_task_by_id(
         self,

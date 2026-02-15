@@ -148,7 +148,7 @@ export default function AnimalDetailPage() {
   // Weight
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
   const [weightInput, setWeightInput] = useState('');
-  const [weightDate, setWeightDate] = useState('');
+  const [weightDate, setWeightDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [weightNotes, setWeightNotes] = useState('');
   const [savingWeight, setSavingWeight] = useState(false);
 
@@ -273,6 +273,10 @@ export default function AnimalDetailPage() {
         { text: isCurrentlyAltered ? t('healthEvents.alteredOff') : t('healthEvents.alteredOn'), date: new Date() },
         ...prev,
       ]);
+      // Neutering changes the MER activity factor — remind user to recalculate
+      if (!isCurrentlyAltered) {
+        setTimeout(() => toast.info(t('mer.recalculateAfterAltering')), 600);
+      }
     } catch {
       toast.error('Failed to update');
     } finally {
@@ -334,7 +338,7 @@ export default function AnimalDetailPage() {
       ]);
       toast.success(t('health.weightAdded'));
       setWeightInput('');
-      setWeightDate('');
+      setWeightDate(new Date().toISOString().split('T')[0]);
       setWeightNotes('');
     } catch { toast.error(t('health.weightError')); }
     finally { setSavingWeight(false); }
@@ -568,9 +572,9 @@ export default function AnimalDetailPage() {
             {animal.current_kennel_id ? (
               <Link
                 href={`/dashboard/kennels/${animal.current_kennel_id}`}
-                className="text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors"
+                className="text-sm text-primary font-medium hover:underline transition-colors flex items-center gap-0.5"
               >
-                <MapPin className="inline h-3.5 w-3.5 mr-0.5 mb-0.5" />
+                <MapPin className="inline h-3.5 w-3.5 mb-0.5" />
                 {animal.current_kennel_name} ({animal.current_kennel_code})
               </Link>
             ) : (
@@ -631,7 +635,6 @@ export default function AnimalDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>{t('overview.basicInfo')}</CardTitle>
-              <CardDescription>{t('overview.basicInfoDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <EditableAnimalDetails animal={animal} onAnimalUpdate={handleAnimalUpdate} />

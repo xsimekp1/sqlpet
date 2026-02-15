@@ -65,7 +65,8 @@
     "system": "Systém",
     "walkMode": "Režim obchůzky",
     "alerts": "Upozornění",
-    "menu": "Menu"
+    "menu": "Menu",
+    "help": "Nápověda"
   },
   "topbar": {
     "search": "Hledat zvířata, lidi, úkoly...",
@@ -127,6 +128,10 @@
     },
     "requestProcedure": "Požádat o lékařský úkon",
     "procedureType": "Typ úkonu",
+    "vaccineFromStock": "Použít vakcínu ze skladu",
+    "noVaccineInStock": "Žádné vhodné vakcíny nejsou na skladě",
+    "vaccinePickerPlaceholder": "Vyberte vakcínu (volitelné)",
+    "vaccineNone": "Bez skladu (ručně)",
     "priority": "Priorita",
     "assignTo": "Přiřadit",
     "dueDate": "Termín",
@@ -353,13 +358,16 @@
       "noKennel": "Zvíře nemá přiřazený kotec",
       "removeFromKennel": "Odebrat z kotce"
     },
+    "unhousedTitle": "Zvířata bez kotce",
     "map": {
       "positionSaved": "Poloha uložena",
       "positionError": "Nepodařilo se uložit polohu",
       "legendAvailable": "Dostupný",
       "legendMaintenance": "Údržba",
       "legendClosed": "Uzavřen",
-      "dragHint": "Přetáhněte kotec pro změnu polohy"
+      "dragHint": "Přetáhněte kotec pro změnu polohy",
+      "animalMoved": "Zvíře přemístěno do kotce",
+      "animalMoveError": "Nepodařilo se přemístit zvíře"
     },
     "dropZone": {
       "drop": "Pustit pro odebrání z kotce",
@@ -600,7 +608,8 @@
       "cream": "Krémová",
       "brindle": "Pruhovaná",
       "orange": "Oranžová",
-      "blue": "Modrá"
+      "blue": "Modrá",
+      "tabby": "Tygrovitý"
     },
     "editName": {
       "nameRequired": "Jméno nesmí být prázdné",
@@ -638,7 +647,6 @@
     },
     "overview": {
       "basicInfo": "Základní informace",
-      "basicInfoDesc": "Základní údaje o zvířeti (klikněte na tlačítko úprav)",
       "specialNeeds": "Speciální potřeby",
       "neutered": "Kastrováno",
       "toggleSpecialNeeds": "Zvíře má speciální potřeby",
@@ -773,6 +781,7 @@
     "messages": {
       "taskCompleted": "Úkol dokončen",
       "taskCompletedDesc": "Úkol byl označen jako dokončený",
+      "vaccinationCompleted": "Očkování provedeno. 1 ks {name} odečteno ze skladu.",
       "feedingTaskCompleted": "Úkol krmení dokončen",
       "feedingTaskCompletedDesc": "Záznam o krmení vytvořen a inventář automaticky odečten",
       "taskCancelled": "Úkol zrušen",
@@ -1018,7 +1027,8 @@
     "red": "Rezavá",
     "cream": "Krémová",
     "brindle": "Pruhovaná",
-    "orange": "Oranžová"
+    "orange": "Oranžová",
+    "tabby": "Tygrovitý"
   },
   "birth": {
     "title": "Zaevidovat porod",
@@ -1044,6 +1054,7 @@
     "foodKcalLabel": "Krmivo (kcal/100g)",
     "calculate": "Vypočítat",
     "recalculate": "Přepočítat",
+    "recalculateAfterAltering": "Kastrace mění faktor energetické potřeby — zvažte přepočítání MER v záložce Krmení.",
     "calculating": "Počítám…",
     "calcError": "Chyba při výpočtu MER",
     "noWeightToast": "Nejprve zadejte váhu zvířete.",
@@ -1098,6 +1109,30 @@
         "adopted": "Adoptováno"
       }
     }
+  },
+  "help": {
+    "title": "Nápověda",
+    "comingSoon": "Připravujeme",
+    "shortcuts": {
+      "title": "Klávesové zkratky",
+      "search": "Otevřít globální vyhledávání"
+    },
+    "docs": {
+      "title": "Dokumentace",
+      "comingSoon": "Plná dokumentace bude dostupná v budoucí verzi"
+    },
+    "support": {
+      "title": "Kontaktovat podporu",
+      "description": "Potřebujete pomoc? Kontaktujte náš tým podpory"
+    }
+  },
+  "search": {
+    "animals": "Zvířata",
+    "kennels": "Kotce",
+    "contacts": "Kontakty",
+    "inventory": "Sklad",
+    "noResults": "Žádné výsledky",
+    "typing": "Napište alespoň 2 znaky pro vyhledávání..."
   },
   "intake": {
     "title": "Příjmy zvířat",

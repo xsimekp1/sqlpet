@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Stethoscope, Loader2 } from 'lucide-react';
+import { Stethoscope, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -33,6 +34,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import ApiClient, { Animal } from '@/app/lib/api';
+import { Input } from '@/components/ui/input';
 
 interface RequestMedicalProcedureDialogProps {
   animal: Animal;
@@ -58,6 +60,7 @@ export default function RequestMedicalProcedureDialog({
 }: RequestMedicalProcedureDialogProps) {
   const t = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [linkedInventoryItemId, setLinkedInventoryItemId] = useState<string>('');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -69,6 +72,17 @@ export default function RequestMedicalProcedureDialog({
       dueDate: '',
     },
   });
+
+  const watchedProcedureType = form.watch('procedureType');
+  const isVaccination = watchedProcedureType === 'vaccination';
+
+  // Fetch vaccine inventory items when vaccination is selected
+  const { data: vaccineItems } = useQuery({
+    queryKey: ['inventory-vaccines', animal.species],
+    queryFn: () => ApiClient.get('/inventory/items', { category: 'vaccine', allowed_species: animal.species }),
+    enabled: isVaccination && open,
+  });
+  const vaccines = Array.isArray(vaccineItems) ? vaccineItems : [];
 
   const procedureTypes = [
     { value: 'checkup', label: t('medical.types.checkup') },
@@ -112,6 +126,7 @@ export default function RequestMedicalProcedureDialog({
         due_at: values.dueDate || undefined,
         related_entity_type: 'animal',
         related_entity_id: animal.id,
+        linked_inventory_item_id: linkedInventoryItemId || undefined,
         task_metadata: {
           procedure_type: values.procedureType,
           animal_name: animal.name,
@@ -183,6 +198,35 @@ export default function RequestMedicalProcedureDialog({
                 </FormItem>
               )}
             />
+
+            {/* Vaccine inventory picker — shown only for vaccination */}
+            {isVaccination && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">
+                  {t('medical.vaccineFromStock')}
+                </label>
+                {vaccines.length === 0 ? (
+                  <div className="flex items-center gap-2 p-2 rounded border border-yellow-300 bg-yellow-50/60 text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    {t('medical.noVaccineInStock')}
+                  </div>
+                ) : (
+                  <Select value={linkedInventoryItemId} onValueChange={setLinkedInventoryItemId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('medical.vaccinePickerPlaceholder')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">{t('medical.vaccineNone')}</SelectItem>
+                      {vaccines.map((v: any) => (
+                        <SelectItem key={v.item?.id ?? v.id} value={v.item?.id ?? v.id}>
+                          {v.item?.name ?? v.name} ({v.total_quantity ?? 0} {v.item?.unit ?? v.unit})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
 
             {/* Description */}
             <FormField

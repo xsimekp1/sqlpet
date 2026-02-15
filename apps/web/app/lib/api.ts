@@ -45,6 +45,7 @@ export interface Task {
   id: string;
   organization_id: string;
   created_by_id: string;
+  created_by_name: string | null;
   assigned_to_id: string | null;
   title: string;
   description: string | null;
@@ -56,6 +57,7 @@ export interface Task {
   task_metadata: Record<string, any> | null;
   related_entity_type: string | null;
   related_entity_id: string | null;
+  linked_inventory_item_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -70,6 +72,7 @@ export interface CreateTaskRequest {
   task_metadata?: Record<string, any>;
   related_entity_type?: string;
   related_entity_id?: string;
+  linked_inventory_item_id?: string;
 }
 
 export interface TaskListResponse {
@@ -1042,6 +1045,14 @@ class ApiClient {
     return response.data;
   }
 
+  static async globalSearch(q: string, limit = 5): Promise<SearchResults> {
+    const response = await axios.get<SearchResults>(
+      `${API_URL}/search`,
+      { params: { q, limit }, headers: this.getAuthHeaders() }
+    );
+    return response.data;
+  }
+
   static async uploadAnimalPhoto(animalId: string, file: File): Promise<{ file_url: string }> {
     const formData = new FormData();
     formData.append('file', file);
@@ -1052,6 +1063,14 @@ class ApiClient {
     );
     return response.data;
   }
+}
+
+// Search types
+export interface SearchResults {
+  animals: { id: string; name: string; public_code: string; status: string; species: string; primary_photo_url: string | null }[];
+  kennels: { id: string; code: string; name: string; status: string; zone_name: string | null }[];
+  contacts: { id: string; name: string; email: string | null }[];
+  inventory: { id: string; name: string; category: string; unit: string | null }[];
 }
 
 export { ApiClient };

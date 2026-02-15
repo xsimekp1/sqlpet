@@ -65,7 +65,8 @@
     "system": "System",
     "walkMode": "Walk Mode",
     "alerts": "Alerts",
-    "menu": "Menu"
+    "menu": "Menu",
+    "help": "Help"
   },
   "topbar": {
     "search": "Search animals, people, tasks...",
@@ -127,6 +128,10 @@
     },
     "requestProcedure": "Request Medical Procedure",
     "procedureType": "Procedure Type",
+    "vaccineFromStock": "Use vaccine from stock",
+    "noVaccineInStock": "No suitable vaccines in stock",
+    "vaccinePickerPlaceholder": "Select vaccine (optional)",
+    "vaccineNone": "None (manual)",
     "priority": "Priority",
     "assignTo": "Assign To",
     "dueDate": "Due Date",
@@ -351,13 +356,16 @@
       "noKennel": "No kennel assigned",
       "removeFromKennel": "Remove from kennel"
     },
+    "unhousedTitle": "Animals without kennel",
     "map": {
       "positionSaved": "Position saved",
       "positionError": "Failed to save position",
       "legendAvailable": "Available",
       "legendMaintenance": "Maintenance",
       "legendClosed": "Closed",
-      "dragHint": "Drag a kennel to reposition"
+      "dragHint": "Drag a kennel to reposition",
+      "animalMoved": "Animal moved to kennel",
+      "animalMoveError": "Failed to move animal"
     },
     "dropZone": {
       "drop": "Drop to remove from kennel",
@@ -439,6 +447,7 @@
     "foodKcalLabel": "Food (kcal/100g)",
     "calculate": "Calculate",
     "recalculate": "Recalculate",
+    "recalculateAfterAltering": "Neutering changes the energy factor — consider recalculating MER in the Feeding tab.",
     "calculating": "Calculating…",
     "calcError": "Error calculating MER",
     "noWeightToast": "Enter the animal's weight first.",
@@ -659,7 +668,8 @@
       "orange": "Orange",
       "red": "Red",
       "cream": "Cream",
-      "brindle": "Brindle"
+      "brindle": "Brindle",
+      "tabby": "Tabby"
     },
     "editName": {
       "nameRequired": "Name cannot be empty",
@@ -697,7 +707,6 @@
     },
     "overview": {
       "basicInfo": "Basic Information",
-      "basicInfoDesc": "Core details about this animal (click edit buttons to modify)",
       "specialNeeds": "Special needs",
       "neutered": "Neutered",
       "toggleSpecialNeeds": "Animal has special needs",
@@ -832,6 +841,7 @@
     "messages": {
       "taskCompleted": "Task completed",
       "taskCompletedDesc": "The task has been marked as completed",
+      "vaccinationCompleted": "Vaccination completed. 1 unit of {name} deducted from stock.",
       "feedingTaskCompleted": "Feeding task completed",
       "feedingTaskCompletedDesc": "Feeding log created and inventory deducted automatically",
       "taskCancelled": "Task cancelled",
@@ -1077,7 +1087,8 @@
     "red": "Red",
     "cream": "Cream",
     "brindle": "Brindle",
-    "orange": "Orange"
+    "orange": "Orange",
+    "tabby": "Tabby"
   },
   "adoptions": {
     "title": "Adoptions",
@@ -1095,6 +1106,30 @@
         "adopted": "Adopted"
       }
     }
+  },
+  "help": {
+    "title": "Help",
+    "comingSoon": "Coming soon",
+    "shortcuts": {
+      "title": "Keyboard Shortcuts",
+      "search": "Open global search"
+    },
+    "docs": {
+      "title": "Documentation",
+      "comingSoon": "Full documentation will be available in a future release"
+    },
+    "support": {
+      "title": "Contact Support",
+      "description": "Need help? Reach out to our support team"
+    }
+  },
+  "search": {
+    "animals": "Animals",
+    "kennels": "Kennels",
+    "contacts": "Contacts",
+    "inventory": "Inventory",
+    "noResults": "No results found",
+    "typing": "Type at least 2 characters to search..."
   },
   "intake": {
     "title": "Animal Intakes",

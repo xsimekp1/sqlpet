@@ -314,6 +314,7 @@ COLOR_CATALOG = [
     "cream",
     "brindle",
     "orange",
+    "tabby",
     "black-white",
     "black_white",
     "black-tan-white",
@@ -339,17 +340,27 @@ async def list_colors_admin(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(
+    # Get all translated colors
+    i18n_result = await db.execute(
         text("SELECT code, locale, name FROM color_i18n WHERE organization_id IS NULL")
     )
-    rows = result.fetchall()
+    i18n_rows = i18n_result.fetchall()
 
     # Build a lookup: code -> {locale: name}
     lookup: dict = {}
-    for code, locale, name in rows:
+    for code, locale, name in i18n_rows:
         if code not in lookup:
             lookup[code] = {}
         lookup[code][locale] = name
+
+    # Also collect all distinct color codes used in animals (might not have translations yet)
+    animal_colors_result = await db.execute(
+        text("SELECT DISTINCT color FROM animals WHERE color IS NOT NULL AND color != ''")
+    )
+    animal_colors = {row[0] for row in animal_colors_result.fetchall()}
+
+    # Build full list: i18n keys + any animal colors not yet in i18n, sorted
+    all_codes = sorted(set(list(lookup.keys()) + list(animal_colors)))
 
     return [
         ColorAdminResponse(
@@ -357,7 +368,7 @@ async def list_colors_admin(
             cs=lookup.get(code, {}).get("cs"),
             en=lookup.get(code, {}).get("en"),
         )
-        for code in COLOR_CATALOG
+        for code in all_codes
     ]
 
 
@@ -368,8 +379,7 @@ async def update_color_translations(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if code not in COLOR_CATALOG:
-        raise HTTPException(status_code=404, detail="Color code not found")
+    # Accept any valid color code (not restricted to COLOR_CATALOG)
 
     for locale, name in [("cs", body.cs), ("en", body.en)]:
         if name is None:
