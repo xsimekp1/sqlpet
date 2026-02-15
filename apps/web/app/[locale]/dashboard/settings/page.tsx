@@ -935,10 +935,30 @@ export default function SettingsPage() {
                 <Users className="h-5 w-5" />
                 Členové organizace
               </CardTitle>
-              <Button size="sm" onClick={() => setAddUserOpen(true)}>
-                <Plus className="h-4 w-4 mr-1.5" />
-                Přidat uživatele
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await fetch(`${API_URL}/admin/roles/init-from-templates`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                      });
+                      toast.success(t('initRolesSuccess'));
+                      loadMembers();
+                    } catch {
+                      toast.error('Failed to initialize roles');
+                    }
+                  }}
+                >
+                  {t('initRoles')}
+                </Button>
+                <Button size="sm" onClick={() => setAddUserOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Přidat uživatele
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {isLoadingMembers ? (

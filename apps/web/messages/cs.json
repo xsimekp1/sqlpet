@@ -490,6 +490,8 @@
       "saveError": "Chyba při ukládání",
       "empty": "Žádná plemena nenalezena"
     },
+    "initRoles": "Inicializovat standardní role",
+    "initRolesSuccess": "Standardní role inicializovány",
     "colorsAdmin": {
       "title": "Správa barev",
       "description": "Upravte české a anglické názvy barev",
@@ -1052,11 +1054,27 @@
       "recordTransaction": "Zaznamenat transakci",
       "viewHistory": "Zobrazit historii"
     },
+    "units": {
+      "can": "Konzerva",
+      "pouch": "Kapsička",
+      "bag": "Pytel",
+      "bottle": "Láhev",
+      "tablet": "Tableta",
+      "vial": "Ampule",
+      "piece": "Kus",
+      "kg": "Kilogram",
+      "g": "Gram",
+      "l": "Litr",
+      "ml": "Mililitr"
+    },
     "messages": {
       "itemCreated": "Položka vytvořena",
       "itemCreatedDesc": "Inventární položka byla úspěšně vytvořena",
       "itemUpdated": "Položka aktualizována",
       "itemUpdatedDesc": "Inventární položka byla úspěšně aktualizována",
+      "itemDeleted": "Položka smazána",
+      "itemDeletedDesc": "Inventární položka byla smazána",
+      "itemDeleteError": "Nelze smazat položku s aktivními zásobami",
       "lotCreated": "Šarže přidána",
       "lotCreatedDesc": "Inventární šarže byla úspěšně přidána",
       "transactionRecorded": "Transakce zaznamenána",

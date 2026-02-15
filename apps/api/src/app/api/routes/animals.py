@@ -75,18 +75,21 @@ async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
         resp.current_kennel_name = stay_row[1]
         resp.current_kennel_code = stay_row[2]
     # Populate current_intake_date from latest active (non-deleted) intake
-    intake_result = await db.execute(
-        text("""
-            SELECT intake_date FROM intakes
-            WHERE animal_id = :animal_id AND deleted_at IS NULL
-            ORDER BY intake_date DESC
-            LIMIT 1
-        """),
-        {"animal_id": str(animal.id)},
-    )
-    intake_row = intake_result.first()
-    if intake_row:
-        resp.current_intake_date = intake_row[0]
+    try:
+        intake_result = await db.execute(
+            text("""
+                SELECT intake_date FROM intakes
+                WHERE animal_id = :animal_id AND deleted_at IS NULL
+                ORDER BY intake_date DESC
+                LIMIT 1
+            """),
+            {"animal_id": str(animal.id)},
+        )
+        intake_row = intake_result.first()
+        if intake_row:
+            resp.current_intake_date = intake_row[0]
+    except Exception:
+        pass  # intakes table may not exist yet
     return resp
 
 
@@ -526,27 +529,31 @@ async def get_daily_animal_count(
     db: AsyncSession = Depends(get_db),
 ):
     """Return daily animal count for the last N days."""
-    from src.app.models.animal import Animal as AnimalModel
-    from sqlalchemy import func, and_, or_  # noqa: F811 (or_ already imported via text)
-
     today = date.today()
     result = []
 
-    for i in range(days - 1, -1, -1):
-        day = today - timedelta(days=i)
-        count_query = select(func.count()).select_from(AnimalModel).where(
-            and_(
-                AnimalModel.organization_id == organization_id,
-                AnimalModel.intake_date <= day,
-                or_(
-                    AnimalModel.outcome_date.is_(None),
-                    AnimalModel.outcome_date > day,
-                ),
+    try:
+        for i in range(days - 1, -1, -1):
+            day = today - timedelta(days=i)
+            count_result = await db.execute(
+                text("""
+                    SELECT COUNT(DISTINCT a.id)
+                    FROM animals a
+                    JOIN intakes i ON i.animal_id = a.id
+                    WHERE a.organization_id = :org_id
+                      AND a.deleted_at IS NULL
+                      AND i.intake_date <= :day
+                      AND (i.deleted_at IS NULL OR i.deleted_at > :day)
+                """),
+                {"org_id": str(organization_id), "day": day},
             )
-        )
-        count_result = await db.execute(count_query)
-        count = count_result.scalar() or 0
-        result.append({"date": day.isoformat(), "count": count})
+            count = count_result.scalar() or 0
+            result.append({"date": day.isoformat(), "count": count})
+    except Exception:
+        # intakes table may not exist yet (e.g. Railway before migration)
+        for i in range(days - 1, -1, -1):
+            day = today - timedelta(days=i)
+            result.append({"date": day.isoformat(), "count": 0})
 
     return result
 

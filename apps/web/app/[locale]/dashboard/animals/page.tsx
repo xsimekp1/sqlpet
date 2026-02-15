@@ -341,7 +341,7 @@ export default function AnimalsPage() {
                       <Scissors className="h-3 w-3 text-primary shrink-0" />
                     )}
                     <Badge className={`text-xs px-1.5 py-0 ${getStatusColor(animal.status)}`}>
-                      {animal.status}
+                      {t(`animals.status.${animal.status}`)}
                     </Badge>
                     {animal.tags && animal.tags.length > 0 && animal.tags.slice(0, 2).map((tag: any) => (
                       <span key={tag.id} className="text-xs px-1.5 py-0 rounded-full border border-border bg-muted text-muted-foreground leading-5">
@@ -473,7 +473,7 @@ export default function AnimalsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Badge className={`text-xs ${getStatusColor(animal.status)}`}>
-                        {animal.status}
+                        {t(`animals.status.${animal.status}`)}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground font-mono text-xs">

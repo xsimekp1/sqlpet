@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
+from src.app.api.dependencies.auth import get_current_user, get_current_organization_id, require_permission
 from src.app.api.dependencies.db import get_db
 from src.app.models.breed import Breed
 from src.app.models.breed_i18n import BreedI18n
@@ -15,6 +15,7 @@ from src.app.models.file import DefaultAnimalImage
 from src.app.models.user import User
 from src.app.models.membership import Membership, MembershipStatus
 from src.app.models.role import Role
+from src.app.models.role_permission import RolePermission
 from src.app.core.security import hash_password
 from src.app.services.supabase_storage_service import supabase_storage_service
 
@@ -655,4 +656,44 @@ async def set_member_password(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     target_user.password_hash = hash_password(data.new_password)
+    await db.commit()
+
+
+@router.post("/roles/init-from-templates", status_code=status.HTTP_204_NO_CONTENT)
+async def init_org_roles_from_templates(
+    current_user: User = Depends(require_permission("users.manage")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create org-specific copies of all global template roles (idempotent)."""
+    templates = (await db.execute(
+        select(Role).where(Role.is_template == True)  # noqa: E712
+    )).scalars().all()
+
+    for template in templates:
+        existing = (await db.execute(
+            select(Role).where(
+                Role.organization_id == organization_id,
+                Role.name == template.name,
+            )
+        )).scalar_one_or_none()
+        if existing:
+            continue
+
+        new_role = Role(
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            name=template.name,
+            description=template.description,
+            is_template=False,
+        )
+        db.add(new_role)
+        await db.flush()
+
+        template_permissions = (await db.execute(
+            select(RolePermission).where(RolePermission.role_id == template.id)
+        )).scalars().all()
+        for tp in template_permissions:
+            db.add(RolePermission(role_id=new_role.id, permission_id=tp.permission_id, allowed=tp.allowed))
+
     await db.commit()

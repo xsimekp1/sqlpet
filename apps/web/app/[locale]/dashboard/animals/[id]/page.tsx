@@ -614,10 +614,10 @@ export default function AnimalDetailPage() {
               </SelectTrigger>
               <SelectContent>
                 {animal.status === 'escaped' && (
-                  <SelectItem value="escaped" className="text-xs text-red-600">escaped</SelectItem>
+                  <SelectItem value="escaped" className="text-xs text-red-600">{t('status.escaped')}</SelectItem>
                 )}
                 {STATUSES.map(s => (
-                  <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
+                  <SelectItem key={s} value={s} className="text-xs">{t(`status.${s}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

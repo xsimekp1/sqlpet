@@ -138,6 +138,43 @@ async def update_inventory_item(
         )
 
 
+@router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_inventory_item(
+    item_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Delete an inventory item if it has no active lots with quantity > 0."""
+    from sqlalchemy import select, and_
+    from src.app.models.inventory_item import InventoryItem
+    from src.app.models.inventory_lot import InventoryLot
+
+    item = (await db.execute(
+        select(InventoryItem).where(
+            InventoryItem.id == item_id,
+            InventoryItem.organization_id == organization_id,
+        )
+    )).scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    active_lots = (await db.execute(
+        select(InventoryLot).where(
+            InventoryLot.item_id == item_id,
+            InventoryLot.quantity > 0,
+        )
+    )).scalars().first()
+    if active_lots:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete item with active stock. Deplete all lots first.",
+        )
+
+    await db.delete(item)
+    await db.commit()
+
+
 # Inventory Lot endpoints
 @router.post("/lots", response_model=InventoryLotResponse, status_code=status.HTTP_201_CREATED)
 async def create_inventory_lot(

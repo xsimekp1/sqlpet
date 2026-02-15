@@ -90,6 +90,16 @@ async def cors_aware_http_exception_handler(request: Request, exc: HTTPException
     )
 
 
+@app.exception_handler(Exception)
+async def cors_aware_general_exception_handler(request: Request, exc: Exception):
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin and (origin in ALLOWED_ORIGINS or re.match(r"https://.*\.vercel\.app", origin)):
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"}, headers=headers)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,

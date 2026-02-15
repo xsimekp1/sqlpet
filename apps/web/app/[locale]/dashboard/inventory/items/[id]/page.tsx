@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
-import { getUnitLabel } from '@/app/lib/constants';
 import { useTranslations } from 'next-intl';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -29,7 +28,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
@@ -37,10 +36,12 @@ export default function InventoryItemDetailPage() {
   const t = useTranslations('inventory');
   const { toast } = useToast();
   const params = useParams();
+  const router = useRouter();
   const itemId = params.id as string;
   const queryClient = useQueryClient();
 
   const [addLotOpen, setAddLotOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [lotFormData, setLotFormData] = useState({
     lot_number: '',
     expires_at: '',
@@ -101,6 +102,18 @@ export default function InventoryItemDetailPage() {
         description: error.message,
         variant: 'destructive',
       });
+    },
+  });
+
+  const deleteItemMutation = useMutation({
+    mutationFn: () => ApiClient.deleteInventoryItem(itemId),
+    onSuccess: () => {
+      toast({ title: t('messages.itemDeleted'), description: t('messages.itemDeletedDesc') });
+      router.push('/dashboard/inventory');
+    },
+    onError: (error: Error) => {
+      toast({ title: t('messages.error'), description: error.message, variant: 'destructive' });
+      setDeleteConfirmOpen(false);
     },
   });
 
@@ -187,9 +200,35 @@ export default function InventoryItemDetailPage() {
             {getCategoryBadge(item.category)}
           </div>
           <p className="text-muted-foreground">
-            Total stock: <span className="font-semibold">{item.total_quantity?.toFixed(2) || '0.00'}</span> {getUnitLabel(item.unit)}
+            Total stock: <span className="font-semibold">{item.total_quantity?.toFixed(2) || '0.00'}</span> {item.unit ? t(`units.${item.unit}`) : ''}
           </p>
         </div>
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Delete
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete item?</DialogTitle>
+              <DialogDescription>
+                This will permanently delete <strong>{item.name}</strong>. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+              <Button
+                variant="destructive"
+                onClick={() => deleteItemMutation.mutate()}
+                disabled={deleteItemMutation.isPending}
+              >
+                {deleteItemMutation.isPending ? 'Deleting...' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Item Info Cards */}

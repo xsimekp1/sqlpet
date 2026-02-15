@@ -551,6 +551,8 @@
       "saveError": "Error saving",
       "empty": "No breeds found"
     },
+    "initRoles": "Initialize standard roles",
+    "initRolesSuccess": "Standard roles initialized",
     "colorsAdmin": {
       "title": "Color Management",
       "description": "Edit Czech and English color names",
@@ -1112,11 +1114,27 @@
       "recordTransaction": "Record Transaction",
       "viewHistory": "View History"
     },
+    "units": {
+      "can": "Can",
+      "pouch": "Pouch",
+      "bag": "Bag",
+      "bottle": "Bottle",
+      "tablet": "Tablet",
+      "vial": "Vial",
+      "piece": "Piece",
+      "kg": "Kilogram",
+      "g": "Gram",
+      "l": "Litre",
+      "ml": "Millilitre"
+    },
     "messages": {
       "itemCreated": "Item created",
       "itemCreatedDesc": "The inventory item has been created successfully",
       "itemUpdated": "Item updated",
       "itemUpdatedDesc": "The inventory item has been updated successfully",
+      "itemDeleted": "Item deleted",
+      "itemDeletedDesc": "The inventory item has been deleted",
+      "itemDeleteError": "Cannot delete item with active stock",
       "lotCreated": "Lot added",
       "lotCreatedDesc": "The inventory lot has been added successfully",
       "transactionRecorded": "Transaction recorded",

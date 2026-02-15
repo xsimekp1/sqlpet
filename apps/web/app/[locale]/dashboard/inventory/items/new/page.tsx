@@ -292,7 +292,7 @@ export default function NewInventoryItemPage() {
                 <SelectContent>
                   {UNIT_OPTIONS.map(u => (
                     <SelectItem key={u.value} value={u.value}>
-                      {u.label}
+                      {t(`units.${u.value}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
