@@ -60,12 +60,12 @@ export default function InventoryPage() {
     );
   };
 
-  const isLowStock = (item: any) => {
-    return item.reorder_threshold && item.total_quantity < item.reorder_threshold;
+  const isLowStock = (stock: any) => {
+    return stock.item.reorder_threshold && stock.total_quantity < stock.item.reorder_threshold;
   };
 
-  const isOutOfStock = (item: any) => {
-    return item.total_quantity === 0 || !item.total_quantity;
+  const isOutOfStock = (stock: any) => {
+    return stock.total_quantity === 0 || !stock.total_quantity;
   };
 
   if (isLoading) {
@@ -152,57 +152,57 @@ export default function InventoryPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((item: any) => (
-                <TableRow key={item.id}>
+              items.map((stock: any) => (
+                <TableRow key={stock.item.id}>
                   <TableCell>
-                    {isOutOfStock(item) ? (
+                    {isOutOfStock(stock) ? (
                       <AlertTriangle className="h-4 w-4 text-red-600" />
-                    ) : isLowStock(item) ? (
+                    ) : isLowStock(stock) ? (
                       <AlertTriangle className="h-4 w-4 text-yellow-600" />
                     ) : (
                       <Package className="h-4 w-4 text-green-600" />
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{item.name}</div>
-                    {isOutOfStock(item) && (
+                    <div className="font-medium">{stock.item.name}</div>
+                    {isOutOfStock(stock) && (
                       <div className="text-xs text-red-600 font-medium">
                         {t('noStock')}
                       </div>
                     )}
-                    {!isOutOfStock(item) && isLowStock(item) && (
+                    {!isOutOfStock(stock) && isLowStock(stock) && (
                       <div className="text-xs text-yellow-600 font-medium">
                         {t('belowThreshold')}
                       </div>
                     )}
                   </TableCell>
-                  <TableCell>{getCategoryBadge(item.category)}</TableCell>
+                  <TableCell>{getCategoryBadge(stock.item.category)}</TableCell>
                   <TableCell>
                     <span className={
-                      isOutOfStock(item)
+                      isOutOfStock(stock)
                         ? 'text-red-600 font-semibold'
-                        : isLowStock(item)
+                        : isLowStock(stock)
                         ? 'text-yellow-600 font-semibold'
                         : 'font-medium'
                     }>
-                      {item.total_quantity?.toFixed(2) || '0.00'}
+                      {stock.total_quantity?.toFixed(2) || '0.00'}
                     </span>
                   </TableCell>
-                  <TableCell>{item.unit || '-'}</TableCell>
+                  <TableCell>{stock.item.unit || '-'}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">
-                      {item.lots_count || 0} lot(s)
+                      {stock.lots_count || 0} lot(s)
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {item.reorder_threshold ? (
-                      <span>{item.reorder_threshold}</span>
+                    {stock.item.reorder_threshold ? (
+                      <span>{stock.item.reorder_threshold}</span>
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/dashboard/inventory/items/${item.id}`}>
+                    <Link href={`/dashboard/inventory/items/${stock.item.id}`}>
                       <Button size="sm" variant="outline">
                         View Details
                       </Button>
@@ -224,11 +224,11 @@ export default function InventoryPage() {
           <div className="flex gap-4">
             <span className="flex items-center gap-1">
               <AlertTriangle className="h-3 w-3 text-red-600" />
-              Out of stock: {items.filter((i: any) => isOutOfStock(i)).length}
+              Out of stock: {items.filter((s: any) => isOutOfStock(s)).length}
             </span>
             <span className="flex items-center gap-1">
               <AlertTriangle className="h-3 w-3 text-yellow-600" />
-              Low stock: {items.filter((i: any) => !isOutOfStock(i) && isLowStock(i)).length}
+              Low stock: {items.filter((s: any) => !isOutOfStock(s) && isLowStock(s)).length}
             </span>
           </div>
         </div>

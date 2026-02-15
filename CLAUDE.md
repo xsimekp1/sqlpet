@@ -142,6 +142,20 @@ vercel logs
    - Railway: `railway logs` or dashboard
    - Vercel: `vercel ls` or dashboard
 
+## CORS Configuration
+
+Configured in `apps/api/src/app/main.py` with `CORSMiddleware`:
+- Static allowed origins: localhost:3000/5173 + known production Vercel URLs
+- Regex: `https://.*\.vercel\.app` — covers all Vercel preview deployments automatically
+- Env var: set `CORS_ORIGINS=https://my-domain.com` (comma-separated) in Railway to add origins without code changes
+
+### CORS error troubleshooting
+CORS errors are almost always a symptom of the backend crashing — the error response has no CORS headers:
+1. `curl -I https://sqlpet-production.up.railway.app/health`
+   - If `x-railway-fallback: true` → app is not running; check `railway logs --tail 50`
+2. If the app is running but CORS still fails, add the origin to `CORS_ORIGINS` env var in Railway dashboard
+3. Preflight (`OPTIONS`) is handled by `allow_methods=["*"]` — no changes needed
+
 ## Architecture Principles (from spec)
 
 - **Multi-tenant from day one:** Every table has `organization_id` (FK). API must enforce tenant isolation — users only see their org's data.

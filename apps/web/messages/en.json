@@ -1109,6 +1109,7 @@
   },
   "help": {
     "title": "Help",
+    "description": "PawShelter (ÚtulekOS) is a shelter management system covering daily operations: animal records, kennel assignments, medical tasks, feeding plans, and inventory.",
     "comingSoon": "Coming soon",
     "shortcuts": {
       "title": "Keyboard Shortcuts",

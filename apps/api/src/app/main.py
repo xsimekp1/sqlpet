@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -55,11 +56,15 @@ app = FastAPI(title="SQLpet API", lifespan=lifespan)
 
 # CORS configuration
 # For production, explicitly list allowed origins for security
+_extra = os.getenv("CORS_ORIGINS", "")
+EXTRA_ORIGINS = [o.strip() for o in _extra.split(",") if o.strip()]
+
 ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Local dev
     "http://localhost:5173",  # Vite dev
     "https://web-theta-peach-77.vercel.app",
     "https://sqlpet.vercel.app",
+    *EXTRA_ORIGINS,
 ]
 
 app.add_middleware(

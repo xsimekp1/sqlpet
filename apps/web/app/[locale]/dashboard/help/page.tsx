@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl';
 import { Keyboard, BookOpen, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPod|iPad/i.test(navigator.platform)
+
 export default function HelpPage() {
   const t = useTranslations('help');
 
@@ -11,6 +13,7 @@ export default function HelpPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+        <p className="text-muted-foreground mt-1">{t('description')}</p>
       </div>
 
       <Card>
@@ -25,7 +28,7 @@ export default function HelpPage() {
             <div className="flex items-center justify-between py-2 border-b">
               <span className="text-sm">{t('shortcuts.search')}</span>
               <div className="flex gap-1">
-                <kbd className="inline-flex h-6 items-center rounded border border-border bg-muted px-1.5 font-mono text-xs">⌘</kbd>
+                <kbd className="inline-flex h-6 items-center rounded border border-border bg-muted px-1.5 font-mono text-xs">{isMac ? '⌘' : 'Ctrl'}</kbd>
                 <kbd className="inline-flex h-6 items-center rounded border border-border bg-muted px-1.5 font-mono text-xs">K</kbd>
               </div>
             </div>

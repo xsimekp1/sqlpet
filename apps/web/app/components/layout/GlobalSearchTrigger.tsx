@@ -18,6 +18,8 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced
 }
 
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPod|iPad/i.test(navigator.platform)
+
 export function GlobalSearchTrigger({ className }: { className?: string }) {
   const t = useTranslations()
   const { searchOpen, setSearchOpen } = useUIStore()
@@ -102,9 +104,10 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
       >
         <Search className="h-4 w-4 text-slate-400" />
         <span className="flex-1 text-left">{t('topbar.search')}</span>
-        <kbd className="pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-slate-500 bg-slate-700 px-1.5 font-mono text-[10px] font-medium text-slate-300 opacity-100">
-          <span className="text-xs">⌘</span>K
-        </kbd>
+        <span className="pointer-events-none hidden sm:inline-flex items-center gap-0.5">
+          <kbd className="select-none inline-flex h-5 items-center rounded border border-slate-500 bg-slate-700 px-1.5 font-mono text-[10px] font-medium text-slate-300 opacity-100">{isMac ? '⌘' : 'Ctrl'}</kbd>
+          <kbd className="select-none inline-flex h-5 items-center rounded border border-slate-500 bg-slate-700 px-1.5 font-mono text-[10px] font-medium text-slate-300 opacity-100">K</kbd>
+        </span>
       </Button>
 
       <Button
@@ -161,7 +164,7 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
                         return (
                           <button
                             key={a.id}
-                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-accent ${activeIdx === idx ? 'bg-accent' : ''}`}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-muted ${activeIdx === idx ? 'bg-muted font-medium' : ''}`}
                             onClick={() => navigate(`/dashboard/animals/${a.id}`)}
                           >
                             <PawPrint className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -184,7 +187,7 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
                         return (
                           <button
                             key={k.id}
-                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-accent ${activeIdx === idx ? 'bg-accent' : ''}`}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-muted ${activeIdx === idx ? 'bg-muted font-medium' : ''}`}
                             onClick={() => navigate(`/dashboard/kennels/${k.id}`)}
                           >
                             <Home className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -207,7 +210,7 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
                         return (
                           <button
                             key={c.id}
-                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-accent ${activeIdx === idx ? 'bg-accent' : ''}`}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-muted ${activeIdx === idx ? 'bg-muted font-medium' : ''}`}
                             onClick={() => navigate(`/dashboard/people/${c.id}`)}
                           >
                             <User2 className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -230,7 +233,7 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
                         return (
                           <button
                             key={i.id}
-                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-accent ${activeIdx === idx ? 'bg-accent' : ''}`}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-muted ${activeIdx === idx ? 'bg-muted font-medium' : ''}`}
                             onClick={() => navigate(`/dashboard/inventory/items/${i.id}`)}
                           >
                             <Package className="h-4 w-4 text-muted-foreground shrink-0" />
