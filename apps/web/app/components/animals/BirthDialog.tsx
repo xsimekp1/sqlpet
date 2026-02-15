@@ -35,7 +35,7 @@ export default function BirthDialog({
 }: BirthDialogProps) {
   const t = useTranslations('birth');
   const [litterCount, setLitterCount] = useState(1);
-  const [birthDate, setBirthDate] = useState('');
+  const [birthDate, setBirthDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
   const getOffspringLabel = (count: number): string => {

@@ -85,11 +85,22 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
   const [colorImages, setColorImages] = useState<ColorImage[]>([]);
   const [loadingColors, setLoadingColors] = useState(false);
 
+  // Compute initial age years from birth_date_estimated
+  const getInitialAgeYears = (): string => {
+    const bd = (animal as any).birth_date_estimated as string | null | undefined;
+    if (!bd) return '';
+    const diffMs = Date.now() - new Date(bd).getTime();
+    const yrs = diffMs / (365.25 * 24 * 60 * 60 * 1000);
+    return String(Math.round(yrs * 10) / 10);
+  };
+
   const [editedData, setEditedData] = useState({
     sex: animal.sex,
     breed_id: animal.breeds?.[0]?.breed_id || '',
     color: animal.color || '',
-    estimated_age_years: animal.estimated_age_years || 0,
+    ageMode: 'years' as 'years' | 'date',
+    ageYears: getInitialAgeYears(),
+    ageBirthDate: ((animal as any).birth_date_estimated as string | null) ?? '',
   });
 
   // Fetch breeds on mount
@@ -117,7 +128,9 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
       sex: animal.sex,
       breed_id: animal.breeds?.[0]?.breed_id || '',
       color: animal.color || '',
-      estimated_age_years: animal.estimated_age_years || 0,
+      ageMode: 'years',
+      ageYears: getInitialAgeYears(),
+      ageBirthDate: ((animal as any).birth_date_estimated as string | null) ?? '',
     });
     setIsEditing(true);
   };
@@ -127,7 +140,9 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
       sex: animal.sex,
       breed_id: animal.breeds?.[0]?.breed_id || '',
       color: animal.color || '',
-      estimated_age_years: animal.estimated_age_years || 0,
+      ageMode: 'years',
+      ageYears: getInitialAgeYears(),
+      ageBirthDate: ((animal as any).birth_date_estimated as string | null) ?? '',
     });
     setIsEditing(false);
   };
@@ -146,8 +161,21 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
       if (editedData.color !== (animal.color || '')) {
         updateData.color = editedData.color || null;
       }
-      if (editedData.estimated_age_years !== animal.estimated_age_years) {
-        updateData.estimated_age_years = editedData.estimated_age_years;
+      // Compute birth_date_estimated from age input
+      let newBirthDate: string | null = null;
+      if (editedData.ageMode === 'years' && editedData.ageYears !== '') {
+        const years = parseFloat(editedData.ageYears);
+        if (!isNaN(years) && years >= 0) {
+          const d = new Date();
+          d.setDate(d.getDate() - Math.round(years * 365.25));
+          newBirthDate = d.toISOString().split('T')[0];
+        }
+      } else if (editedData.ageMode === 'date' && editedData.ageBirthDate) {
+        newBirthDate = editedData.ageBirthDate;
+      }
+      const currentBirthDate = ((animal as any).birth_date_estimated as string | null) ?? null;
+      if (newBirthDate !== currentBirthDate) {
+        updateData.birth_date_estimated = newBirthDate;
       }
 
       if (Object.keys(updateData).length === 0) {
@@ -250,18 +278,46 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
           </div>
         )}
 
-        {/* Estimated Age */}
+        {/* Age / Birth date */}
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">Estimated Age</p>
-          <Input
-            type="number"
-            value={editedData.estimated_age_years}
-            onChange={(e) => setEditedData(prev => ({ ...prev, estimated_age_years: parseInt(e.target.value) || 0 }))}
-            disabled={isSaving}
-            min="0"
-            max="30"
-          />
-          <p className="text-xs text-muted-foreground">years</p>
+          <p className="text-sm text-muted-foreground">Věk</p>
+          <div className="flex gap-1 text-xs mb-1">
+            <button
+              type="button"
+              className={`px-2 py-0.5 rounded border transition-colors ${editedData.ageMode === 'years' ? 'bg-primary text-primary-foreground border-primary' : 'border-input hover:bg-accent'}`}
+              onClick={() => setEditedData(prev => ({ ...prev, ageMode: 'years' }))}
+              disabled={isSaving}
+            >
+              Odhadovaný věk
+            </button>
+            <button
+              type="button"
+              className={`px-2 py-0.5 rounded border transition-colors ${editedData.ageMode === 'date' ? 'bg-primary text-primary-foreground border-primary' : 'border-input hover:bg-accent'}`}
+              onClick={() => setEditedData(prev => ({ ...prev, ageMode: 'date' }))}
+              disabled={isSaving}
+            >
+              Datum narození
+            </button>
+          </div>
+          {editedData.ageMode === 'years' ? (
+            <>
+              <Input
+                type="text"
+                value={editedData.ageYears}
+                onChange={(e) => setEditedData(prev => ({ ...prev, ageYears: e.target.value }))}
+                disabled={isSaving}
+                placeholder="např. 1.5"
+              />
+              <p className="text-xs text-muted-foreground">roky (desetinné číslo)</p>
+            </>
+          ) : (
+            <Input
+              type="date"
+              value={editedData.ageBirthDate}
+              onChange={(e) => setEditedData(prev => ({ ...prev, ageBirthDate: e.target.value }))}
+              disabled={isSaving}
+            />
+          )}
         </div>
 
         {/* Save/Cancel buttons */}
@@ -336,10 +392,10 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
         </div>
       )}
 
-      {/* Estimated Age - editable */}
+      {/* Age (computed from birth_date_estimated) - editable */}
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground flex items-center gap-2">
-          Estimated Age
+          Věk
           <Button
             size="sm"
             variant="outline"
@@ -350,9 +406,24 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
           </Button>
         </p>
         <p className="font-medium">
-          {animal.estimated_age_years
-            ? `${animal.estimated_age_years} ${animal.estimated_age_years === 1 ? 'year' : 'years'}`
-            : '—'}
+          {(() => {
+            const bd = (animal as any).birth_date_estimated as string | null | undefined;
+            if (!bd) return '—';
+            const diffMs = Date.now() - new Date(bd).getTime();
+            const years = diffMs / (365.25 * 24 * 60 * 60 * 1000);
+            if (years < 1 / 12) {
+              const days = Math.floor(years * 365.25);
+              return `${days} ${days === 1 ? 'den' : days <= 4 ? 'dny' : 'dní'}`;
+            }
+            if (years < 1) {
+              const months = Math.round(years * 12);
+              return `${months} ${months === 1 ? 'měsíc' : months <= 4 ? 'měsíce' : 'měsíců'}`;
+            }
+            const yr = Math.round(years * 10) / 10;
+            if (yr === 1) return '1 rok';
+            if (yr <= 4) return `${yr} ${Number.isInteger(yr) ? 'roky' : 'roku'}`;
+            return `${yr} let`;
+          })()}
         </p>
       </div>
 

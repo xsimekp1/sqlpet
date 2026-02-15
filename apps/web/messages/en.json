@@ -982,8 +982,16 @@
       "deactivate": "Deactivate",
       "viewHistory": "View History",
       "generateTasks": "Generate Tasks",
-      "logFeeding": "Log Feeding"
+      "logFeeding": "Log Feeding",
+      "cancel": "Cancel"
     },
+    "createPlanDesc": "Create a new feeding schedule for an animal",
+    "selectAnimal": "Select an animal",
+    "selectFoodOptional": "Select food (optional)",
+    "foodLinkDesc": "Link to a specific food for automatic inventory deduction",
+    "addTime": "Add Time",
+    "endDateDesc": "Leave empty for ongoing plan",
+    "creating": "Creating...",
     "messages": {
       "planCreated": "Feeding plan created",
       "planCreatedDesc": "The feeding plan has been created successfully",

@@ -61,6 +61,7 @@ async def create_inventory_item(
         unit_weight_g=item_data.unit_weight_g,
     )
     await db.commit()
+    await db.refresh(item)
     return item
 
 
@@ -197,6 +198,7 @@ async def create_inventory_lot(
             cost_per_unit=lot_data.cost_per_unit,
         )
         await db.commit()
+        await db.refresh(lot)
         return lot
     except ValueError as e:
         raise HTTPException(

@@ -126,7 +126,7 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
           onClick={() => setSearchOpen(false)}
         >
           <div
-            className="bg-background rounded-xl shadow-2xl border w-full max-w-2xl mx-4 overflow-hidden"
+            className="bg-background rounded-xl shadow-2xl border w-full max-w-2xl mx-4 overflow-hidden text-foreground"
             onClick={e => e.stopPropagation()}
             onKeyDown={handleKeyDown}
           >

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
@@ -49,28 +49,19 @@ export default function NewInventoryItemPage() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
 
-  const { register, handleSubmit, setValue, control, formState: { errors } } = useForm<InventoryItemFormData>();
+  const [categoryValue, setCategoryValue] = useState(() => searchParams.get('category') || '');
+  const [selectedSpecies, setSelectedSpecies] = useState<string[]>(() => {
+    const s = searchParams.get('species');
+    return s ? [s] : [];
+  });
+
+  const { register, handleSubmit, setValue, control, formState: { errors } } = useForm<InventoryItemFormData>({
+    defaultValues: {
+      category: (searchParams.get('category') as any) || undefined,
+    },
+  });
   const category = useWatch({ control, name: 'category' });
   const isFood = category === 'food';
-
-  // Controlled value for category Select (needed for pre-fill to show visually)
-  const [categoryValue, setCategoryValue] = useState('');
-
-  // Species selection state
-  const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
-
-  // Pre-fill from URL params (e.g. ?category=food&species=dog)
-  useEffect(() => {
-    const defaultCategory = searchParams.get('category');
-    const defaultSpecies = searchParams.get('species');
-    if (defaultCategory) {
-      setCategoryValue(defaultCategory);
-      setValue('category', defaultCategory as any);
-    }
-    if (defaultSpecies) {
-      setSelectedSpecies([defaultSpecies]);
-    }
-  }, []);
 
   const toggleSpecies = (sp: string) => {
     setSelectedSpecies(prev =>

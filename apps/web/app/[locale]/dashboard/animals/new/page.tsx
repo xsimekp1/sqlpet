@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { ArrowLeft, ImageOff } from 'lucide-react';
 import Link from 'next/link';
@@ -40,6 +40,7 @@ interface ColorImage {
 
 export default function NewAnimalPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations('animals.new');
   const tColors = useTranslations('animals.colors');
   const tSpecies = useTranslations('animals.species');
@@ -146,7 +147,7 @@ export default function NewAnimalPage() {
       species: formData.get('species') as string,
       sex: formData.get('sex') as string,
       color: selectedColor || null,
-      status: 'available',
+      status: 'registered',
     };
 
     if (selectedBreed) {
@@ -166,7 +167,12 @@ export default function NewAnimalPage() {
           toast.warning('Upozornění: V inventáři není žádné krmivo vhodné pro tento druh zvířete.');
         }
       } catch { /* non-critical */ }
-      router.push(`/dashboard/animals/${newAnimal.id}`);
+      const returnTo = searchParams.get('returnTo');
+      if (returnTo) {
+        router.push(`${returnTo}?animalId=${newAnimal.id}`);
+      } else {
+        router.push(`/dashboard/animals/${newAnimal.id}`);
+      }
     } catch (error) {
       toast.error(t('error'));
       console.error(error);

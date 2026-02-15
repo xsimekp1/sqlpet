@@ -20,6 +20,8 @@ import { toast } from 'sonner';
 interface MERCalculatorProps {
   animalId: string;
   weightKg: number | null;
+  /** Altered status of the animal — used for MER factor display */
+  alteredStatus?: string;
   /** Called after successful calculation so parent can prefill form */
   onApply?: (result: MERCalculation) => void;
   /** Compact mode – hide the breakdown table */
@@ -40,6 +42,7 @@ const WEIGHT_GOAL_VALUES = ['maintain', 'lose', 'gain'] as const;
 export default function MERCalculator({
   animalId,
   weightKg,
+  alteredStatus,
   onApply,
   compact = false,
 }: MERCalculatorProps) {

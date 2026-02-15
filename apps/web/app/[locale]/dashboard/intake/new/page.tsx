@@ -51,6 +51,7 @@ interface FormState {
   reason: string;
   intake_date: string;
   notes: string;
+  medicalCheck: boolean;
   // Step 3
   finder_notes: string;
   // Step 4
@@ -71,6 +72,7 @@ export default function NewIntakePage() {
     reason: '',
     intake_date: today,
     notes: '',
+    medicalCheck: false,
     finder_notes: '',
     funding_source: '',
     funding_notes: '',
@@ -85,9 +87,9 @@ export default function NewIntakePage() {
   const [previousIntakes, setPreviousIntakes] = useState<IntakeRecord[]>([]);
   const [loadingPreviousIntakes, setLoadingPreviousIntakes] = useState(false);
 
-  // Pre-fill animal when animal_id is passed via URL (e.g. from animal detail page)
+  // Pre-fill animal when animal_id or animalId is passed via URL
   useEffect(() => {
-    const urlAnimalId = searchParams.get('animal_id');
+    const urlAnimalId = searchParams.get('animal_id') || searchParams.get('animalId');
     if (!urlAnimalId) return;
     (async () => {
       try {
@@ -158,6 +160,19 @@ export default function NewIntakePage() {
       };
       await ApiClient.post('/intakes', body);
       toast.success('Příjem byl zaznamenán');
+      // Fire-and-forget: create medical check task if requested
+      if (form.medicalCheck) {
+        const todayIso = new Date().toISOString().split('T')[0];
+        ApiClient.post('/tasks', {
+          title: `Veterinární prohlídka – ${form.animal_name}`,
+          type: 'medical',
+          status: 'pending',
+          priority: 'high',
+          due_date: todayIso,
+          related_entity_type: 'animal',
+          related_entity_id: form.animal_id,
+        }).catch(() => { /* non-critical */ });
+      }
       router.push('/dashboard/intake');
     } catch (err: any) {
       toast.error('Nepodařilo se vytvořit příjem: ' + (err.message || ''));
@@ -270,7 +285,7 @@ export default function NewIntakePage() {
               <div className="pt-2">
                 <p className="text-xs text-muted-foreground">
                   Zvíře nenalezeno?{' '}
-                  <Link href="/dashboard/animals/new" className="text-primary hover:underline">
+                  <Link href={"/dashboard/animals/new?returnTo=" + encodeURIComponent("/dashboard/intake/new")} className="text-primary hover:underline">
                     Vytvořte nové zvíře
                   </Link>
                 </p>
@@ -305,6 +320,15 @@ export default function NewIntakePage() {
                   onChange={e => set('notes', e.target.value)}
                 />
               </div>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={form.medicalCheck}
+                  onChange={e => setForm(p => ({ ...p, medicalCheck: e.target.checked }))}
+                  className="w-4 h-4 rounded border border-input accent-primary"
+                />
+                <span className="text-sm">Provést veterinární prohlídku (dnes)</span>
+              </label>
             </div>
           )}
 

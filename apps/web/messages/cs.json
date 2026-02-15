@@ -922,8 +922,16 @@
       "deactivate": "Deaktivovat",
       "viewHistory": "Zobrazit historii",
       "generateTasks": "Generovat úkoly",
-      "logFeeding": "Zaznamenat krmení"
+      "logFeeding": "Zaznamenat krmení",
+      "cancel": "Zrušit"
     },
+    "createPlanDesc": "Vytvořte nový plán krmení pro zvíře",
+    "selectAnimal": "Vyberte zvíře",
+    "selectFoodOptional": "Vyberte krmivo (volitelně)",
+    "foodLinkDesc": "Propojit s konkrétním krmivem pro automatický odpočet ze skladu",
+    "addTime": "Přidat čas",
+    "endDateDesc": "Ponechte prázdné pro průběžný plán",
+    "creating": "Vytváření...",
     "messages": {
       "planCreated": "Plán krmení vytvořen",
       "planCreatedDesc": "Plán krmení byl úspěšně vytvořen",

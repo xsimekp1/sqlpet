@@ -128,7 +128,7 @@ export default function NewFeedingPlanPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('createPlan')}</h1>
           <p className="text-muted-foreground">
-            Create a new feeding schedule for an animal
+            {t('createPlanDesc')}
           </p>
         </div>
       </div>
@@ -143,7 +143,7 @@ export default function NewFeedingPlanPage() {
             required
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select an animal" />
+              <SelectValue placeholder={t('selectAnimal')} />
             </SelectTrigger>
             <SelectContent>
               {animals.map((animal: any) => (
@@ -162,7 +162,7 @@ export default function NewFeedingPlanPage() {
             onValueChange={(value) => setValue('food_id', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select food (optional)" />
+              <SelectValue placeholder={t('selectFoodOptional')} />
             </SelectTrigger>
             <SelectContent>
               {filteredFoods.map((food: any) => (
@@ -173,7 +173,7 @@ export default function NewFeedingPlanPage() {
             </SelectContent>
           </Select>
           <p className="text-sm text-muted-foreground">
-            Link to a specific food for automatic inventory deduction
+            {t('foodLinkDesc')}
           </p>
           {selectedAnimal && filteredFoods.length === 0 && (
             <Alert variant="destructive" className="mt-2">
@@ -236,7 +236,7 @@ export default function NewFeedingPlanPage() {
             />
             <Button type="button" onClick={addScheduleTime} variant="outline">
               <Plus className="h-4 w-4 mr-2" />
-              Add Time
+              {t('addTime')}
             </Button>
           </div>
           {scheduleTimes.length > 0 && (
@@ -278,7 +278,7 @@ export default function NewFeedingPlanPage() {
               {...register('end_date')}
             />
             <p className="text-sm text-muted-foreground">
-              Leave empty for ongoing plan
+              {t('endDateDesc')}
             </p>
           </div>
         </div>
@@ -300,11 +300,11 @@ export default function NewFeedingPlanPage() {
             type="submit"
             disabled={createPlanMutation.isPending}
           >
-            {createPlanMutation.isPending ? 'Creating...' : t('actions.createPlan')}
+            {createPlanMutation.isPending ? t('creating') : t('actions.createPlan')}
           </Button>
           <Link href="/dashboard/feeding/plans">
             <Button type="button" variant="outline">
-              Cancel
+              {t('actions.cancel')}
             </Button>
           </Link>
         </div>

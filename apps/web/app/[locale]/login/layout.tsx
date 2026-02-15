@@ -10,8 +10,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <Image
             src="/petslog.png"
             alt="Petslog"
-            width={240}
-            height={160}
+            width={360}
+            height={240}
             className="drop-shadow-md"
             priority
           />

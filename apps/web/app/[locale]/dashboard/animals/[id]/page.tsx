@@ -1035,6 +1035,7 @@ export default function AnimalDetailPage() {
               <MERCalculator
                 animalId={animalId}
                 weightKg={latestWeight ? Number(latestWeight.weight_kg) : null}
+                alteredStatus={animal.altered_status}
               />
             </CardContent>
           </Card>
