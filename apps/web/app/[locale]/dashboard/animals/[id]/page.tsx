@@ -1245,6 +1245,7 @@ export default function AnimalDetailPage() {
             ]);
           }}
         />
+      )}
 
       {/* Close Intake Dialog */}
       <Dialog open={closeIntakeOpen} onOpenChange={setCloseIntakeOpen}>
