@@ -1329,7 +1329,6 @@ export default function AnimalDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      )}
     </div>
   );
 }
