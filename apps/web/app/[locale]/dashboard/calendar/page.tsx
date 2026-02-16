@@ -72,7 +72,7 @@ export default function CalendarPage() {
     queryFn: async () => {
       const start = Date.now();
       const result = await ApiClient.getAnimals({ page_size: 500 });
-      console.timeEnd('[CALENDAR] Fetch animals', Date.now() - start);
+      console.timeEnd('[CALENDAR] Fetch animals');
       console.log(`[CALENDAR] Animals received: ${result.items.length}, time: ${Date.now() - start}ms`);
       return result;
     },
