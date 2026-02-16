@@ -322,20 +322,17 @@ export default function FindingsReportWidget() {
           )}
         </div>
 
-        {/* Map View */}
+        {/* Map View - disabled until map library is resolved */}
         {viewMode === 'map' && (
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">
               Klikněte na mapu pro výběr bodu GPS filtru
             </p>
-          )}
-
-          {/* Map View - disabled until map library is resolved */}
-          {viewMode === 'map' && (
             <div className="h-[300px] rounded-lg bg-muted flex items-center justify-center">
               <p className="text-muted-foreground">Mapa bude dostupná po vyřešení kompatibility</p>
             </div>
-          )}
+          </div>
+        )}
 
         {/* Results count */}
         <div className="text-sm text-muted-foreground">
