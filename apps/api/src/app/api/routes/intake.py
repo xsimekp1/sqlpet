@@ -124,10 +124,19 @@ def _to_response(i: Intake, animal=None) -> IntakeResponse:
 # ── Routes ───────────────────────────────────────────────────────────────────
 
 
+from datetime import date as date_type
+
+
 @router.get("", response_model=List[IntakeResponse])
 async def list_intakes(
     reason: Optional[str] = Query(None),
     animal_id: Optional[str] = Query(None),
+    date_from: Optional[date_type] = Query(
+        None, description="Filter by intake date (from)"
+    ),
+    date_to: Optional[date_type] = Query(
+        None, description="Filter by intake date (to)"
+    ),
     current_user: User = Depends(get_current_user),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
@@ -150,6 +159,10 @@ async def list_intakes(
             q = q.where(Intake.animal_id == uuid.UUID(animal_id))
         except ValueError:
             pass
+    if date_from:
+        q = q.where(Intake.intake_date >= date_from)
+    if date_to:
+        q = q.where(Intake.intake_date <= date_to)
     q = q.order_by(Intake.intake_date.desc())
     result = await db.execute(q)
     return [_to_response(i, a) for i, a in result.all()]

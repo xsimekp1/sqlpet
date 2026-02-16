@@ -158,19 +158,40 @@ export default function IntakePage() {
         </Link>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
-        <Select value={reasonFilter || '__all__'} onValueChange={v => setReasonFilter(v === '__all__' ? '' : v)}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Všechny důvody" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">Všechny důvody</SelectItem>
-            {Object.entries(REASON_LABELS).map(([v, label]) => (
-              <SelectItem key={v} value={v}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+{/* Filters */}
+      <div className="flex gap-3 flex-wrap items-end">
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Důvod</Label>
+          <Select value={reasonFilter || '__all__'} onValueChange={v => setReasonFilter(v === '__all__' ? '' : v)}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Všechny důvody" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Všechny důvody</SelectItem>
+              {Object.entries(REASON_LABELS).map(([v, label]) => (
+                <SelectItem key={v} value={v}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Od</Label>
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Do</Label>
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+            className="w-40"
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -201,8 +222,9 @@ export default function IntakePage() {
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Důvod příjmu</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Datum příjmu</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Plánovaný konec</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Způsob financování</th>
+<th className="text-left px-4 py-3 font-medium text-muted-foreground">Způsob financování</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">Poznámky</th>
+                  <th className="w-12"></th>
                 </tr>
               </thead>
               <tbody>
@@ -235,8 +257,13 @@ export default function IntakePage() {
                     <td className="px-4 py-3 text-muted-foreground text-xs">
                       {intake.funding_source ?? '—'}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs max-w-xs truncate">
+<td className="px-4 py-3 text-muted-foreground text-xs max-w-xs truncate">
                       {intake.notes ?? '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openEditDialog(intake)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -246,5 +273,73 @@ export default function IntakePage() {
         </Card>
       )}
     </div>
+
+    {/* Edit Dialog */}
+    <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Upravit příjem</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Důvod příjmu</Label>
+            <Select value={editForm.reason} onValueChange={v => setEditForm(p => ({ ...p, reason: v }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Vyberte důvod" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(REASON_LABELS).map(([v, label]) => (
+                  <SelectItem key={v} value={v}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Datum příjmu</Label>
+              <Input
+                type="date"
+                value={editForm.intake_date}
+                onChange={e => setEditForm(p => ({ ...p, intake_date: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Plánovaný konec</Label>
+              <Input
+                type="date"
+                value={editForm.planned_end_date}
+                onChange={e => setEditForm(p => ({ ...p, planned_end_date: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Způsob financování</Label>
+            <Input
+              value={editForm.funding_source}
+              onChange={e => setEditForm(p => ({ ...p, funding_source: e.target.value }))}
+              placeholder="např. Nadace浙浙"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Poznámky</Label>
+            <Textarea
+              value={editForm.notes}
+              onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))}
+              placeholder="Volitelné poznámky..."
+              rows={3}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={savingIntake}>
+            Zrušit
+          </Button>
+          <Button onClick={handleSaveIntake} disabled={savingIntake}>
+            {savingIntake ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Uložit
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
