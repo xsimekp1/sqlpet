@@ -13,6 +13,7 @@ import { ApiClient } from '@/app/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
