@@ -33,6 +33,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useUIStore } from '@/app/stores/uiStore';
@@ -116,12 +117,16 @@ export default function SettingsPage() {
   const [savingBreedId, setSavingBreedId] = useState<string | null>(null);
 
   // Colors admin state
-  interface ColorAdmin { code: string; cs: string | null; en: string | null }
+  interface ColorAdmin { code: string; cs: string | null; en: string | null; used_count: number }
   const [colorsAdmin, setColorsAdmin] = useState<ColorAdmin[]>([]);
   const [colorsSearch, setColorsSearch] = useState('');
   const [isLoadingColorsAdmin, setIsLoadingColorsAdmin] = useState(false);
   const [colorEdits, setColorEdits] = useState<Record<string, { cs: string; en: string }>>({});
   const [savingColorCode, setSavingColorCode] = useState<string | null>(null);
+  const [newColorOpen, setNewColorOpen] = useState(false);
+  const [newColorForm, setNewColorForm] = useState({ code: '', cs: '', en: '' });
+  const [creatingColor, setCreatingColor] = useState(false);
+  const [deletingColor, setDeletingColor] = useState<string | null>(null);
 
   // Members state
   interface MemberListItem { user_id: string; email: string; name: string; role_id?: string | null; role_name?: string | null; status: string }
@@ -463,6 +468,43 @@ export default function SettingsPage() {
       toast.error(t('colorsAdmin.saveError'));
     } finally {
       setSavingColorCode(null);
+    }
+  };
+
+  const createNewColor = async () => {
+    if (!newColorForm.code.trim()) {
+      toast.error(t('colorsAdmin.codeRequired'));
+      return;
+    }
+    setCreatingColor(true);
+    try {
+      await ApiClient.createColor({
+        code: newColorForm.code.trim().toLowerCase(),
+        cs: newColorForm.cs || undefined,
+        en: newColorForm.en || undefined,
+      });
+      toast.success(t('colorsAdmin.createSuccess'));
+      setNewColorOpen(false);
+      setNewColorForm({ code: '', cs: '', en: '' });
+      loadColorsAdmin();
+    } catch (err: any) {
+      toast.error(err.message || t('colorsAdmin.createError'));
+    } finally {
+      setCreatingColor(false);
+    }
+  };
+
+  const deleteColor = async (code: string) => {
+    if (!confirm(t('colorsAdmin.deleteConfirm'))) return;
+    setDeletingColor(code);
+    try {
+      await ApiClient.deleteColor(code);
+      toast.success(t('colorsAdmin.deleteSuccess'));
+      loadColorsAdmin();
+    } catch (err: any) {
+      toast.error(err.message || t('colorsAdmin.deleteError'));
+    } finally {
+      setDeletingColor(null);
     }
   };
 
@@ -845,8 +887,12 @@ export default function SettingsPage() {
         {/* ── Colors tab ── */}
         <TabsContent value="colors" className="space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>{t('colorsAdmin.title')}</CardTitle>
+              <Button size="sm" onClick={() => setNewColorOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                {t('colorsAdmin.addColor')}
+              </Button>
             </CardHeader>
             <CardContent className="space-y-3">
               <Input
@@ -864,10 +910,12 @@ export default function SettingsPage() {
               ) : (
                 <div className="space-y-2">
                   {/* Header row */}
-                  <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 px-1 text-xs text-muted-foreground font-medium">
+                  <div className="grid grid-cols-[1fr_1fr_1fr_80px_80px_auto] gap-2 px-1 text-xs text-muted-foreground font-medium">
                     <span>{t('colorsAdmin.colorCode')}</span>
                     <span>{t('colorsAdmin.nameCz')}</span>
                     <span>{t('colorsAdmin.nameEn')}</span>
+                    <span>{t('colorsAdmin.used')}</span>
+                    <span />
                     <span />
                   </div>
                   {colorsAdmin
@@ -883,7 +931,7 @@ export default function SettingsPage() {
                     .map((color) => (
                       <div
                         key={color.code}
-                        className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center"
+                        className="grid grid-cols-[1fr_1fr_1fr_80px_80px_auto] gap-2 items-center"
                       >
                         <span className="text-sm font-mono truncate">{color.code}</span>
                         <Input
@@ -906,6 +954,15 @@ export default function SettingsPage() {
                           }
                           className="h-8 text-sm"
                         />
+                        <span className="text-sm text-muted-foreground text-center">
+                          {color.used_count > 0 ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium dark:bg-blue-900 dark:text-blue-200">
+                              {color.used_count}
+                            </span>
+                          ) : (
+                            '-'
+                          )}
+                        </span>
                         <Button
                           size="sm"
                           variant="outline"
@@ -919,12 +976,68 @@ export default function SettingsPage() {
                             <Save className="h-3.5 w-3.5" />
                           )}
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                          onClick={() => deleteColor(color.code)}
+                          disabled={deletingColor === color.code || color.used_count > 0}
+                          title={color.used_count > 0 ? t('colorsAdmin.cannotDelete') : t('colorsAdmin.delete')}
+                        >
+                          {deletingColor === color.code ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
                       </div>
                     ))}
                 </div>
               )}
             </CardContent>
           </Card>
+
+          {/* New Color Dialog */}
+          <Dialog open={newColorOpen} onOpenChange={setNewColorOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{t('colorsAdmin.addColor')}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('colorsAdmin.colorCode')} *</label>
+                  <Input
+                    value={newColorForm.code}
+                    onChange={(e) => setNewColorForm((prev) => ({ ...prev, code: e.target.value }))}
+                    placeholder="e.g. black, brown-white, tricolor"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('colorsAdmin.nameCz')}</label>
+                  <Input
+                    value={newColorForm.cs}
+                    onChange={(e) => setNewColorForm((prev) => ({ ...prev, cs: e.target.value }))}
+                    placeholder="Český název"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('colorsAdmin.nameEn')}</label>
+                  <Input
+                    value={newColorForm.en}
+                    onChange={(e) => setNewColorForm((prev) => ({ ...prev, en: e.target.value }))}
+                    placeholder="English name"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setNewColorOpen(false)}>{t('cancel')}</Button>
+                <Button onClick={createNewColor} disabled={creatingColor}>
+                  {creatingColor ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {t('colorsAdmin.create')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* ── Members tab ── */}

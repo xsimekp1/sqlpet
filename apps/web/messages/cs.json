@@ -501,9 +501,20 @@
       "colorCode": "Kód barvy",
       "nameCz": "Název (CS)",
       "nameEn": "Název (EN)",
+      "used": "Použito",
       "saveSuccess": "Překlad uložen",
       "saveError": "Chyba při ukládání",
-      "empty": "Žádné barvy nenalezeny"
+      "empty": "Žádné barvy nenalezeny",
+      "addColor": "Přidat barvu",
+      "create": "Vytvořit",
+      "createSuccess": "Barva vytvořena",
+      "createError": "Chyba při vytváření barvy",
+      "codeRequired": "Kód barvy je povinný",
+      "delete": "Smazat",
+      "deleteConfirm": "Opravdu chcete smazat tuto barvu?",
+      "deleteSuccess": "Barva smazána",
+      "deleteError": "Chyba při mazání barvy",
+      "cannotDelete": "Barvu nelze smazat - je použita u zvířat"
     }
   },
   "animals": {

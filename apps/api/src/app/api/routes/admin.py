@@ -7,7 +7,11 @@ from pydantic import BaseModel
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.auth import get_current_user, get_current_organization_id, require_permission
+from src.app.api.dependencies.auth import (
+    get_current_user,
+    get_current_organization_id,
+    require_permission,
+)
 from src.app.api.dependencies.db import get_db
 from src.app.models.breed import Breed
 from src.app.models.breed_i18n import BreedI18n
@@ -19,7 +23,13 @@ from src.app.models.role_permission import RolePermission
 from src.app.core.security import hash_password
 from src.app.services.supabase_storage_service import supabase_storage_service
 
-ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
+ALLOWED_IMAGE_TYPES = {
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+}
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -329,11 +339,22 @@ class ColorAdminResponse(BaseModel):
     code: str
     cs: Optional[str] = None
     en: Optional[str] = None
+    used_count: int = 0
 
 
 class UpdateColorTranslationsRequest(BaseModel):
     cs: Optional[str] = None
     en: Optional[str] = None
+
+
+class CreateColorRequest(BaseModel):
+    code: str
+    cs: Optional[str] = None
+    en: Optional[str] = None
+
+
+class DeleteColorRequest(BaseModel):
+    pass
 
 
 @router.get("/colors", response_model=List[ColorAdminResponse])
@@ -354,20 +375,33 @@ async def list_colors_admin(
             lookup[code] = {}
         lookup[code][locale] = name
 
-    # Also collect all distinct color codes used in animals (might not have translations yet)
+    # Also collect all distinct color codes used in animals
     animal_colors_result = await db.execute(
-        text("SELECT DISTINCT color FROM animals WHERE color IS NOT NULL AND color != ''")
+        text(
+            "SELECT color, COUNT(*) as cnt FROM animals WHERE color IS NOT NULL AND color != '' GROUP BY color"
+        )
     )
-    animal_colors = {row[0] for row in animal_colors_result.fetchall()}
+    animal_color_counts = {row[0]: row[1] for row in animal_colors_result.fetchall()}
 
-    # Build full list: i18n keys + any animal colors not yet in i18n, sorted
-    all_codes = sorted(set(list(lookup.keys()) + list(animal_colors)))
+    # Also get colors from default_animal_images
+    image_colors_result = await db.execute(
+        text(
+            "SELECT DISTINCT color_pattern FROM default_animal_images WHERE color_pattern IS NOT NULL AND color_pattern != ''"
+        )
+    )
+    image_colors = {row[0] for row in image_colors_result.fetchall()}
+
+    # Build full list: i18n keys + any animal colors + image colors, sorted
+    all_codes = sorted(
+        set(list(lookup.keys()) + list(animal_color_counts.keys()) + list(image_colors))
+    )
 
     return [
         ColorAdminResponse(
             code=code,
             cs=lookup.get(code, {}).get("cs"),
             en=lookup.get(code, {}).get("en"),
+            used_count=animal_color_counts.get(code, 0),
         )
         for code in all_codes
     ]
@@ -415,7 +449,68 @@ async def update_color_translations(
     return {"ok": True}
 
 
-@router.delete("/default-images/{image_id}", status_code=204)
+@router.post("/colors", status_code=201)
+async def create_color(
+    body: CreateColorRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    code = body.code.strip().lower()
+    if not code:
+        raise HTTPException(status_code=400, detail="Color code is required")
+
+    # Check if color already exists
+    existing = await db.execute(
+        text(
+            "SELECT code FROM color_i18n WHERE code = :code AND organization_id IS NULL LIMIT 1"
+        ),
+        {"code": code},
+    )
+    if existing.fetchone():
+        raise HTTPException(status_code=409, detail="Color already exists")
+
+    # Insert translations if provided
+    for locale, name in [("cs", body.cs), ("en", body.en)]:
+        if name:
+            await db.execute(
+                text(
+                    "INSERT INTO color_i18n (code, locale, name) VALUES (:code, :locale, :name)"
+                ),
+                {"code": code, "locale": locale, "name": name.strip()},
+            )
+
+    await db.commit()
+    return {"ok": True, "code": code}
+
+
+@router.delete("/colors/{code}", status_code=204)
+async def delete_color(
+    code: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Check if color is used by any animals
+    usage_check = await db.execute(
+        text("SELECT COUNT(*) FROM animals WHERE color = :code AND deleted_at IS NULL"),
+        {"code": code},
+    )
+    count = usage_check.scalar()
+    if count and count > 0:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Color is used by {count} animals and cannot be deleted",
+        )
+
+    # Delete translations
+    await db.execute(
+        text("DELETE FROM color_i18n WHERE code = :code AND organization_id IS NULL"),
+        {"code": code},
+    )
+
+    await db.commit()
+    return None
+
+
 async def delete_default_image(
     image_id: str,
     db: AsyncSession = Depends(get_db),
@@ -446,6 +541,7 @@ async def delete_default_image(
 
 
 # ── Member management ─────────────────────────────────────────────────────────
+
 
 class MemberCreateRequest(BaseModel):
     name: str
@@ -501,7 +597,11 @@ async def list_members(
     ]
 
 
-@router.post("/members/create", response_model=MemberCreateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/members/create",
+    response_model=MemberCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_member(
     data: MemberCreateRequest,
     current_user: User = Depends(get_current_user),
@@ -510,16 +610,20 @@ async def create_member(
 ):
     """Create a new user and add them to the current organization."""
     # Check if user with this email already exists
-    existing_user = (await db.execute(select(User).where(User.email == data.email))).scalar_one_or_none()
+    existing_user = (
+        await db.execute(select(User).where(User.email == data.email))
+    ).scalar_one_or_none()
 
     if existing_user:
         # Check if already a member of this org
-        existing_membership = (await db.execute(
-            select(Membership).where(
-                Membership.user_id == existing_user.id,
-                Membership.organization_id == organization_id,
+        existing_membership = (
+            await db.execute(
+                select(Membership).where(
+                    Membership.user_id == existing_user.id,
+                    Membership.organization_id == organization_id,
+                )
             )
-        )).scalar_one_or_none()
+        ).scalar_one_or_none()
         if existing_membership:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -545,7 +649,9 @@ async def create_member(
         try:
             role_uuid = uuid.UUID(data.role_id)
             role_result = await db.execute(
-                select(Role).where(Role.id == role_uuid, Role.organization_id == organization_id)
+                select(Role).where(
+                    Role.id == role_uuid, Role.organization_id == organization_id
+                )
             )
             role = role_result.scalar_one_or_none()
             if role:
@@ -584,9 +690,7 @@ async def list_org_roles(
 ):
     """List roles available in the current organization."""
     result = await db.execute(
-        select(Role)
-        .where(Role.organization_id == organization_id)
-        .order_by(Role.name)
+        select(Role).where(Role.organization_id == organization_id).order_by(Role.name)
     )
     return [RoleListItem(id=str(r.id), name=r.name) for r in result.scalars().all()]
 
@@ -607,7 +711,9 @@ async def set_member_role(
     try:
         user_uuid = uuid.UUID(user_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID"
+        )
 
     membership_result = await db.execute(
         select(Membership).where(
@@ -617,18 +723,28 @@ async def set_member_role(
     )
     membership = membership_result.scalar_one_or_none()
     if membership is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found in this organization")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found in this organization",
+        )
 
     if body.role_id:
         try:
             role_uuid = uuid.UUID(body.role_id)
         except ValueError:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role ID")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role ID"
+            )
         role_result = await db.execute(
-            select(Role).where(Role.id == role_uuid, Role.organization_id == organization_id)
+            select(Role).where(
+                Role.id == role_uuid, Role.organization_id == organization_id
+            )
         )
         if role_result.scalar_one_or_none() is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found in this organization")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Role not found in this organization",
+            )
         membership.role_id = role_uuid
     else:
         membership.role_id = None
@@ -648,7 +764,9 @@ async def set_member_password(
     try:
         user_uuid = uuid.UUID(user_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID"
+        )
 
     # Verify target user is a member of this org
     membership_result = await db.execute(
@@ -658,13 +776,18 @@ async def set_member_password(
         )
     )
     if membership_result.scalar_one_or_none() is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found in this organization")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found in this organization",
+        )
 
     # Update password
     user_result = await db.execute(select(User).where(User.id == user_uuid))
     target_user = user_result.scalar_one_or_none()
     if target_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     target_user.password_hash = hash_password(data.new_password)
     await db.commit()
@@ -677,17 +800,25 @@ async def init_org_roles_from_templates(
     db: AsyncSession = Depends(get_db),
 ):
     """Create org-specific copies of all global template roles (idempotent)."""
-    templates = (await db.execute(
-        select(Role).where(Role.is_template == True)  # noqa: E712
-    )).scalars().all()
+    templates = (
+        (
+            await db.execute(
+                select(Role).where(Role.is_template == True)  # noqa: E712
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     for template in templates:
-        existing = (await db.execute(
-            select(Role).where(
-                Role.organization_id == organization_id,
-                Role.name == template.name,
+        existing = (
+            await db.execute(
+                select(Role).where(
+                    Role.organization_id == organization_id,
+                    Role.name == template.name,
+                )
             )
-        )).scalar_one_or_none()
+        ).scalar_one_or_none()
         if existing:
             continue
 
@@ -701,10 +832,22 @@ async def init_org_roles_from_templates(
         db.add(new_role)
         await db.flush()
 
-        template_permissions = (await db.execute(
-            select(RolePermission).where(RolePermission.role_id == template.id)
-        )).scalars().all()
+        template_permissions = (
+            (
+                await db.execute(
+                    select(RolePermission).where(RolePermission.role_id == template.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
         for tp in template_permissions:
-            db.add(RolePermission(role_id=new_role.id, permission_id=tp.permission_id, allowed=tp.allowed))
+            db.add(
+                RolePermission(
+                    role_id=new_role.id,
+                    permission_id=tp.permission_id,
+                    allowed=tp.allowed,
+                )
+            )
 
     await db.commit()

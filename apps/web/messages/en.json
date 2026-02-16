@@ -562,9 +562,20 @@
       "colorCode": "Color code",
       "nameCz": "Name (CS)",
       "nameEn": "Name (EN)",
+      "used": "Used",
       "saveSuccess": "Translation saved",
       "saveError": "Error saving",
-      "empty": "No colors found"
+      "empty": "No colors found",
+      "addColor": "Add Color",
+      "create": "Create",
+      "createSuccess": "Color created",
+      "createError": "Error creating color",
+      "codeRequired": "Color code is required",
+      "delete": "Delete",
+      "deleteConfirm": "Are you sure you want to delete this color?",
+      "deleteSuccess": "Color deleted",
+      "deleteError": "Error deleting color",
+      "cannotDelete": "Cannot delete - color is used by animals"
     }
   },
   "animals": {

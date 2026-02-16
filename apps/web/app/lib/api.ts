@@ -800,7 +800,7 @@ class ApiClient {
     }
   }
 
-  static async getAdminColors(): Promise<Array<{ code: string; cs: string | null; en: string | null }>> {
+  static async getAdminColors(): Promise<Array<{ code: string; cs: string | null; en: string | null; used_count: number }>> {
     try {
       const response = await axios.get(`${API_URL}/admin/colors`, { headers: this.getAuthHeaders() });
       return response.data;
@@ -824,6 +824,38 @@ class ApiClient {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
         throw new Error(axiosError.response?.data?.detail || 'Failed to update color translation');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async createColor(data: { code: string; cs?: string; en?: string }): Promise<{ ok: boolean; code: string }> {
+    try {
+      const response = await axios.post(
+        `${API_URL}/admin/colors`,
+        data,
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to create color');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async deleteColor(code: string): Promise<void> {
+    try {
+      await axios.delete(
+        `${API_URL}/admin/colors/${encodeURIComponent(code)}`,
+        { headers: this.getAuthHeaders() }
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to delete color');
       }
       throw new Error('An unexpected error occurred');
     }
