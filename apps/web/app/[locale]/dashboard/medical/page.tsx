@@ -73,9 +73,10 @@ useEffect(() => {
         const animalsData = await ApiClient.getAnimals({ status: 'quarantine' });
         setQuarantineAnimals(animalsData.items || []);
 
-        // Fetch all animals for bulk vaccination
+        // Fetch all animals for bulk vaccination (only valid shelter statuses)
         const allAnimalsData = await ApiClient.getAnimals({ page_size: 500 });
-        setAllAnimals(allAnimalsData.items || []);
+        const validStatuses = ['intake', 'available', 'reserved', 'fostered', 'hold', 'quarantine'];
+        setAllAnimals((allAnimalsData.items || []).filter(a => validStatuses.includes(a.status)));
 
         // Fetch medication/vaccine inventory
         // TODO: Add getInventoryItems method to ApiClient
