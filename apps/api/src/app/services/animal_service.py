@@ -317,6 +317,7 @@ class AnimalService:
         # Auto-create disposal task when animal is marked deceased
         if new_status == "deceased":
             from src.app.models.task import Task, TaskType, TaskStatus, TaskPriority
+
             disposal_task = Task(
                 id=uuid.uuid4(),
                 organization_id=organization_id,
@@ -331,6 +332,33 @@ class AnimalService:
             )
             self.db.add(disposal_task)
             await self.db.flush()
+
+        # Log escape event when status changes to escaped
+        if new_status == "escaped":
+            await self.audit.log_action(
+                organization_id=organization_id,
+                actor_user_id=actor_id,
+                action="escaped",
+                entity_type="animal",
+                entity_id=animal.id,
+                after={"status": "escaped"},
+                ip=ip,
+                user_agent=user_agent,
+            )
+
+        # Log return event when status changes from escaped to something else
+        old_status = before.get("status")
+        if old_status == "escaped" and new_status and new_status != "escaped":
+            await self.audit.log_action(
+                organization_id=organization_id,
+                actor_user_id=actor_id,
+                action="returned",
+                entity_type="animal",
+                entity_id=animal.id,
+                after={"status": new_status},
+                ip=ip,
+                user_agent=user_agent,
+            )
 
         # Audit log
         await self.audit.log_action(

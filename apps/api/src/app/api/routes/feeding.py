@@ -48,6 +48,7 @@ async def create_food(
         )
 
     from src.app.models.food import Food
+
     food = Food(
         id=uuid.uuid4(),
         organization_id=organization_id,
@@ -63,7 +64,9 @@ async def create_food(
 
 
 # Feeding Plan endpoints
-@router.post("/plans", response_model=FeedingPlanResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/plans", response_model=FeedingPlanResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_feeding_plan(
     plan_data: FeedingPlanCreate,
     current_user: User = Depends(get_current_user),
@@ -100,7 +103,7 @@ async def list_feeding_plans(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
     """List feeding plans."""
-    from sqlalchemy import select, and_
+    from sqlalchemy import select, and_, func
     from src.app.models.feeding_plan import FeedingPlan
 
     conditions = [FeedingPlan.organization_id == organization_id]
@@ -109,9 +112,19 @@ async def list_feeding_plans(
     if is_active is not None:
         conditions.append(FeedingPlan.is_active == is_active)
 
-    stmt = select(FeedingPlan).where(and_(*conditions))
+    count_stmt = select(func.count()).select_from(FeedingPlan).where(and_(*conditions))
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar_one()
+
+    stmt = (
+        select(FeedingPlan)
+        .where(and_(*conditions))
+        .order_by(FeedingPlan.start_date.desc())
+    )
     result = await db.execute(stmt)
-    return result.scalars().all()
+    items = result.scalars().all()
+
+    return {"items": items, "total": total}
 
 
 @router.put("/plans/{plan_id}", response_model=FeedingPlanResponse)
@@ -167,7 +180,9 @@ async def deactivate_feeding_plan(
 
 
 # Feeding Log endpoints
-@router.post("/logs", response_model=FeedingLogResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/logs", response_model=FeedingLogResponse, status_code=status.HTTP_201_CREATED
+)
 async def log_feeding(
     log_data: FeedingLogCreate,
     current_user: User = Depends(get_current_user),
@@ -251,6 +266,7 @@ async def complete_feeding_task(
 
         # Convert task to dict for response
         from src.app.schemas.task import TaskResponse
+
         task_response = TaskResponse.from_orm(result["task"])
 
         return CompleteFeedingTaskResponse(
@@ -291,7 +307,9 @@ async def calculate_mer(
     )
     animal = result.scalar_one_or_none()
     if animal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
 
     if animal.weight_current_kg is None:
         raise HTTPException(
@@ -303,7 +321,9 @@ async def calculate_mer(
     food_kcal: Optional[float] = request.food_kcal_per_100g
     if request.food_id and food_kcal is None:
         food_result = await db.execute(
-            select(Food).where(Food.id == request.food_id, Food.organization_id == organization_id)
+            select(Food).where(
+                Food.id == request.food_id, Food.organization_id == organization_id
+            )
         )
         food = food_result.scalar_one_or_none()
         if food and food.kcal_per_100g:
@@ -311,13 +331,21 @@ async def calculate_mer(
 
     snapshot = _calc_mer(
         weight_kg=float(animal.weight_current_kg),
-        species=animal.species.value if hasattr(animal.species, "value") else str(animal.species),
-        altered_status=animal.altered_status.value if hasattr(animal.altered_status, "value") else str(animal.altered_status),
-        age_group=animal.age_group.value if hasattr(animal.age_group, "value") else str(animal.age_group),
+        species=animal.species.value
+        if hasattr(animal.species, "value")
+        else str(animal.species),
+        altered_status=animal.altered_status.value
+        if hasattr(animal.altered_status, "value")
+        else str(animal.altered_status),
+        age_group=animal.age_group.value
+        if hasattr(animal.age_group, "value")
+        else str(animal.age_group),
         bcs=animal.bcs,
         health_modifier=request.health_modifier,
         environment=request.environment,
-        breed_size=animal.size_estimated.value if hasattr(animal.size_estimated, "value") else "unknown",
+        breed_size=animal.size_estimated.value
+        if hasattr(animal.size_estimated, "value")
+        else "unknown",
         weight_goal=request.weight_goal,
         food_kcal_per_100g=food_kcal,
         meals_per_day=request.meals_per_day,

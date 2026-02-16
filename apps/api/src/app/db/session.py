@@ -1,7 +1,17 @@
+import time
+import uuid
+from contextvars import ContextVar
+from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 
 from src.app.core.config import settings
+
+_request_query_data: ContextVar[dict[str, Any]] = ContextVar(
+    "request_query_data",
+    default={"queries": [], "total_db_time": 0.0, "query_count": 0},
+)
 
 # Async engine (for FastAPI runtime)
 # statement_cache_size=0 is required for Supabase PgBouncer in transaction mode
@@ -14,6 +24,27 @@ async_engine = create_async_engine(
         "ssl": "require",
     },
 )
+
+
+def _setup_engine_events(engine: Any) -> None:
+    @event.listens_for(engine, "before_cursor_execute")
+    def before_cursor_execute(
+        conn, cursor, statement, parameters, context, executemany
+    ):
+        conn.info.setdefault("query_start_time", []).append(time.perf_counter())
+        conn.info.setdefault("query_statement", []).append(statement)
+
+    @event.listens_for(engine, "after_cursor_execute")
+    def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        total = time.perf_counter() - conn.info["query_start_time"].pop()
+        data = _request_query_data.get()
+        data["queries"].append({"statement": statement[:200], "duration": total})
+        data["total_db_time"] += total
+        data["query_count"] += 1
+
+
+if async_engine.sync_engine:
+    _setup_engine_events(async_engine.sync_engine)
 
 # Sync engine (for Alembic migrations)
 sync_engine = create_engine(

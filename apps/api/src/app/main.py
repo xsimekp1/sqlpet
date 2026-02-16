@@ -1,6 +1,9 @@
 import os
 import re
+import time
+import uuid
 from contextlib import asynccontextmanager
+from contextvars import copy_context
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
@@ -85,13 +88,13 @@ ALLOWED_ORIGINS = [
     *EXTRA_ORIGINS,
 ]
 
+
 @app.exception_handler(HTTPException)
 async def cors_aware_http_exception_handler(request: Request, exc: HTTPException):
     origin = request.headers.get("origin", "")
     headers = {}
     if origin and (
-        origin in ALLOWED_ORIGINS or
-        re.match(r"https://.*\.vercel\.app", origin)
+        origin in ALLOWED_ORIGINS or re.match(r"https://.*\.vercel\.app", origin)
     ):
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
@@ -105,14 +108,19 @@ async def cors_aware_http_exception_handler(request: Request, exc: HTTPException
 @app.exception_handler(Exception)
 async def cors_aware_general_exception_handler(request: Request, exc: Exception):
     import traceback
+
     print(f"UNHANDLED EXCEPTION [{request.method} {request.url.path}]: {exc}")
     print(traceback.format_exc())
     origin = request.headers.get("origin", "")
     headers = {}
-    if origin and (origin in ALLOWED_ORIGINS or re.match(r"https://.*\.vercel\.app", origin)):
+    if origin and (
+        origin in ALLOWED_ORIGINS or re.match(r"https://.*\.vercel\.app", origin)
+    ):
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"}, headers=headers)
+    return JSONResponse(
+        status_code=500, content={"detail": "Internal server error"}, headers=headers
+    )
 
 
 app.add_middleware(
@@ -124,6 +132,64 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def timing_middleware(request: Request, call_next):
+    from src.app.db.session import _request_query_data
+
+    request_id = str(uuid.uuid4())[:8]
+    start_time = time.perf_counter()
+
+    ctx = copy_context()
+    data = {"queries": [], "total_db_time": 0.0, "query_count": 0}
+    token = _request_query_data.set(data)
+
+    try:
+        response = await call_next(request)
+    finally:
+        _request_query_data.reset(token)
+
+    total_time = time.perf_counter() - start_time
+    db_time = data["total_db_time"]
+    query_count = data["query_count"]
+
+    sorted_queries = sorted(data["queries"], key=lambda x: x["duration"], reverse=True)
+    slow_queries = []
+    for q in sorted_queries[:3]:
+        sql = q["statement"].replace("\n", " ").strip()
+        if len(sql) > 150:
+            sql = sql[:150] + "..."
+        slow_queries.append(f"{sql} ({q['duration'] * 1000:.1f}ms)")
+
+    params = dict(request.query_params)
+    params.pop("authorization", None)
+    params.pop("Authorization", None)
+    safe_params = {
+        k: v
+        for k, v in params.items()
+        if k.lower() not in ("token", "secret", "password")
+    }
+
+    log_parts = [
+        f"request_id={request_id}",
+        f"method={request.method}",
+        f"path={request.url.path}",
+        f"status={response.status_code}",
+        f"total_ms={total_time * 1000:.1f}",
+        f"db_ms={db_time * 1000:.1f}",
+        f"queries={query_count}",
+    ]
+    if safe_params:
+        log_parts.append(f"params={safe_params}")
+    if slow_queries:
+        log_parts.append(f"slow_queries={' | '.join(slow_queries)}")
+
+    print(" | ".join(log_parts))
+
+    response.headers["X-Request-ID"] = request_id
+    return response
+
 
 app.include_router(health_router)
 app.include_router(auth_router)
