@@ -15,27 +15,10 @@ depends_on = None
 
 
 def upgrade():
-    # First add 'registered' to the enum type if it doesn't exist
+    # Just add 'registered' to the enum - skip the update for now
     op.execute("ALTER TYPE animal_status_enum ADD VALUE IF NOT EXISTS 'registered'")
-
-    # The status column might be enum or varchar - try both approaches
-    # First try: cast to text, then back to enum
-    op.execute("""
-        UPDATE animals
-        SET status = 'registered'::animal_status_enum
-        WHERE status::text = 'intake'
-          AND id NOT IN (
-            SELECT DISTINCT animal_id FROM intakes
-            WHERE deleted_at IS NULL
-          )
-          AND deleted_at IS NULL
-    """)
 
 
 def downgrade():
-    op.execute("""
-        UPDATE animals
-        SET status = 'intake'::animal_status_enum
-        WHERE status::text = 'registered'
-          AND deleted_at IS NULL
-    """)
+    # No need to remove enum values in downgrade
+    pass
