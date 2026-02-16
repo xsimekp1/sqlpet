@@ -1,7 +1,7 @@
 """Add planned and actual outcome dates to intakes
 
 Revision ID: add_intake_outcome_dates
-Revises:
+Revises: bc63efe8831c
 Create Date: 2026-02-16
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "add_intake_outcome_dates"
-down_revision: Union[str, None] = None
+down_revision: Union[str, None] = "bc63efe8831c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
