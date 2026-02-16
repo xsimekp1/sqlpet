@@ -15,10 +15,28 @@ depends_on = None
 
 
 def upgrade():
-    # Just add 'registered' to the enum - skip the update for now
-    op.execute("ALTER TYPE animal_status_enum ADD VALUE IF NOT EXISTS 'registered'")
+    # Add enum value outside of transaction
+    with op.get_context().autocommit_block():
+        op.execute("ALTER TYPE animal_status_enum ADD VALUE IF NOT EXISTS 'registered'")
+
+    # Now update the data
+    op.execute("""
+        UPDATE animals
+        SET status = 'registered'::animal_status_enum
+        WHERE status::text = 'intake'
+          AND id NOT IN (
+            SELECT DISTINCT animal_id FROM intakes
+            WHERE deleted_at IS NULL
+          )
+          AND deleted_at IS NULL
+    """)
 
 
 def downgrade():
-    # No need to remove enum values in downgrade
-    pass
+    # Cannot remove enum values in PostgreSQL, so just update data
+    op.execute("""
+        UPDATE animals
+        SET status = 'intake'::animal_status_enum
+        WHERE status::text = 'registered'
+          AND deleted_at IS NULL
+    """)
