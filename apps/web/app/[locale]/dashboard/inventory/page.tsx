@@ -25,6 +25,16 @@ import { Plus, AlertTriangle, Package, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { getUnitSymbol } from '@/app/lib/constants';
 
+const DECIMAL_UNITS = ['kg', 'g', 'l', 'ml'];
+
+function formatQuantity(value: number | null | undefined, unit?: string | null): string {
+  if (value === null || value === undefined) return '0';
+  if (unit && DECIMAL_UNITS.includes(unit)) {
+    return value.toFixed(2);
+  }
+  return Math.round(value).toString();
+}
+
 type CategoryFilter = 'all' | 'medication' | 'vaccine' | 'food' | 'supply' | 'other';
 
 export default function InventoryPage() {
@@ -185,8 +195,8 @@ export default function InventoryPage() {
                         : isLowStock(stock)
                         ? 'text-yellow-600 font-semibold'
                         : 'font-medium'
-                    }>
-                      {stock.total_quantity?.toFixed(2) || '0.00'}
+}>
+                      {formatQuantity(stock.total_quantity, stock.item.unit) || '0'}
                     </span>
                   </TableCell>
                   <TableCell>{getUnitSymbol(stock.item.unit)}</TableCell>

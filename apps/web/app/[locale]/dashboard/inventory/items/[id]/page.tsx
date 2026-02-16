@@ -51,6 +51,16 @@ const SPECIES_LABELS: Record<string, string> = {
   other: 'Jiné',
 };
 
+const DECIMAL_UNITS = ['kg', 'g', 'l', 'ml'];
+
+function formatQuantity(value: number | null | undefined, unit?: string | null): string {
+  if (value === null || value === undefined) return '0';
+  if (unit && DECIMAL_UNITS.includes(unit)) {
+    return value.toFixed(2);
+  }
+  return Math.round(value).toString();
+}
+
 export default function InventoryItemDetailPage() {
   const t = useTranslations('inventory');
   const { toast } = useToast();
@@ -235,7 +245,7 @@ export default function InventoryItemDetailPage() {
             {getCategoryBadge(item.category)}
           </div>
           <p className="text-muted-foreground">
-            Total stock: <span className="font-semibold">{totalQuantity.toFixed(2)}</span> {item.unit ? t(`units.${item.unit}`) : ''}
+            Total stock: <span className="font-semibold">{formatQuantity(totalQuantity, item.unit)}</span> {item.unit ? t(`units.${item.unit}`) : ''}
           </p>
         </div>
         <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
@@ -274,7 +284,7 @@ export default function InventoryItemDetailPage() {
             Total Quantity
           </div>
           <div className="text-2xl font-bold">
-            {totalQuantity.toFixed(2)} {item.unit || ''}
+            {formatQuantity(totalQuantity, item.unit)} {item.unit || ''}
           </div>
         </div>
         <div className="border rounded-lg p-4">
@@ -421,8 +431,8 @@ export default function InventoryItemDetailPage() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className={lot.quantity > 0 ? 'font-semibold' : 'text-muted-foreground'}>
-                          {lot.quantity?.toFixed(2)} {item.unit || ''}
+<span className={lot.quantity > 0 ? 'font-semibold' : 'text-muted-foreground'}>
+                          {formatQuantity(lot.quantity, item.unit)} {item.unit || ''}
                         </span>
                       </TableCell>
                       <TableCell>
