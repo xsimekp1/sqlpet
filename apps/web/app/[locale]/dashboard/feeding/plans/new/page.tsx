@@ -52,6 +52,8 @@ export default function NewFeedingPlanPage() {
   const [scheduleTimes, setScheduleTimes] = useState<string[]>([]);
   const [newTime, setNewTime] = useState('08:00');
   const [selectedAnimalId, setSelectedAnimalId] = useState('');
+  const [selectedFoodId, setSelectedFoodId] = useState('');
+  const [recommendedAmount, setRecommendedAmount] = useState<number | null>(null);
 
   // Fetch animals
   const { data: animalsData } = useQuery({
@@ -125,6 +127,80 @@ export default function NewFeedingPlanPage() {
     setScheduleTimes(scheduleTimes.filter(t => t !== time));
   };
 
+  const calculateRecommendedAmount = (animal: any, food: any) => {
+    const weight = animal.weight_current_kg;
+    
+    if (!weight || weight <= 0) {
+      toast({
+        title: 'Zvíře nemá zadanou váhu',
+        description: 'Nelze navrhnout optimální krmnou dávku. Prosím zadejte aktuální váhu zvířete.',
+        variant: 'destructive',
+      });
+      setRecommendedAmount(null);
+      return;
+    }
+
+    const kcalPer100g = food.kcal_per_100g;
+    if (!kcalPer100g || kcalPer100g <= 0) {
+      setRecommendedAmount(null);
+      return;
+    }
+
+    // RER = 70 × weight_kg^0.75
+    const rer = 70 * Math.pow(weight, 0.75);
+    
+    // Activity factor based on altered status and age
+    // Default to neutered_adult for shelter animals
+    let activityFactor = 1.4; // default for neutered adult
+    if (animal.species === 'cat') {
+      activityFactor = 1.2;
+    }
+    if (animal.altered_status === 'intact') {
+      activityFactor = animal.species === 'cat' ? 1.4 : 1.8;
+    }
+    
+    const mer = rer * activityFactor;
+    const amountGPerDay = (mer / kcalPer100g) * 100;
+    
+    // Round according to rules:
+    // 0-200g: round to nearest 10
+    // 201-400g: round to nearest 20
+    // 400g+: round to nearest 50
+    let roundedAmount: number;
+    if (amountGPerDay <= 200) {
+      roundedAmount = Math.round(amountGPerDay / 10) * 10;
+    } else if (amountGPerDay <= 400) {
+      roundedAmount = Math.round(amountGPerDay / 20) * 20;
+    } else {
+      roundedAmount = Math.round(amountGPerDay / 50) * 50;
+    }
+    
+    // Ensure minimum of 10g
+    roundedAmount = Math.max(10, roundedAmount);
+    
+    setRecommendedAmount(roundedAmount);
+  };
+
+  const handleFoodChange = (value: string) => {
+    setSelectedFoodId(value);
+    setValue('food_id', value);
+    
+    if (value && selectedAnimal) {
+      const food = foods.find((f: any) => f.id === value);
+      if (food) {
+        calculateRecommendedAmount(selectedAnimal, food);
+      }
+    } else {
+      setRecommendedAmount(null);
+    }
+  };
+
+  const applyRecommendedAmount = () => {
+    if (recommendedAmount) {
+      setValue('amount_g', recommendedAmount);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center gap-4">
@@ -167,7 +243,8 @@ export default function NewFeedingPlanPage() {
         <div className="space-y-2">
           <Label htmlFor="food_id">{t('fields.food')}</Label>
           <Select
-            onValueChange={(value) => setValue('food_id', value)}
+            value={selectedFoodId}
+            onValueChange={handleFoodChange}
           >
             <SelectTrigger>
               <SelectValue placeholder={t('selectFoodOptional')} />
@@ -200,25 +277,43 @@ export default function NewFeedingPlanPage() {
         </div>
 
         {/* Amount */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
             <Label htmlFor="amount_g">{t('fields.amountGrams')}</Label>
-            <Input
-              id="amount_g"
-              type="number"
-              step="0.01"
-              placeholder="e.g. 200"
-              {...register('amount_g')}
-            />
+            {recommendedAmount && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={applyRecommendedAmount}
+                className="h-7 text-xs"
+              >
+                Použít doporučených {recommendedAmount}g
+              </Button>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount_text">{t('fields.amountText')}</Label>
-            <Input
-              id="amount_text"
-              placeholder="e.g. 1 cup, half can"
-              {...register('amount_text')}
-            />
-          </div>
+          <Input
+            id="amount_g"
+            type="number"
+            step="1"
+            placeholder="např. 200"
+            {...register('amount_g')}
+          />
+          {recommendedAmount && (
+            <p className="text-xs text-muted-foreground">
+              Doporučená denní dávka: {recommendedAmount}g (vypočteno z váhy {selectedAnimal?.weight_current_kg}kg)
+            </p>
+          )}
+        </div>
+
+        {/* Amount text */}
+        <div className="space-y-2">
+          <Label htmlFor="amount_text">{t('fields.amountText')}</Label>
+          <Input
+            id="amount_text"
+            placeholder="např. 1 kelímek, půl konzervy"
+            {...register('amount_text')}
+          />
         </div>
 
         {/* Times per day */}
