@@ -43,7 +43,7 @@ def _to_response_with_animal(finding: Finding) -> FindingWithAnimalResponse:
 @router.post("", response_model=FindingResponse, status_code=status.HTTP_201_CREATED)
 async def create_finding(
     data: FindingCreate,
-    current_user: User = Depends(require_permission("intake.create")),
+    current_user: User = Depends(require_permission("reports.run")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -69,7 +69,7 @@ async def list_findings(
     lat: Optional[float] = Query(None, description="Latitude for GPS filter"),
     lng: Optional[float] = Query(None, description="Longitude for GPS filter"),
     radius_km: Optional[float] = Query(None, description="Radius in kilometers"),
-    current_user: User = Depends(require_permission("intake.read")),
+    current_user: User = Depends(require_permission("reports.run")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -133,7 +133,7 @@ async def list_findings(
 @router.get("/{finding_id}", response_model=FindingWithAnimalResponse)
 async def get_finding(
     finding_id: uuid.UUID,
-    current_user: User = Depends(require_permission("intake.read")),
+    current_user: User = Depends(require_permission("reports.run")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -155,7 +155,7 @@ async def get_finding(
 async def update_finding(
     finding_id: uuid.UUID,
     data: FindingUpdate,
-    current_user: User = Depends(require_permission("intake.write")),
+    current_user: User = Depends(require_permission("reports.run")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -182,7 +182,7 @@ async def update_finding(
 @router.delete("/{finding_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_finding(
     finding_id: uuid.UUID,
-    current_user: User = Depends(require_permission("intake.write")),
+    current_user: User = Depends(require_permission("reports.run")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
