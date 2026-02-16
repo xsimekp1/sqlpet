@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Loader2, FileText } from 'lucide-react';
+import { Plus, Loader2, FileText, Edit, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,6 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import ApiClient from '@/app/lib/api';
 import { toast } from 'sonner';
 
@@ -53,12 +62,35 @@ export default function IntakePage() {
   const [intakes, setIntakes] = useState<IntakeRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [reasonFilter, setReasonFilter] = useState('');
+  
+  // Date filter state
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingIntake, setEditingIntake] = useState<IntakeRecord | null>(null);
+  const [savingIntake, setSavingIntake] = useState(false);
+  const [editForm, setEditForm] = useState({
+    reason: '',
+    intake_date: '',
+    planned_end_date: '',
+    funding_source: '',
+    notes: '',
+  });
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const params = reasonFilter ? `?reason=${reasonFilter}` : '';
+        let params = '';
+        if (reasonFilter || dateFrom || dateTo) {
+          const parts = [];
+          if (reasonFilter) parts.push(`reason=${reasonFilter}`);
+          if (dateFrom) parts.push(`date_from=${dateFrom}`);
+          if (dateTo) parts.push(`date_to=${dateTo}`);
+          params = '?' + parts.join('&');
+        }
         const data = await ApiClient.get(`/intakes${params}`);
         setIntakes(data);
       } catch {
@@ -68,7 +100,48 @@ export default function IntakePage() {
       }
     };
     load();
-  }, [reasonFilter]);
+  }, [reasonFilter, dateFrom, dateTo]);
+
+  const openEditDialog = (intake: IntakeRecord) => {
+    setEditingIntake(intake);
+    setEditForm({
+      reason: intake.reason || '',
+      intake_date: intake.intake_date ? intake.intake_date.split('T')[0] : '',
+      planned_end_date: intake.planned_end_date ? intake.planned_end_date.split('T')[0] : '',
+      funding_source: intake.funding_source || '',
+      notes: intake.notes || '',
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveIntake = async () => {
+    if (!editingIntake) return;
+    setSavingIntake(true);
+    try {
+      const updateData: Record<string, any> = {};
+      if (editForm.reason) updateData.reason = editForm.reason;
+      if (editForm.intake_date) updateData.intake_date = editForm.intake_date;
+      if (editForm.planned_end_date) updateData.planned_end_date = editForm.planned_end_date;
+      else updateData.planned_end_date = null;
+      if (editForm.funding_source) updateData.funding_source = editForm.funding_source;
+      else updateData.funding_source = null;
+      if (editForm.notes) updateData.notes = editForm.notes;
+      else updateData.notes = null;
+
+      await ApiClient.put(`/intakes/${editingIntake.id}`, updateData);
+      
+      // Refresh data
+      setIntakes(prev => prev.map(i => 
+        i.id === editingIntake.id ? { ...i, ...updateData } : i
+      ));
+      setEditDialogOpen(false);
+      toast.success('Příjem aktualizován');
+    } catch {
+      toast.error('Nepodařilo se uložit');
+    } finally {
+      setSavingIntake(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
