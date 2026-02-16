@@ -17,17 +17,22 @@ pytestmark = pytest.mark.anyio
 
 # ─── helpers ──────────────────────────────────────────────────────────────────
 
+
 async def _make_org_with_permissions(db_session, test_user, perm_keys):
     """Create an org + role with the given permission keys for test_user."""
     org_id = uuid.uuid4()
     role_id = uuid.uuid4()
     membership_id = uuid.uuid4()
 
-    org = Organization(id=org_id, name="Contacts Test Org", slug=f"contacts-org-{org_id.hex[:8]}")
+    org = Organization(
+        id=org_id, name="Contacts Test Org", slug=f"contacts-org-{org_id.hex[:8]}"
+    )
     db_session.add(org)
     await db_session.flush()
 
-    role = Role(id=role_id, organization_id=org_id, name="contacts_role", is_template=False)
+    role = Role(
+        id=role_id, organization_id=org_id, name="contacts_role", is_template=False
+    )
     db_session.add(role)
     await db_session.flush()
 
@@ -37,7 +42,9 @@ async def _make_org_with_permissions(db_session, test_user, perm_keys):
         )
         perm = perm_result.scalar_one_or_none()
         if perm:
-            db_session.add(RolePermission(role_id=role_id, permission_id=perm.id, allowed=True))
+            db_session.add(
+                RolePermission(role_id=role_id, permission_id=perm.id, allowed=True)
+            )
     await db_session.flush()
 
     membership = Membership(
@@ -55,7 +62,9 @@ async def _make_org_with_permissions(db_session, test_user, perm_keys):
 
 async def _cleanup_org(db_session, org_id, role_id, membership_id):
     await db_session.execute(delete(Contact).where(Contact.organization_id == org_id))
-    await db_session.execute(delete(RolePermission).where(RolePermission.role_id == role_id))
+    await db_session.execute(
+        delete(RolePermission).where(RolePermission.role_id == role_id)
+    )
     await db_session.execute(delete(Membership).where(Membership.id == membership_id))
     await db_session.execute(delete(Role).where(Role.id == role_id))
     await db_session.execute(delete(Organization).where(Organization.id == org_id))
@@ -63,6 +72,7 @@ async def _cleanup_org(db_session, org_id, role_id, membership_id):
 
 
 # ─── fixtures ─────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture()
 async def contacts_org(db_session, test_user):
@@ -83,6 +93,7 @@ async def contacts_read_only_org(db_session, test_user):
 
 
 # ─── CREATE ───────────────────────────────────────────────────────────────────
+
 
 async def test_create_contact_basic(client, auth_headers, contacts_org):
     org, _, _ = contacts_org
@@ -152,6 +163,7 @@ async def test_create_contact_missing_name(client, auth_headers, contacts_org):
 
 # ─── LIST ─────────────────────────────────────────────────────────────────────
 
+
 async def test_list_contacts(client, auth_headers, contacts_org, db_session):
     org, _, _ = contacts_org
     headers = {**auth_headers, "x-organization-id": str(org.id)}
@@ -175,8 +187,12 @@ async def test_list_contacts_filter_type(client, auth_headers, contacts_org):
     org, _, _ = contacts_org
     headers = {**auth_headers, "x-organization-id": str(org.id)}
 
-    await client.post("/contacts", json={"name": "Donor1", "type": "donor"}, headers=headers)
-    await client.post("/contacts", json={"name": "Vol1", "type": "volunteer"}, headers=headers)
+    await client.post(
+        "/contacts", json={"name": "Donor1", "type": "donor"}, headers=headers
+    )
+    await client.post(
+        "/contacts", json={"name": "Vol1", "type": "volunteer"}, headers=headers
+    )
 
     resp = await client.get("/contacts?type=donor", headers=headers)
     assert resp.status_code == 200
@@ -185,6 +201,7 @@ async def test_list_contacts_filter_type(client, auth_headers, contacts_org):
 
 
 # ─── GET BY ID ────────────────────────────────────────────────────────────────
+
 
 async def test_get_contact_by_id(client, auth_headers, contacts_org):
     org, _, _ = contacts_org
@@ -212,6 +229,7 @@ async def test_get_contact_not_found(client, auth_headers, contacts_org):
 
 # ─── UPDATE ───────────────────────────────────────────────────────────────────
 
+
 async def test_update_contact(client, auth_headers, contacts_org):
     org, _, _ = contacts_org
     headers = {**auth_headers, "x-organization-id": str(org.id)}
@@ -235,7 +253,128 @@ async def test_update_contact(client, auth_headers, contacts_org):
     assert body["type"] == "donor"  # unchanged
 
 
+async def test_update_contact_all_fields(client, auth_headers, contacts_org):
+    """Test updating all available fields."""
+    org, _, _ = contacts_org
+    headers = {**auth_headers, "x-organization-id": str(org.id)}
+
+    # Create contact with minimal data
+    create_resp = await client.post(
+        "/contacts",
+        json={"name": "Minimal Contact", "type": "other"},
+        headers=headers,
+    )
+    contact_id = create_resp.json()["id"]
+
+    # Update all fields
+    resp = await client.patch(
+        f"/contacts/{contact_id}",
+        json={
+            "name": "Full Contact",
+            "type": "donor",
+            "email": "contact@example.cz",
+            "phone": "+420 777 123 456",
+            "address": "Testovací 123, 110 00 Praha",
+            "profession": "Lékař",
+            "organization_name": "Test Organization",
+            "bank_account": "123456789/0100",
+            "tax_id": "12345678",
+            "notes": "Testovací poznámky",
+            "is_active": False,
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["name"] == "Full Contact"
+    assert body["type"] == "donor"
+    assert body["email"] == "contact@example.cz"
+    assert body["phone"] == "+420 777 123 456"
+    assert body["address"] == "Testovací 123, 110 00 Praha"
+    assert body["profession"] == "Lékař"
+    assert body["organization_name"] == "Test Organization"
+    assert body["bank_account"] == "123456789/0100"
+    assert body["tax_id"] == "12345678"
+    assert body["notes"] == "Testovací poznámky"
+    assert body["is_active"] is False
+
+
+async def test_update_contact_no_auth(client, contacts_org):
+    """Test that unauthenticated request fails."""
+    org, _, _ = contacts_org
+    headers = {"x-organization-id": str(org.id)}
+
+    # Create a contact first
+    create_resp = await client.post(
+        "/contacts",
+        json={"name": "Test Contact", "type": "donor"},
+        headers=headers,
+    )
+    contact_id = create_resp.json()["id"]
+
+    # Try to update without auth
+    resp = await client.patch(
+        f"/contacts/{contact_id}",
+        json={"name": "Should Fail"},
+        headers=headers,
+    )
+    assert resp.status_code == 401
+
+
+async def test_update_contact_type_change(client, auth_headers, contacts_org):
+    """Test changing contact type."""
+    org, _, _ = contacts_org
+    headers = {**auth_headers, "x-organization-id": str(org.id)}
+
+    create_resp = await client.post(
+        "/contacts",
+        json={"name": "Type Test", "type": "volunteer"},
+        headers=headers,
+    )
+    contact_id = create_resp.json()["id"]
+
+    # Change type to donor
+    resp = await client.patch(
+        f"/contacts/{contact_id}",
+        json={"type": "donor"},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["type"] == "donor"
+
+
+async def test_update_contact_partial(client, auth_headers, contacts_org):
+    """Test partial update - only specified fields change."""
+    org, _, _ = contacts_org
+    headers = {**auth_headers, "x-organization-id": str(org.id)}
+
+    create_resp = await client.post(
+        "/contacts",
+        json={
+            "name": "Partial Update",
+            "type": "donor",
+            "email": "old@email.cz",
+            "phone": "111222333",
+        },
+        headers=headers,
+    )
+    contact_id = create_resp.json()["id"]
+
+    # Update only name - other fields should remain unchanged
+    resp = await client.patch(
+        f"/contacts/{contact_id}",
+        json={"name": "New Name"},
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["name"] == "New Name"
+    assert body["email"] == "old@email.cz"
+    assert body["phone"] == "111222333"
+
+
 # ─── DELETE ───────────────────────────────────────────────────────────────────
+
 
 async def test_delete_contact(client, auth_headers, contacts_org):
     org, _, _ = contacts_org
@@ -257,7 +396,10 @@ async def test_delete_contact(client, auth_headers, contacts_org):
 
 # ─── ORG ISOLATION ────────────────────────────────────────────────────────────
 
-async def test_contacts_org_isolation(client, auth_headers, contacts_org, db_session, test_user):
+
+async def test_contacts_org_isolation(
+    client, auth_headers, contacts_org, db_session, test_user
+):
     """Contact of org A must not be visible to org B."""
     org_a, _, _ = contacts_org
     headers_a = {**auth_headers, "x-organization-id": str(org_a.id)}
