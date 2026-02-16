@@ -5,6 +5,7 @@ Revises: remove_animal_intake_date
 Create Date: 2026-02-15
 
 """
+
 from alembic import op
 
 revision = "add_registered_animal_status"
@@ -22,7 +23,7 @@ def upgrade():
     op.execute("""
         UPDATE animals
         SET status = 'registered'
-        WHERE status = 'intake'
+        WHERE LOWER(status) = 'intake'
           AND id NOT IN (
             SELECT DISTINCT animal_id FROM intakes
             WHERE deleted_at IS NULL
@@ -35,6 +36,6 @@ def downgrade():
     op.execute("""
         UPDATE animals
         SET status = 'intake'
-        WHERE status = 'registered'
+        WHERE LOWER(status) = 'registered'
           AND deleted_at IS NULL
     """)
