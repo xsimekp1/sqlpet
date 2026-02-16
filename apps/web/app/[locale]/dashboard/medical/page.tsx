@@ -67,6 +67,13 @@ export default function MedicalPage() {
   const [availableLots, setAvailableLots] = useState<Array<{ id: string; lot_number: string | null; quantity: number; expires_at: string | null }>>([]);
   const [loadingLots, setLoadingLots] = useState(false);
 
+  // Vaccinations list state
+  const [vaccinations, setVaccinations] = useState<any[]>([]);
+  const [vaccinationsPage, setVaccinationsPage] = useState(1);
+  const [vaccinationsTotal, setVaccinationsTotal] = useState(0);
+  const [vaccineFilterType, setVaccineFilterType] = useState<string>('');
+  const [vaccineFilterLot, setVaccineFilterLot] = useState<string>('');
+
 useEffect(() => {
     const fetchMedicalData = async () => {
       try {
@@ -90,6 +97,11 @@ useEffect(() => {
         // TODO: Add getTasks method with type filter to ApiClient
         // For now, use empty array
         setMedicalTasks([]);
+
+        // Fetch vaccinations
+        const vacsData = await ApiClient.getVaccinations({ page: 1, page_size: 50 });
+        setVaccinations(vacsData.items || []);
+        setVaccinationsTotal(vacsData.total || 0);
       } catch (error) {
         toast.error(t('medical.errors.fetchFailed'));
         console.error('Error fetching medical data:', error);
@@ -256,7 +268,98 @@ const getPriorityColor = (priority: string) => {
         </CardContent>
       </Card>
 
-{/* Section 3: Medical Tasks */}
+{/* Section 2: Vaccinations Overview */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Syringe className="h-5 w-5 text-blue-600" />
+              <CardTitle>Přehled očkování</CardTitle>
+            </div>
+            <Badge variant="outline">
+              Celkem: {vaccinationsTotal}
+            </Badge>
+          </div>
+          <CardDescription>Seznam provedených očkování</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Filters */}
+          <div className="flex gap-2 mb-4">
+            <Select value={vaccineFilterType} onValueChange={(v) => { setVaccineFilterType(v); setVaccinationsPage(1); }}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Typ očkování" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Všechny typy</SelectItem>
+                <SelectItem value="rabies">Vzteklina</SelectItem>
+                <SelectItem value="distemper">Psinka</SelectItem>
+                <SelectItem value="parvovirus">Parvoviróza</SelectItem>
+                <SelectItem value="hepatitis">Infekční hepatitida</SelectItem>
+                <SelectItem value="leptospirosis">Leptospiróza</SelectItem>
+                <SelectItem value="bordetella">Bordetella</SelectItem>
+                <SelectItem value="feline_vaccine">Kočičí očkování</SelectItem>
+                <SelectItem value="other">Jiné</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input 
+              placeholder="Filtrovat podle šarže..." 
+              value={vaccineFilterLot}
+              onChange={(e) => { setVaccineFilterLot(e.target.value); setVaccinationsPage(1); }}
+              className="w-[180px]"
+            />
+          </div>
+
+          {vaccinations.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">Žádná očkování</p>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left px-3 py-2 font-medium">Zvíře</th>
+                    <th className="text-left px-3 py-2 font-medium">Typ</th>
+                    <th className="text-left px-3 py-2 font-medium">Datum</th>
+                    <th className="text-left px-3 py-2 font-medium">Šarže</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vaccinations
+                    .filter((v: any) => !vaccineFilterType || v.vaccination_type === vaccineFilterType)
+                    .filter((v: any) => !vaccineFilterLot || (v.lot_number && v.lot_number.toLowerCase().includes(vaccineFilterLot.toLowerCase())))
+                    .map((vac: any) => (
+                    <tr key={vac.id} className="border-t">
+                      <td className="px-3 py-2">
+                        <Link href={`/dashboard/animals/${vac.animal_id}`} className="hover:underline text-primary">
+                          {vac.animal_name || vac.animal_public_code || 'Neznámé'}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2">
+                        {vac.vaccination_type === 'rabies' && 'Vzteklina'}
+                        {vac.vaccination_type === 'distemper' && 'Psinka'}
+                        {vac.vaccination_type === 'parvovirus' && 'Parvoviróza'}
+                        {vac.vaccination_type === 'hepatitis' && 'Infekční hepatitida'}
+                        {vac.vaccination_type === 'leptospirosis' && 'Leptospiróza'}
+                        {vac.vaccination_type === 'bordetella' && 'Bordetella'}
+                        {vac.vaccination_type === 'feline_vaccine' && 'Kočičí očkování'}
+                        {vac.vaccination_type === 'other' && 'Jiné'}
+                        {!['rabies','distemper','parvovirus','hepatitis','leptospirosis','bordetella','feline_vaccine','other'].includes(vac.vaccination_type) && vac.vaccination_type}
+                      </td>
+                      <td className="px-3 py-2">
+                        {new Date(vac.administered_at).toLocaleDateString('cs-CZ')}
+                      </td>
+                      <td className="px-3 py-2">
+                        {vac.lot_number || '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Section 3: Medical Tasks */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">

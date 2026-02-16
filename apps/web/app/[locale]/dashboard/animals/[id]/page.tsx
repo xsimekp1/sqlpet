@@ -185,6 +185,7 @@ export default function AnimalDetailPage() {
 
   // Weight
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
+  const [vaccinations, setVaccinations] = useState<any[]>([]);
   const [weightInput, setWeightInput] = useState('');
   const [weightDate, setWeightDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [weightNotes, setWeightNotes] = useState('');
@@ -256,12 +257,13 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           setLoading(true);
         }
 
-        const [data, listData, wLogs, kHistory, intakes] = await Promise.all([
+const [data, listData, wLogs, kHistory, intakes, vacs] = await Promise.all([
           ApiClient.getAnimal(animalId),
           ApiClient.getAnimals({ page_size: 200 }),
           ApiClient.getWeightHistory(animalId),
           ApiClient.getAnimalKennelHistory(animalId).catch(() => []),
           ApiClient.get('/intakes', { animal_id: animalId }).catch(() => []),
+          ApiClient.get(`/vaccinations/animal/${animalId}`).catch(() => ({ items: [] })),
         ]);
         // Store fresh data back in cache
         queryClient.setQueryData(['animal', data.id], data);
@@ -269,9 +271,10 @@ if (photoInputRef.current) photoInputRef.current.value = '';
         queryClient.setQueryData(['animalIds'], ids);
         setAnimal(data);
         setAnimalIds(ids);
-        setWeightLogs(wLogs);
+setWeightLogs(wLogs);
         setKennelHistory(kHistory);
         setBehaviorNotes(data.behavior_notes ?? '');
+        setVaccinations(vacs.items || []);
         // Set active intake id (first non-deleted intake)
         const activeIntake = Array.isArray(intakes) ? intakes[0] : null;
         setActiveIntakeId(activeIntake?.id ?? null);
@@ -1186,7 +1189,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           </Card>
         </TabsContent>
 
-        {/* ── Medical ── */}
+{/* ── Medical ── */}
         <TabsContent value="medical" className="space-y-4">
           {/* Weight history sparkline */}
           {weightLogs.length >= 2 && (
@@ -1203,13 +1206,50 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               </CardContent>
             </Card>
           )}
+          
+          {/* Vaccinations */}
           <Card>
             <CardHeader>
-              <CardTitle>{t('medical.tabTitle')}</CardTitle>
-              <CardDescription>{t('medical.tabDesc')}</CardDescription>
+              <CardTitle>Očkování</CardTitle>
+              <CardDescription>Historie očkování zvířete</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-center py-8">{t('medical.comingSoon')}</p>
+              {vaccinations.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">Žádná očkování</p>
+              ) : (
+                <div className="space-y-2">
+                  {vaccinations.map((vac: any) => (
+                    <div key={vac.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                          <Stethoscope className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {vac.vaccination_type === 'rabies' && 'Vzteklina'}
+                            {vac.vaccination_type === 'distemper' && 'Psinka'}
+                            {vac.vaccination_type === 'parvovirus' && 'Parvoviróza'}
+                            {vac.vaccination_type === 'hepatitis' && 'Infekční hepatitida'}
+                            {vac.vaccination_type === 'leptospirosis' && 'Leptospiróza'}
+                            {vac.vaccination_type === 'bordetella' && 'Bordetella'}
+                            {vac.vaccination_type === 'feline_vaccine' && 'Kočičí očkování'}
+                            {vac.vaccination_type === 'other' && 'Jiné očkování'}
+                            {!['rabies','distemper','parvovirus','hepatitis','leptospirosis','bordetella','feline_vaccine','other'].includes(vac.vaccination_type) && vac.vaccination_type}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(vac.administered_at).toLocaleDateString('cs-CZ')}
+                          </p>
+                        </div>
+                      </div>
+                      {vac.lot_number && (
+                        <Badge variant="outline">
+                          Š: {vac.lot_number}
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
