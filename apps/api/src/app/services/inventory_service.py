@@ -146,7 +146,7 @@ class InventoryService:
             item_id=item_id,
             lot_number=lot_number,
             expires_at=expires_at,
-            quantity=quantity,
+            quantity=0,
             cost_per_unit=cost_per_unit,
         )
         self.db.add(lot)

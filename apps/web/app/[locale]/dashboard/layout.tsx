@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/app/context/AuthContext';
 import { AppShell } from '@/app/components/app-shell/AppShell';
 import { useKeyboardShortcuts } from '@/app/hooks/useKeyboardShortcuts';
+import { AnimalsPrefetcher } from '@/app/components/AnimalsPrefetcher';
 
 export default function DashboardLayout({
   children,
@@ -38,5 +39,10 @@ export default function DashboardLayout({
     );
   }
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppShell>
+      <AnimalsPrefetcher />
+      {children}
+    </AppShell>
+  );
 }

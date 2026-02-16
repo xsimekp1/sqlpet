@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,15 +29,34 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt } from 'lucide-react';
+import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
+
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  food: <UtensilsCrossed className="h-8 w-8" />,
+  medication: <Pill className="h-8 w-8" />,
+  vaccine: <Syringe className="h-8 w-8" />,
+  supply: <Package className="h-8 w-8" />,
+  other: <Archive className="h-8 w-8" />,
+};
+
+const SPECIES_LABELS: Record<string, string> = {
+  dog: 'Pes',
+  cat: 'Kočka',
+  rabbit: 'Králík',
+  bird: 'Pták',
+  small_animal: 'Drobné zvíře',
+  reptile: 'Plaz',
+  other: 'Jiné',
+};
 
 export default function InventoryItemDetailPage() {
   const t = useTranslations('inventory');
   const { toast } = useToast();
   const params = useParams();
   const router = useRouter();
+  const locale = useLocale();
   const itemId = params.id as string;
   const queryClient = useQueryClient();
 
@@ -69,6 +89,7 @@ export default function InventoryItemDetailPage() {
 
   const lots = Array.isArray(lotsData) ? lotsData : (lotsData?.items ?? []);
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.items ?? []);
+  const totalQuantity = lots.reduce((sum: number, lot: any) => sum + (Number(lot.quantity) || 0), 0);
 
   // Add lot mutation
   const addLotMutation = useMutation({
@@ -109,7 +130,7 @@ export default function InventoryItemDetailPage() {
     mutationFn: () => ApiClient.deleteInventoryItem(itemId),
     onSuccess: () => {
       toast({ title: t('messages.itemDeleted'), description: t('messages.itemDeletedDesc') });
-      router.push('/dashboard/inventory');
+      router.push(`/${locale}/dashboard/inventory`);
     },
     onError: (error: Error) => {
       toast({ title: t('messages.error'), description: error.message, variant: 'destructive' });
@@ -194,13 +215,16 @@ export default function InventoryItemDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
+        <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-muted text-muted-foreground shrink-0">
+          {CATEGORY_ICONS[item.category] ?? <Package className="h-8 w-8" />}
+        </div>
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight">{item.name}</h1>
             {getCategoryBadge(item.category)}
           </div>
           <p className="text-muted-foreground">
-            Total stock: <span className="font-semibold">{item.total_quantity?.toFixed(2) || '0.00'}</span> {item.unit ? t(`units.${item.unit}`) : ''}
+            Total stock: <span className="font-semibold">{totalQuantity.toFixed(2)}</span> {item.unit ? t(`units.${item.unit}`) : ''}
           </p>
         </div>
         <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
@@ -239,7 +263,7 @@ export default function InventoryItemDetailPage() {
             Total Quantity
           </div>
           <div className="text-2xl font-bold">
-            {item.total_quantity?.toFixed(2) || '0.00'} {item.unit || ''}
+            {totalQuantity.toFixed(2)} {item.unit || ''}
           </div>
         </div>
         <div className="border rounded-lg p-4">
@@ -261,6 +285,16 @@ export default function InventoryItemDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Allowed species (food only) */}
+      {item.category === 'food' && item.allowed_species?.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-muted-foreground">Vhodné pro:</span>
+          {item.allowed_species.map((sp: string) => (
+            <Badge key={sp} variant="secondary">{SPECIES_LABELS[sp] || sp}</Badge>
+          ))}
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs defaultValue="lots" className="space-y-4">

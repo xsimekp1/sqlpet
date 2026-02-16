@@ -56,6 +56,7 @@ export default function NewFeedingPlanPage() {
   const { data: animalsData } = useQuery({
     queryKey: ['animals'],
     queryFn: () => ApiClient.getAnimals({ page_size: 100 }),
+    staleTime: 10 * 60 * 1000,
   });
 
   // Fetch foods
