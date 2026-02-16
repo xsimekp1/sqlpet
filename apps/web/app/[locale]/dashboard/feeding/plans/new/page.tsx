@@ -141,7 +141,7 @@ export default function NewFeedingPlanPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-background p-6 rounded-lg border">
         {/* Animal Selection */}
         <div className="space-y-2">
           <Label htmlFor="animal_id">{t('fields.animal')} *</Label>
