@@ -148,10 +148,11 @@ export default function AnimalDetailPage() {
 
   // Close intake dialog
   const [closeIntakeOpen, setCloseIntakeOpen] = useState(false);
-  const [closeIntakeOutcome, setCloseIntakeOutcome] = useState<'adopted' | 'deceased' | 'lost'>('adopted');
+  const [closeIntakeOutcome, setCloseIntakeOutcome] = useState<'adopted' | 'deceased' | 'lost' | 'hotel_end'>('adopted');
   const [closeIntakeNotes, setCloseIntakeNotes] = useState('');
   const [closingIntake, setClosingIntake] = useState(false);
   const [activeIntakeId, setActiveIntakeId] = useState<string | null>(null);
+  const [activeIntakeReason, setActiveIntakeReason] = useState<string | null>(null);
 
   // Escape dialog
   const [escapeOpen, setEscapeOpen] = useState(false);
@@ -237,6 +238,7 @@ export default function AnimalDetailPage() {
         // Set active intake id (first non-deleted intake)
         const activeIntake = Array.isArray(intakes) ? intakes[0] : null;
         setActiveIntakeId(activeIntake?.id ?? null);
+        setActiveIntakeReason(activeIntake?.reason ?? null);
       } catch (error) {
         toast.error(t('loadError'));
         console.error(error);
@@ -460,6 +462,7 @@ export default function AnimalDetailPage() {
       toast.success(t('intake.closeSuccess'));
       setCloseIntakeOpen(false);
       setActiveIntakeId(null);
+      setActiveIntakeReason(null);
       // Refresh animal to get updated status
       const updated = await ApiClient.getAnimal(animalId);
       setAnimal(updated);
@@ -721,7 +724,7 @@ export default function AnimalDetailPage() {
                 onClick={() => setCloseIntakeOpen(true)}
                 className="border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-300"
               >
-                {t('intake.closeIntake')}
+                {activeIntakeReason === 'hotel' ? t('intake.closeIntake') : t('intake.closeIntake')}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={handleDelete}>
@@ -1308,7 +1311,14 @@ export default function AnimalDetailPage() {
       )}
 
       {/* Close Intake Dialog */}
-      <Dialog open={closeIntakeOpen} onOpenChange={setCloseIntakeOpen}>
+      <Dialog open={closeIntakeOpen} onOpenChange={(open) => {
+        setCloseIntakeOpen(open);
+        if (!open) {
+          // Reset outcome to default based on intake type when closing
+          setCloseIntakeOutcome(activeIntakeReason === 'hotel' ? 'hotel_end' : 'adopted');
+          setCloseIntakeNotes('');
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('intake.closeIntake')}</DialogTitle>
@@ -1321,9 +1331,15 @@ export default function AnimalDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="adopted">{t('intake.outcomes.adopted')}</SelectItem>
-                  <SelectItem value="deceased">{t('intake.outcomes.deceased')}</SelectItem>
-                  <SelectItem value="lost">{t('intake.outcomes.lost')}</SelectItem>
+                  {activeIntakeReason === 'hotel' ? (
+                    <SelectItem value="hotel_end">{t('intake.outcomes.hotel_end')}</SelectItem>
+                  ) : (
+                    <>
+                      <SelectItem value="adopted">{t('intake.outcomes.adopted')}</SelectItem>
+                      <SelectItem value="deceased">{t('intake.outcomes.deceased')}</SelectItem>
+                      <SelectItem value="lost">{t('intake.outcomes.lost')}</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

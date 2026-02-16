@@ -332,11 +332,11 @@ export default function AnimalsPage() {
                 </div>
                 <div className="p-1.5 space-y-1">
                   <p className="font-bold text-base leading-tight truncate">{animal.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
+<p className="text-xs text-muted-foreground truncate">
                     {animal.current_kennel_code && <span className="font-mono mr-1">{animal.current_kennel_code}</span>}
-                    {animal.estimated_age_years !== null 
-                      ? `${animal.estimated_age_years} r.` 
-                      : (animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '' : '')}
+                    {animal.estimated_age_years != null
+                      ? `${animal.estimated_age_years} r.`
+                      : (animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '—' : '—')}
                   </p>
                   <div className="flex items-center gap-1 flex-wrap">
                     {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
@@ -423,9 +423,9 @@ export default function AnimalsPage() {
                         ? animal.breeds.map(b => formatBreedName(b)).join(', ')
                         : '—'}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {animal.estimated_age_years !== null 
-                        ? `${animal.estimated_age_years} r.` 
+<td className="px-4 py-3 text-muted-foreground">
+                      {animal.estimated_age_years != null
+                        ? `${animal.estimated_age_years} r.`
                         : (animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '—' : '—')}
                     </td>
                     <td className="px-4 py-3">
