@@ -69,7 +69,9 @@ export default function NewFeedingPlanPage() {
   const animals = (animalsData?.items || []).filter(
     (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
   );
-  const foods = Array.isArray(foodsData) ? foodsData : (foodsData?.items ?? []);
+  // GET /inventory/items returns List[InventoryStockResponse] — each element is {item: {...}, total_quantity, ...}
+  const rawFoods = Array.isArray(foodsData) ? foodsData : [];
+  const foods = rawFoods.map((s: any) => s.item ?? s);
 
   const watchedAnimalId = watch('animal_id');
   const selectedAnimal = animals.find((a: any) => a.id === watchedAnimalId);
