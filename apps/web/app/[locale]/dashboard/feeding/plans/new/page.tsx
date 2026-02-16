@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ApiClient from '@/app/lib/api';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ export default function NewFeedingPlanPage() {
   const t = useTranslations('feeding');
   const { toast } = useToast();
   const router = useRouter();
+  const locale = useLocale();
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FeedingPlanFormData>({
@@ -84,7 +85,10 @@ export default function NewFeedingPlanPage() {
     mutationFn: async (data: FeedingPlanFormData) => {
       return await ApiClient.post('/feeding/plans', {
         ...data,
-        schedule_json: scheduleTimes,
+        // Backend expects Dict[str,Any]|null — wrap times array; send null when empty
+        schedule_json: scheduleTimes.length > 0 ? { times: scheduleTimes } : null,
+        // food_id references foods.id (diet definitions), not inventory items — omit for now
+        food_id: undefined,
         amount_g: data.amount_g ? Number(data.amount_g) : undefined,
         times_per_day: data.times_per_day ? Number(data.times_per_day) : undefined,
       });
@@ -95,7 +99,7 @@ export default function NewFeedingPlanPage() {
         title: t('messages.planCreated'),
         description: t('messages.planCreatedDesc'),
       });
-      router.push('/dashboard/feeding/plans');
+      router.push(`/${locale}/dashboard/feeding/plans`);
     },
     onError: (error: Error) => {
       toast({
