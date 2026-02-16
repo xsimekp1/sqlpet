@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, dynamic } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Search, MapPin, Calendar, User, Loader2, X, 
@@ -15,15 +15,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ApiClient, Finding, FindingListResponse } from '@/app/lib/api';
 import { toast } from 'sonner';
-
-const LocationPickerMap = dynamic(() => import('@/app/components/LocationPickerMap'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[300px] w-full rounded-lg bg-muted flex items-center justify-center">
-      <span className="text-muted-foreground">Načítání mapy...</span>
-    </div>
-  ),
-});
 
 interface Contact {
   id: string;
@@ -337,13 +328,14 @@ export default function FindingsReportWidget() {
             <p className="text-xs text-muted-foreground">
               Klikněte na mapu pro výběr bodu GPS filtru
             </p>
-            <LocationPickerMap
-              lat={gpsLat}
-              lng={gpsLng}
-              onChange={handleMapClick}
-            />
-          </div>
-        )}
+          )}
+
+          {/* Map View - disabled until map library is resolved */}
+          {viewMode === 'map' && (
+            <div className="h-[300px] rounded-lg bg-muted flex items-center justify-center">
+              <p className="text-muted-foreground">Mapa bude dostupná po vyřešení kompatibility</p>
+            </div>
+          )}
 
         {/* Results count */}
         <div className="text-sm text-muted-foreground">
