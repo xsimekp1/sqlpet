@@ -15,14 +15,14 @@ depends_on = None
 
 
 def upgrade():
-    # The status column is already VARCHAR (not a native PostgreSQL enum),
-    # so no DDL change is needed. New animals will default to 'registered'
-    # via the SQLAlchemy model default.
-    # Update existing animals that have status='intake' but no current_intake_date
-    # to 'registered' so they are correctly categorised.
+    # First add 'registered' to the enum type if it doesn't exist
+    op.execute("ALTER TYPE animal_status_enum ADD VALUE IF NOT EXISTS 'registered'")
+
+    # The status column might be enum or varchar - try both approaches
+    # First try: cast to text, then back to enum
     op.execute("""
         UPDATE animals
-        SET status = 'registered'
+        SET status = 'registered'::animal_status_enum
         WHERE status::text = 'intake'
           AND id NOT IN (
             SELECT DISTINCT animal_id FROM intakes
@@ -35,7 +35,7 @@ def upgrade():
 def downgrade():
     op.execute("""
         UPDATE animals
-        SET status = 'intake'
+        SET status = 'intake'::animal_status_enum
         WHERE status::text = 'registered'
           AND deleted_at IS NULL
     """)
