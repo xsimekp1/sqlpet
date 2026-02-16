@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, Mail, Phone, MapPin, User, Tag, FileText, Camera, PawPrint, Edit, Heart, Plus } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, User, Tag, FileText, Camera, PawPrint, Edit, Heart, Plus, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,14 +12,7 @@ import { Loader2 } from 'lucide-react';
 import { ApiClient } from '@/app/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -27,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -64,20 +56,9 @@ export default function ContactDetailPage() {
   const [findings, setFindings] = useState<Finding[]>([]);
   const [loadingFindings, setLoadingFindings] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [savingContact, setSavingContact] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    type: 'other',
-    email: '',
-    phone: '',
-    address: '',
-    notes: '',
-    profession: '',
-    organization_name: '',
-    bank_account: '',
-    tax_id: '',
-  });
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [savingField, setSavingField] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -87,50 +68,31 @@ export default function ContactDetailPage() {
       .finally(() => setLoading(false));
   }, [contactId]);
 
-  const openEditDialog = () => {
-    if (contact) {
-      setEditForm({
-        name: contact.name || '',
-        type: contact.type || 'other',
-        email: contact.email || '',
-        phone: contact.phone || '',
-        address: contact.address || '',
-        notes: contact.notes || '',
-        profession: contact.profession || '',
-        organization_name: contact.organization_name || '',
-        bank_account: contact.bank_account || '',
-        tax_id: contact.tax_id || '',
-      });
-      setEditDialogOpen(true);
-    }
+  const startEdit = (field: string, currentValue: string | null) => {
+    setEditingField(field);
+    setEditValue(currentValue || '');
   };
 
-  const handleSaveContact = async () => {
-    if (!editForm.name.trim()) {
-      toast.error('Jméno je povinné');
-      return;
-    }
-    setSavingContact(true);
+  const cancelEdit = () => {
+    setEditingField(null);
+    setEditValue('');
+  };
+
+  const saveField = async (field: string) => {
+    setSavingField(field);
     try {
-      const updated = await ApiClient.patch(`/contacts/${contactId}`, {
-        name: editForm.name,
-        type: editForm.type,
-        email: editForm.email || null,
-        phone: editForm.phone || null,
-        address: editForm.address || null,
-        notes: editForm.notes || null,
-        profession: editForm.profession || null,
-        organization_name: editForm.organization_name || null,
-        bank_account: editForm.bank_account || null,
-        tax_id: editForm.tax_id || null,
-      });
+      const updateData: Record<string, any> = {};
+      updateData[field] = editValue || null;
+      
+      const updated = await ApiClient.patch(`/contacts/${contactId}`, updateData);
       setContact(updated);
-      setEditDialogOpen(false);
-      toast.success('Kontakt byl aktualizován');
+      setEditingField(null);
+      setEditValue('');
+      toast.success('Uloženo');
     } catch (error) {
-      toast.error('Nepodařilo se uložit kontakt');
+      toast.error('Nepodařilo se uložit');
     } finally {
-      setSavingContact(false);
+      setSavingField(null);
     }
   };
 
@@ -235,16 +197,76 @@ export default function ContactDetailPage() {
 </div>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{contact.name}</h1>
-            <Badge className={TYPE_COLORS[contact.type] ?? TYPE_COLORS.other} variant="outline">
-              <Tag className="h-3 w-3 mr-1" />
-              {contact.type}
-            </Badge>
+            {editingField === 'name' ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={editValue}
+                  onChange={e => setEditValue(e.target.value)}
+                  className="h-8 max-w-[200px]"
+                  autoFocus
+                />
+                <Button size="sm" variant="ghost" onClick={() => saveField('name')} disabled={savingField === 'name'}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <h1 
+                  className="text-2xl font-bold cursor-pointer hover:text-primary"
+                  onClick={() => startEdit('name', contact.name)}
+                >
+                  {contact.name}
+                </h1>
+                <Button size="sm" variant="ghost" onClick={() => startEdit('name', contact.name)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
-          <Button variant="outline" size="sm" className="mt-2" onClick={openEditDialog}>
-            <Edit className="h-4 w-4 mr-1" />
-            Upravit
-          </Button>
+          {/* Type - inline edit */}
+          <div className="flex items-center gap-3 mt-2">
+            {editingField === 'type' ? (
+              <div className="flex items-center gap-2">
+                <Select value={editValue} onValueChange={setEditValue}>
+                  <SelectTrigger className="w-[140px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONTACT_TYPES.map(type => (
+                      <SelectItem key={type} value={type}>
+                        {type === 'donor' && 'Dárce'}
+                        {type === 'veterinarian' && 'Veterinář'}
+                        {type === 'volunteer' && 'Dobrovolník'}
+                        {type === 'foster' && 'Pěstoun'}
+                        {type === 'supplier' && 'Dodavatel'}
+                        {type === 'partner' && 'Partner'}
+                        {type === 'other' && 'Jiné'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" variant="ghost" onClick={() => saveField('type')} disabled={savingField === 'type'}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Badge className={TYPE_COLORS[contact.type] ?? TYPE_COLORS.other} variant="outline">
+                  <Tag className="h-3 w-3 mr-1" />
+                  {contact.type}
+                </Badge>
+                <Button size="sm" variant="ghost" onClick={() => startEdit('type', contact.type)}>
+                  <Edit className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -254,38 +276,173 @@ export default function ContactDetailPage() {
           <CardTitle>{t('contactDetails')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {contact.email && (
-            <div className="flex items-center gap-3">
-              <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-              <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
-                {contact.email}
-              </a>
-            </div>
-          )}
-          {contact.phone && (
-            <div className="flex items-center gap-3">
-              <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-              <a href={`tel:${contact.phone}`} className="hover:underline">
-                {contact.phone}
-              </a>
-            </div>
-          )}
-{contact.address && (
-            <div className="flex items-start gap-3">
-              <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-              <span className="whitespace-pre-line">{contact.address}</span>
-            </div>
-          )}
-          {(contact.profession || contact.organization_name) && (
-            <div className="flex items-center gap-3">
-              <User className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span>
-                {contact.profession}
-                {contact.profession && contact.organization_name && ' – '}
-                {contact.organization_name}
-              </span>
-            </div>
-          )}
+          {/* Email */}
+          <div className="flex items-center gap-3">
+            <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+            {editingField === 'email' ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={editValue}
+                  onChange={e => setEditValue(e.target.value)}
+                  placeholder="email@priklad.cz"
+                  className="h-8 max-w-[250px]"
+                  autoFocus
+                />
+                <Button size="sm" variant="ghost" onClick={() => saveField('email')} disabled={savingField === 'email'}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                {contact.email ? (
+                  <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
+                    {contact.email}
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground text-sm italic">prázdné</span>
+                )}
+                <Button size="sm" variant="ghost" onClick={() => startEdit('email', contact.email)}>
+                  <Edit className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Phone */}
+          <div className="flex items-center gap-3">
+            <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+            {editingField === 'phone' ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={editValue}
+                  onChange={e => setEditValue(e.target.value)}
+                  placeholder="+420 123 456 789"
+                  className="h-8 max-w-[180px]"
+                  autoFocus
+                />
+                <Button size="sm" variant="ghost" onClick={() => saveField('phone')} disabled={savingField === 'phone'}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                {contact.phone ? (
+                  <a href={`tel:${contact.phone}`} className="hover:underline">
+                    {contact.phone}
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground text-sm italic">prázdné</span>
+                )}
+                <Button size="sm" variant="ghost" onClick={() => startEdit('phone', contact.phone)}>
+                  <Edit className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Address */}
+          <div className="flex items-start gap-3">
+            <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            {editingField === 'address' ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Textarea
+                  value={editValue}
+                  onChange={e => setEditValue(e.target.value)}
+                  placeholder="Ulice, Město, PSČ"
+                  className="h-16 max-w-[300px]"
+                  autoFocus
+                />
+                <div className="flex flex-col gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => saveField('address')} disabled={savingField === 'address'}>
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {contact.address ? (
+                  <span className="whitespace-pre-line">{contact.address}</span>
+                ) : (
+                  <span className="text-muted-foreground text-sm italic">prázdné</span>
+                )}
+                <Button size="sm" variant="ghost" onClick={() => startEdit('address', contact.address)}>
+                  <Edit className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Profession */}
+          <div className="flex items-start gap-3">
+            <User className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            {editingField === 'profession' ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={editValue}
+                  onChange={e => setEditValue(e.target.value)}
+                  placeholder="Profese"
+                  className="h-8 max-w-[160px]"
+                  autoFocus
+                />
+                <Button size="sm" variant="ghost" onClick={() => saveField('profession')} disabled={savingField === 'profession'}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <span>
+                  {contact.profession || <span className="text-muted-foreground text-sm italic">prázdné</span>}
+                </span>
+                <Button size="sm" variant="ghost" onClick={() => startEdit('profession', contact.profession)}>
+                  <Edit className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Organization */}
+          <div className="flex items-start gap-3">
+            <User className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            {editingField === 'organization_name' ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  value={editValue}
+                  onChange={e => setEditValue(e.target.value)}
+                  placeholder="Organizace"
+                  className="h-8 max-w-[200px]"
+                  autoFocus
+                />
+                <Button size="sm" variant="ghost" onClick={() => saveField('organization_name')} disabled={savingField === 'organization_name'}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <>
+                <span>
+                  {contact.organization_name || <span className="text-muted-foreground text-sm italic">prázdné</span>}
+                </span>
+                <Button size="sm" variant="ghost" onClick={() => startEdit('organization_name', contact.organization_name)}>
+                  <Edit className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
+
           {!contact.email && !contact.phone && !contact.address && !contact.profession && !contact.organization_name && (
             <p className="text-sm text-muted-foreground">{t('noContactInfo')}</p>
           )}
@@ -381,141 +538,6 @@ export default function ContactDetailPage() {
           )}
 </CardContent>
       </Card>
-
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Upravit kontakt</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto py-2">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Jméno *</Label>
-              <Input
-                id="edit-name"
-                value={editForm.name}
-                onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))}
-                placeholder="Jméno a příjmení"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-type">Typ</Label>
-              <Select
-                value={editForm.type}
-                onValueChange={v => setEditForm(p => ({ ...p, type: v }))}
-              >
-                <SelectTrigger id="edit-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CONTACT_TYPES.map(type => (
-                    <SelectItem key={type} value={type}>
-                      {type === 'donor' && 'Dárce'}
-                      {type === 'veterinarian' && 'Veterinář'}
-                      {type === 'volunteer' && 'Dobrovolník'}
-                      {type === 'foster' && 'Pěstoun'}
-                      {type === 'supplier' && 'Dodavatel'}
-                      {type === 'partner' && 'Partner'}
-                      {type === 'other' && 'Jiné'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">Email</Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={editForm.email}
-                  onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))}
-                  placeholder="email@priklad.cz"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-phone">Telefon</Label>
-                <Input
-                  id="edit-phone"
-                  type="tel"
-                  value={editForm.phone}
-                  onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))}
-                  placeholder="+420 123 456 789"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-address">Adresa</Label>
-              <Textarea
-                id="edit-address"
-                value={editForm.address}
-                onChange={e => setEditForm(p => ({ ...p, address: e.target.value }))}
-                placeholder="Ulice, Město, PSČ"
-                rows={2}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-profession">Profese</Label>
-                <Input
-                  id="edit-profession"
-                  value={editForm.profession}
-                  onChange={e => setEditForm(p => ({ ...p, profession: e.target.value }))}
-                  placeholder="např. Veterinář"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-org">Název organizace</Label>
-                <Input
-                  id="edit-org"
-                  value={editForm.organization_name}
-                  onChange={e => setEditForm(p => ({ ...p, organization_name: e.target.value }))}
-                  placeholder="Název firmy"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-bank">Bankovní účet</Label>
-                <Input
-                  id="edit-bank"
-                  value={editForm.bank_account}
-                  onChange={e => setEditForm(p => ({ ...p, bank_account: e.target.value }))}
-                  placeholder="123456789/0100"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-ico">IČO</Label>
-                <Input
-                  id="edit-ico"
-                  value={editForm.tax_id}
-                  onChange={e => setEditForm(p => ({ ...p, tax_id: e.target.value }))}
-                  placeholder="12345678"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-notes">Poznámky</Label>
-              <Textarea
-                id="edit-notes"
-                value={editForm.notes}
-                onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))}
-                placeholder="Volitelné poznámky..."
-                rows={3}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={savingContact}>
-              Zrušit
-            </Button>
-            <Button onClick={handleSaveContact} disabled={savingContact}>
-              {savingContact ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Uložit
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
