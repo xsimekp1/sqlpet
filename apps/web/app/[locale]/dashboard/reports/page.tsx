@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import ApiClient from '@/app/lib/api';
 import { toast } from 'sonner';
+import FindingsReportWidget from '@/app/components/reports/FindingsReportWidget';
 
 // ── Simple SVG line chart for daily animal count ────────────────────────────
 function DailyCountChart({ data }: { data: { date: string; count: number }[] }) {
@@ -113,10 +114,9 @@ export default function ReportsPage() {
       .finally(() => setLoadingChart(false));
   }, []);
 
-  const plannedReports = [
+const plannedReports = [
     { icon: PieChart, title: 'Příjmy a výdeje', desc: 'Statistiky příjmů (intake) vs adopcí/výdejů' },
     { icon: FileText, title: 'Adopční přehled', desc: 'Úspěšnost adopcí, průměrná doba v útulku' },
-    { icon: BarChart3, title: 'Lékařské záznamy', desc: 'Přehled veterinárních úkonů, očkování, léčby' },
     { icon: Clock, title: 'Denní operace', desc: 'Krmení, procházky, úkoly — denní souhrn' },
   ];
 
@@ -148,8 +148,11 @@ export default function ReportsPage() {
           ) : (
             <DailyCountChart data={dailyData} />
           )}
-        </CardContent>
+</CardContent>
       </Card>
+
+      {/* ── Findings Report Widget ── */}
+      <FindingsReportWidget />
 
       {/* ── Planned reports placeholder ── */}
       <Card className="border-dashed">

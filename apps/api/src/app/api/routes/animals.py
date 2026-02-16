@@ -60,7 +60,9 @@ async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
     try:
         async with db.begin_nested():
             default_img = await svc.get_default_image_for_animal(
-                species=animal.species, breed_id=breed_id, color=animal.color,
+                species=animal.species,
+                breed_id=breed_id,
+                color=animal.color,
             )
             resp.default_image_url = default_img.public_url if default_img else None
     except Exception:
@@ -144,9 +146,12 @@ async def create_animal(
         raise
     except Exception as e:
         import traceback
+
         print(f"ERROR in create_animal: {e}")
         print(f"ERROR traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Failed to create animal: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create animal: {str(e)}"
+        )
 
 
 @router.get(
@@ -168,7 +173,7 @@ async def list_animals(
 
     try:
         svc = AnimalService(db)
-        items, total = await svc.list_animals(
+        items, count, has_more = await svc.list_animals(
             organization_id=organization_id,
             page=page,
             page_size=page_size,
@@ -182,9 +187,10 @@ async def list_animals(
             built_items.append(await _build_animal_response(a, db))
         return AnimalListResponse(
             items=built_items,
-            total=total,
+            total=count,
             page=page,
             page_size=page_size,
+            has_more=has_more,
         )
     except Exception as e:
         import traceback
@@ -288,7 +294,9 @@ async def log_weight(
     svc = AnimalService(db)
     animal = await svc.get_animal(organization_id, animal_id)
     if animal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
 
     measured_at = data.measured_at or datetime.now(timezone.utc)
     log = AnimalWeightLog(
@@ -318,7 +326,9 @@ async def get_weight_history(
     svc = AnimalService(db)
     animal = await svc.get_animal(organization_id, animal_id)
     if animal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
 
     result = await db.execute(
         select(AnimalWeightLog)
@@ -364,7 +374,9 @@ async def register_birth(
     svc = AnimalService(db)
     mother = await svc.get_animal(organization_id, animal_id)
     if mother is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
 
     today = data.birth_date or datetime.now(timezone.utc).date()
 
@@ -408,6 +420,7 @@ async def register_birth(
 
         # Create intake record for offspring (reason: birth)
         from src.app.models.intake import Intake, IntakeReason as IR
+
         birth_intake = Intake(
             organization_id=organization_id,
             animal_id=offspring.id,
@@ -424,17 +437,25 @@ async def register_birth(
 
         # Place in mother's kennel (ignoring capacity)
         if current_kennel_id:
-            db.add(KennelStay(
-                id=uuid.uuid4(),
-                organization_id=organization_id,
-                animal_id=offspring.id,
-                kennel_id=current_kennel_id,
-                start_at=datetime.now(timezone.utc),
-                reason="Narozeno",
-                moved_by_user_id=current_user.id,
-            ))
+            db.add(
+                KennelStay(
+                    id=uuid.uuid4(),
+                    organization_id=organization_id,
+                    animal_id=offspring.id,
+                    kennel_id=current_kennel_id,
+                    start_at=datetime.now(timezone.utc),
+                    reason="Narozeno",
+                    moved_by_user_id=current_user.id,
+                )
+            )
 
-        created.append({"id": str(offspring.id), "public_code": public_code, "name": offspring.name})
+        created.append(
+            {
+                "id": str(offspring.id),
+                "public_code": public_code,
+                "name": offspring.name,
+            }
+        )
         await db.flush()
 
     # Clear expected litter date and unmark pregnant on mother
@@ -464,7 +485,9 @@ async def log_bcs(
     svc = AnimalService(db)
     animal = await svc.get_animal(organization_id, animal_id)
     if animal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
 
     measured_at = data.measured_at or datetime.now(timezone.utc)
     log = AnimalBCSLog(
@@ -496,7 +519,9 @@ async def get_bcs_history(
     svc = AnimalService(db)
     animal = await svc.get_animal(organization_id, animal_id)
     if animal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
 
     result = await db.execute(
         select(AnimalBCSLog)
@@ -524,7 +549,9 @@ async def get_animal_kennel_history(
     svc = AnimalService(db)
     animal = await svc.get_animal(organization_id, animal_id)
     if animal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
 
     result = await db.execute(
         select(KennelStay, Kennel.code)
@@ -547,6 +574,7 @@ async def get_animal_kennel_history(
 
 
 # --- Daily count stats endpoint ---
+
 
 @router.get("/stats/daily-count")
 async def get_daily_animal_count(
@@ -586,6 +614,7 @@ async def get_daily_animal_count(
 
 # --- Identifier endpoints ---
 
+
 @router.post(
     "/{animal_id}/identifiers",
     response_model=AnimalIdentifierResponse,
@@ -602,7 +631,9 @@ async def add_identifier(
     svc = AnimalService(db)
     animal = await svc.get_animal(organization_id, animal_id)
     if animal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
 
     identifier = AnimalIdentifier(
         id=uuid.uuid4(),
@@ -638,7 +669,9 @@ async def delete_identifier(
     )
     identifier = result.scalar_one_or_none()
     if identifier is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Identifier not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Identifier not found"
+        )
     await db.delete(identifier)
 
 
@@ -678,7 +711,9 @@ async def list_breeds(
     return responses
 
 
-@breed_router.get("/{breed_id}/color-images", response_model=list[BreedColorImageResponse])
+@breed_router.get(
+    "/{breed_id}/color-images", response_model=list[BreedColorImageResponse]
+)
 async def get_breed_color_images(
     breed_id: uuid.UUID,
     current_user: User = Depends(get_current_user),

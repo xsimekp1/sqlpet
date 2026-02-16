@@ -16,6 +16,7 @@ class IntakeReason(str, Enum):
     OFFICIAL = "official"
     TRANSFER = "transfer"
     BIRTH = "birth"
+    HOTEL = "hotel"
     OTHER = "other"
 
 

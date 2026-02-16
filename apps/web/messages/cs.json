@@ -735,7 +735,9 @@
       "quarantine": "Karanténa",
       "returned_to_owner": "Vráceno majiteli",
       "euthanized": "Utraceno",
-      "escaped": "Uprchlé"
+      "escaped": "Uprchlé",
+      "hotel": "Hotel",
+      "with_owner": "S majitelem"
     },
     "intake": {
       "closeIntake": "Ukončit pobyt",
@@ -748,7 +750,8 @@
       "outcomes": {
         "adopted": "Adoptováno",
         "deceased": "Uhynulo",
-        "lost": "Ztraceno (nenašlo se)"
+        "lost": "Ztraceno (nenašlo se)",
+        "hotel_end": "Vráceno majiteli"
       }
     },
     "createChoice": {
@@ -1240,13 +1243,14 @@
     "title": "Příjmy zvířat",
     "new": "Nový příjem",
     "reason": "Důvod příjmu",
-    "reasons": {
+"reasons": {
       "found": "Nález",
       "return": "Návrat",
       "surrender": "Odevzdání",
       "official": "Úřední příděl",
       "transfer": "Převod",
       "birth": "Porod v útulku",
+      "hotel": "Hotel (dočasný pobyt)",
       "other": "Jiné"
     },
     "finder": "Kdo nalezl",

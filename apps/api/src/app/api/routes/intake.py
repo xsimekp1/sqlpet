@@ -6,7 +6,7 @@ from datetime import date, datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +14,7 @@ from src.app.api.dependencies.auth import get_current_user, get_current_organiza
 from src.app.api.dependencies.db import get_db
 from src.app.models.intake import Intake, IntakeReason
 from src.app.models.user import User
+from src.app.models.animal import AnimalStatus
 
 router = APIRouter(prefix="/intakes", tags=["intakes"])
 
@@ -33,6 +34,23 @@ class IntakeCreate(BaseModel):
     funding_notes: Optional[str] = None
     notes: Optional[str] = None
 
+    @field_validator("planned_end_date", mode="before")
+    @classmethod
+    def validate_hotel_end_date(cls, v, info):
+        # Will be validated in model_validator after we know the reason
+        return v
+
+    @model_validator(mode="after")
+    def validate_hotel_mandatory_end_date(self):
+        if self.reason == IntakeReason.HOTEL and self.planned_end_date is None:
+            raise ValueError("planned_end_date is required when reason is 'hotel'")
+        if (
+            self.planned_end_date is not None
+            and self.planned_end_date <= self.intake_date
+        ):
+            raise ValueError("planned_end_date must be after intake_date")
+        return self
+
 
 class IntakeUpdate(BaseModel):
     reason: Optional[IntakeReason] = None
@@ -46,6 +64,15 @@ class IntakeUpdate(BaseModel):
     funding_source: Optional[str] = None
     funding_notes: Optional[str] = None
     notes: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_hotel_mandatory_end_date(self):
+        if self.reason == IntakeReason.HOTEL and self.planned_end_date is None:
+            raise ValueError("planned_end_date is required when reason is 'hotel'")
+        if self.planned_end_date is not None and self.intake_date is not None:
+            if self.planned_end_date <= self.intake_date:
+                raise ValueError("planned_end_date must be after intake_date")
+        return self
 
 
 class IntakeResponse(BaseModel):
@@ -172,7 +199,10 @@ async def create_intake(
     )
     animal = animal_result.scalar_one_or_none()
     if animal:
-        animal.status = "intake"  # type: ignore
+        if data.reason == IntakeReason.HOTEL:
+            animal.status = AnimalStatus.HOTEL
+        else:
+            animal.status = AnimalStatus.INTAKE
 
     await db.commit()
     await db.refresh(intake)
@@ -296,6 +326,7 @@ class IntakeOutcome(str, enum.Enum):
     ADOPTED = "adopted"
     DECEASED = "deceased"
     LOST = "lost"
+    HOTEL_END = "hotel_end"
 
 
 class IntakeClose(BaseModel):
@@ -304,9 +335,10 @@ class IntakeClose(BaseModel):
 
 
 _OUTCOME_STATUS_MAP = {
-    IntakeOutcome.ADOPTED: "adopted",
-    IntakeOutcome.DECEASED: "deceased",
-    IntakeOutcome.LOST: "escaped",
+    IntakeOutcome.ADOPTED: AnimalStatus.ADOPTED,
+    IntakeOutcome.DECEASED: AnimalStatus.DECEASED,
+    IntakeOutcome.LOST: AnimalStatus.ESCAPED,
+    IntakeOutcome.HOTEL_END: AnimalStatus.WITH_OWNER,
 }
 
 

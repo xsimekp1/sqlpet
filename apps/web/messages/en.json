@@ -795,7 +795,9 @@
       "quarantine": "Quarantine",
       "returned_to_owner": "Returned to Owner",
       "euthanized": "Euthanized",
-      "escaped": "Escaped"
+      "escaped": "Escaped",
+      "hotel": "Hotel",
+      "with_owner": "With Owner"
     },
     "intake": {
       "closeIntake": "Close Intake",
@@ -808,7 +810,8 @@
       "outcomes": {
         "adopted": "Adopted",
         "deceased": "Deceased",
-        "lost": "Lost (not found)"
+        "lost": "Lost (not found)",
+        "hotel_end": "Returned to Owner"
       }
     },
     "createChoice": {
@@ -1237,13 +1240,14 @@
     "title": "Animal Intakes",
     "new": "New Intake",
     "reason": "Intake reason",
-    "reasons": {
+"reasons": {
       "found": "Found",
       "return": "Return from adoption",
       "surrender": "Owner surrender",
       "official": "Official placement",
       "transfer": "Transfer",
       "birth": "Born in shelter",
+      "hotel": "Hotel (temporary stay)",
       "other": "Other"
     },
     "finder": "Finder",

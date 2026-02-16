@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, dynamic } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, Loader2, Info } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2, Info, MapPin, X, Search } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,7 @@ const REASON_OPTIONS = [
   { value: 'surrender', label: 'Dobrovolné odevzdání' },
   { value: 'official', label: 'Úřední příděl' },
   { value: 'transfer', label: 'Převod z jiného útulku' },
+  { value: 'hotel', label: 'Hotel (dočasný pobyt)' },
   { value: 'other', label: 'Jiné' },
 ];
 
@@ -50,6 +51,7 @@ interface FormState {
   // Step 2
   reason: string;
   intake_date: string;
+  planned_end_date: string;
   notes: string;
   medicalCheck: boolean;
   // Step 3
@@ -65,12 +67,13 @@ export default function NewIntakePage() {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  const today = new Date().toISOString().split('T')[0];
+const today = new Date().toISOString().split('T')[0];
   const [form, setForm] = useState<FormState>({
     animal_id: '',
     animal_name: '',
     reason: '',
     intake_date: today,
+    planned_end_date: '',
     notes: '',
     medicalCheck: false,
     finder_notes: '',
@@ -139,13 +142,17 @@ export default function NewIntakePage() {
   const set = (key: keyof FormState, value: string) =>
     setForm(p => ({ ...p, [key]: value }));
 
-  const canNext = () => {
+const canNext = () => {
     if (step === 0) return !!form.animal_id;
-    if (step === 1) return !!form.reason && !!form.intake_date;
+    if (step === 1) {
+      if (!form.reason || !form.intake_date) return false;
+      if (form.reason === 'hotel' && !form.planned_end_date) return false;
+      return true;
+    }
     return true;
   };
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     if (!form.animal_id || !form.reason || !form.intake_date) return;
     setSubmitting(true);
     try {
@@ -158,6 +165,9 @@ export default function NewIntakePage() {
         funding_source: form.funding_source || undefined,
         funding_notes: form.funding_notes || undefined,
       };
+      if (form.reason === 'hotel' && form.planned_end_date) {
+        body.planned_end_date = form.planned_end_date;
+      }
       await ApiClient.post('/intakes', body);
       toast.success('Příjem byl zaznamenán');
       // Fire-and-forget: create medical check task if requested
@@ -307,10 +317,22 @@ export default function NewIntakePage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1">
+<div className="space-y-1">
                 <Label>Datum příjmu *</Label>
                 <Input type="date" value={form.intake_date} onChange={e => set('intake_date', e.target.value)} />
               </div>
+              {form.reason === 'hotel' && (
+                <div className="space-y-1">
+                  <Label>Datum ukončení pobytu *</Label>
+                  <Input 
+                    type="date" 
+                    value={form.planned_end_date} 
+                    onChange={e => set('planned_end_date', e.target.value)}
+                    min={form.intake_date}
+                  />
+                  <p className="text-xs text-muted-foreground">Povinné pro hotel - krátkodobý pobyt</p>
+                </div>
+              )}
               <div className="space-y-1">
                 <Label>Poznámky</Label>
                 <textarea
@@ -391,10 +413,16 @@ export default function NewIntakePage() {
                   <span className="text-muted-foreground">Důvod:</span>
                   <span>{REASON_OPTIONS.find(o => o.value === form.reason)?.label ?? form.reason}</span>
                 </div>
-                <div className="flex justify-between">
+<div className="flex justify-between">
                   <span className="text-muted-foreground">Datum příjmu:</span>
                   <span>{form.intake_date}</span>
                 </div>
+                {form.reason === 'hotel' && form.planned_end_date && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Datum ukončení:</span>
+                    <span>{form.planned_end_date}</span>
+                  </div>
+                )}
                 {form.funding_source && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Financování:</span>

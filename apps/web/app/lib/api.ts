@@ -1054,7 +1054,7 @@ class ApiClient {
 
   static async closeIntake(
     intakeId: string,
-    data: { outcome: 'adopted' | 'deceased' | 'lost'; notes?: string },
+    data: { outcome: 'adopted' | 'deceased' | 'lost' | 'hotel_end'; notes?: string },
   ): Promise<any> {
     return this.post(`/intakes/${intakeId}/close`, data);
   }
@@ -1105,6 +1105,25 @@ class ApiClient {
     );
     return response.data;
   }
+
+  static async getFindings(params?: {
+    page?: number;
+    page_size?: number;
+    animal_id?: string;
+    who_found_id?: string;
+    date_from?: string;
+    date_to?: string;
+    lat?: number;
+    lng?: number;
+    radius_km?: number;
+  }): Promise<FindingListResponse> {
+    return ApiClient.get('/findings', params);
+  }
+
+  static async searchContacts(q: string): Promise<{ id: string; name: string; email: string | null }[]> {
+    const result = await ApiClient.get<SearchResults>('/search', { q, limit: 10 });
+    return result.contacts;
+  }
 }
 
 // Search types
@@ -1117,3 +1136,27 @@ export interface SearchResults {
 
 export { ApiClient };
 export default ApiClient;
+
+// Findings types
+export interface Finding {
+  id: string;
+  organization_id: string;
+  who_found_id: string | null;
+  where_lat: number | null;
+  where_lng: number | null;
+  when_found: string;
+  notes: string | null;
+  animal_id: string | null;
+  created_at: string;
+  updated_at: string;
+  animal_name?: string | null;
+  animal_public_code?: string | null;
+  who_found_name?: string | null;
+}
+
+export interface FindingListResponse {
+  items: Finding[];
+  total: number;
+  page: number;
+  page_size: number;
+}

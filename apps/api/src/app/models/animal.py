@@ -2,7 +2,17 @@ import enum
 import uuid
 from datetime import date
 
-from sqlalchemy import Boolean, Date, Enum, ForeignKey, Index, Integer, Numeric, String, Text
+from sqlalchemy import (
+    Boolean,
+    Date,
+    Enum,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -38,6 +48,8 @@ class AnimalStatus(str, enum.Enum):
     RETURNED_TO_OWNER = "returned_to_owner"
     EUTHANIZED = "euthanized"
     ESCAPED = "escaped"
+    HOTEL = "hotel"
+    WITH_OWNER = "with_owner"
 
 
 class AlteredStatus(str, enum.Enum):
@@ -86,11 +98,23 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     species: Mapped[Species] = mapped_column(
-        Enum(Species, name="species_enum", create_constraint=False, native_enum=False, values_callable=lambda x: [e.value for e in x]),
+        Enum(
+            Species,
+            name="species_enum",
+            create_constraint=False,
+            native_enum=False,
+            values_callable=lambda x: [e.value for e in x],
+        ),
         nullable=False,
     )
     sex: Mapped[Sex] = mapped_column(
-        Enum(Sex, name="sex_enum", create_constraint=False, native_enum=False, values_callable=lambda x: [e.value for e in x]),
+        Enum(
+            Sex,
+            name="sex_enum",
+            create_constraint=False,
+            native_enum=False,
+            values_callable=lambda x: [e.value for e in x],
+        ),
         default=Sex.UNKNOWN,
     )
     status: Mapped[AnimalStatus] = mapped_column(
@@ -116,7 +140,11 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     birth_date_estimated: Mapped[date | None] = mapped_column(Date, nullable=True)
     age_group: Mapped[AgeGroup] = mapped_column(
         Enum(
-            AgeGroup, name="age_group_enum", create_constraint=False, native_enum=False, values_callable=lambda x: [e.value for e in x]
+            AgeGroup,
+            name="age_group_enum",
+            create_constraint=False,
+            native_enum=False,
+            values_callable=lambda x: [e.value for e in x],
         ),
         default=AgeGroup.UNKNOWN,
     )
@@ -152,7 +180,9 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     bcs: Mapped[int | None] = mapped_column(Integer, nullable=True)
     expected_litter_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     behavior_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    is_special_needs: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_special_needs: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
 
     # Relationships
     animal_breeds = relationship(

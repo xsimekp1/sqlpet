@@ -215,7 +215,9 @@ class AnimalService:
         status: str | None = None,
         sex: str | None = None,
         search: str | None = None,
-    ) -> tuple[list[Animal], int]:
+    ) -> tuple[list[Animal], int, bool]:
+        from sqlalchemy.orm import selectinload
+
         base = select(Animal).where(
             Animal.organization_id == organization_id,
             Animal.deleted_at.is_(None),
@@ -230,21 +232,26 @@ class AnimalService:
         if search:
             base = base.where(Animal.name.ilike(f"%{search}%"))
 
-        # Count total
-        count_q = select(func.count()).select_from(base.subquery())
-        total_result = await self.db.execute(count_q)
-        total = total_result.scalar_one()
-
-        # Paginated items
+        # Use has_more pattern: fetch page_size + 1 to determine if there's more
+        fetch_size = page_size + 1
         items_q = (
-            base.order_by(Animal.created_at.desc())
+            base.options(
+                selectinload(Animal.animal_breeds).joinedload(AnimalBreed.breed),
+                selectinload(Animal.identifiers),
+                selectinload(Animal.tags),
+            )
+            .order_by(Animal.created_at.desc())
             .offset((page - 1) * page_size)
-            .limit(page_size)
+            .limit(fetch_size)
         )
         result = await self.db.execute(items_q)
         items = list(result.scalars().all())
 
-        return items, total
+        has_more = len(items) > page_size
+        if has_more:
+            items = items[:page_size]
+
+        return items, len(items), has_more
 
     async def update_animal(
         self,
