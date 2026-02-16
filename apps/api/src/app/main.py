@@ -31,6 +31,7 @@ from src.app.api.routes.shortcuts import router as shortcuts_router
 from src.app.api.routes.incidents import router as incidents_router
 from src.app.api.routes.organization import router as organization_router
 from src.app.api.routes.finding import router as finding_router
+from src.app.api.routes.vaccinations import router as vaccinations_router
 
 # Files router is now working properly after fixing import issues
 
@@ -213,3 +214,4 @@ app.include_router(shortcuts_router)
 app.include_router(incidents_router)
 app.include_router(organization_router)
 app.include_router(finding_router)
+app.include_router(vaccinations_router)

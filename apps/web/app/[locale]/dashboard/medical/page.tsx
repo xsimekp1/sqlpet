@@ -63,6 +63,9 @@ export default function MedicalPage() {
   const [vaccineType, setVaccineType] = useState<string>('');
   const [vaccineDate, setVaccineDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [vaccineNotes, setVaccineNotes] = useState<string>('');
+  const [selectedLotId, setSelectedLotId] = useState<string>('');
+  const [availableLots, setAvailableLots] = useState<Array<{ id: string; lot_number: string | null; quantity: number; expires_at: string | null }>>([]);
+  const [loadingLots, setLoadingLots] = useState(false);
 
 useEffect(() => {
     const fetchMedicalData = async () => {
@@ -147,6 +150,27 @@ const getPriorityColor = (priority: string) => {
     setVaccineType('');
     setVaccineDate(new Date().toISOString().split('T')[0]);
     setVaccineNotes('');
+    setSelectedLotId('');
+    setAvailableLots([]);
+  };
+
+  const handleVaccineTypeChange = async (type: string) => {
+    setVaccineType(type);
+    setSelectedLotId('');
+    if (type) {
+      setLoadingLots(true);
+      try {
+        const lots = await ApiClient.getAvailableLots(type);
+        setAvailableLots(lots);
+      } catch (e) {
+        console.error('Failed to load lots:', e);
+        setAvailableLots([]);
+      } finally {
+        setLoadingLots(false);
+      }
+    } else {
+      setAvailableLots([]);
+    }
   };
 
   if (loading) {
@@ -294,10 +318,10 @@ const getPriorityColor = (priority: string) => {
           
           <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
             {/* Vaccine type and date */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Typ očkování</Label>
-                <Select value={vaccineType} onValueChange={setVaccineType}>
+                <Select value={vaccineType} onValueChange={handleVaccineTypeChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Vyberte typ" />
                   </SelectTrigger>
@@ -310,6 +334,27 @@ const getPriorityColor = (priority: string) => {
                     <SelectItem value="bordetella">Bordetella</SelectItem>
                     <SelectItem value="feline_vaccine">Kočičí očkování</SelectItem>
                     <SelectItem value="other">Jiné</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Šarže (volitelné)</Label>
+                <Select 
+                  value={selectedLotId} 
+                  onValueChange={setSelectedLotId}
+                  disabled={!vaccineType || loadingLots || availableLots.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingLots ? "Načítání..." : "Vyberte šarži"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Bez šarže</SelectItem>
+                    {availableLots.map(lot => (
+                      <SelectItem key={lot.id} value={lot.id}>
+                        {lot.lot_number || 'Bez čísla'} ({lot.quantity} ks)
+                        {lot.expires_at ? ` - exp: ${lot.expires_at}` : ''}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -377,10 +422,24 @@ const getPriorityColor = (priority: string) => {
             </Button>
             <Button
               disabled={selectedAnimalIds.size === 0 || !vaccineType}
-              onClick={() => {
-                toast.success(`Vybráno ${selectedAnimalIds.size} zvířat pro očkování ${vaccineType}`);
-                setBulkVaccineOpen(false);
-                resetBulkVaccineDialog();
+              onClick={async () => {
+                try {
+                  const vaccineDateTime = new Date(vaccineDate);
+                  for (const animalId of selectedAnimalIds) {
+                    await ApiClient.createVaccination({
+                      animal_id: animalId,
+                      vaccination_type: vaccineType,
+                      lot_id: selectedLotId || undefined,
+                      administered_at: vaccineDateTime.toISOString(),
+                      notes: vaccineNotes || undefined,
+                    });
+                  }
+                  toast.success(`Očkováno ${selectedAnimalIds.size} zvířat`);
+                  setBulkVaccineOpen(false);
+                  resetBulkVaccineDialog();
+                } catch (e: any) {
+                  toast.error('Chyba při očkování: ' + (e.message || ''));
+                }
               }}
             >
               <Syringe className="h-4 w-4 mr-2" />

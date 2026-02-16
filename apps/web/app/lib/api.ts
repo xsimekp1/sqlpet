@@ -1157,6 +1157,34 @@ class ApiClient {
     const result = await ApiClient.get<SearchResults>('/search', { q, limit: 10 });
     return result.contacts;
   }
+
+  // Vaccinations
+  static async createVaccination(data: {
+    animal_id: string;
+    vaccination_type: string;
+    lot_id?: string;
+    administered_at: string;
+    task_id?: string;
+    notes?: string;
+  }): Promise<any> {
+    return this.post('/vaccinations', data);
+  }
+
+  static async getVaccinations(params?: {
+    page?: number;
+    page_size?: number;
+    animal_id?: string;
+    vaccination_type?: string;
+    lot_id?: string;
+    lot_number?: string;
+  }): Promise<any> {
+    return this.get('/vaccinations', params);
+  }
+
+  static async getAvailableLots(vaccinationType?: string): Promise<Array<{ id: string; lot_number: string | null; quantity: number; expires_at: string | null }>> {
+    const params = vaccinationType ? { vaccination_type: vaccinationType } : {};
+    return this.get('/vaccinations/lots/available', params);
+  }
 }
 
 // Search types
