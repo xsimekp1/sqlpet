@@ -334,7 +334,9 @@ export default function AnimalsPage() {
                   <p className="font-bold text-base leading-tight truncate">{animal.name}</p>
                   <p className="text-xs text-muted-foreground truncate">
                     {animal.current_kennel_code && <span className="font-mono mr-1">{animal.current_kennel_code}</span>}
-                    {animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '' : ''}
+                    {animal.estimated_age_years !== null 
+                      ? `${animal.estimated_age_years} r.` 
+                      : (animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '' : '')}
                   </p>
                   <div className="flex items-center gap-1 flex-wrap">
                     {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
@@ -422,7 +424,9 @@ export default function AnimalsPage() {
                         : '—'}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '—' : '—'}
+                      {animal.estimated_age_years !== null 
+                        ? `${animal.estimated_age_years} r.` 
+                        : (animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '—' : '—')}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1 flex-wrap">

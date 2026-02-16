@@ -245,8 +245,8 @@ function DroppableKennelCard({
           )}
         </div>
 
-        {/* Simple footer: species badges • count/capacity • status */}
-        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+{/* Simple footer: species badges • count/capacity • status */}
+        <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
           <SpeciesBadges species={kennel.allowed_species} />
           <div className="flex items-center gap-1.5 shrink-0">
             <span>{kennel.occupied_count}/{kennel.capacity}</span>
