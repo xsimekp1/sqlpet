@@ -101,7 +101,7 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
             native_enum=False,
             values_callable=lambda x: [e.value for e in x],
         ),
-        default=AnimalStatus.REGISTERED,
+        default=AnimalStatus.INTAKE,
     )
     altered_status: Mapped[AlteredStatus] = mapped_column(
         Enum(

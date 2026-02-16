@@ -13,6 +13,7 @@ from src.app.api.dependencies.auth import (
 )
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Animal, Species
+from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.models.animal_weight_log import AnimalWeightLog
 from src.app.models.animal_bcs_log import AnimalBCSLog
 from src.app.models.breed import Breed
@@ -21,6 +22,7 @@ from src.app.models.file import DefaultAnimalImage
 from src.app.models.user import User
 from src.app.schemas.animal import (
     AnimalCreate,
+    AnimalIdentifierCreate,
     AnimalListResponse,
     AnimalResponse,
     AnimalUpdate,
@@ -580,6 +582,64 @@ async def get_daily_animal_count(
         result.append({"date": day.isoformat(), "count": count})
 
     return result
+
+
+# --- Identifier endpoints ---
+
+@router.post(
+    "/{animal_id}/identifiers",
+    response_model=AnimalIdentifierResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_identifier(
+    animal_id: uuid.UUID,
+    data: AnimalIdentifierCreate,
+    current_user: User = Depends(require_permission("animals.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Add an identifier (microchip, tattoo, etc.) to an animal."""
+    svc = AnimalService(db)
+    animal = await svc.get_animal(organization_id, animal_id)
+    if animal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found")
+
+    identifier = AnimalIdentifier(
+        id=uuid.uuid4(),
+        animal_id=animal_id,
+        type=data.type,
+        value=data.value,
+        registry=data.registry if hasattr(data, "registry") else None,
+        issued_at=data.issued_at if hasattr(data, "issued_at") else None,
+    )
+    db.add(identifier)
+    await db.flush()
+    await db.refresh(identifier)
+    return AnimalIdentifierResponse.model_validate(identifier)
+
+
+@router.delete(
+    "/{animal_id}/identifiers/{identifier_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_identifier(
+    animal_id: uuid.UUID,
+    identifier_id: uuid.UUID,
+    current_user: User = Depends(require_permission("animals.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Remove an identifier from an animal."""
+    result = await db.execute(
+        select(AnimalIdentifier).where(
+            AnimalIdentifier.id == identifier_id,
+            AnimalIdentifier.animal_id == animal_id,
+        )
+    )
+    identifier = result.scalar_one_or_none()
+    if identifier is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Identifier not found")
+    await db.delete(identifier)
 
 
 # --- Breeds endpoint (authenticated, no org scoping) ---
