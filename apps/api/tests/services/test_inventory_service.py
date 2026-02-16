@@ -124,9 +124,11 @@ class TestInventoryService:
         # Assert
         assert result.item_id == sample_item.id
         assert result.lot_number == "LOT-2024-002"
-        assert result.quantity == 100
+        # Lot is initialised with quantity=0; record_transaction(IN, 100) sets the real value
+        assert result.quantity == 0
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
+        inventory_service.record_transaction.assert_called_once()
         mock_audit.log_action.assert_called_once()
 
 
