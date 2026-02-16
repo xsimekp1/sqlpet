@@ -333,15 +333,16 @@ class ApiClient {
     }
   }
 
-  /**
+/**
    * Generic POST request
    */
-  static async post<T = any>(endpoint: string, data?: any): Promise<T> {
+  static async post<T = any>(endpoint: string, data?: any, options?: { headers?: Record<string, string> }): Promise<T> {
     try {
       const response = await axios.post<T>(`${API_URL}${endpoint}`, data, {
         headers: {
           ...this.getAuthHeaders(),
           'Content-Type': 'application/json',
+          ...options?.headers,
         },
       });
       return response.data;

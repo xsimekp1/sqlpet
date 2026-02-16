@@ -283,6 +283,7 @@ async def upload_contact_avatar(
     )
 
     from io import BytesIO
+
     file_stream = BytesIO(file_content)
 
     file_url, storage_path = await supabase_storage_service.upload_file(
@@ -318,6 +319,7 @@ async def upload_organization_logo(
     )
 
     from io import BytesIO
+
     file_stream = BytesIO(file_content)
 
     file_url, storage_path = await supabase_storage_service.upload_file(
@@ -331,3 +333,140 @@ async def upload_organization_logo(
     await db.commit()
 
     return {"file_url": file_url}
+
+
+class AnimalDocumentResponse(BaseModel):
+    id: str
+    file_url: str
+    original_filename: str
+    mime_type: str
+    size_bytes: int
+    purpose: Optional[str] = None
+    uploaded_by_user_id: Optional[str] = None
+    uploaded_by_user_name: Optional[str] = None
+    created_at: str
+
+
+@router.get(
+    "/animal/{animal_id}/documents", response_model=List[AnimalDocumentResponse]
+)
+async def get_animal_documents(
+    animal_id: str,
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get all documents for an animal"""
+    from sqlalchemy import select
+    from src.app.models.file import EntityFile, File as FileModel
+    from src.app.models.user import User
+
+    animal = await db.get(Animal, UUID(animal_id))
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    q = (
+        select(EntityFile, FileModel, User)
+        .join(FileModel, FileModel.id == EntityFile.file_id)
+        .outerjoin(User, User.id == FileModel.uploaded_by_user_id)
+        .where(
+            EntityFile.entity_type == "animal",
+            EntityFile.entity_id == UUID(animal_id),
+            EntityFile.purpose == "document",
+        )
+        .order_by(EntityFile.created_at.desc())
+    )
+
+    result = await db.execute(q)
+    rows = result.all()
+
+    return [
+        AnimalDocumentResponse(
+            id=str(ef.file_id),
+            file_url=await supabase_storage_service.get_public_url(f.storage_path),
+            original_filename=f.original_filename,
+            mime_type=f.mime_type,
+            size_bytes=f.size_bytes,
+            purpose=ef.purpose,
+            uploaded_by_user_id=str(f.uploaded_by_user_id)
+            if f.uploaded_by_user_id
+            else None,
+            uploaded_by_user_name=u.full_name if u else None,
+            created_at=ef.created_at.isoformat() if ef.created_at else "",
+        )
+        for ef, f, u in rows
+    ]
+
+
+@router.post(
+    "/animal/{animal_id}/upload-document", response_model=AnimalDocumentResponse
+)
+async def upload_animal_document(
+    animal_id: str,
+    file: UploadFile = FastAPIFile(...),
+    purpose: Optional[str] = Query(default="document"),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload a document for an animal"""
+    from src.app.models.file import EntityFile, File as FileModel
+
+    animal = await db.get(Animal, UUID(animal_id))
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    file_content, content_type = await file_upload_service.process_upload(
+        file=file,
+        organization_id=str(organization_id),
+        is_public=True,
+    )
+
+    from io import BytesIO
+
+    file_stream = BytesIO(file_content)
+
+    file_url, storage_path = await supabase_storage_service.upload_file(
+        file_content=file_stream,
+        filename=file.filename or "document",
+        content_type=content_type,
+        organization_id=str(organization_id),
+    )
+
+    db_file = FileModel(
+        organization_id=organization_id,
+        storage_provider=StorageProvider.SUPABASE,
+        storage_path=storage_path,
+        original_filename=file.filename or "document",
+        mime_type=content_type,
+        size_bytes=len(file_content),
+        is_public=True,
+        uploaded_by_user_id=current_user.id,
+    )
+
+    db.add(db_file)
+    await db.flush()
+
+    entity_file = EntityFile(
+        organization_id=organization_id,
+        entity_type="animal",
+        entity_id=animal.id,
+        file_id=db_file.id,
+        purpose=purpose,
+    )
+
+    db.add(entity_file)
+    await db.commit()
+    await db.refresh(db_file)
+
+    return AnimalDocumentResponse(
+        id=str(db_file.id),
+        file_url=file_url,
+        original_filename=db_file.original_filename,
+        mime_type=db_file.mime_type,
+        size_bytes=db_file.size_bytes,
+        purpose=purpose,
+        uploaded_by_user_id=str(current_user.id),
+        uploaded_by_user_name=current_user.full_name,
+        created_at=db_file.created_at.isoformat() if db_file.created_at else "",
+    )

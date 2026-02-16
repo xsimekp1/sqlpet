@@ -8,7 +8,7 @@ import {
   ArrowLeft, Trash2, MapPin, Loader2, Stethoscope,
   CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors,
   ChevronLeft, ChevronRight, Baby, Scale, Accessibility, Home, Camera,
-  PersonStanding, LogIn, CheckCheck,
+  PersonStanding, LogIn, CheckCheck, FileText, Upload, X, ExternalLink,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -154,9 +154,15 @@ export default function AnimalDetailPage() {
   const [activeIntakeId, setActiveIntakeId] = useState<string | null>(null);
   const [activeIntakeReason, setActiveIntakeReason] = useState<string | null>(null);
 
-  // Escape dialog
+// Escape dialog
   const [escapeOpen, setEscapeOpen] = useState(false);
   const [escapeNotes, setEscapeNotes] = useState('');
+
+  // Documents
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const documentInputRef = useRef<HTMLInputElement>(null);
   const [escapeDate, setEscapeDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [recordingEscape, setRecordingEscape] = useState(false);
 
@@ -201,7 +207,38 @@ export default function AnimalDetailPage() {
       toast.error('Nepodařilo se nahrát fotku: ' + (err.message || ''));
     } finally {
       setUploadingPhoto(false);
-      if (photoInputRef.current) photoInputRef.current.value = '';
+if (photoInputRef.current) photoInputRef.current.value = '';
+    }
+  };
+
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !animal) return;
+    setUploadingDocument(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await ApiClient.post(`/files/animal/${animal.id}/upload-document`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setDocuments(prev => [result, ...prev]);
+      toast.success('Dokument nahrán');
+    } catch (err: any) {
+      toast.error('Nepodařilo se nahrát dokument: ' + (err.message || ''));
+    } finally {
+      setUploadingDocument(false);
+      if (documentInputRef.current) documentInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    if (!confirm('Opravdu chcete smazat tento dokument?')) return;
+    try {
+      await ApiClient.delete(`/files/${docId}`);
+      setDocuments(prev => prev.filter(d => d.id !== docId));
+      toast.success('Dokument smazán');
+    } catch (err: any) {
+      toast.error('Nepodařilo se smazat dokument: ' + (err.message || ''));
     }
   };
 
@@ -264,7 +301,24 @@ export default function AnimalDetailPage() {
         staleTime: 30_000,
       });
     });
-  }, [prevId, nextId, router, queryClient]);
+}, [prevId, nextId, router, queryClient]);
+
+  // Load documents when animal is loaded
+  useEffect(() => {
+    if (!animal?.id) return;
+    const loadDocuments = async () => {
+      setLoadingDocuments(true);
+      try {
+        const docs = await ApiClient.get(`/files/animal/${animal.id}/documents`);
+        setDocuments(docs || []);
+      } catch {
+        setDocuments([]);
+      } finally {
+        setLoadingDocuments(false);
+      }
+    };
+    loadDocuments();
+  }, [animal?.id]);
 
   const handleAnimalUpdate = (updatedAnimal: Animal) => setAnimal(updatedAnimal);
 
@@ -1187,15 +1241,93 @@ export default function AnimalDetailPage() {
           </Card>
         </TabsContent>
 
-        {/* ── Documents ── */}
+{/* ── Documents ── */}
         <TabsContent value="documents">
           <Card>
             <CardHeader>
-              <CardTitle>{t('documents.title')}</CardTitle>
-              <CardDescription>{t('documents.description')}</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{t('documents.title')}</CardTitle>
+                  <CardDescription>{t('documents.description')}</CardDescription>
+                </div>
+                <div>
+                  <input
+                    ref={documentInputRef}
+                    type="file"
+                    accept="image/*,.pdf"
+                    className="hidden"
+                    onChange={handleDocumentUpload}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => documentInputRef.current?.click()}
+                    disabled={uploadingDocument}
+                  >
+                    {uploadingDocument ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    Nahrát dokument
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-center py-8">{t('documents.comingSoon')}</p>
+              {loadingDocuments ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : documents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p>Žádné dokumenty</p>
+                  <p className="text-sm mt-1">Nahrajte první dokument pomocí tlačítka výše</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="border rounded-lg p-4 flex flex-col gap-2">
+                      <div className="flex items-start gap-3">
+                        {doc.mime_type?.startsWith('image/') ? (
+                          <div className="w-16 h-16 rounded bg-muted overflow-hidden shrink-0">
+                            <img src={doc.file_url} alt={doc.original_filename} className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded bg-muted flex items-center justify-center shrink-0">
+                            <FileText className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate" title={doc.original_filename}>
+                            {doc.original_filename}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {doc.size_bytes ? `${Math.round(doc.size_bytes / 1024)} KB` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {doc.uploaded_by_user_name && <span>Nahrál: {doc.uploaded_by_user_name}</span>}
+                        {doc.uploaded_by_user_name && doc.created_at && <span> · </span>}
+                        {doc.created_at && <span>{new Date(doc.created_at).toLocaleDateString('cs-CZ')}</span>}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <Button variant="outline" size="sm" className="flex-1" asChild>
+                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Otevřít
+                          </a>
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={() => handleDeleteDocument(doc.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
