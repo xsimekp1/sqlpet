@@ -113,20 +113,6 @@ export default function CalendarPage() {
     }
   }, [animalsLoading, animalsData]);
 
-  // Fetch escape incidents
-  const { data: incidents = [] } = useQuery<Incident[]>({
-    queryKey: ['incidents-escape'],
-    queryFn: () => ApiClient.getIncidents({ incident_type: 'escape' }),
-    staleTime: 2 * 60 * 1000,
-  });
-
-  // Fetch intakes for planned_adoption events
-  const { data: intakesData = [] } = useQuery({
-    queryKey: ['intakes-calendar'],
-    queryFn: () => ApiClient.get('/intakes'),
-    staleTime: 2 * 60 * 1000,
-  });
-
   const animals: CalendarAnimal[] = animalsData?.items ?? [];
 
   // Build animal lookup map for incidents
