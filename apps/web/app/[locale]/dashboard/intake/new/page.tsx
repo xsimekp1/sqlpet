@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, dynamic } from 'react';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2, Info, MapPin, X, Search } from 'lucide-react';
 import Link from 'next/link';
