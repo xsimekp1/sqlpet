@@ -155,14 +155,10 @@ async def delete_inventory_item(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
     """Delete an inventory item if it has no active lots with quantity > 0."""
-    print(
-        f"[DEBUG] delete_inventory_item called: item_id={item_id}, org_id={organization_id}, user={current_user.id}"
-    )
     from sqlalchemy import select, and_
     from src.app.models.inventory_item import InventoryItem
     from src.app.models.inventory_lot import InventoryLot
 
-    print(f"[DEBUG] Looking for item: {item_id} in org {organization_id}")
     item = (
         await db.execute(
             select(InventoryItem).where(
@@ -171,15 +167,12 @@ async def delete_inventory_item(
             )
         )
     ).scalar_one_or_none()
-    print(f"[DEBUG] Item found: {item}")
 
     if not item:
-        print(f"[DEBUG] Item not found - returning 404")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
 
-    print(f"[DEBUG] Checking active lots for item {item_id}")
     active_lots = (
         (
             await db.execute(
@@ -192,19 +185,15 @@ async def delete_inventory_item(
         .scalars()
         .first()
     )
-    print(f"[DEBUG] Active lots: {active_lots}")
 
     if active_lots:
-        print(f"[DEBUG] Active lots found - returning 409")
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Cannot delete item with active stock. Deplete all lots first.",
         )
 
-    print(f"[DEBUG] Deleting item {item_id}")
     await db.delete(item)
     await db.commit()
-    print(f"[DEBUG] Item deleted successfully")
 
 
 # Inventory Lot endpoints
