@@ -23,7 +23,7 @@ def upgrade():
     op.execute("""
         UPDATE animals
         SET status = 'registered'
-        WHERE LOWER(status) = 'intake'
+        WHERE status::text = 'intake'
           AND id NOT IN (
             SELECT DISTINCT animal_id FROM intakes
             WHERE deleted_at IS NULL
@@ -36,6 +36,6 @@ def downgrade():
     op.execute("""
         UPDATE animals
         SET status = 'intake'
-        WHERE LOWER(status) = 'registered'
+        WHERE status::text = 'registered'
           AND deleted_at IS NULL
     """)
