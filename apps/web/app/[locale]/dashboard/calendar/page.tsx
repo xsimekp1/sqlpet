@@ -153,11 +153,11 @@ export default function CalendarPage() {
       if (animal) {
         // Planned outcome (future)
         if (intake.planned_outcome_date) {
-          addEvent(intake.planned_outcome_date, 'outcome', animal);
+          addEvent(intake.planned_outcome_date, 'planned_outcome', animal);
         }
         // Actual outcome (past)
         if (intake.actual_outcome_date) {
-          addEvent(intake.actual_outcome_date, 'outcome', animal);
+          addEvent(intake.actual_outcome_date, 'planned_outcome', animal);
         }
         // Legacy: planned_end_date as planned adoption
         if (intake.planned_end_date) {
