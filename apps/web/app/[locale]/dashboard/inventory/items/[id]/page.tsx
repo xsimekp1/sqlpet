@@ -245,31 +245,31 @@ export default function InventoryItemDetailPage() {
             {getCategoryBadge(item.category)}
           </div>
           <p className="text-muted-foreground">
-            Total stock: <span className="font-semibold">{formatQuantity(totalQuantity, item.unit)}</span> {item.unit ? t(`units.${item.unit}`) : ''}
+            {t('totalStock')}: <span className="font-semibold">{formatQuantity(totalQuantity, item.unit)}</span> {item.unit ? t(`units.${item.unit}`) : ''}
           </p>
         </div>
         <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
               <Trash2 className="h-4 w-4 mr-1.5" />
-              Delete
+              {t('delete')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete item?</DialogTitle>
+              <DialogTitle>{t('deleteItem')}</DialogTitle>
               <DialogDescription>
-                This will permanently delete <strong>{item.name}</strong>. This action cannot be undone.
+                {t('deleteItemConfirm', { name: item.name })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>{t('cancel')}</Button>
               <Button
                 variant="destructive"
                 onClick={() => deleteItemMutation.mutate()}
                 disabled={deleteItemMutation.isPending}
               >
-                {deleteItemMutation.isPending ? 'Deleting...' : 'Delete'}
+                {deleteItemMutation.isPending ? t('deleting') : t('delete')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -281,7 +281,7 @@ export default function InventoryItemDetailPage() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <Package className="h-4 w-4" />
-            Total Quantity
+            {t('totalQuantity')}
           </div>
           <div className="text-2xl font-bold">
             {formatQuantity(totalQuantity, item.unit)} {item.unit || ''}
@@ -290,7 +290,7 @@ export default function InventoryItemDetailPage() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <Package className="h-4 w-4" />
-            Active Lots
+            {t('activeLots')}
           </div>
           <div className="text-2xl font-bold">
             {lots.filter((lot: any) => lot.quantity > 0).length}
@@ -299,7 +299,7 @@ export default function InventoryItemDetailPage() {
         <div className="border rounded-lg p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <TrendingDown className="h-4 w-4" />
-            Reorder Threshold
+            {t('reorderThreshold')}
           </div>
           <div className="text-2xl font-bold">
             {item.reorder_threshold || '-'}
@@ -408,18 +408,18 @@ export default function InventoryItemDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Lot Number</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead>Cost/Unit</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead>{t('lotNumber')}</TableHead>
+                  <TableHead>{t('quantity')}</TableHead>
+                  <TableHead>{t('expires')}</TableHead>
+                  <TableHead>{t('costPerUnit')}</TableHead>
+                  <TableHead>{t('created')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {lots.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No lots found. Add a lot to start tracking inventory.
+                      {t('noLotsFound')}
                     </TableCell>
                   </TableRow>
                 ) : (

@@ -141,13 +141,13 @@ export default function InventoryPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"></TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Total Quantity</TableHead>
-              <TableHead>Unit</TableHead>
-              <TableHead>Lots</TableHead>
-              <TableHead>Reorder Threshold</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('fields.name')}</TableHead>
+              <TableHead>{t('fields.category')}</TableHead>
+              <TableHead>{t('totalQuantity')}</TableHead>
+              <TableHead>{t('fields.unit')}</TableHead>
+              <TableHead>{t('lots')}</TableHead>
+              <TableHead>{t('reorderThreshold')}</TableHead>
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

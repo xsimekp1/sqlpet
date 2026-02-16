@@ -1,9 +1,12 @@
 """API routes for inventory management."""
 
 import uuid
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List
+
+logger = logging.getLogger(__name__)
 
 from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
 from src.app.api.dependencies.db import get_db
@@ -159,6 +162,8 @@ async def delete_inventory_item(
     from src.app.models.inventory_item import InventoryItem
     from src.app.models.inventory_lot import InventoryLot
 
+    logger.info(f"Attempting to delete inventory item: {item_id}")
+
     item = (
         await db.execute(
             select(InventoryItem).where(
@@ -169,10 +174,12 @@ async def delete_inventory_item(
     ).scalar_one_or_none()
 
     if not item:
+        logger.warning(f"Inventory item not found: {item_id}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Položka nenalezena"
         )
 
+    # Check for active lots (quantity > 0)
     active_lots = (
         (
             await db.execute(
@@ -187,13 +194,26 @@ async def delete_inventory_item(
     )
 
     if active_lots:
+        logger.warning(
+            f"Cannot delete item {item_id}: has active lots with quantity > 0"
+        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot delete item with active stock. Deplete all lots first.",
+            detail="Nelze smazat - položka má aktivní zásoby (šarže s množstvím > 0). Nejprve spotřebujte nebo smažte šarže.",
         )
+
+    # Check for any lots (even with quantity = 0) - delete them too
+    from sqlalchemy import delete as sql_delete
+
+    result = await db.execute(
+        sql_delete(InventoryLot).where(InventoryLot.item_id == item_id)
+    )
+    if result.rowcount > 0:
+        logger.info(f"Deleted {result.rowcount} lots for item {item_id}")
 
     await db.delete(item)
     await db.commit()
+    logger.info(f"Inventory item deleted successfully: {item_id}")
 
 
 # Inventory Lot endpoints

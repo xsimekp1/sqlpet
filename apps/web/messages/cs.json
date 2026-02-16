@@ -1120,7 +1120,27 @@
       "transactionRecorded": "Transakce zaznamenána",
       "transactionRecordedDesc": "Inventární transakce byla úspěšně zaznamenána",
       "error": "Chyba",
-      "errorDesc": "Nepodařilo se dokončit operaci"
+      "errorDesc": "Nepodařilo se dokončit operaci",
+      "totalStock": "Celkový sklad",
+      "totalQuantity": "Celkové množství",
+      "activeLots": "Aktivní šarže",
+      "reorderThreshold": "Práh pro objednání",
+      "lotNumber": "Číslo šarže",
+      "quantity": "Množství",
+      "expires": "Vyprší",
+      "costPerUnit": "Cena/jednotka",
+      "created": "Vytvořeno",
+      "addLot": "Přidat šarži",
+      "noLotsFound": "Žádné šarže nenalezeny. Přidejte šarži pro sledování zásob.",
+      "vial": "lahvička",
+      "ampule": "ampule",
+      "delete": "Smazat",
+      "deleteItem": "Smazat položku?",
+      "deleteItemConfirm": "Toto trvale smaže položku \"{name}\". Tuto akci nelze vrátit zpět.",
+      "cancel": "Zrušit",
+      "deleting": "Mažu...",
+      "lots": "Šarže",
+      "actions": "Akce"
     }
   },
   "colors": {
