@@ -272,74 +272,74 @@ export default function IntakePage() {
           </div>
         </Card>
       )}
-    </div>
 
-    {/* Edit Dialog */}
-    <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Upravit příjem</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Důvod příjmu</Label>
-            <Select value={editForm.reason} onValueChange={v => setEditForm(p => ({ ...p, reason: v }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Vyberte důvod" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(REASON_LABELS).map(([v, label]) => (
-                  <SelectItem key={v} value={v}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upravit příjem</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Datum příjmu</Label>
+              <Label>Důvod příjmu</Label>
+              <Select value={editForm.reason} onValueChange={v => setEditForm(p => ({ ...p, reason: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Vyberte důvod" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(REASON_LABELS).map(([v, label]) => (
+                    <SelectItem key={v} value={v}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Datum příjmu</Label>
+                <Input
+                  type="date"
+                  value={editForm.intake_date}
+                  onChange={e => setEditForm(p => ({ ...p, intake_date: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Plánovaný konec</Label>
+                <Input
+                  type="date"
+                  value={editForm.planned_end_date}
+                  onChange={e => setEditForm(p => ({ ...p, planned_end_date: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Způsob financování</Label>
               <Input
-                type="date"
-                value={editForm.intake_date}
-                onChange={e => setEditForm(p => ({ ...p, intake_date: e.target.value }))}
+                value={editForm.funding_source}
+                onChange={e => setEditForm(p => ({ ...p, funding_source: e.target.value }))}
+                placeholder="např. Nadace"
               />
             </div>
             <div className="space-y-2">
-              <Label>Plánovaný konec</Label>
-              <Input
-                type="date"
-                value={editForm.planned_end_date}
-                onChange={e => setEditForm(p => ({ ...p, planned_end_date: e.target.value }))}
+              <Label>Poznámky</Label>
+              <Textarea
+                value={editForm.notes}
+                onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))}
+                placeholder="Volitelné poznámky..."
+                rows={3}
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Způsob financování</Label>
-            <Input
-              value={editForm.funding_source}
-              onChange={e => setEditForm(p => ({ ...p, funding_source: e.target.value }))}
-              placeholder="např. Nadace浙浙"
-            />
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={savingIntake}>
+              Zrušit
+            </Button>
+            <Button onClick={handleSaveIntake} disabled={savingIntake}>
+              {savingIntake ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Uložit
+            </Button>
           </div>
-          <div className="space-y-2">
-            <Label>Poznámky</Label>
-            <Textarea
-              value={editForm.notes}
-              onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))}
-              placeholder="Volitelné poznámky..."
-              rows={3}
-            />
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={savingIntake}>
-            Zrušit
-          </Button>
-          <Button onClick={handleSaveIntake} disabled={savingIntake}>
-            {savingIntake ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Uložit
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
