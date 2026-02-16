@@ -281,6 +281,35 @@ async def update_inventory_lot(
         )
 
 
+@router.delete("/lots/{lot_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_inventory_lot(
+    lot_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Delete an inventory lot."""
+    from sqlalchemy import select
+    from src.app.models.inventory_lot import InventoryLot
+
+    lot = (
+        await db.execute(
+            select(InventoryLot).where(
+                InventoryLot.id == lot_id,
+                InventoryLot.organization_id == organization_id,
+            )
+        )
+    ).scalar_one_or_none()
+
+    if not lot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Lot not found"
+        )
+
+    await db.delete(lot)
+    await db.commit()
+
+
 # Inventory Transaction endpoints
 @router.post(
     "/transactions",

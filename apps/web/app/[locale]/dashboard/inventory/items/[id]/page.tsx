@@ -138,6 +138,17 @@ export default function InventoryItemDetailPage() {
     },
   });
 
+  const deleteLotMutation = useMutation({
+    mutationFn: (lotId: string) => ApiClient.deleteInventoryLot(lotId),
+    onSuccess: () => {
+      toast({ title: t('messages.lotDeleted'), description: t('messages.lotDeletedDesc') });
+      queryClient.invalidateQueries({ queryKey: ['inventory-lots', itemId] });
+    },
+    onError: (error: Error) => {
+      toast({ title: t('messages.error'), description: error.message, variant: 'destructive' });
+    },
+  });
+
   const handleAddLot = () => {
     if (!lotFormData.quantity) {
       toast({
@@ -429,6 +440,18 @@ export default function InventoryItemDetailPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(lot.created_at), 'MMM d, yyyy')}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => deleteLotMutation.mutate(lot.id)}
+                          disabled={deleteLotMutation.isPending}
+                          title="Delete lot"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

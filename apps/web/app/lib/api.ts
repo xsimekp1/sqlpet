@@ -1091,6 +1091,10 @@ class ApiClient {
     await ApiClient.delete(`/inventory/items/${itemId}`);
   }
 
+  static async deleteInventoryLot(lotId: string): Promise<void> {
+    await ApiClient.delete(`/inventory/lots/${lotId}`);
+  }
+
   static async uploadOrgLogo(file: File): Promise<{ file_url: string }> {
     const formData = new FormData();
     formData.append('file', file);

@@ -1159,6 +1159,8 @@
       "itemDeleted": "Item deleted",
       "itemDeletedDesc": "The inventory item has been deleted",
       "itemDeleteError": "Cannot delete item with active stock",
+      "lotDeleted": "Lot deleted",
+      "lotDeletedDesc": "The inventory lot has been deleted",
       "lotCreated": "Lot added",
       "lotCreatedDesc": "The inventory lot has been added successfully",
       "transactionRecorded": "Transaction recorded",

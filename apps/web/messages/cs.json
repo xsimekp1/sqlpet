@@ -1099,6 +1099,8 @@
       "itemDeleted": "Položka smazána",
       "itemDeletedDesc": "Inventární položka byla smazána",
       "itemDeleteError": "Nelze smazat položku s aktivními zásobami",
+      "lotDeleted": "Šarže smazána",
+      "lotDeletedDesc": "Inventární šarže byla smazána",
       "lotCreated": "Šarže přidána",
       "lotCreatedDesc": "Inventární šarže byla úspěšně přidána",
       "transactionRecorded": "Transakce zaznamenána",
