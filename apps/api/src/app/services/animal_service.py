@@ -215,6 +215,7 @@ class AnimalService:
         status: str | None = None,
         sex: str | None = None,
         search: str | None = None,
+        available_for_intake: bool = False,
     ) -> tuple[list[Animal], int, bool]:
         from sqlalchemy.orm import selectinload
 
@@ -231,6 +232,9 @@ class AnimalService:
             base = base.where(Animal.sex == sex)
         if search:
             base = base.where(Animal.name.ilike(f"%{search}%"))
+
+        if available_for_intake:
+            base = base.where(Animal.status.not_in(["intake", "hotel"]))
 
         # Use has_more pattern: fetch page_size + 1 to determine if there's more
         fetch_size = page_size + 1

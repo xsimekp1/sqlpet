@@ -165,6 +165,7 @@ async def list_animals(
     status_filter: str | None = Query(None, alias="status"),
     sex: str | None = Query(None),
     search: str | None = Query(None),
+    available_for_intake: bool = Query(False),
     current_user: User = Depends(require_permission("animals.read")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
@@ -181,6 +182,7 @@ async def list_animals(
             status=status_filter,
             sex=sex,
             search=search,
+            available_for_intake=available_for_intake,
         )
         built_items = []
         for a in items:

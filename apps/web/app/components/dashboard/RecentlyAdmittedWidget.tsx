@@ -48,7 +48,7 @@ export function RecentlyAdmittedWidget({ editMode, onRemove, dragHandleProps }: 
       ) : animal ? (
         <Link href={`/dashboard/animals/${animal.id}`} className="block group">
           {/* Big photo */}
-          <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-muted mb-3">
+          <div className="relative w-full h-32 rounded-lg overflow-hidden bg-muted mb-3">
             <Image
               src={getAnimalImageUrl(animal)}
               alt={animal.name}

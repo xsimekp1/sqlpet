@@ -249,3 +249,85 @@ async def test_update_hotel_with_valid_end_date(client, intake_env):
     data = resp.json()
     assert data["reason"] == "hotel"
     assert data["planned_end_date"] == "2024-06-20"
+
+
+@pytest.mark.anyio
+async def test_hotel_intake_sets_animal_status_to_hotel(client, intake_env):
+    """Test that creating hotel intake sets animal status to 'hotel'."""
+    resp = await client.post(
+        "/intakes",
+        json={
+            "animal_id": str(intake_env["animal"].id),
+            "reason": "hotel",
+            "intake_date": "2024-06-01",
+            "planned_end_date": "2024-06-15",
+        },
+        headers=intake_env["headers"],
+    )
+    assert resp.status_code == 201
+
+    # Check animal status is now "hotel"
+    animal_resp = await client.get(
+        f"/animals/{intake_env['animal'].id}",
+        headers=intake_env["headers"],
+    )
+    assert animal_resp.status_code == 200
+    animal_data = animal_resp.json()
+    assert animal_data["status"] == "hotel"
+
+
+@pytest.mark.anyio
+async def test_regular_intake_sets_animal_status_to_intake(client, intake_env):
+    """Test that creating regular intake sets animal status to 'intake'."""
+    resp = await client.post(
+        "/intakes",
+        json={
+            "animal_id": str(intake_env["animal"].id),
+            "reason": "found",
+            "intake_date": "2024-06-01",
+        },
+        headers=intake_env["headers"],
+    )
+    assert resp.status_code == 201
+
+    # Check animal status is now "intake"
+    animal_resp = await client.get(
+        f"/animals/{intake_env['animal'].id}",
+        headers=intake_env["headers"],
+    )
+    assert animal_resp.status_code == 200
+    animal_data = animal_resp.json()
+    assert animal_data["status"] == "intake"
+
+
+@pytest.mark.anyio
+async def test_hotel_end_sets_animal_status_to_with_owner(client, intake_env):
+    """Test that closing hotel with hotel_end sets animal status to 'with_owner'."""
+    create_resp = await client.post(
+        "/intakes",
+        json={
+            "animal_id": str(intake_env["animal"].id),
+            "reason": "hotel",
+            "intake_date": "2024-06-01",
+            "planned_end_date": "2024-06-15",
+        },
+        headers=intake_env["headers"],
+    )
+    assert create_resp.status_code == 201
+    intake_id = create_resp.json()["id"]
+
+    close_resp = await client.post(
+        f"/intakes/{intake_id}/close",
+        json={"outcome": "hotel_end"},
+        headers=intake_env["headers"],
+    )
+    assert close_resp.status_code == 200
+
+    # Check animal status is now "with_owner"
+    animal_resp = await client.get(
+        f"/animals/{intake_env['animal'].id}",
+        headers=intake_env["headers"],
+    )
+    assert animal_resp.status_code == 200
+    animal_data = animal_resp.json()
+    assert animal_data["status"] == "with_owner"

@@ -168,6 +168,23 @@ async def create_intake(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid animal_id")
 
+    from src.app.models.animal import Animal as AnimalModel
+
+    animal_result = await db.execute(
+        select(AnimalModel).where(
+            AnimalModel.id == animal_uuid,
+            AnimalModel.organization_id == organization_id,
+        )
+    )
+    animal = animal_result.scalar_one_or_none()
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    if animal.status in (AnimalStatus.INTAKE, AnimalStatus.HOTEL):
+        raise HTTPException(
+            status_code=400, detail="Animal already has an active intake stay"
+        )
+
     intake = Intake(
         organization_id=organization_id,
         animal_id=animal_uuid,
@@ -188,16 +205,6 @@ async def create_intake(
     )
     db.add(intake)
 
-    # Update animal status to 'intake'
-    from src.app.models.animal import Animal as AnimalModel
-
-    animal_result = await db.execute(
-        select(AnimalModel).where(
-            AnimalModel.id == animal_uuid,
-            AnimalModel.organization_id == organization_id,
-        )
-    )
-    animal = animal_result.scalar_one_or_none()
     if animal:
         if data.reason == IntakeReason.HOTEL:
             animal.status = AnimalStatus.HOTEL
