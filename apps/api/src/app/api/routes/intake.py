@@ -20,6 +20,7 @@ router = APIRouter(prefix="/intakes", tags=["intakes"])
 
 # ── Schemas ──────────────────────────────────────────────────────────────────
 
+
 class IntakeCreate(BaseModel):
     animal_id: str
     reason: IntakeReason
@@ -39,6 +40,8 @@ class IntakeUpdate(BaseModel):
     finder_person_id: Optional[str] = None
     finder_notes: Optional[str] = None
     planned_end_date: Optional[date] = None
+    planned_outcome_date: Optional[date] = None
+    actual_outcome_date: Optional[date] = None
     planned_person_id: Optional[str] = None
     funding_source: Optional[str] = None
     funding_notes: Optional[str] = None
@@ -56,6 +59,8 @@ class IntakeResponse(BaseModel):
     finder_person_id: Optional[str] = None
     finder_notes: Optional[str] = None
     planned_end_date: Optional[date] = None
+    planned_outcome_date: Optional[date] = None
+    actual_outcome_date: Optional[date] = None
     planned_person_id: Optional[str] = None
     funding_source: Optional[str] = None
     funding_notes: Optional[str] = None
@@ -77,6 +82,8 @@ def _to_response(i: Intake, animal=None) -> IntakeResponse:
         finder_person_id=str(i.finder_person_id) if i.finder_person_id else None,
         finder_notes=i.finder_notes,
         planned_end_date=i.planned_end_date,
+        planned_outcome_date=i.planned_outcome_date,
+        actual_outcome_date=i.actual_outcome_date,
         planned_person_id=str(i.planned_person_id) if i.planned_person_id else None,
         funding_source=i.funding_source,
         funding_notes=i.funding_notes,
@@ -89,6 +96,7 @@ def _to_response(i: Intake, animal=None) -> IntakeResponse:
 
 # ── Routes ───────────────────────────────────────────────────────────────────
 
+
 @router.get("", response_model=List[IntakeResponse])
 async def list_intakes(
     reason: Optional[str] = Query(None),
@@ -99,6 +107,7 @@ async def list_intakes(
 ):
     """List intakes for the current organization."""
     from src.app.models.animal import Animal as AnimalModel
+
     q = (
         select(Intake, AnimalModel)
         .outerjoin(AnimalModel, AnimalModel.id == Intake.animal_id)
@@ -137,10 +146,14 @@ async def create_intake(
         animal_id=animal_uuid,
         reason=data.reason,
         intake_date=data.intake_date,
-        finder_person_id=uuid.UUID(data.finder_person_id) if data.finder_person_id else None,
+        finder_person_id=uuid.UUID(data.finder_person_id)
+        if data.finder_person_id
+        else None,
         finder_notes=data.finder_notes,
         planned_end_date=data.planned_end_date,
-        planned_person_id=uuid.UUID(data.planned_person_id) if data.planned_person_id else None,
+        planned_person_id=uuid.UUID(data.planned_person_id)
+        if data.planned_person_id
+        else None,
         funding_source=data.funding_source,
         funding_notes=data.funding_notes,
         notes=data.notes,
@@ -150,6 +163,7 @@ async def create_intake(
 
     # Update animal status to 'intake'
     from src.app.models.animal import Animal as AnimalModel
+
     animal_result = await db.execute(
         select(AnimalModel).where(
             AnimalModel.id == animal_uuid,
@@ -219,13 +233,21 @@ async def update_intake(
     if data.intake_date is not None:
         intake.intake_date = data.intake_date
     if data.finder_person_id is not None:
-        intake.finder_person_id = uuid.UUID(data.finder_person_id) if data.finder_person_id else None
+        intake.finder_person_id = (
+            uuid.UUID(data.finder_person_id) if data.finder_person_id else None
+        )
     if data.finder_notes is not None:
         intake.finder_notes = data.finder_notes
     if data.planned_end_date is not None:
         intake.planned_end_date = data.planned_end_date
+    if data.planned_outcome_date is not None:
+        intake.planned_outcome_date = data.planned_outcome_date
+    if data.actual_outcome_date is not None:
+        intake.actual_outcome_date = data.actual_outcome_date
     if data.planned_person_id is not None:
-        intake.planned_person_id = uuid.UUID(data.planned_person_id) if data.planned_person_id else None
+        intake.planned_person_id = (
+            uuid.UUID(data.planned_person_id) if data.planned_person_id else None
+        )
     if data.funding_source is not None:
         intake.funding_source = data.funding_source
     if data.funding_notes is not None:
@@ -262,11 +284,13 @@ async def delete_intake(
         raise HTTPException(status_code=404, detail="Intake not found")
 
     from datetime import datetime as dt
+
     intake.deleted_at = dt.utcnow()  # type: ignore
     await db.commit()
 
 
 # ── Close Intake ─────────────────────────────────────────────────────────────
+
 
 class IntakeOutcome(str, enum.Enum):
     ADOPTED = "adopted"
@@ -312,6 +336,7 @@ async def close_intake(
         raise HTTPException(status_code=404, detail="Intake not found")
 
     from src.app.models.animal import Animal as AnimalModel
+
     animal_result = await db.execute(
         select(AnimalModel).where(
             AnimalModel.id == intake.animal_id,
@@ -326,6 +351,7 @@ async def close_intake(
         intake.notes = (intake.notes or "") + f"\n[Close] {data.notes}"
 
     from datetime import datetime as dt
+
     intake.deleted_at = dt.utcnow()  # type: ignore
 
     await db.commit()

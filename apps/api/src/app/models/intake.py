@@ -50,6 +50,8 @@ class Intake(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
 
     # Planned outcome
     planned_end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    planned_outcome_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    actual_outcome_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     planned_person_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("contacts.id", ondelete="SET NULL"),

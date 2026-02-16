@@ -70,7 +70,9 @@ async def create_task(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
     """Create a new task."""
-    print(f"[DEBUG] create_task: org={organization_id}, user={current_user.id}, title={task_data.title!r}, type={task_data.type!r}, priority={task_data.priority!r}")
+    print(
+        f"[DEBUG] create_task: org={organization_id}, user={current_user.id}, title={task_data.title!r}, type={task_data.type!r}, priority={task_data.priority!r}"
+    )
     task_service = TaskService(db)
 
     try:
@@ -127,7 +129,9 @@ async def list_tasks(
     due_date: Optional[str] = Query(
         None, description="Filter by due date (YYYY-MM-DD)"
     ),
-    related_entity_id: Optional[str] = Query(None, description="Filter by related entity ID"),
+    related_entity_id: Optional[str] = Query(
+        None, description="Filter by related entity ID"
+    ),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=1000, description="Items per page"),
     current_user: User = Depends(get_current_user),
@@ -258,6 +262,7 @@ async def complete_task(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
     """Complete a task."""
+    print(f"[DEBUG] complete_task: task_id={task_id}, data={complete_data}")
     task_service = TaskService(db)
 
     try:
@@ -278,6 +283,7 @@ async def complete_task(
             from src.app.models.inventory_item import InventoryItem as InvItem
             from src.app.services.audit_service import AuditService as _AuditService
             from sqlalchemy import select as _sel
+
             inv_service = InventoryService(db)
             try:
                 await inv_service.record_transaction(
@@ -299,7 +305,11 @@ async def complete_task(
                     action="vaccination",
                     entity_type="animal",
                     entity_id=task.related_entity_id,
-                    after={"vaccine": inv_item.name if inv_item else str(task.linked_inventory_item_id)},
+                    after={
+                        "vaccine": inv_item.name
+                        if inv_item
+                        else str(task.linked_inventory_item_id)
+                    },
                 )
             except Exception as e:
                 print(f"[DEBUG] complete_task: inventory deduction failed: {e!r}")
@@ -313,6 +323,7 @@ async def complete_task(
             from src.app.models.kennel import Kennel
             from sqlalchemy import select as _select
             from datetime import timezone as _tz
+
             kennel_result = await db.execute(
                 _select(Kennel).where(
                     Kennel.id == task.related_entity_id,
@@ -322,6 +333,7 @@ async def complete_task(
             kennel = kennel_result.scalar_one_or_none()
             if kennel:
                 from datetime import datetime as _dt
+
                 kennel.last_cleaned_at = _dt.now(_tz.utc)
 
         await db.commit()

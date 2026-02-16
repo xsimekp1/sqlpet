@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { ApiClient } from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Baby, LogIn, PersonStanding, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Baby, LogIn, PersonStanding, Heart, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -29,7 +29,7 @@ interface Incident {
 
 interface CalendarEvent {
   date: string;
-  type: 'intake' | 'litter' | 'escaped' | 'planned_adoption';
+  type: 'intake' | 'litter' | 'escaped' | 'planned_adoption' | 'planned_outcome';
   animal: CalendarAnimal;
 }
 
@@ -44,11 +44,11 @@ function AnimalMedallion({ animal, title }: { animal: CalendarAnimal; title: str
         <img
           src={animal.primary_photo_url}
           alt={animal.name}
-          className="w-8 h-8 rounded-full object-cover border-2 border-white shadow group-hover:scale-110 transition-transform"
+          className="w-12 h-12 rounded-full object-cover border-2 border-white shadow group-hover:scale-110 transition-transform"
         />
       ) : (
-        <div className="w-8 h-8 rounded-full bg-primary/20 border-2 border-white shadow flex items-center justify-center group-hover:scale-110 transition-transform">
-          <span className="text-[8px] font-bold text-primary">
+        <div className="w-12 h-12 rounded-full bg-primary/20 border-2 border-white shadow flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span className="text-[10px] font-bold text-primary">
             {animal.name.slice(0, 2).toUpperCase()}
           </span>
         </div>
@@ -65,11 +65,53 @@ export default function CalendarPage() {
   const [month, setMonth] = useState(today.getMonth()); // 0-indexed
 
   // Fetch all animals (large page size to get enough data)
-  const { data: animalsData } = useQuery({
+  console.time('[CALENDAR] Total load time');
+  console.time('[CALENDAR] Fetch animals');
+  const { data: animalsData, isLoading: animalsLoading } = useQuery<{ items: CalendarAnimal[] }>({
     queryKey: ['animals-calendar'],
-    queryFn: () => ApiClient.getAnimals({ page_size: 500 }),
+    queryFn: async () => {
+      const start = Date.now();
+      const result = await ApiClient.getAnimals({ page_size: 500 });
+      console.timeEnd('[CALENDAR] Fetch animals', Date.now() - start);
+      console.log(`[CALENDAR] Animals received: ${result.items.length}, time: ${Date.now() - start}ms`);
+      return result;
+    },
     staleTime: 2 * 60 * 1000,
   });
+  console.time('[CALENDAR] Fetch incidents');
+  // Fetch escape incidents
+  const { data: incidents = [] } = useQuery<Incident[]>({
+    queryKey: ['incidents-escape'],
+    queryFn: async () => {
+      const start = Date.now();
+      const result = await ApiClient.getIncidents({ incident_type: 'escape' });
+      console.log(`[CALENDAR] Incidents received: ${result.length}, time: ${Date.now() - start}ms`);
+      console.timeEnd('[CALENDAR] Fetch incidents');
+      return result;
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+
+  console.time('[CALENDAR] Fetch intakes');
+  // Fetch intakes for planned_adoption events
+  const { data: intakesData = [] } = useQuery({
+    queryKey: ['intakes-calendar'],
+    queryFn: async () => {
+      const start = Date.now();
+      const result = await ApiClient.get('/intakes');
+      console.log(`[CALENDAR] Intakes received: ${(result as any[]).length}, time: ${Date.now() - start}ms`);
+      console.timeEnd('[CALENDAR] Fetch intakes');
+      return result;
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Loading complete
+  useMemo(() => {
+    if (!animalsLoading && animalsData) {
+      console.timeEnd('[CALENDAR] Total load time');
+    }
+  }, [animalsLoading, animalsData]);
 
   // Fetch escape incidents
   const { data: incidents = [] } = useQuery<Incident[]>({
@@ -119,11 +161,22 @@ export default function CalendarPage() {
       }
     }
 
-    // Add planned adoption events
+    // Add planned and actual outcome events
     for (const intake of intakesData as any[]) {
       const animal = animalById[intake.animal_id];
-      if (animal && intake.planned_end_date) {
-        addEvent(intake.planned_end_date, 'planned_adoption', animal);
+      if (animal) {
+        // Planned outcome (future)
+        if (intake.planned_outcome_date) {
+          addEvent(intake.planned_outcome_date, 'outcome', animal);
+        }
+        // Actual outcome (past)
+        if (intake.actual_outcome_date) {
+          addEvent(intake.actual_outcome_date, 'outcome', animal);
+        }
+        // Legacy: planned_end_date as planned adoption
+        if (intake.planned_end_date) {
+          addEvent(intake.planned_end_date, 'planned_adoption', animal);
+        }
       }
     }
 
@@ -187,16 +240,19 @@ export default function CalendarPage() {
       {/* Legend */}
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
-          <LogIn className="h-4 w-4 text-blue-500" /> {t('intakeStart')}
+          <LogIn className="h-5 w-5 text-blue-500" /> {t('intakeStart')}
         </span>
         <span className="flex items-center gap-1">
-          <Baby className="h-4 w-4 text-pink-500" /> {t('expectedLitter')}
+          <Baby className="h-5 w-5 text-pink-500" /> {t('expectedLitter')}
         </span>
         <span className="flex items-center gap-1">
-          <PersonStanding className="h-4 w-4 text-orange-500" /> {t('escaped')}
+          <PersonStanding className="h-5 w-5 text-orange-500" /> {t('escaped')}
         </span>
         <span className="flex items-center gap-1">
-          <Heart className="h-4 w-4 text-green-500" /> {t('plannedAdoption')}
+          <Heart className="h-5 w-5 text-green-500" /> {t('plannedAdoption')}
+        </span>
+        <span className="flex items-center gap-1">
+          <LogOut className="h-5 w-5 text-red-500" /> {t('plannedOutcome')}
         </span>
       </div>
 
