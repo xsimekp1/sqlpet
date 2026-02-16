@@ -1,8 +1,9 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from functools import cached_property
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from src.app.models.animal import (
     AgeGroup,
@@ -168,6 +169,18 @@ class AnimalResponse(BaseModel):
     breeds: list[AnimalBreedResponse] = []
     identifiers: list[AnimalIdentifierResponse] = []
     tags: list[TagResponse] = []
+
+    @computed_field
+    @cached_property
+    def estimated_age_years(self) -> float | None:
+        if not self.birth_date_estimated:
+            return None
+        today = date.today()
+        bd = self.birth_date_estimated
+        years = today.year - bd.year
+        if (today.month, today.day) < (bd.month, bd.day):
+            years -= 1
+        return years
 
     model_config = {"from_attributes": True}
 
