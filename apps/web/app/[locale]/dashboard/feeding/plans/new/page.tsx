@@ -59,21 +59,22 @@ export default function NewFeedingPlanPage() {
     staleTime: 10 * 60 * 1000,
   });
 
-  // Fetch foods
+  // Fetch food inventory items (category=food)
   const { data: foodsData } = useQuery({
-    queryKey: ['foods'],
-    queryFn: () => ApiClient.get('/feeding/foods'),
+    queryKey: ['inventory-items', 'food'],
+    queryFn: () => ApiClient.get('/inventory/items', { category: 'food' }),
+    staleTime: 10 * 60 * 1000,
   });
 
   const animals = (animalsData?.items || []).filter(
     (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
   );
-  const foods = foodsData?.items || [];
+  const foods = Array.isArray(foodsData) ? foodsData : (foodsData?.items ?? []);
 
   const watchedAnimalId = watch('animal_id');
   const selectedAnimal = animals.find((a: any) => a.id === watchedAnimalId);
   const filteredFoods = foods.filter(
-    (f: any) => !f.species || !selectedAnimal || f.species === selectedAnimal.species
+    (f: any) => !f.allowed_species?.length || !selectedAnimal || f.allowed_species.includes(selectedAnimal.species)
   );
 
   // Create plan mutation
