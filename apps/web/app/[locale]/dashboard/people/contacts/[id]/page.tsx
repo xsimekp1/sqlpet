@@ -153,7 +153,7 @@ export default function ContactDetailPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const resp = await axios.post(
         `${API_URL}/files/contact/${contactId}/upload-avatar`,
         formData,
