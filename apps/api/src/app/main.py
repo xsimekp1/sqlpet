@@ -76,6 +76,28 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"✗ Table sync error: {e}")
 
+    # Create missing tables that can't be auto-created
+    try:
+        script_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "scripts", "create_missing_tables.py"
+        )
+        if os.path.exists(script_path):
+            result = subprocess.run(
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                env={
+                    **os.environ,
+                    "PYTHONPATH": os.path.join(os.path.dirname(__file__), ".."),
+                },
+            )
+            if result.returncode == 0:
+                print("✓ Missing tables created")
+            else:
+                print(f"✗ Create tables failed: {result.stderr}")
+    except Exception as e:
+        print(f"✗ Create tables error: {e}")
+
     # Seed permissions and role templates on startup
     try:
         from src.app.db.seed_data import (
