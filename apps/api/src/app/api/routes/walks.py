@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
