@@ -220,5 +220,5 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     events = relationship(
         "AnimalEvent",
         back_populates="animal",
-        lazy="selectin",
+        lazy="noload",
     )
