@@ -39,8 +39,10 @@ async def _to_response_with_animals(
     if animal_ids:
         result = await db.execute(select(Animal).where(Animal.id.in_(animal_ids)))
         animals = result.scalars().all()
+        # Convert UUIDs to strings for proper Pydantic serialization
         data.animals = [
-            {"id": a.id, "name": a.name, "public_code": a.public_code} for a in animals
+            {"id": str(a.id), "name": a.name, "public_code": a.public_code}
+            for a in animals
         ]
 
     return data

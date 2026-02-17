@@ -53,7 +53,7 @@ class WalkResponse(BaseModel):
 
 
 class WalkWithAnimalsResponse(WalkResponse):
-    animals: list[dict] = []
+    animals: list[dict] = Field(default_factory=list)
 
 
 class WalkListResponse(BaseModel):

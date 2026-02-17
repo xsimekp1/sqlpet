@@ -31,7 +31,40 @@ async def get_current_organization_id(
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    payload = decode_token(token)
+
+    try:
+        payload = decode_token(token)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {str(e)[:100]}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    org_id_str = x_organization_id or payload.get("org_id")
+
+    if org_id_str is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No organization selected. Please select an organization first.",
+        )
+    try:
+        return uuid.UUID(org_id_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid organization ID: {org_id_str}",
+        )
+
+    try:
+        payload = decode_token(token)
+    except Exception as e:
+        print(f"DEBUG: decode_token failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     org_id_str = x_organization_id or payload.get("org_id")
 

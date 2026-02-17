@@ -61,20 +61,63 @@ async def main():
             """)
             )
 
-            # Create indexes
-            await db.execute(
-                text("""
-                CREATE INDEX idx_api_metrics_org_id ON api_metrics(organization_id)
-            """)
-            )
-            await db.execute(
-                text("""
-                CREATE INDEX idx_api_metrics_created_at ON api_metrics(created_at)
-            """)
-            )
-
             await db.commit()
             print("✓ Table api_metrics created successfully")
+
+        # Add indexes for better query performance
+        indexes = [
+            (
+                "idx_api_metrics_org_id",
+                "CREATE INDEX IF NOT EXISTS idx_api_metrics_org_id ON api_metrics(organization_id)",
+            ),
+            (
+                "idx_api_metrics_created_at",
+                "CREATE INDEX IF NOT EXISTS idx_api_metrics_created_at ON api_metrics(created_at)",
+            ),
+            (
+                "idx_api_metrics_path",
+                "CREATE INDEX IF NOT EXISTS idx_api_metrics_path ON api_metrics(path)",
+            ),
+            (
+                "idx_api_metrics_status",
+                "CREATE INDEX IF NOT EXISTS idx_api_metrics_status ON api_metrics(status_code)",
+            ),
+        ]
+
+        for idx_name, idx_sql in indexes:
+            try:
+                await db.execute(text(idx_sql))
+                print(f"✓ Index {idx_name} ready")
+            except Exception as e:
+                print(f"  Index {idx_name}: {e}")
+
+        await db.commit()
+
+        # Add indexes to kennel_stays for faster joins
+        kennel_indexes = [
+            (
+                "idx_kennel_stays_animal_id",
+                "CREATE INDEX IF NOT EXISTS idx_kennel_stays_animal_id ON kennel_stays(animal_id)",
+            ),
+            (
+                "idx_kennel_stays_kennel_id",
+                "CREATE INDEX IF NOT EXISTS idx_kennel_stays_kennel_id ON kennel_stays(kennel_id)",
+            ),
+            (
+                "idx_kennel_stays_active",
+                "CREATE INDEX IF NOT EXISTS idx_kennel_stays_active ON kennel_stays(animal_id) WHERE end_at IS NULL",
+            ),
+        ]
+
+        for idx_name, idx_sql in kennel_indexes:
+            try:
+                await db.execute(text(idx_sql))
+                print(f"✓ Index {idx_name} ready")
+            except Exception as e:
+                print(f"  Index {idx_name}: {e}")
+
+        await db.commit()
+        print("✅ All indexes ready!")
 
     await engine.dispose()
     print("✅ Done!")
