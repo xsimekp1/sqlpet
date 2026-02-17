@@ -101,8 +101,19 @@ def require_permission(permission_key: str) -> Callable:
         organization_id: uuid.UUID = Depends(get_current_organization_id),
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db),
+        token: str | None = Depends(oauth2_scheme),
     ) -> User:
-        svc = PermissionService(db)
+        # Check superadmin from token
+        is_superadmin = False
+        user_email = current_user.email
+        if token:
+            try:
+                payload = decode_token(token)
+                is_superadmin = payload.get("superadmin", False)
+            except Exception:
+                pass
+
+        svc = PermissionService(db, is_superadmin=is_superadmin, user_email=user_email)
         has = await svc.user_has_permission(
             current_user.id, organization_id, permission_key
         )

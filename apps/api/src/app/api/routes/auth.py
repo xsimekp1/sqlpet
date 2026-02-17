@@ -56,8 +56,12 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
-    access_token = create_access_token({"sub": str(user.id)})
-    refresh_token = create_refresh_token({"sub": str(user.id)})
+    access_token = create_access_token(
+        {"sub": str(user.id), "superadmin": user.is_superadmin}
+    )
+    refresh_token = create_refresh_token(
+        {"sub": str(user.id), "superadmin": user.is_superadmin}
+    )
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -80,8 +84,12 @@ async def refresh(request: RefreshRequest, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
-    access_token = create_access_token({"sub": str(user.id)})
-    refresh_token = create_refresh_token({"sub": str(user.id)})
+    access_token = create_access_token(
+        {"sub": str(user.id), "superadmin": user.is_superadmin}
+    )
+    refresh_token = create_refresh_token(
+        {"sub": str(user.id), "superadmin": user.is_superadmin}
+    )
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -169,10 +177,18 @@ async def select_organization(
 
     # Create new tokens with org_id claim
     access_token = create_access_token(
-        data={"sub": str(current_user.id), "org_id": str(org_uuid)}
+        data={
+            "sub": str(current_user.id),
+            "org_id": str(org_uuid),
+            "superadmin": current_user.is_superadmin,
+        }
     )
     refresh_token = create_refresh_token(
-        data={"sub": str(current_user.id), "org_id": str(org_uuid)}
+        data={
+            "sub": str(current_user.id),
+            "org_id": str(org_uuid),
+            "superadmin": current_user.is_superadmin,
+        }
     )
 
     return TokenResponse(
