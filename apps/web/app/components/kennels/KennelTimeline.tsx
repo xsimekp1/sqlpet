@@ -19,9 +19,14 @@ const HEADER_HEIGHT = 60;
 const LEFT_COL_WIDTH = 180;
 
 const SPECIES_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  dog: { bg: 'bg-blue-500', border: 'border-blue-600', text: 'text-blue-600' },
-  cat: { bg: 'bg-orange-500', border: 'border-orange-600', text: 'text-orange-600' },
-  other: { bg: 'bg-emerald-500', border: 'border-emerald-600', text: 'text-emerald-600' },
+  // Shelter animals (světlejší)
+  dog: { bg: 'bg-blue-400', border: 'border-blue-500', text: 'text-blue-600' },
+  cat: { bg: 'bg-orange-400', border: 'border-orange-500', text: 'text-orange-600' },
+  other: { bg: 'bg-emerald-400', border: 'border-emerald-500', text: 'text-emerald-600' },
+  // Hotel animals (tmavší)
+  dog_hotel: { bg: 'bg-blue-700', border: 'border-blue-800', text: 'text-blue-100' },
+  cat_hotel: { bg: 'bg-orange-700', border: 'border-orange-800', text: 'text-orange-100' },
+  other_hotel: { bg: 'bg-emerald-700', border: 'border-emerald-800', text: 'text-emerald-100' },
 };
 
 const SPECIES_ICONS: Record<string, typeof Rabbit> = {
@@ -33,16 +38,9 @@ const SPECIES_ICONS: Record<string, typeof Rabbit> = {
 };
 
 function getSpeciesColor(species: string, isHotel: boolean = false) {
-  const base = SPECIES_COLORS[species] || SPECIES_COLORS.other;
-  if (isHotel) {
-    return {
-      bg: base.bg.replace('bg-', 'bg-') + '/90',
-      border: base.border,
-      text: base.text,
-      badge: true,
-    };
-  }
-  return { ...base, badge: false };
+  const key = isHotel ? `${species}_hotel` : species;
+  const base = SPECIES_COLORS[key] || SPECIES_COLORS[species] || SPECIES_COLORS.other;
+  return { ...base, badge: isHotel };
 }
 
 function packStaysIntoLanes(stays: KennelTimelineStay[], capacity: number) {

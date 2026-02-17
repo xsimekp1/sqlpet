@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, AlertCircle, Plus, Ban } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Plus, Ban, ArrowUpDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -56,6 +56,7 @@ export default function TasksPage() {
 
   const [statusFilter, setStatusFilter] = useState<TaskStatus>(initialStatus);
   const [typeFilter, setTypeFilter] = useState<TaskType>(initialType);
+  const [prioritySort, setPrioritySort] = useState<'desc' | 'asc' | null>(null);
   const [page, setPage] = useState(1);
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -110,6 +111,16 @@ export default function TasksPage() {
   const tasks = taskData?.items || [];
   const totalTasks = taskData?.total ?? 0;
   const totalPages = Math.ceil(totalTasks / 10);
+
+  // Client-side sort by priority
+  const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+  const sortedTasks = prioritySort
+    ? [...tasks].sort((a, b) => {
+        const aOrder = priorityOrder[a.priority as keyof typeof priorityOrder] ?? 4;
+        const bOrder = priorityOrder[b.priority as keyof typeof priorityOrder] ?? 4;
+        return prioritySort === 'desc' ? aOrder - bOrder : bOrder - aOrder;
+      })
+    : tasks;
 
   // Complete task mutation
   const completeTaskMutation = useMutation({
@@ -368,6 +379,16 @@ export default function TasksPage() {
           </Select>
         </div>
 
+        <Button
+          variant={prioritySort ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setPrioritySort(prev => prev === 'desc' ? 'asc' : prev === 'asc' ? null : 'desc')}
+          title="Seřadit podle priority"
+        >
+          <ArrowUpDown className="h-4 w-4 mr-1" />
+          {prioritySort === 'desc' ? 'Urgentní' : prioritySort === 'asc' ? 'Nízká' : 'Řadit'}
+        </Button>
+
         {totalTasks > 0 && (
           <div className="flex items-center text-sm text-muted-foreground">
             {totalTasks} úkolů celkem
@@ -390,7 +411,7 @@ export default function TasksPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tasks.length === 0 ? (
+            {sortedTasks.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
@@ -402,7 +423,7 @@ export default function TasksPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              tasks.map((task) => (
+              sortedTasks.map((task) => (
                 <TableRow key={task.id}>
                   <TableCell className="max-w-[240px]">
                     <TooltipProvider>

@@ -339,6 +339,7 @@ export interface KennelTimelineStay {
   is_hotel: boolean;
   lane?: number;
   has_conflict?: boolean;
+  conflicting_with_id?: string | null;
 }
 
 export interface KennelTimelineKennel {
