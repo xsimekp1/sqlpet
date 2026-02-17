@@ -1,7 +1,7 @@
 """Add chat_messages table
 
 Revision ID: add_chat_messages
-Revises:
+Revises: b30506086829
 Create Date: 2026-02-17
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = "add_chat_messages"
-down_revision = None
+down_revision = "b30506086829"
 branch_labels = None
 depends_on = None
 
