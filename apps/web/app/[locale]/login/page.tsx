@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { useAuth } from '@/app/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
-import { PawPrint } from 'lucide-react';
 
 const formSchema = z.object({
   email: z
@@ -73,25 +73,25 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
       {/* Logo - always visible, animates on login */}
       <div
-        className={`absolute top-8 transition-all duration-700 ease-in-out ${
+        className={`absolute transition-all duration-1000 ease-in-out ${
           isLoggingIn
             ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-125'
-            : ''
+            : 'top-8'
         }`}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary shadow-lg">
-            <PawPrint className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-            {t('app.name')}
-          </span>
-        </div>
+        <Image
+          src="/petslog.png"
+          alt="Petslog"
+          width={360}
+          height={240}
+          className="drop-shadow-md"
+          priority
+        />
       </div>
 
       {/* Login Form - fades out on submit */}
       <div
-        className={`w-full max-w-md transition-all duration-500 ease-out ${
+        className={`w-full max-w-md transition-all duration-700 ease-out ${
           isLoggingIn
             ? 'translate-y-8 opacity-0 scale-95'
             : 'translate-y-0 opacity-100 scale-100'
