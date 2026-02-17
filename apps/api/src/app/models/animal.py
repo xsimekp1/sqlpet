@@ -217,8 +217,3 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         cascade="all, delete-orphan",
         order_by="AnimalBCSLog.measured_at.desc()",
     )
-    events = relationship(
-        "AnimalEvent",
-        back_populates="animal",
-        lazy="noload",
-    )

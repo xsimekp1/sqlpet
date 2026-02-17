@@ -20,6 +20,3 @@ class Organization(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # Relationships
     tags = relationship("Tag", back_populates="organization", lazy="selectin")
     files = relationship("File", back_populates="organization")
-    animal_events = relationship(
-        "AnimalEvent", back_populates="organization", lazy="selectin"
-    )

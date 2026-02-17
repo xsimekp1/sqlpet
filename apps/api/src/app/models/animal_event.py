@@ -51,7 +51,6 @@ class AnimalEvent(Base):
 
     # Relationships
     organization = relationship("Organization", back_populates="animal_events")
-    animal = relationship("Animal", back_populates="events")
     related_user = relationship("User")
     related_kennel = relationship("Kennel")
     related_intake = relationship("Intake")
