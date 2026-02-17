@@ -16,6 +16,7 @@ interface AuthContextType {
   refreshToken: string | null;
   memberships: Membership[];
   selectedOrg: SelectedOrg | null;
+  permissions: string[];
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [refreshTokenState, setRefreshTokenState] = useState<string | null>(null);
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<SelectedOrg | null>(null);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -55,6 +57,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (storedSelectedOrg) {
             const orgData = JSON.parse(storedSelectedOrg);
             setSelectedOrg(orgData);
+            
+            // Fetch permissions for the stored org
+            try {
+              const permResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/auth/permissions`, {
+                headers: { 'Authorization': `Bearer ${storedToken}` },
+              });
+              if (permResponse.ok) {
+                const permData = await permResponse.json();
+                setPermissions(permData.permissions || []);
+              }
+            } catch (e) {
+              console.error('Failed to fetch permissions:', e);
+              setPermissions([]);
+            }
           }
         }
 
@@ -72,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setMemberships([]);
         setSelectedOrg(null);
+        setPermissions([]);
       } finally {
         setIsLoading(false);
       }
@@ -147,6 +164,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(response.access_token);
     setRefreshTokenState(response.refresh_token);
 
+    // Fetch permissions for the new organization
+    try {
+      const permResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/auth/permissions`, {
+        headers: { 'Authorization': `Bearer ${response.access_token}` },
+      });
+      if (permResponse.ok) {
+        const permData = await permResponse.json();
+        setPermissions(permData.permissions || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch permissions:', e);
+      setPermissions([]);
+    }
+
     // Store org info
     const orgData = {
       id: membership.organization_id,
@@ -178,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setMemberships([]);
     setSelectedOrg(null);
+    setPermissions([]);
     router.push('/login');
   }, [router]);
 
@@ -200,6 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshToken: refreshTokenState,
     memberships,
     selectedOrg,
+    permissions,
     isAuthenticated: !!token && !!user,
     isLoading,
     login,

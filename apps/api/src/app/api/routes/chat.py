@@ -11,7 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_
 from sqlalchemy.orm import selectinload
 
-from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
+from src.app.api.dependencies.auth import (
+    get_current_user,
+    get_current_organization_id,
+    require_permission,
+)
 from src.app.api.dependencies.db import get_db
 from src.app.models.user import User
 from src.app.models.chat import ChatMessage
@@ -19,6 +23,36 @@ from src.app.models.chat import ChatMessage
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
+
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    full_name: str | None
+    avatar_url: str | None
+
+
+@router.get("/users", response_model=List[UserResponse])
+async def get_organization_users(
+    current_user: User = Depends(require_permission("chat.use")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get all users in the current organization (for starting new conversations)."""
+    q = select(User).where(User.organization_id == organization_id)
+    result = await db.execute(q)
+    users = result.scalars().all()
+
+    return [
+        UserResponse(
+            id=str(u.id),
+            name=u.name,
+            full_name=u.full_name,
+            avatar_url=getattr(u, "avatar_url", None),
+        )
+        for u in users
+        if str(u.id) != str(current_user.id)
+    ]
 
 
 class ChatMessageCreate(BaseModel):
@@ -49,7 +83,7 @@ class ConversationResponse(BaseModel):
 
 @router.get("/conversations", response_model=List[ConversationResponse])
 async def get_conversations(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("chat.use")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -109,7 +143,7 @@ async def get_conversations(
 @router.get("/messages/{partner_id}", response_model=List[ChatMessageResponse])
 async def get_messages(
     partner_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("chat.use")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -188,7 +222,7 @@ async def get_messages(
 )
 async def send_message(
     data: ChatMessageCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("chat.use")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -238,7 +272,7 @@ async def send_message(
 
 @router.get("/unread-count")
 async def get_unread_count(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("chat.use")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):

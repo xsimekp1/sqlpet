@@ -311,6 +311,40 @@ export interface KennelStay {
   moved_by?: string | null;
 }
 
+export interface KennelTimelineStay {
+  id: string;
+  animal_id: string;
+  animal_name: string;
+  animal_species: string;
+  animal_public_code?: string | null;
+  animal_photo_url?: string | null;
+  start_at: string;
+  end_at?: string | null;
+  reason?: string | null;
+  notes?: string | null;
+  is_hotel: boolean;
+  lane?: number;
+  has_conflict?: boolean;
+}
+
+export interface KennelTimelineKennel {
+  kennel_id: string;
+  kennel_name: string;
+  kennel_code: string;
+  capacity: number;
+  allowed_species?: string | null;
+  zone_id?: string | null;
+  zone_name?: string | null;
+  zone_color?: string | null;
+  stays: KennelTimelineStay[];
+}
+
+export interface KennelTimelineData {
+  from_date: string;
+  to_date: string;
+  kennels: KennelTimelineKennel[];
+}
+
 class ApiClient {
   /**
    * Get authorization headers with Bearer token + organization ID from localStorage.
@@ -696,6 +730,23 @@ class ApiClient {
         const axiosError = error as AxiosError<ApiError>;
         if (axiosError.response?.status === 404) return [];
         throw new Error(axiosError.response?.data?.detail || 'Failed to fetch kennel stays');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  // Timeline types
+  static async getStaysTimeline(params?: { from_date?: string; to_date?: string }): Promise<KennelTimelineData> {
+    try {
+      const searchParams = new URLSearchParams();
+      if (params?.from_date) searchParams.append('from_date', params.from_date);
+      if (params?.to_date) searchParams.append('to_date', params.to_date);
+      const url = `${API_URL}/stays/timeline${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      const response = await axios.get<KennelTimelineData>(url, { headers: this.getAuthHeaders() });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch timeline');
       }
       throw new Error('An unexpected error occurred');
     }

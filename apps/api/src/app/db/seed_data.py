@@ -35,38 +35,98 @@ PERMISSIONS = [
     ("tasks.write", "Create and manage tasks"),
     ("feeding.read", "View feeding plans and logs"),
     ("feeding.write", "Create and manage feeding plans"),
+    ("chat.use", "Use chat/messaging"),
 ]
 
 # Role templates: name -> list of permission keys
 ROLE_TEMPLATES = {
     "admin": [p[0] for p in PERMISSIONS],  # all permissions
     "manager": [
-        "org.manage", "users.manage", "animals.read", "animals.write",
-        "intakes.write", "outcomes.write", "kennels.manage",
-        "medical.read", "medical.write", "inventory.read", "inventory.write",
-        "people.read", "people.write", "forms.manage", "contracts.manage",
-        "reports.run", "reports.schedule", "public.manage",
-        "payments.write", "audits.read", "tasks.read", "tasks.write",
-        "feeding.read", "feeding.write",
+        "org.manage",
+        "users.manage",
+        "animals.read",
+        "animals.write",
+        "intakes.write",
+        "outcomes.write",
+        "kennels.manage",
+        "medical.read",
+        "medical.write",
+        "inventory.read",
+        "inventory.write",
+        "people.read",
+        "people.write",
+        "forms.manage",
+        "contracts.manage",
+        "reports.run",
+        "reports.schedule",
+        "public.manage",
+        "payments.write",
+        "audits.read",
+        "tasks.read",
+        "tasks.write",
+        "feeding.read",
+        "feeding.write",
+        "chat.use",
     ],
     "vet_staff": [
-        "animals.read", "medical.read", "medical.write", "tasks.read", "tasks.write",
+        "animals.read",
+        "medical.read",
+        "medical.write",
+        "tasks.read",
+        "tasks.write",
+        "feeding.read",
+        "chat.use",
+    ],
+    "caretaker": [
+        "animals.read",
+        "animals.write",
+        "kennels.manage",
+        "medical.read",
+        "inventory.read",
+        "inventory.write",
+        "tasks.read",
+        "tasks.write",
+        "feeding.read",
+        "feeding.write",
+        "chat.use",
+    ],
+    "vet_staff": [
+        "animals.read",
+        "medical.read",
+        "medical.write",
+        "tasks.read",
+        "tasks.write",
         "feeding.read",
     ],
     "caretaker": [
-        "animals.read", "animals.write", "kennels.manage",
-        "medical.read", "inventory.read", "inventory.write", "tasks.read", "tasks.write",
-        "feeding.read", "feeding.write",
+        "animals.read",
+        "animals.write",
+        "kennels.manage",
+        "medical.read",
+        "inventory.read",
+        "inventory.write",
+        "tasks.read",
+        "tasks.write",
+        "feeding.read",
+        "feeding.write",
     ],
     "volunteer": [
-        "animals.read", "tasks.read", "tasks.write",
+        "animals.read",
+        "tasks.read",
+        "tasks.write",
     ],
     "foster": [
-        "animals.read", "tasks.read",
+        "animals.read",
+        "tasks.read",
     ],
     "readonly": [
-        "animals.read", "medical.read", "inventory.read",
-        "people.read", "reports.run", "audits.read", "tasks.read",
+        "animals.read",
+        "medical.read",
+        "inventory.read",
+        "people.read",
+        "reports.run",
+        "audits.read",
+        "tasks.read",
     ],
 }
 
@@ -118,7 +178,9 @@ async def seed_role_templates(db: AsyncSession, perm_map: dict[str, uuid.UUID]) 
                 )
             )
             if result.scalar_one_or_none() is None:
-                db.add(RolePermission(role_id=role_id, permission_id=perm_id, allowed=True))
+                db.add(
+                    RolePermission(role_id=role_id, permission_id=perm_id, allowed=True)
+                )
 
     await db.flush()
 

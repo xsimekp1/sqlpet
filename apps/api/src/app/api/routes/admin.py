@@ -851,3 +851,202 @@ async def init_org_roles_from_templates(
             )
 
     await db.commit()
+
+
+# ========================================
+# ROLE MANAGEMENT
+# ========================================
+
+
+class CreateRoleRequest(BaseModel):
+    name: str
+    description: Optional[str] = ""
+
+
+class RoleDetailResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    is_template: bool
+    permissions: List[str] = []
+
+
+class PermissionItem(BaseModel):
+    key: str
+    allowed: bool
+
+
+class UpdatePermissionsRequest(BaseModel):
+    permissions: List[PermissionItem]
+
+
+@router.post(
+    "/roles", response_model=RoleDetailResponse, status_code=status.HTTP_201_CREATED
+)
+async def create_role(
+    body: CreateRoleRequest,
+    current_user: User = Depends(require_permission("users.manage")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new role in the current organization."""
+    result = await db.execute(
+        select(Role).where(
+            Role.organization_id == organization_id,
+            Role.name == body.name,
+        )
+    )
+    if result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role with this name already exists in the organization",
+        )
+
+    new_role = Role(
+        id=uuid.uuid4(),
+        organization_id=organization_id,
+        name=body.name,
+        description=body.description or "",
+        is_template=False,
+    )
+    db.add(new_role)
+    await db.commit()
+    await db.refresh(new_role)
+
+    return RoleDetailResponse(
+        id=str(new_role.id),
+        name=new_role.name,
+        description=new_role.description,
+        is_template=new_role.is_template,
+        permissions=[],
+    )
+
+
+@router.get("/roles/{role_id}", response_model=RoleDetailResponse)
+async def get_role_details(
+    role_id: str,
+    current_user: User = Depends(require_permission("users.manage")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get details of a role including its permissions."""
+    try:
+        role_uuid = uuid.UUID(role_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid role ID")
+
+    result = await db.execute(
+        select(Role).where(
+            Role.id == role_uuid, Role.organization_id == organization_id
+        )
+    )
+    role = result.scalar_one_or_none()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    # Get permissions for this role
+    perm_result = await db.execute(
+        select(RolePermission).where(RolePermission.role_id == role_uuid)
+    )
+    role_perms = perm_result.scalars().all()
+    permissions = [str(p.permission_id) for p in role_perms if p.allowed]
+
+    return RoleDetailResponse(
+        id=str(role.id),
+        name=role.name,
+        description=role.description,
+        is_template=role.is_template,
+        permissions=permissions,
+    )
+
+
+@router.get("/roles/{role_id}/permissions")
+async def get_role_permissions(
+    role_id: str,
+    current_user: User = Depends(require_permission("users.manage")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get all permissions (allowed/not allowed) for a role."""
+    try:
+        role_uuid = uuid.UUID(role_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid role ID")
+
+    result = await db.execute(
+        select(Role).where(
+            Role.id == role_uuid, Role.organization_id == organization_id
+        )
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    # Get all permission keys
+    from src.app.models.permission import Permission
+
+    perm_result = await db.execute(select(Permission))
+    all_perms = perm_result.scalars().all()
+
+    # Get role permissions
+    role_perm_result = await db.execute(
+        select(RolePermission).where(RolePermission.role_id == role_uuid)
+    )
+    role_perms = {
+        str(p.permission_id): p.allowed for p in role_perm_result.scalars().all()
+    }
+
+    return [
+        {"key": p.key, "allowed": role_perms.get(str(p.id), False)} for p in all_perms
+    ]
+
+
+@router.put("/roles/{role_id}/permissions", status_code=status.HTTP_204_NO_CONTENT)
+async def update_role_permissions(
+    role_id: str,
+    body: UpdatePermissionsRequest,
+    current_user: User = Depends(require_permission("users.manage")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update permissions for a role."""
+    try:
+        role_uuid = uuid.UUID(role_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid role ID")
+
+    # Verify role exists and belongs to org
+    result = await db.execute(
+        select(Role).where(
+            Role.id == role_uuid, Role.organization_id == organization_id
+        )
+    )
+    role = result.scalar_one_or_none()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    if role.is_template:
+        raise HTTPException(status_code=400, detail="Cannot modify template roles")
+
+    # Get all permission keys
+    from src.app.models.permission import Permission
+
+    perm_result = await db.execute(select(Permission))
+    all_perms = {p.key: p.id for p in perm_result.scalars().all()}
+
+    # Delete existing role permissions
+    await db.execute(
+        RolePermission.__table__.delete().where(RolePermission.role_id == role_uuid)
+    )
+
+    # Add new permissions
+    for perm in body.permissions:
+        if perm.key in all_perms:
+            db.add(
+                RolePermission(
+                    role_id=role_uuid,
+                    permission_id=all_perms[perm.key],
+                    allowed=perm.allowed,
+                )
+            )
+
+    await db.commit()

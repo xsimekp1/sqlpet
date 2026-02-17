@@ -1355,5 +1355,21 @@
     "vetVisitComingSoon": "Návštěvy veterináře budou přidány brzy",
     "noEvents": "Žádné události",
     "weekdays": ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"]
+  },
+  "chat": {
+    "title": "Zprávy",
+    "newConversation": "Nová konverzace",
+    "noConversations": "Žádné konverzace",
+    "noMessages": "Žádné zprávy",
+    "selectConversation": "Vyberte konverzaci",
+    "typeMessage": "Napište zprávu...",
+    "noUsersInOrg": "V organizaci nejsou žádní další uživatelé",
+    "needTwoMembers": "Pro chat potřebujete alespoň dva členy organizace",
+    "errors": {
+      "loadUsers": "Nepodařilo se načíst uživatele",
+      "loadConversations": "Nepodařilo se načíst konverzace",
+      "loadMessages": "Nepodařilo se načíst zprávy",
+      "sendMessage": "Nepodařilo se odeslat zprávu"
+    }
   }
 }

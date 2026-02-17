@@ -51,7 +51,7 @@ interface NavSection {
 }
 
 export function Sidebar() {
-  const { user } = useAuth()
+  const { user, permissions } = useAuth()
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
   const t = useTranslations()
   const queryClient = useQueryClient()
@@ -106,7 +106,7 @@ export function Sidebar() {
       title: 'nav.people',
       items: [
         { label: 'nav.people', href: '/dashboard/people', icon: Users, permission: 'people.view' },
-        { label: 'nav.chat', href: '/dashboard/chat', icon: MessageSquare, permission: null },
+        { label: 'nav.chat', href: '/dashboard/chat', icon: MessageSquare, permission: 'chat.use' },
         { label: 'nav.adoptions', href: '/dashboard/adoptions', icon: Heart, permission: 'adoptions.view' },
       ]
     },
@@ -124,7 +124,7 @@ export function Sidebar() {
   // Filter nav sections by RBAC
   const filteredSections = navSections.map(section => ({
     ...section,
-    items: filterNavByPermissions(section.items, user)
+    items: filterNavByPermissions(section.items, user, permissions)
   })).filter(section => section.items.length > 0)
 
   return (

@@ -52,11 +52,14 @@
     "dashboard": "Dashboard",
     "animals": "Animals",
     "kennels": "Kennels",
+    "hotel": "Hotel",
+    "walks": "Walks",
     "medical": "Medical",
     "feeding": "Feeding",
     "inventory": "Inventory",
     "tasks": "Tasks",
     "people": "People",
+    "chat": "Messages",
     "reports": "Reports",
     "settings": "Settings",
     "intake": "Intake",
@@ -1304,5 +1307,21 @@
     "vetVisitComingSoon": "Vet visits coming soon",
     "noEvents": "No events this day",
     "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  },
+  "chat": {
+    "title": "Messages",
+    "newConversation": "New conversation",
+    "noConversations": "No conversations",
+    "noMessages": "No messages",
+    "selectConversation": "Select a conversation",
+    "typeMessage": "Type a message...",
+    "noUsersInOrg": "No other users in the organization",
+    "needTwoMembers": "You need at least two organization members for chat",
+    "errors": {
+      "loadUsers": "Failed to load users",
+      "loadConversations": "Failed to load conversations",
+      "loadMessages": "Failed to load messages",
+      "sendMessage": "Failed to send message"
+    }
   }
 }

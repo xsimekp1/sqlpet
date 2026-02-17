@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { Send, Loader2, User, MessageSquare } from 'lucide-react';
+import { Send, Loader2, User, MessageSquare, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { cs, enUS } from 'date-fns/locale';
+import { ApiClient } from '@/lib/api';
 
 interface Conversation {
   partner_id: string;
@@ -31,6 +31,13 @@ interface Message {
   read_at: string | null;
 }
 
+interface OrgUser {
+  id: string;
+  name: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 export default function ChatPage() {
   const t = useTranslations();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -40,6 +47,9 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [orgUsers, setOrgUsers] = useState<OrgUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [newConvDialogOpen, setNewConvDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,12 +66,42 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const loadOrgUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const data = await ApiClient.get<OrgUser[]>('/chat/users');
+      if (data.length === 0) {
+        toast.info(t('chat.noUsersInOrg'));
+        return;
+      }
+      setOrgUsers(data);
+    } catch (err: any) {
+      toast.error(t('chat.errors.loadUsers'));
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const openNewConvDialog = async () => {
+    await loadOrgUsers();
+    if (orgUsers.length === 0) {
+      toast.warning(t('chat.needTwoMembers'));
+      return;
+    }
+    setNewConvDialogOpen(true);
+  };
+
+  const startConversation = (user: OrgUser) => {
+    setSelectedPartner(user.id);
+    setNewConvDialogOpen(false);
+  };
+
   const loadConversations = async () => {
     try {
-      const data = await fetch('/api/chat/conversations').then(r => r.json());
+      const data = await ApiClient.get<Conversation[]>('/chat/conversations');
       setConversations(data);
-    } catch {
-      toast.error('Nepodařilo se načíst konverzace');
+    } catch (err: any) {
+      toast.error(t('chat.errors.loadConversations'));
     } finally {
       setLoading(false);
     }
@@ -70,10 +110,10 @@ export default function ChatPage() {
   const loadMessages = async (partnerId: string) => {
     setLoadingMessages(true);
     try {
-      const data = await fetch(`/api/chat/messages/${partnerId}`).then(r => r.json());
+      const data = await ApiClient.get<Message[]>(`/chat/messages/${partnerId}`);
       setMessages(data);
-    } catch {
-      toast.error('Nepodařilo se načíst zprávy');
+    } catch (err: any) {
+      toast.error(t('chat.errors.loadMessages'));
     } finally {
       setLoadingMessages(false);
     }
@@ -83,19 +123,15 @@ export default function ChatPage() {
     if (!newMessage.trim() || !selectedPartner) return;
     setSending(true);
     try {
-      await fetch('/api/chat/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recipient_id: selectedPartner,
-          content: newMessage,
-        }),
+      await ApiClient.post('/chat/messages', {
+        recipient_id: selectedPartner,
+        content: newMessage,
       });
       setNewMessage('');
       loadMessages(selectedPartner);
       loadConversations();
     } catch (error: any) {
-      toast.error(error.message || 'Nepodařilo se odeslat zprávu');
+      toast.error(t('chat.errors.sendMessage'));
     } finally {
       setSending(false);
     }
@@ -118,8 +154,50 @@ export default function ChatPage() {
     <div className="flex h-[calc(100vh-64px)]">
       {/* Conversations List */}
       <div className="w-80 border-r bg-card">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Zprávy</h2>
+        <div className="p-4 border-b flex items-center justify-between">
+          <h2 className="text-lg font-semibold">{t('chat.title')}</h2>
+          <Dialog open={newConvDialogOpen} onOpenChange={setNewConvDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="icon" variant="ghost" onClick={openNewConvDialog}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{t('chat.newConversation')}</DialogTitle>
+              </DialogHeader>
+              <div className="max-h-[400px] overflow-y-auto">
+                {usersLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : orgUsers.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">{t('chat.noUsersInOrg')}</p>
+                ) : (
+                  <div className="divide-y">
+                    {orgUsers.map((user) => (
+                      <button
+                        key={user.id}
+                        onClick={() => startConversation(user)}
+                        className="w-full p-3 text-left hover:bg-muted flex items-center gap-3"
+                      >
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
+                          ) : (
+                            <User className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium">{user.full_name || user.name}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
         <div className="h-[calc(100vh-130px)] overflow-y-auto">
           {loading ? (
@@ -129,7 +207,7 @@ export default function ChatPage() {
           ) : conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
               <MessageSquare className="h-8 w-8 mb-2" />
-              <p className="text-sm">Žádné konverzace</p>
+              <p className="text-sm">{t('chat.noConversations')}</p>
             </div>
           ) : (
             <div className="divide-y">
@@ -178,7 +256,10 @@ export default function ChatPage() {
             {/* Header */}
             <div className="p-4 border-b bg-card">
               <h3 className="font-semibold">
-                {conversations.find(c => c.partner_id === selectedPartner)?.partner_name}
+                {conversations.find(c => c.partner_id === selectedPartner)?.partner_name || 
+                 orgUsers.find(u => u.id === selectedPartner)?.full_name || 
+                 orgUsers.find(u => u.id === selectedPartner)?.name || 
+                 'Nová konverzace'}
               </h3>
             </div>
 
@@ -191,7 +272,7 @@ export default function ChatPage() {
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                   <MessageSquare className="h-8 w-8 mb-2" />
-                  <p className="text-sm">Žádné zprávy</p>
+                  <p className="text-sm">{t('chat.noMessages')}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -234,7 +315,7 @@ export default function ChatPage() {
                 <Input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Napište zprávu..."
+                  placeholder={t('chat.typeMessage')}
                   disabled={sending}
                 />
                 <Button type="submit" disabled={sending || !newMessage.trim()}>
@@ -250,7 +331,7 @@ export default function ChatPage() {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
             <MessageSquare className="h-12 w-12 mb-4" />
-            <p>Vyberte konverzaci</p>
+            <p>{t('chat.selectConversation')}</p>
           </div>
         )}
       </div>

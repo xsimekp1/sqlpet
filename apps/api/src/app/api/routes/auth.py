@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.api.dependencies.db import get_db
-from src.app.api.dependencies.auth import get_current_user
+from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
 from src.app.core.config import settings
 from src.app.core.security import (
     create_access_token,
@@ -182,3 +182,53 @@ async def select_organization(
 @router.post("/logout")
 async def logout(current_user: User = Depends(get_current_user)):
     return {"message": "Logged out successfully"}
+
+
+@router.get("/permissions")
+async def get_my_permissions(
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get permissions for the current user in the current organization."""
+    from sqlalchemy import select
+    from src.app.models.membership import Membership, MembershipStatus
+    from src.app.models.role_permission import RolePermission
+    from src.app.models.permission import Permission
+
+    # Get user's membership in this org
+    result = await db.execute(
+        select(Membership).where(
+            Membership.user_id == current_user.id,
+            Membership.organization_id == organization_id,
+            Membership.status == MembershipStatus.ACTIVE,
+        )
+    )
+    membership = result.scalar_one_or_none()
+
+    permissions: list[str] = []
+    if membership and membership.role_id:
+        # Get permissions for the role
+        perm_result = await db.execute(
+            select(RolePermission).where(
+                RolePermission.role_id == membership.role_id,
+                RolePermission.allowed == True,
+            )
+        )
+        role_perms = perm_result.scalars().all()
+
+        # Get permission keys
+        for rp in role_perms:
+            key_result = await db.execute(
+                select(Permission.key).where(Permission.id == rp.permission_id)
+            )
+            key = key_result.scalar_one_or_none()
+            if key:
+                permissions.append(key)
+
+    # Superadmins get all permissions
+    if current_user.is_superadmin:
+        all_perms_result = await db.execute(select(Permission.key))
+        permissions = [p.key for p in all_perms_result.scalars().all()]
+
+    return {"permissions": permissions}
