@@ -86,6 +86,40 @@ cd apps/api
 railway run alembic current
 ```
 
+### Scripts (apps/api/scripts/)
+
+**CRITICAL: When writing new scripts, always use `DATABASE_URL_ASYNC` NOT `DATABASE_URL`!**
+
+```python
+# Wrong - will fail on Railway
+database_url = settings.DATABASE_URL
+
+# Correct - works on Railway
+database_url = settings.DATABASE_URL_ASYNC
+```
+
+Other scripts use this pattern:
+- `sync_tables.py`
+- `create_missing_tables.py`
+- `generate_thumbnails.py`
+- `seed_breeds_simple.py`
+- `seed_breeds_from_images.py`
+- `import_default_images.py`
+- `import_default_images_local.py`
+- `backfill_default_images.py` ← example of correct usage
+
+Run scripts locally:
+```
+cd apps/api
+python scripts/script_name.py
+```
+
+Run scripts on Railway:
+```
+cd apps/api
+railway run python scripts/script_name.py
+```
+
 ## CLI Tools & Deployment Debugging
 
 ### Railway CLI Setup
