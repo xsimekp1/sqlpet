@@ -187,10 +187,6 @@ async def get_today_walks(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-    import logging
-
-    logging.warning("WALKS_DIRECT_START")
-
     today = datetime.now(timezone.utc).date()
     start_of_day = datetime.combine(today, datetime.min.time())
     end_of_day = datetime.combine(today, datetime.max.time())
@@ -204,14 +200,10 @@ async def get_today_walks(
     result = await db.execute(q.order_by(WalkLog.started_at.desc()))
     walks = result.scalars().all()
 
-    logging.warning(f"WALKS_DIRECT_FOUND: {len(walks)}")
-
     items = []
     for w in walks:
         item = await _to_response_with_animals(w, db)
         items.append(item)
-
-    logging.warning(f"WALKS_DIRECT_RETURNING: {len(items)}")
 
     def _convert_animal_ids(ids):
         if ids is None:
@@ -246,7 +238,6 @@ async def get_today_walks(
         "page_size": 100,
     }
 
-    logging.warning(f"WALKS_DIRECT_DONE")
     return JSONResponse(content=result)
 
 

@@ -13,7 +13,11 @@ from pydantic import BaseModel
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.api.dependencies.auth import get_current_user, require_permission
+from src.app.api.dependencies.auth import (
+    get_current_user,
+    require_permission,
+    get_current_organization_id,
+)
 from src.app.api.dependencies.db import get_db
 from src.app.models.api_metric import ApiMetric
 from src.app.models.user import User
@@ -47,7 +51,7 @@ async def get_metrics_summary(
     hours: int = Query(24, ge=1, le=168),
     limit: int = Query(20, ge=1, le=100),
     current_user: User = Depends(require_permission("metrics.read")),
-    organization_id: uuid.UUID = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
     """Get performance metrics summary for the organization."""
@@ -137,7 +141,7 @@ async def get_metrics_summary(
 async def get_recent_metrics(
     limit: int = Query(50, ge=1, le=200),
     current_user: User = Depends(require_permission("metrics.read")),
-    organization_id: uuid.UUID = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
     """Get recent API requests."""
