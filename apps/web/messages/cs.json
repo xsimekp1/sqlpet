@@ -1289,6 +1289,31 @@
     "plannedPerson": "Plánovaný adoptér/pěstoun",
     "funding": "Způsob financování"
   },
+  "hotel": {
+    "title": "Hotelové rezervace",
+    "new": "Nová rezervace",
+    "selectKennel": "Vyberte kotec",
+    "selectContact": "Vyberte kontakt",
+    "animalName": "Jméno zvířete",
+    "species": "Druh",
+    "breed": "Plemeno",
+    "from": "Od",
+    "to": "Do",
+    "pricePerDay": "Cena za den",
+    "totalPrice": "Celková cena",
+    "checkAvailability": "Zkontrolovat dostavnost",
+    "available": "Kotec je dostupný",
+    "notAvailable": "Kotec není dostupný",
+    "requiresSingleCage": "Požadavek na samostatný kotec",
+    "checkin": "Check-in",
+    "cancel": "Zrušit",
+    "status": {
+      "pending": "Čeká na potvrzení",
+      "confirmed": "Potvrzeno",
+      "cancelled": "Zrušeno",
+      "completed": "Dokončeno"
+    }
+  },
   "shortcuts": {
     "title": "Klávesové zkratky",
     "description": "Přizpůsobte si klávesové zkratky pro rychlou navigaci",
