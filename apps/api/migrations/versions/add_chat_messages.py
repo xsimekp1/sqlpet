@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = "add_chat_messages"
-down_revision = "b30506086829"
+down_revision = "add_hotel_with_owner"
 branch_labels = None
 depends_on = None
 
