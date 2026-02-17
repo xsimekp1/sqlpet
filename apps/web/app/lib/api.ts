@@ -110,10 +110,12 @@ export interface Animal {
   current_intake_date: string | null;
   status: 'intake' | 'available' | 'reserved' | 'adopted' | 'fostered' | 'returned' | 'deceased' | 'transferred' | 'hold' | 'quarantine' | 'returned_to_owner' | 'euthanized' | 'escaped';
   primary_photo_url: string | null;
+  thumbnail_url: string | null;
   default_image_url: string | null;
   current_kennel_id: string | null;
   current_kennel_name: string | null;
   current_kennel_code: string | null;
+  last_walked_at: string | null;
   is_dewormed: boolean;
   is_aggressive: boolean;
   is_pregnant: boolean;
@@ -798,6 +800,23 @@ class ApiClient {
     }
   }
 
+  static async markAnimalWalked(id: string): Promise<Animal> {
+    try {
+      const response = await axios.patch<Animal>(
+        `${API_URL}/animals/${id}/walked`,
+        {},
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to mark animal as walked');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
   // ========================================
   // WALKS
   // ========================================
@@ -1302,7 +1321,7 @@ class ApiClient {
 
 // Search types
 export interface SearchResults {
-  animals: { id: string; name: string; public_code: string; status: string; species: string; primary_photo_url: string | null }[];
+  animals: { id: string; name: string; public_code: string; status: string; species: string; primary_photo_url: string | null; thumbnail_url: string | null }[];
   kennels: { id: string; code: string; name: string; status: string; zone_name: string | null }[];
   contacts: { id: string; name: string; email: string | null }[];
   inventory: { id: string; name: string; category: string; unit: string | null }[];

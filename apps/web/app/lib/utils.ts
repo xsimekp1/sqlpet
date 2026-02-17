@@ -1,6 +1,9 @@
 import { Animal } from './api';
 
 export function getAnimalImageUrl(animal: Animal): string {
+  if (animal.thumbnail_url) {
+    return animal.thumbnail_url;
+  }
   if (animal.primary_photo_url) {
     return animal.primary_photo_url;
   }

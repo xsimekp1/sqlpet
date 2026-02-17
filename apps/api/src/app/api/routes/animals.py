@@ -13,6 +13,7 @@ from src.app.api.dependencies.auth import (
 )
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Animal, Species
+from src.app.models.animal_event import AnimalEvent, AnimalEventType
 from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.models.animal_weight_log import AnimalWeightLog
 from src.app.models.animal_bcs_log import AnimalBCSLog
@@ -104,6 +105,13 @@ async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
                 resp.current_intake_date = intake_row[0]
     except Exception:
         pass  # savepoint rolled back; outer transaction continues
+
+    # Generate thumbnail URL from primary_photo_url
+    if animal.primary_photo_url:
+        resp.thumbnail_url = animal.primary_photo_url.replace(
+            "/animal-photos/", "/animal-thumbnails/"
+        )
+
     return resp
 
 
@@ -733,3 +741,44 @@ async def get_breed_color_images(
     )
     rows = result.fetchall()
     return [BreedColorImageResponse(color=row[0], image_url=row[1]) for row in rows]
+
+
+@router.patch("/{animal_id}/walked", response_model=AnimalResponse)
+async def mark_animal_walked(
+    animal_id: uuid.UUID,
+    current_user: User = Depends(require_permission("tasks.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Mark an animal as walked (sets last_walked_at timestamp and creates event)."""
+    result = await db.execute(
+        select(Animal).where(
+            Animal.id == animal_id,
+            Animal.organization_id == organization_id,
+        )
+    )
+    animal = result.scalar_one_or_none()
+    if not animal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
+        )
+
+    now = datetime.utcnow()
+    animal.last_walked_at = now
+
+    event = AnimalEvent(
+        id=uuid.uuid4(),
+        organization_id=organization_id,
+        animal_id=animal_id,
+        event_type=AnimalEventType.WALK,
+        occurred_at=now,
+        title="Venčení",
+        description="Zvíře bylo venčeno",
+        related_user_id=current_user.id,
+    )
+    db.add(event)
+
+    await db.commit()
+    await db.refresh(animal)
+
+    return await _build_animal_response(animal, db)

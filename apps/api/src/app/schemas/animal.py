@@ -160,10 +160,12 @@ class AnimalResponse(BaseModel):
     behavior_notes: str | None = None
     is_special_needs: bool = False
     primary_photo_url: str | None = None
+    thumbnail_url: str | None = None
     default_image_url: str | None = None
     current_kennel_id: str | None = None
     current_kennel_name: str | None = None
     current_kennel_code: str | None = None
+    last_walked_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
     breeds: list[AnimalBreedResponse] = []
