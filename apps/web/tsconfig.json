@@ -20,6 +20,9 @@
       }
     ],
     "paths": {
+      "@/lib/*": ["./app/lib/*"],
+      "@/app/*": ["./app/*"],
+      "@/components/*": ["./components/*"],
       "@/*": ["./*"]
     }
   },
