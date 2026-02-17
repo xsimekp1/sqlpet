@@ -72,6 +72,7 @@ async def lifespan(app: FastAPI):
                 print("✓ Database tables synced")
             else:
                 print(f"✗ Table sync failed: {result.stderr}")
+                print(f"  Stdout: {result.stdout}")
     except Exception as e:
         print(f"✗ Table sync error: {e}")
 
