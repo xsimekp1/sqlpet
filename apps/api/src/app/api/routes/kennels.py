@@ -23,6 +23,60 @@ from src.app.schemas.kennel import KennelCreate
 
 router = APIRouter(prefix="/kennels", tags=["kennels"])
 
+# Public endpoints (no auth required)
+public_router = APIRouter(prefix="/public/kennels", tags=["public-kennels"])
+
+
+@public_router.get("/{kennel_id}")
+async def get_public_kennel(
+    kennel_id: str,
+    session: AsyncSession = Depends(get_db),
+):
+    """Get public kennel details with animals (no auth required)."""
+    # First get organization_id from kennel
+    org_query = text("""
+        SELECT k.organization_id, k.code, k.name, k.type::text AS type,
+               k.size_category::text AS size_category, k.capacity,
+               z.name AS zone_name,
+               COUNT(ks.id) FILTER (WHERE ks.end_at IS NULL) AS occupied_count,
+               COALESCE(
+                 json_agg(
+                   json_build_object(
+                     'id', a.id::text,
+                     'name', a.name,
+                     'species', a.species::text,
+                     'public_code', a.public_code,
+                     'photo_url', a.primary_photo_url,
+                     'status', a.status::text,
+                     'start_at', ks.start_at
+                   ) ORDER BY ks.start_at
+                 ) FILTER (WHERE ks.end_at IS NULL AND a.id IS NOT NULL),
+                 '[]'::json
+               ) AS animals
+        FROM kennels k
+        LEFT JOIN zones z ON z.id = k.zone_id
+        LEFT JOIN kennel_stays ks ON ks.kennel_id = k.id
+        LEFT JOIN animals a ON a.id = ks.animal_id AND a.deleted_at IS NULL
+        WHERE k.id = :kennel_id AND k.deleted_at IS NULL
+        GROUP BY k.id, k.code, k.name, k.type, k.size_category, k.capacity, z.name
+    """)
+    result = await session.execute(org_query, {"kennel_id": kennel_id})
+    row = result.first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Kennel not found")
+
+    return {
+        "id": str(kennel_id),
+        "code": row.code,
+        "name": row.name,
+        "type": row.type,
+        "size_category": row.size_category,
+        "capacity": row.capacity,
+        "zone_name": row.zone_name,
+        "occupied_count": row.occupied_count,
+        "animals": row.animals if row.animals else [],
+    }
+
 
 @router.get("/zones")
 async def list_zones(
@@ -130,13 +184,18 @@ async def list_kennels(
                 "allowed_species": row.allowed_species,
                 "notes": row.notes,
                 "alerts": _calculate_alerts_from_data(
-                    row.status or "available", row.type or "indoor", occupied, row.capacity or 1
+                    row.status or "available",
+                    row.type or "indoor",
+                    occupied,
+                    row.capacity or 1,
                 ),
                 "map_x": row.map_x or 0,
                 "map_y": row.map_y or 0,
                 "map_w": row.map_w or 160,
                 "map_h": row.map_h or 120,
-                "last_cleaned_at": row.last_cleaned_at.isoformat() if row.last_cleaned_at else None,
+                "last_cleaned_at": row.last_cleaned_at.isoformat()
+                if row.last_cleaned_at
+                else None,
                 "dimensions": row.dimensions,
             }
             kennels.append(kennel_dict)
@@ -245,7 +304,9 @@ def _calculate_alerts(kennel: Kennel, occupied_count: int) -> List[str]:
     return alerts
 
 
-def _calculate_alerts_from_data(status: str, type: str, occupied_count: int, capacity: int) -> List[str]:
+def _calculate_alerts_from_data(
+    status: str, type: str, occupied_count: int, capacity: int
+) -> List[str]:
     """Calculate alerts from raw string data (used in raw SQL responses)"""
     alerts = []
     if occupied_count > capacity:
@@ -351,7 +412,10 @@ async def get_kennel(
             "allowed_species": row.allowed_species,
             "dimensions": row.dimensions,
             "alerts": _calculate_alerts_from_data(
-                row.status or "available", row.type or "indoor", occupied, row.capacity or 1
+                row.status or "available",
+                row.type or "indoor",
+                occupied,
+                row.capacity or 1,
             ),
             "notes": row.notes,
             "map_x": row.map_x or 0,
@@ -360,12 +424,15 @@ async def get_kennel(
             "map_h": row.map_h or 120,
             "map_rotation": row.map_rotation,
             "map_meta": row.map_meta,
-            "last_cleaned_at": row.last_cleaned_at.isoformat() if row.last_cleaned_at else None,
+            "last_cleaned_at": row.last_cleaned_at.isoformat()
+            if row.last_cleaned_at
+            else None,
         }
     except HTTPException:
         raise
     except Exception as e:
         import traceback
+
         print(f"ERROR in get_kennel endpoint: {e}")
         print(f"ERROR traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -464,9 +531,15 @@ async def update_kennel(
         "name": kennel.name,
         "zone_id": str(kennel.zone_id) if kennel.zone_id else None,
         "zone_name": zone_name,
-        "status": str(kennel.status.value) if hasattr(kennel.status, 'value') else str(kennel.status),
-        "type": str(kennel.type.value) if hasattr(kennel.type, 'value') else str(kennel.type),
-        "size_category": str(kennel.size_category.value) if hasattr(kennel.size_category, 'value') else str(kennel.size_category),
+        "status": str(kennel.status.value)
+        if hasattr(kennel.status, "value")
+        else str(kennel.status),
+        "type": str(kennel.type.value)
+        if hasattr(kennel.type, "value")
+        else str(kennel.type),
+        "size_category": str(kennel.size_category.value)
+        if hasattr(kennel.size_category, "value")
+        else str(kennel.size_category),
         "capacity": kennel.capacity,
         "allowed_species": kennel.allowed_species,
         "notes": kennel.notes,
@@ -474,8 +547,12 @@ async def update_kennel(
         "occupied_count": occupied,
         "animals_preview": [],
         "alerts": _calculate_alerts_from_data(
-            str(kennel.status.value) if hasattr(kennel.status, 'value') else str(kennel.status),
-            str(kennel.type.value) if hasattr(kennel.type, 'value') else str(kennel.type),
+            str(kennel.status.value)
+            if hasattr(kennel.status, "value")
+            else str(kennel.status),
+            str(kennel.type.value)
+            if hasattr(kennel.type, "value")
+            else str(kennel.type),
             occupied,
             kennel.capacity or 1,
         ),
@@ -557,6 +634,7 @@ async def get_kennel_stays(
         ]
     except Exception as e:
         import traceback
+
         print(f"ERROR in get_kennel_stays: {e}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

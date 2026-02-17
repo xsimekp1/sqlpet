@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
   ArrowLeft, Copy, Trash2, Loader2, MapPin, CheckCircle2, AlertTriangle,
-  Pencil, Check, X, Plus,
+  Pencil, Check, X, Plus, QrCode,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -26,10 +26,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import ApiClient, { Kennel, KennelStay, Task } from '@/app/lib/api';
 import { KennelTaskDialog } from '@/app/components/kennels/KennelTaskDialog';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import QRCode from 'react-qr-code';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -137,6 +144,7 @@ export default function KennelDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [copying, setCopying] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!kennelId) return;
@@ -428,6 +436,10 @@ export default function KennelDetailPage() {
           <Button size="sm" onClick={() => setTaskDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-1" />
             {t('detail.addTask')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)}>
+            <QrCode className="h-4 w-4 mr-1" />
+            QR kód
           </Button>
           <Button variant="outline" size="sm" onClick={handleCopy} disabled={copying}>
             {copying ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Copy className="h-4 w-4 mr-1" />}
@@ -879,6 +891,54 @@ export default function KennelDetailPage() {
         kennelId={kennelId}
         onCreated={task => setTasks(prev => [task, ...prev])}
       />
+
+      {/* QR Code Dialog */}
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>QR kód pro kotec</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            {kennel && (
+              <>
+                <div className="bg-white p-4 rounded-lg border">
+                  <QRCode
+                    value={`https://sqlpet.vercel.app/cs/public/kennels/${kennelId}`}
+                    size={200}
+                    level="M"
+                  />
+                </div>
+                <p className="text-center text-sm text-muted-foreground">
+                  Naskenujte QR kód pro rychlý přístup k informacím o zvířatech v tomto kotci.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const svg = document.querySelector('svg');
+                    if (!svg) return;
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.onload = () => {
+                      canvas.width = 200;
+                      canvas.height = 200;
+                      ctx?.drawImage(img, 0, 0);
+                      const link = document.createElement('a');
+                      link.download = `kennel-${kennel.code}-qr.png`;
+                      link.href = canvas.toDataURL('image/png');
+                      link.click();
+                    };
+                    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                  }}
+                >
+                  Stáhnout PNG
+                </Button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

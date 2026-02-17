@@ -222,8 +222,8 @@ async def get_upcoming_outcomes(
         query,
         {
             "org_id": str(organization_id),
-            "today": today.isoformat(),
-            "future_date": future_date.isoformat(),
+            "today": today,
+            "future_date": future_date,
         },
     )
     rows = result.fetchall()
