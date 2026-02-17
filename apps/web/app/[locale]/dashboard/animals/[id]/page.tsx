@@ -202,7 +202,7 @@ export default function AnimalDetailPage() {
     setUploadingPhoto(true);
     try {
       const result = await ApiClient.uploadAnimalPhoto(animal.id, file);
-      setAnimal(prev => prev ? { ...prev, primary_photo_url: result.file_url } : prev);
+      setAnimal(prev => prev ? { ...prev, primary_photo_url: result.thumbnail_url || result.file_url } : prev);
       toast.success('Fotka nahrána');
     } catch (err: any) {
       toast.error('Nepodařilo se nahrát fotku: ' + (err.message || ''));
@@ -1332,7 +1332,7 @@ setWeightLogs(wLogs);
                       <div className="flex items-start gap-3">
                         {doc.mime_type?.startsWith('image/') ? (
                           <div className="w-16 h-16 rounded bg-muted overflow-hidden shrink-0">
-                            <img src={doc.file_url} alt={doc.original_filename} className="w-full h-full object-cover" />
+                            <img src={doc.thumbnail_url || doc.file_url} alt={doc.original_filename} className="w-full h-full object-cover" />
                           </div>
                         ) : (
                           <div className="w-16 h-16 rounded bg-muted flex items-center justify-center shrink-0">

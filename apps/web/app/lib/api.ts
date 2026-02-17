@@ -1218,10 +1218,10 @@ class ApiClient {
     return this.get('/incidents', params);
   }
 
-  static async uploadAnimalPhoto(animalId: string, file: File): Promise<{ file_url: string }> {
+  static async uploadAnimalPhoto(animalId: string, file: File): Promise<{ file_url: string; thumbnail_url: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await axios.post<{ file_url: string }>(
+    const response = await axios.post<{ file_url: string; thumbnail_url: string }>(
       `${API_URL}/files/animal/${animalId}/upload-primary-photo`,
       formData,
       { headers: { ...this.getAuthHeaders() } }

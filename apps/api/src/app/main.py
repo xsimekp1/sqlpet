@@ -74,6 +74,15 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"✗ Failed to seed data: {e}")
 
+    # Ensure Supabase storage buckets exist
+    try:
+        from src.app.services.supabase_storage_service import supabase_storage_service
+
+        supabase_storage_service.ensure_buckets_exist()
+        print("✓ Storage buckets ensured")
+    except Exception as e:
+        print(f"✗ Failed to ensure buckets: {e}")
+
     yield
     await async_engine.dispose()
 

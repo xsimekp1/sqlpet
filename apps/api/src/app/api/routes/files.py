@@ -201,13 +201,15 @@ async def upload_primary_animal_photo(
         is_public=True,  # Animal photos are public
     )
 
-    # Upload to Supabase
+    # Upload to Supabase with thumbnail
     from io import BytesIO
 
-    file_stream = BytesIO(file_content)
-
-    file_url, storage_path = await supabase_storage_service.upload_file(
-        file_content=file_stream,
+    (
+        file_url,
+        storage_path,
+        thumbnail_url,
+    ) = await supabase_storage_service.upload_file_with_thumbnail(
+        file_content=file_content,
         filename=file.filename or "unknown",
         content_type=content_type,
         organization_id=str(animal.organization_id),
@@ -253,13 +255,15 @@ async def upload_primary_animal_photo(
     db.add(entity_file)
 
     # Update animal's primary_photo_url for backwards compatibility
-    animal.primary_photo_url = file_url
+    # Use thumbnail for better performance, fall back to full image
+    animal.primary_photo_url = thumbnail_url or file_url
 
     await db.commit()
 
     return {
         "message": "Primary photo uploaded successfully",
         "file_url": file_url,
+        "thumbnail_url": thumbnail_url,
         "storage_path": storage_path,
     }
 
@@ -338,6 +342,7 @@ async def upload_organization_logo(
 class AnimalDocumentResponse(BaseModel):
     id: str
     file_url: str
+    thumbnail_url: Optional[str] = None
     original_filename: str
     mime_type: str
     size_bytes: int
@@ -384,6 +389,11 @@ async def get_animal_documents(
         AnimalDocumentResponse(
             id=str(ef.file_id),
             file_url=await supabase_storage_service.get_public_url(f.storage_path),
+            thumbnail_url=await supabase_storage_service.get_public_url(
+                f.storage_path, bucket=supabase_storage_service.thumbnails_bucket
+            )
+            if f.mime_type and f.mime_type.startswith("image/")
+            else None,
             original_filename=f.original_filename,
             mime_type=f.mime_type,
             size_bytes=f.size_bytes,
@@ -426,8 +436,12 @@ async def upload_animal_document(
 
     file_stream = BytesIO(file_content)
 
-    file_url, storage_path = await supabase_storage_service.upload_file(
-        file_content=file_stream,
+    (
+        file_url,
+        storage_path,
+        thumbnail_url,
+    ) = await supabase_storage_service.upload_file_with_thumbnail(
+        file_content=file_content,
         filename=file.filename or "document",
         content_type=content_type,
         organization_id=str(organization_id),
@@ -462,6 +476,7 @@ async def upload_animal_document(
     return AnimalDocumentResponse(
         id=str(db_file.id),
         file_url=file_url,
+        thumbnail_url=thumbnail_url,
         original_filename=db_file.original_filename,
         mime_type=db_file.mime_type,
         size_bytes=db_file.size_bytes,

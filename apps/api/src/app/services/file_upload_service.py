@@ -42,10 +42,16 @@ class FileUploadService:
         try:
             if magic:
                 mime_type = magic.from_buffer(file_content, mime=True)
-                return mime_type
+                if mime_type:
+                    return mime_type
         except Exception:
-            # Fallback to content-type header
-            return getattr(file, "content_type", "application/octet-stream")
+            pass
+
+        # Fallback to content-type header
+        return (
+            getattr(file, "content_type", "application/octet-stream")
+            or "application/octet-stream"
+        )
 
     @staticmethod
     async def process_upload(
