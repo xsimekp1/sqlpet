@@ -295,7 +295,8 @@
     },
     "view": {
       "table": "Tabulka",
-      "grid": "Karty"
+      "grid": "Karty",
+      "timeline": "Časová osa"
     },
     "occupancy": {
       "empty": "Prázdný",

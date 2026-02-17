@@ -294,7 +294,8 @@
     "noSpeciesRestriction": "Not specified — suitable for all animals",
     "view": {
       "table": "Table",
-      "grid": "Grid"
+      "grid": "Grid",
+      "timeline": "Timeline"
     },
     "occupancy": {
       "empty": "Empty",

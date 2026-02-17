@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import {
   Plus, Search, Loader2, Grid, Table, Settings,
   Footprints, MoreHorizontal, Users, Edit,
-  ArrowRight, Map, Accessibility
+  ArrowRight, Map, Accessibility, Calendar
 } from 'lucide-react';
 import {
   DndContext,
@@ -45,6 +45,8 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { AddKennelDialog } from '@/app/components/kennels/AddKennelDialog';
 import KennelMapView from '@/app/components/kennels/KennelMapView';
+import KennelTimeline from '@/app/components/kennels/KennelTimeline';
+
 
 
 interface FilterState {
@@ -319,7 +321,7 @@ export default function KennelsPage() {
   const [kennels, setKennels] = useState<Kennel[]>([]);
   const [allAnimals, setAllAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'table' | 'grid' | 'map'>('grid');
+  const [view, setView] = useState<'table' | 'grid' | 'map' | 'timeline'>('grid');
   const [activeAnimal, setActiveAnimal] = useState<Animal | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -565,6 +567,14 @@ export default function KennelsPage() {
             >
               <Map className="h-4 w-4" />
             </Button>
+            <Button
+              variant={view === 'timeline' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none border-0"
+              onClick={() => setView('timeline')}
+            >
+              <Calendar className="h-4 w-4" />
+            </Button>
           </div>
           <TooltipProvider>
             <Tooltip>
@@ -652,6 +662,11 @@ export default function KennelsPage() {
           allAnimals={allAnimals}
           onPositionSaved={() => fetchData(true)}
         />
+      )}
+
+      {/* Timeline View */}
+      {view === 'timeline' && (
+        <KennelTimeline />
       )}
 
       {/* Grid View with DnD */}
