@@ -1,4 +1,10 @@
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 import { Animal } from './api';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export function getAnimalImageUrl(animal: Animal): string {
   if (animal.thumbnail_url) {
