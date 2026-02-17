@@ -443,7 +443,6 @@ const getPriorityColor = (priority: string) => {
               <div className="space-y-2">
                 <Label>Šarže (volitelné)</Label>
                 <Select 
-                  value={selectedLotId} 
                   value={selectedLotId || undefined}
                   onValueChange={(v) => setSelectedLotId(v === 'none' ? '' : v)}
                   disabled={!vaccineType || loadingLots || availableLots.length === 0}
