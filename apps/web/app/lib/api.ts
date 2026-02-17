@@ -746,7 +746,7 @@ class ApiClient {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch timeline');
+        throw new Error(error.response?.data?.detail || 'Failed to fetch timeline');
       }
       throw new Error('An unexpected error occurred');
     }
