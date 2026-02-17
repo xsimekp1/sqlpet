@@ -53,6 +53,16 @@ async def lifespan(app: FastAPI):
         import asyncio
 
         alembic_cfg = Config("alembic.ini")
+
+        # Stamp DB to current head (fix stale migration references)
+        try:
+            await asyncio.to_thread(
+                alembic_command.stamp, alembic_cfg, "add_kennel_map_layout"
+            )
+            print("✓ Database stamped to current revision")
+        except Exception as stamp_err:
+            print(f"Stamp warning: {stamp_err}")
+
         await asyncio.to_thread(alembic_command.upgrade, alembic_cfg, "head")
         print("✓ Database migrations applied")
     except Exception as e:
