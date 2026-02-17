@@ -80,8 +80,6 @@ async def get_current_user(
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-            detail=f"Token decode error: {str(e)}",
-        )
 
     if payload.get("typ") != "access":
         raise HTTPException(
