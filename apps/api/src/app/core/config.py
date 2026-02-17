@@ -38,6 +38,14 @@ class Settings(BaseSettings):
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ]
 
+    # Performance Monitoring Settings
+    PERF_ENABLED: bool = False
+    PERF_SLOW_THRESHOLD_MS: int = 200
+    PERF_VERY_SLOW_THRESHOLD_MS: int = 800
+    PERF_LOG_SQL: bool = False
+    PERF_LOG_TOP_N: int = 5
+    PERF_COLORED_LOGS: bool = True
+
     @property
     def max_file_size_bytes(self) -> int:
         return self.MAX_FILE_SIZE_MB * 1024 * 1024

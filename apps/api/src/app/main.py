@@ -39,6 +39,7 @@ from src.app.api.routes.chat import router as chat_router
 # Files router is now working properly after fixing import issues
 
 from src.app.db.session import async_engine
+from src.app.core.config import settings
 
 
 @asynccontextmanager
@@ -82,6 +83,14 @@ async def lifespan(app: FastAPI):
         print("✓ Storage buckets ensured")
     except Exception as e:
         print(f"✗ Failed to ensure buckets: {e}")
+
+    # Setup performance monitoring if enabled
+    if settings.PERF_ENABLED:
+        print("✓ Performance monitoring enabled")
+        if async_engine.sync_engine:
+            from src.app.perf.sql import setup_sql_listeners
+
+            setup_sql_listeners(async_engine.sync_engine)
 
     yield
     await async_engine.dispose()
@@ -146,6 +155,12 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+# Add performance middleware if enabled
+if settings.PERF_ENABLED:
+    from src.app.perf.middleware import PerfMiddleware
+
+    app.add_middleware(PerfMiddleware)
 
 
 @app.middleware("http")

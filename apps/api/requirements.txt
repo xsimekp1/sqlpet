@@ -23,3 +23,6 @@ python-multipart
 aiofiles
 Pillow
 python-magic
+
+# Performance monitoring
+colorama
