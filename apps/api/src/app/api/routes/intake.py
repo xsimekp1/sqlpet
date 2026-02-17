@@ -23,8 +23,9 @@ router = APIRouter(prefix="/intakes", tags=["intakes"])
 
 
 class IntakeCreate(BaseModel):
-    animal_id: str
+    animal_id: Optional[str] = None  # Optional for hotel intakes
     reason: IntakeReason
+    kennel_id: Optional[str] = None  # For hotel intakes
     intake_date: date
     finder_person_id: Optional[str] = None
     finder_notes: Optional[str] = None
@@ -33,6 +34,13 @@ class IntakeCreate(BaseModel):
     funding_source: Optional[str] = None
     funding_notes: Optional[str] = None
     notes: Optional[str] = None
+
+    @field_validator("animal_id")
+    @classmethod
+    def validate_animal_id_for_non_hotel(cls, v, info):
+        if info.data.get("reason") != IntakeReason.HOTEL and not v:
+            raise ValueError("animal_id is required for non-hotel intakes")
+        return v
 
     @field_validator("planned_end_date", mode="before")
     @classmethod
@@ -78,9 +86,10 @@ class IntakeUpdate(BaseModel):
 class IntakeResponse(BaseModel):
     id: str
     organization_id: str
-    animal_id: str
+    animal_id: Optional[str] = None
     animal_name: Optional[str] = None
     animal_species: Optional[str] = None
+    kennel_id: Optional[str] = None
     reason: str
     intake_date: date
     finder_person_id: Optional[str] = None
@@ -101,9 +110,10 @@ def _to_response(i: Intake, animal=None) -> IntakeResponse:
     return IntakeResponse(
         id=str(i.id),
         organization_id=str(i.organization_id),
-        animal_id=str(i.animal_id),
+        animal_id=str(i.animal_id) if i.animal_id else None,
         animal_name=animal.name if animal else None,
         animal_species=animal.species if animal else None,
+        kennel_id=str(i.kennel_id) if i.kennel_id else None,
         reason=i.reason.value if isinstance(i.reason, IntakeReason) else str(i.reason),
         intake_date=i.intake_date,
         finder_person_id=str(i.finder_person_id) if i.finder_person_id else None,
@@ -176,31 +186,41 @@ async def create_intake(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new intake record."""
-    try:
-        animal_uuid = uuid.UUID(data.animal_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid animal_id")
+    animal_uuid = None
+    if data.animal_id:
+        try:
+            animal_uuid = uuid.UUID(data.animal_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid animal_id")
 
-    from src.app.models.animal import Animal as AnimalModel
+        from src.app.models.animal import Animal as AnimalModel
 
-    animal_result = await db.execute(
-        select(AnimalModel).where(
-            AnimalModel.id == animal_uuid,
-            AnimalModel.organization_id == organization_id,
+        animal_result = await db.execute(
+            select(AnimalModel).where(
+                AnimalModel.id == animal_uuid,
+                AnimalModel.organization_id == organization_id,
+            )
         )
-    )
-    animal = animal_result.scalar_one_or_none()
-    if not animal:
-        raise HTTPException(status_code=404, detail="Animal not found")
+        animal = animal_result.scalar_one_or_none()
+        if not animal:
+            raise HTTPException(status_code=404, detail="Animal not found")
 
-    if animal.status in (AnimalStatus.INTAKE, AnimalStatus.HOTEL):
-        raise HTTPException(
-            status_code=400, detail="Animal already has an active intake stay"
-        )
+        if animal.status in (AnimalStatus.INTAKE, AnimalStatus.HOTEL):
+            raise HTTPException(
+                status_code=400, detail="Animal already has an active intake stay"
+            )
+
+    kennel_uuid = None
+    if data.kennel_id:
+        try:
+            kennel_uuid = uuid.UUID(data.kennel_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid kennel_id")
 
     intake = Intake(
         organization_id=organization_id,
         animal_id=animal_uuid,
+        kennel_id=kennel_uuid,
         reason=data.reason,
         intake_date=data.intake_date,
         finder_person_id=uuid.UUID(data.finder_person_id)

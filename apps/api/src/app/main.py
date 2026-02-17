@@ -26,12 +26,14 @@ from src.app.api.routes.timezones import router as timezones_router
 from src.app.api.routes.admin import router as admin_router
 from src.app.api.routes.contacts import router as contacts_router
 from src.app.api.routes.intake import router as intake_router
+from src.app.api.routes.hotel_reservations import router as hotel_reservations_router
 from src.app.api.routes.search import router as search_router
 from src.app.api.routes.shortcuts import router as shortcuts_router
 from src.app.api.routes.incidents import router as incidents_router
 from src.app.api.routes.organization import router as organization_router
 from src.app.api.routes.finding import router as finding_router
 from src.app.api.routes.vaccinations import router as vaccinations_router
+from src.app.api.routes.walks import router as walks_router
 
 # Files router is now working properly after fixing import issues
 
@@ -209,9 +211,11 @@ app.include_router(timezones_router)
 app.include_router(admin_router)
 app.include_router(contacts_router)
 app.include_router(intake_router)
+app.include_router(hotel_reservations_router)
 app.include_router(search_router)
 app.include_router(shortcuts_router)
 app.include_router(incidents_router)
 app.include_router(organization_router)
 app.include_router(finding_router)
 app.include_router(vaccinations_router)
+app.include_router(walks_router)

@@ -29,10 +29,16 @@ class Intake(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         nullable=False,
         index=True,
     )
-    animal_id: Mapped[uuid.UUID] = mapped_column(
+    animal_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("animals.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,  # NULL for hotel stays without shelter animal
+        index=True,
+    )
+    kennel_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("kennels.id", ondelete="SET NULL"),
+        nullable=True,  # For hotel stays
         index=True,
     )
     reason: Mapped[IntakeReason] = mapped_column(
@@ -74,6 +80,7 @@ class Intake(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     # Relationships
     organization = relationship("Organization")
     animal = relationship("Animal")
+    kennel = relationship("Kennel")
     finder_person = relationship("Contact", foreign_keys=[finder_person_id])
     planned_person = relationship("Contact", foreign_keys=[planned_person_id])
     created_by = relationship("User")
