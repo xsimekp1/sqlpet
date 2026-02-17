@@ -1,7 +1,7 @@
-"""Initial schema - all tables already exist in DB
+"""Placeholder for initial_schema
 
 Revision ID: initial_schema
-Revises: 
+Revises: None
 Create Date: 2026-02-17
 
 """

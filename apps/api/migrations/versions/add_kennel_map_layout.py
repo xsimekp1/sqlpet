@@ -1,15 +1,14 @@
 """Placeholder for add_kennel_map_layout
 
 Revision ID: add_kennel_map_layout
-Revises: None
+Revises: 'initial_schema'
 Create Date: 2026-02-17
 
 """
-
 from alembic import op
 
-revision = "add_kennel_map_layout"
-down_revision = "initial_schema"
+revision = 'add_kennel_map_layout'
+down_revision = 'initial_schema'
 branch_labels = None
 depends_on = None
 
