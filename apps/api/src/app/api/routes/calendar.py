@@ -145,7 +145,7 @@ async def get_calendar_events(
                 i.animal_id::text,
                 a.name,
                 a.primary_photo_url
-            FROM incidents i
+            FROM animal_incidents i
             JOIN animals a ON a.id = i.animal_id
             WHERE i.organization_id = :org_id
               AND i.incident_type = 'escape'

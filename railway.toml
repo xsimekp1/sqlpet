@@ -4,3 +4,4 @@ buildCommand = "cd apps/api && pip install -r requirements.txt"
 
 [deploy]
 startCommand = "cd apps/api && uvicorn src.app.main:app --host 0.0.0.0 --port $PORT"
+releaseCommand = "cd apps/api && alembic upgrade head"

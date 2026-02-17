@@ -107,6 +107,31 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"✗ API metrics error: {e}")
 
+    # Check critical tables exist - fail fast with clear error
+    try:
+        from sqlalchemy import text, inspect
+        from src.app.db.session import async_engine
+
+        async def check_tables():
+            async with async_engine.connect() as conn:
+                inspector = inspect(conn.sync_connection)
+                tables = await conn.run_sync(lambda c: inspector.get_table_names())
+                table_names = set(tables)
+
+                required = ["animals", "kennels", "organizations", "animal_incidents"]
+                missing = [t for t in required if t not in table_names]
+                if missing:
+                    print(f"⚠️  WARNING: Missing tables: {missing}")
+                    print(f"   Run: alembic upgrade head")
+                else:
+                    print("✓ All required tables exist")
+
+        import asyncio
+
+        asyncio.run(check_tables())
+    except Exception as e:
+        print(f"⚠️  Table check error (non-fatal): {e}")
+
     # Seed permissions and role templates on startup
     try:
         from src.app.db.seed_data import (
@@ -169,48 +194,57 @@ async def track_request_metrics(request: Request, call_next):
         status_code = response.status_code
     except Exception as e:
         status_code = 500
-        raise e
+        raise e  # Re-raise the original exception - don't lose the error
     finally:
         duration_ms = int((time.time() - start_time) * 1000)
 
         # Log to console (for Railway logs)
         print(f"PERF: {method} {path} status={status_code} duration_ms={duration_ms}")
 
-        # Store in database asynchronously (with error handling to never crash request)
-        try:
-            from src.app.models.api_metric import ApiMetric
-            from src.app.db.session import AsyncSessionLocal
-            import uuid
+        # Store in database asynchronously - NEVER crash the request due to metrics
+        # Only attempt if explicitly enabled via config (disabled by default to prevent prod crashes)
+        from src.app.core.config import settings
 
-            # Get organization and user from request state if available
-            org_id = getattr(request.state, "organization_id", None)
-            user_id = getattr(request.state, "user_id", None)
+        if getattr(settings, "PERF_DB_METRICS_ENABLED", False):
+            try:
+                from src.app.models.api_metric import ApiMetric
+                from src.app.db.session import AsyncSessionLocal
+                import uuid
 
-            # Run in background without awaiting
-            async def save_metric():
-                async with AsyncSessionLocal() as db:
-                    metric = ApiMetric(
-                        id=uuid.uuid4(),
-                        organization_id=str(org_id) if org_id else None,
-                        user_id=str(user_id) if user_id else None,
-                        method=method,
-                        path=path[:500],  # Truncate long paths
-                        status_code=status_code,
-                        duration_ms=duration_ms,
-                        db_ms=duration_ms,  # Approximate - total includes DB
-                        query_count=None,  # Query counting disabled - was causing crashes
-                        ip_address=request.client.host if request.client else None,
-                        user_agent=request.headers.get("user-agent", "")[:500],
-                    )
-                    db.add(metric)
-                    await db.commit()
+                # Get organization and user from request state if available
+                org_id = getattr(request.state, "organization_id", None)
+                user_id = getattr(request.state, "user_id", None)
 
-            # Don't await - run in background
-            import asyncio
+                # Run in background without awaiting
+                async def save_metric():
+                    try:
+                        async with AsyncSessionLocal() as db:
+                            metric = ApiMetric(
+                                id=uuid.uuid4(),
+                                organization_id=str(org_id) if org_id else None,
+                                user_id=str(user_id) if user_id else None,
+                                method=method,
+                                path=path[:500],
+                                status_code=status_code,
+                                duration_ms=duration_ms,
+                                db_ms=duration_ms,
+                                query_count=None,
+                                ip_address=request.client.host
+                                if request.client
+                                else None,
+                                user_agent=request.headers.get("user-agent", "")[:500],
+                            )
+                            db.add(metric)
+                            await db.commit()
+                    except Exception as db_err:
+                        print(f"WARNING: Failed to save metric: {db_err}")
 
-            asyncio.create_task(save_metric())
-        except Exception:
-            pass  # Never crash the request due to metrics
+                import asyncio
+
+                asyncio.create_task(save_metric())
+            except Exception as setup_err:
+                print(f"WARNING: Metrics setup failed: {setup_err}")
+        # If PERF_DB_METRICS_ENABLED is false (default), we just log to console
 
     return response
 

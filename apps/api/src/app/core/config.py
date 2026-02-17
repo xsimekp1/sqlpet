@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     PERF_LOG_SQL: bool = False
     PERF_LOG_TOP_N: int = 5
     PERF_COLORED_LOGS: bool = True
+    PERF_DB_METRICS_ENABLED: bool = (
+        False  # Disabled by default - set True only if api_metrics table exists
+    )
 
     @property
     def max_file_size_bytes(self) -> int:

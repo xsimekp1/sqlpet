@@ -133,10 +133,12 @@ async def get_public_animal(
     """)
     result = await session.execute(query, {"animal_id": animal_id})
     row = result.first()
-    
+
     if not row:
-        raise HTTPException(status_code=404, detail="Animal not found or not publicly visible")
-    
+        raise HTTPException(
+            status_code=404, detail="Animal not found or not publicly visible"
+        )
+
     return {
         "id": str(row.id),
         "name": row.name,
@@ -165,8 +167,7 @@ async def get_public_animal(
             "name": row.kennel_name,
             "code": row.kennel_code,
             "zone_name": row.zone_name,
-        } if row.kennel_id else None,
-    }
+        }
         if row.kennel_id
         else None,
     }
