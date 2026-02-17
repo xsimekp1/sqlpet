@@ -2,26 +2,23 @@ import uuid
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import delete, select
-from sqlalchemy.pool import NullPool
+from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-# ── Patch DB session with NullPool engine BEFORE importing app ────────────────
-# This ensures that each async test gets a fresh connection (no event-loop
-# reuse across tests), avoiding "Event loop is closed" errors with asyncpg.
-import src.app.db.session as _db_session
-from src.app.core.config import settings
-
+# ── Test with SQLite in-memory (no PostgreSQL required for testing) ───────────
 _test_engine = create_async_engine(
-    settings.DATABASE_URL_ASYNC,
-    poolclass=NullPool,
-    connect_args={"statement_cache_size": 0, "ssl": "require"},
+    "sqlite+aiosqlite:///:memory:",
+    connect_args={"check_same_thread": False},
 )
 _TestSessionLocal = async_sessionmaker(
     bind=_test_engine,
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
+# ── Patch DB session with test engine BEFORE importing app ────────────────────
+import src.app.db.session as _db_session
+
 _db_session.async_engine = _test_engine
 _db_session.AsyncSessionLocal = _TestSessionLocal
 
@@ -29,6 +26,7 @@ _db_session.AsyncSessionLocal = _TestSessionLocal
 from src.app.main import app  # noqa: E402
 
 import src.app.api.dependencies.db as _dep_db  # noqa: E402
+
 _dep_db.AsyncSessionLocal = _TestSessionLocal
 
 # ── Model imports for fixtures ────────────────────────────────────────────────
@@ -57,9 +55,22 @@ async def db_session() -> AsyncSession:
 
 
 @pytest.fixture(scope="session", autouse=True)
+async def create_tables():
+    """Create all tables in SQLite in-memory DB before tests."""
+    from src.app.db.base import Base
+
+    async with _test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with _test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest.fixture(scope="session", autouse=True)
 def dispose_engine():
     yield
     import asyncio
+
     asyncio.run(_test_engine.dispose())
 
 
@@ -118,7 +129,9 @@ async def test_org_with_membership(db_session: AsyncSession, test_user: User):
     )
     perm = perm_result.scalar_one_or_none()
     if perm:
-        db_session.add(RolePermission(role_id=role_id, permission_id=perm.id, allowed=True))
+        db_session.add(
+            RolePermission(role_id=role_id, permission_id=perm.id, allowed=True)
+        )
         await db_session.flush()
 
     membership = Membership(
@@ -134,7 +147,9 @@ async def test_org_with_membership(db_session: AsyncSession, test_user: User):
     yield org, membership, role
 
     # Cleanup
-    await db_session.execute(delete(RolePermission).where(RolePermission.role_id == role_id))
+    await db_session.execute(
+        delete(RolePermission).where(RolePermission.role_id == role_id)
+    )
     await db_session.execute(delete(Membership).where(Membership.id == membership_id))
     await db_session.execute(delete(Role).where(Role.id == role_id))
     await db_session.execute(delete(Organization).where(Organization.id == org_id))
@@ -148,11 +163,15 @@ async def test_org_with_write_permission(db_session: AsyncSession, test_user: Us
     role_id = uuid.uuid4()
     membership_id = uuid.uuid4()
 
-    org = Organization(id=org_id, name="Write Test Org", slug=f"write-org-{org_id.hex[:8]}")
+    org = Organization(
+        id=org_id, name="Write Test Org", slug=f"write-org-{org_id.hex[:8]}"
+    )
     db_session.add(org)
     await db_session.flush()
 
-    role = Role(id=role_id, organization_id=org_id, name="test_writer_role", is_template=False)
+    role = Role(
+        id=role_id, organization_id=org_id, name="test_writer_role", is_template=False
+    )
     db_session.add(role)
     await db_session.flush()
 
@@ -163,7 +182,9 @@ async def test_org_with_write_permission(db_session: AsyncSession, test_user: Us
         )
         perm = perm_result.scalar_one_or_none()
         if perm:
-            db_session.add(RolePermission(role_id=role_id, permission_id=perm.id, allowed=True))
+            db_session.add(
+                RolePermission(role_id=role_id, permission_id=perm.id, allowed=True)
+            )
     await db_session.flush()
 
     membership = Membership(
@@ -184,11 +205,17 @@ async def test_org_with_write_permission(db_session: AsyncSession, test_user: Us
     )
     animal_ids = [row[0] for row in animal_result.all()]
     if animal_ids:
-        await db_session.execute(delete(AnimalIdentifier).where(AnimalIdentifier.animal_id.in_(animal_ids)))
-        await db_session.execute(delete(AnimalBreed).where(AnimalBreed.animal_id.in_(animal_ids)))
+        await db_session.execute(
+            delete(AnimalIdentifier).where(AnimalIdentifier.animal_id.in_(animal_ids))
+        )
+        await db_session.execute(
+            delete(AnimalBreed).where(AnimalBreed.animal_id.in_(animal_ids))
+        )
         await db_session.execute(delete(Animal).where(Animal.organization_id == org_id))
 
-    await db_session.execute(delete(RolePermission).where(RolePermission.role_id == role_id))
+    await db_session.execute(
+        delete(RolePermission).where(RolePermission.role_id == role_id)
+    )
     await db_session.execute(delete(Membership).where(Membership.id == membership_id))
     await db_session.execute(delete(Role).where(Role.id == role_id))
     await db_session.execute(delete(Organization).where(Organization.id == org_id))

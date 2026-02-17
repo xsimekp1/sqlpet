@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, Mail, Phone, MapPin, User, Tag, FileText, Camera, PawPrint, Edit, Heart, Plus, Check, X } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, User, Tag, FileText, Camera, PawPrint, Edit, Heart, Plus, Check, X, Building } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -280,6 +280,7 @@ export default function ContactDetailPage() {
           {/* Email */}
           <div className="flex items-center gap-3">
             <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="w-16 text-sm text-muted-foreground">E-mail:</span>
             {editingField === 'email' ? (
               <div className="flex items-center gap-2 flex-1">
                 <Input
@@ -315,6 +316,7 @@ export default function ContactDetailPage() {
           {/* Phone */}
           <div className="flex items-center gap-3">
             <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="w-16 text-sm text-muted-foreground">Telefon:</span>
             {editingField === 'phone' ? (
               <div className="flex items-center gap-2 flex-1">
                 <Input
@@ -350,6 +352,7 @@ export default function ContactDetailPage() {
           {/* Address */}
           <div className="flex items-start gap-3">
             <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <span className="w-16 text-sm text-muted-foreground shrink-0 pt-1">Adresa:</span>
             {editingField === 'address' ? (
               <div className="flex items-center gap-2 flex-1">
                 <Textarea
@@ -385,6 +388,7 @@ export default function ContactDetailPage() {
           {/* Profession */}
           <div className="flex items-start gap-3">
             <User className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <span className="w-16 text-sm text-muted-foreground shrink-0 pt-1">Profese:</span>
             {editingField === 'profession' ? (
               <div className="flex items-center gap-2 flex-1">
                 <Input
@@ -415,7 +419,8 @@ export default function ContactDetailPage() {
 
           {/* Organization */}
           <div className="flex items-start gap-3">
-            <User className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <Building className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <span className="w-16 text-sm text-muted-foreground shrink-0 pt-1">Organizace:</span>
             {editingField === 'organization_name' ? (
               <div className="flex items-center gap-2 flex-1">
                 <Input
