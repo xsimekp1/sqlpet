@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Float, String, Text, ARRAY
+from sqlalchemy import DateTime, ForeignKey, Float, String, Text, ARRAY, Integer
 from sqlalchemy.dialects.postgresql import UUID, ARRAY as PG_ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,7 +29,7 @@ class WalkLog(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     ended_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    duration_minutes: Mapped[int | None] = mapped_column(String(10), nullable=True)
+    duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     started_by_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
