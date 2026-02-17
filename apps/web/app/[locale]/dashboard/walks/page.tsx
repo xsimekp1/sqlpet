@@ -17,19 +17,7 @@ import {
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import Link from 'next/link';
-
-interface Walk {
-  id: string;
-  animal_ids: string[];
-  walk_type: string;
-  status: string;
-  started_at: string;
-  ended_at: string | null;
-  duration_minutes: number | null;
-  distance_km: number | null;
-  notes: string | null;
-  animals?: { id: string; name: string; public_code: string }[];
-}
+import ApiClient, { Animal, Walk, WalkListResponse } from '@/app/lib/api';
 
 const STATUS_COLORS: Record<string, string> = {
   in_progress: 'bg-yellow-100 text-yellow-800',
@@ -52,7 +40,7 @@ export default function WalksPage() {
   const t = useTranslations('walks');
   const [walks, setWalks] = useState<Walk[]>([]);
   const [loading, setLoading] = useState(true);
-  const [animals, setAnimals] = useState<any[]>([]);
+  const [animals, setAnimals] = useState<Animal[]>([]);
   const [view, setView] = useState<'today' | 'all'>('today');
 
   const [newWalk, setNewWalk] = useState({
@@ -69,10 +57,11 @@ export default function WalksPage() {
   const loadWalks = async () => {
     setLoading(true);
     try {
-      const endpoint = view === 'today' ? '/api/walks/today' : '/api/walks';
-      const data = await fetch(endpoint).then(r => r.json());
+      const data: WalkListResponse = view === 'today' 
+        ? await ApiClient.getTodayWalks()
+        : await ApiClient.getWalks({ page_size: 100 });
       setWalks(data.items || []);
-    } catch {
+    } catch (error: any) {
       toast.error('Nepodařilo se načíst procházky');
     } finally {
       setLoading(false);
@@ -81,7 +70,7 @@ export default function WalksPage() {
 
   const loadAnimals = async () => {
     try {
-      const data = await fetch('/api/animals?page_size=100').then(r => r.json());
+      const data = await ApiClient.getAnimals({ page_size: 100 });
       setAnimals(data.items || []);
     } catch {
       // ignore
@@ -95,13 +84,9 @@ export default function WalksPage() {
     }
     setCreating(true);
     try {
-      await fetch('/api/walks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          animal_ids: newWalk.animal_ids,
-          walk_type: newWalk.walk_type,
-        }),
+      await ApiClient.createWalk({
+        animal_ids: newWalk.animal_ids,
+        walk_type: newWalk.walk_type,
       });
       toast.success('Procházka začala');
       setNewWalk({ animal_ids: [], walk_type: 'walk' });
@@ -115,7 +100,7 @@ export default function WalksPage() {
 
   const completeWalk = async (walkId: string) => {
     try {
-      await fetch(`/api/walks/${walkId}/complete`, { method: 'POST' });
+      await ApiClient.completeWalk(walkId);
       toast.success('Procházka dokončena');
       loadWalks();
     } catch (error: any) {
@@ -166,7 +151,7 @@ export default function WalksPage() {
                 <SelectValue placeholder="Vyberte zvíře" />
               </SelectTrigger>
               <SelectContent>
-                {animals.filter((a: any) => a.status === 'intake' || a.status === 'hotel').map((animal: any) => (
+                {animals.filter((a) => a.status === 'intake' || a.status === 'hotel').map((animal) => (
                   <SelectItem key={animal.id} value={animal.id}>
                     {animal.name} ({animal.public_code})
                   </SelectItem>

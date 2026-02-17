@@ -197,8 +197,42 @@ export interface CreateAnimalRequest {
   sex: 'male' | 'female' | 'unknown';
   color?: string | null;
   status?: string;
-  // Note: Backend uses birth_date_estimated and age_group instead of estimated_age_years
-  // For now, omit age fields - will be added in future milestone
+}
+
+// Walk types
+export interface WalkAnimal {
+  id: string;
+  name: string;
+  public_code: string;
+}
+
+export interface Walk {
+  id: string;
+  organization_id: string;
+  animal_ids: string[];
+  walk_type: string;
+  status: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_minutes: number | null;
+  distance_km: number | null;
+  notes: string | null;
+  started_by_id: string | null;
+  ended_by_id: string | null;
+  animals?: WalkAnimal[];
+}
+
+export interface WalkListResponse {
+  items: Walk[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface CreateWalkRequest {
+  animal_ids: string[];
+  walk_type: string;
+  started_at?: string;
 }
 
 // Kennel types
@@ -759,6 +793,85 @@ class ApiClient {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
         throw new Error(axiosError.response?.data?.detail || 'Failed to delete animal');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  // ========================================
+  // WALKS
+  // ========================================
+
+  static async getWalks(params?: { page?: number; page_size?: number; status?: string }): Promise<WalkListResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', String(params.page));
+      if (params?.page_size) queryParams.append('page_size', String(params.page_size));
+      if (params?.status) queryParams.append('status', params.status);
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      const response = await axios.get<WalkListResponse>(
+        `${API_URL}/walks${queryString}`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch walks');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async getTodayWalks(): Promise<WalkListResponse> {
+    try {
+      const response = await axios.get<WalkListResponse>(
+        `${API_URL}/walks/today`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch today walks');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async createWalk(data: CreateWalkRequest): Promise<Walk> {
+    try {
+      const response = await axios.post<Walk>(
+        `${API_URL}/walks`,
+        data,
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to create walk');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async completeWalk(walkId: string, distance_km?: number, notes?: string): Promise<Walk> {
+    try {
+      const params = new URLSearchParams();
+      if (distance_km !== undefined) params.append('distance_km', String(distance_km));
+      if (notes) params.append('notes', notes);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await axios.post<Walk>(
+        `${API_URL}/walks/${walkId}/complete${queryString}`,
+        {},
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to complete walk');
       }
       throw new Error('An unexpected error occurred');
     }
