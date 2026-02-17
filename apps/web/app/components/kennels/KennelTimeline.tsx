@@ -24,7 +24,7 @@ const SPECIES_COLORS: Record<string, { bg: string; border: string; text: string 
   other: { bg: 'bg-emerald-500', border: 'border-emerald-600', text: 'text-emerald-600' },
 };
 
-const SPECIES_ICONS = {
+const SPECIES_ICONS: Record<string, typeof Rabbit> = {
   dog: Dog,
   cat: Cat,
   bird: Bird,
