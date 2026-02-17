@@ -106,8 +106,8 @@ export default function NewInventoryItemPage() {
   const onSubmit = (data: InventoryItemFormData) => {
     if (!data.category) {
       toast({
-        title: 'Kategorie je povinná',
-        description: 'Vyberte kategorii položky skladu',
+        title: t('messages.categoryRequired'),
+        description: t('messages.selectCategory'),
         variant: 'destructive',
       });
       return;
@@ -125,7 +125,7 @@ export default function NewInventoryItemPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('createItem')}</h1>
-          <p className="text-muted-foreground">Add a new inventory item to track</p>
+          <p className="text-muted-foreground">{t('messages.addNewItemTitle')}</p>
         </div>
       </div>
 
@@ -308,10 +308,10 @@ export default function NewInventoryItemPage() {
         {/* Actions */}
         <div className="flex gap-4">
           <Button type="submit" disabled={createItemMutation.isPending}>
-            {createItemMutation.isPending ? 'Creating...' : t('actions.createItem')}
+            {createItemMutation.isPending ? t('messages.creating') : t('createItem')}
           </Button>
           <Link href="/dashboard/inventory">
-            <Button type="button" variant="outline">Cancel</Button>
+            <Button type="button" variant="outline">{t('cancel')}</Button>
           </Link>
         </div>
       </form>

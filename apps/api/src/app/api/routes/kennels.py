@@ -25,6 +25,7 @@ router = APIRouter(prefix="/kennels", tags=["kennels"])
 
 # Public endpoints (no auth required)
 public_router = APIRouter(prefix="/public/kennels", tags=["public-kennels"])
+public_animals_router = APIRouter(prefix="/public/animals", tags=["public-animals"])
 
 
 @public_router.get("/{kennel_id}")
@@ -75,6 +76,99 @@ async def get_public_kennel(
         "zone_name": row.zone_name,
         "occupied_count": row.occupied_count,
         "animals": row.animals if row.animals else [],
+    }
+
+
+@public_animals_router.get("/{animal_id}")
+async def get_public_animal(
+    animal_id: str,
+    session: AsyncSession = Depends(get_db),
+):
+    """Get public animal details (no auth required)."""
+    query = text("""
+        SELECT 
+            a.id, a.name, a.species::text AS species, a.sex::text AS sex,
+            a.status::text AS status, a.age_group::text AS age_group,
+            a.color, a.coat, a.size_estimated::text AS size_estimated,
+            a.weight_current_kg, a.description, a.behavior_notes,
+            a.primary_photo_url, a.public_code,
+            a.is_dewormed, a.is_aggressive, a.is_pregnant,
+            a.is_special_needs, a.bcs,
+            o.name AS organization_name,
+            -- Breed info
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'primary', ab.is_primary,
+                        'breed', b.name
+                    )
+                ) FILTER (WHERE ab.id IS NOT NULL),
+                '[]'::json
+            ) AS breeds,
+            -- Identifiers
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'type', ai.type::text,
+                        'value', ai.value
+                    )
+                ) FILTER (WHERE ai.id IS NOT NULL),
+                '[]'::json
+            ) AS identifiers,
+            -- Current kennel
+            k.id AS kennel_id, k.name AS kennel_name, k.code AS kennel_code,
+            z.name AS zone_name
+        FROM animals a
+        LEFT JOIN organizations o ON o.id = a.organization_id
+        LEFT JOIN animal_breeds ab ON ab.animal_id = a.id
+        LEFT JOIN breeds b ON b.id = ab.breed_id
+        LEFT JOIN animal_identifiers ai ON ai.animal_id = a.id
+        LEFT JOIN kennel_stays ks ON ks.animal_id = a.id AND ks.end_at IS NULL
+        LEFT JOIN kennels k ON k.id = ks.kennel_id
+        LEFT JOIN zones z ON z.id = k.zone_id
+        WHERE a.id = :animal_id 
+            AND a.deleted_at IS NULL 
+            AND a.public_visibility = true
+        GROUP BY a.id, o.name, k.id, k.name, k.code, z.name
+    """)
+    result = await session.execute(query, {"animal_id": animal_id})
+    row = result.first()
+    
+    if not row:
+        raise HTTPException(status_code=404, detail="Animal not found or not publicly visible")
+    
+    return {
+        "id": str(row.id),
+        "name": row.name,
+        "species": row.species,
+        "sex": row.sex,
+        "status": row.status,
+        "age_group": row.age_group,
+        "color": row.color,
+        "coat": row.coat,
+        "size_estimated": row.size_estimated,
+        "weight_current_kg": row.weight_current_kg,
+        "description": row.description,
+        "behavior_notes": row.behavior_notes,
+        "primary_photo_url": row.primary_photo_url,
+        "public_code": row.public_code,
+        "organization_name": row.organization_name,
+        "is_dewormed": row.is_dewormed,
+        "is_aggressive": row.is_aggressive,
+        "is_pregnant": row.is_pregnant,
+        "is_special_needs": row.is_special_needs,
+        "bcs": row.bcs,
+        "breeds": row.breeds if row.breeds else [],
+        "identifiers": row.identifiers if row.identifiers else [],
+        "current_kennel": {
+            "id": str(row.kennel_id),
+            "name": row.kennel_name,
+            "code": row.kennel_code,
+            "zone_name": row.zone_name,
+        } if row.kennel_id else None,
+    }
+        if row.kennel_id
+        else None,
     }
 
 

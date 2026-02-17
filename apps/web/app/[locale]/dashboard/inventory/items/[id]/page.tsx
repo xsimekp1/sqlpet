@@ -162,8 +162,8 @@ export default function InventoryItemDetailPage() {
   const handleAddLot = () => {
     if (!lotFormData.quantity) {
       toast({
-        title: 'Validation Error',
-        description: 'Quantity is required',
+        title: t('messages.validationError'),
+        description: t('messages.quantityRequired'),
         variant: 'destructive',
       });
       return;
@@ -214,7 +214,7 @@ export default function InventoryItemDetailPage() {
   if (itemLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading item...</div>
+        <div className="text-muted-foreground">{t('messages.loadingItem')}</div>
       </div>
     );
   }
@@ -335,11 +335,11 @@ export default function InventoryItemDetailPage() {
                   {t('addLot')}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+                <DialogContent>
                 <DialogHeader>
                   <DialogTitle>{t('addLot')}</DialogTitle>
                   <DialogDescription>
-                    Add a new lot of {item.name} to inventory
+                    {t('messages.addNewLotTitle', { name: item.name })}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -394,10 +394,10 @@ export default function InventoryItemDetailPage() {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setAddLotOpen(false)}>
-                    Cancel
+                    {t('cancel')}
                   </Button>
                   <Button onClick={handleAddLot} disabled={addLotMutation.isPending}>
-                    {addLotMutation.isPending ? 'Adding...' : 'Add Lot'}
+                    {addLotMutation.isPending ? t('adding') : t('addLot')}
                   </Button>
                 </DialogFooter>
               </DialogContent>

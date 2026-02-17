@@ -82,7 +82,7 @@ export default function InventoryPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading inventory...</div>
+        <div className="text-muted-foreground">{t('messages.loadingInventory')}</div>
       </div>
     );
   }

@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     ]
 
     # Performance Monitoring Settings
-    PERF_ENABLED: bool = False
+    PERF_ENABLED: bool = True
     PERF_SLOW_THRESHOLD_MS: int = 200
     PERF_VERY_SLOW_THRESHOLD_MS: int = 800
     PERF_LOG_SQL: bool = False

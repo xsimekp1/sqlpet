@@ -16,6 +16,7 @@ from src.app.api.routes.animals import router as animals_router, breed_router
 from src.app.api.routes.kennels import (
     router as kennels_router,
     public_router as public_kennels_router,
+    public_animals_router,
 )
 from src.app.api.routes.stays import router as stays_router
 from src.app.api.routes.tasks import router as tasks_router
@@ -344,6 +345,7 @@ app.include_router(animals_router)
 app.include_router(breed_router)
 app.include_router(kennels_router)
 app.include_router(public_kennels_router)
+app.include_router(public_animals_router)
 app.include_router(stays_router)
 app.include_router(tasks_router)
 app.include_router(feeding_router)
