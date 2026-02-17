@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import String, Text
+from sqlalchemy import Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
@@ -13,6 +13,9 @@ class Organization(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     timezone: Mapped[str] = mapped_column(String(50), default="Europe/Prague")
     logo_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    hotel_price_per_day: Mapped[Optional[float]] = mapped_column(
+        Numeric(10, 2), nullable=True
+    )
 
     # Relationships
     tags = relationship("Tag", back_populates="organization", lazy="selectin")

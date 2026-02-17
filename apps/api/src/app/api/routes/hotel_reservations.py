@@ -65,6 +65,7 @@ class HotelReservationResponse(BaseModel):
     id: str
     organization_id: str
     kennel_id: str
+    kennel_name: Optional[str] = None
     contact_id: Optional[str]
     animal_name: str
     animal_species: str
@@ -96,11 +97,12 @@ class KennelAvailabilityResponse(BaseModel):
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 
-def _to_response(r: HotelReservation) -> dict:
+def _to_response(r: HotelReservation, kennel_name: str = None) -> dict:
     return {
         "id": str(r.id),
         "organization_id": str(r.organization_id),
         "kennel_id": str(r.kennel_id),
+        "kennel_name": kennel_name,
         "contact_id": str(r.contact_id) if r.contact_id else None,
         "animal_name": r.animal_name,
         "animal_species": r.animal_species,
@@ -133,6 +135,8 @@ async def list_reservations(
     db: AsyncSession = Depends(get_db),
 ):
     """List hotel reservations for the organization."""
+    from src.app.models.kennel import Kennel
+
     q = select(HotelReservation).where(
         HotelReservation.organization_id == organization_id
     )
@@ -148,7 +152,19 @@ async def list_reservations(
 
     q = q.order_by(HotelReservation.reserved_from.desc())
     result = await db.execute(q)
-    return [_to_response(r) for r in result.scalars().all()]
+    reservations = result.scalars().all()
+
+    # Get kennel names
+    kennel_ids = [r.kennel_id for r in reservations]
+    kennel_names = {}
+    if kennel_ids:
+        kennel_result = await db.execute(
+            select(Kennel.id, Kennel.name).where(Kennel.id.in_(kennel_ids))
+        )
+        for row in kennel_result.all():
+            kennel_names[str(row[0])] = row[1]
+
+    return [_to_response(r, kennel_names.get(str(r.kennel_id))) for r in reservations]
 
 
 @router.post(

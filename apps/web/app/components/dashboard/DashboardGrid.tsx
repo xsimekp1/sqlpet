@@ -14,8 +14,10 @@ import { ShelterStatsWidget } from './ShelterStatsWidget'
 import { OccupancyWidget } from './OccupancyWidget'
 import { RecentlyAdmittedWidget } from './RecentlyAdmittedWidget'
 import { WalksTodayWidget } from './WalksTodayWidget'
+import { MyTasksWidget } from './MyTasksWidget'
+import { UpcomingOutcomesWidget } from './UpcomingOutcomesWidget'
 
-const ALL_WIDGETS = ['medical-today', 'feeding-today', 'tasks', 'shelter-stats', 'occupancy', 'recently-admitted', 'walks-today'] as const
+const ALL_WIDGETS = ['medical-today', 'feeding-today', 'tasks', 'shelter-stats', 'occupancy', 'recently-admitted', 'walks-today', 'my-tasks', 'upcoming-outcomes'] as const
 const widgetLabels: Record<string, string> = {
   'medical-today': 'medicalToday',
   'feeding-today': 'feedingToday',
@@ -24,6 +26,8 @@ const widgetLabels: Record<string, string> = {
   'occupancy': 'occupancy',
   'recently-admitted': 'recentlyAdmitted',
   'walks-today': 'walksToday',
+  'my-tasks': 'myTasks',
+  'upcoming-outcomes': 'upcomingOutcomes',
 }
 
 // Widget registry
@@ -35,6 +39,8 @@ const widgetComponents = {
   'occupancy': OccupancyWidget,
   'recently-admitted': RecentlyAdmittedWidget,
   'walks-today': WalksTodayWidget,
+  'my-tasks': MyTasksWidget,
+  'upcoming-outcomes': UpcomingOutcomesWidget,
 }
 
 interface SortableWidgetProps {

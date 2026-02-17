@@ -178,6 +178,76 @@ async def list_intakes(
     return [_to_response(i, a) for i, a in result.all()]
 
 
+@router.get("/upcoming-outcomes")
+async def get_upcoming_outcomes(
+    days: int = Query(30, ge=1, le=90, description="Number of days to look ahead"),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get intakes with planned outcomes in the next N days."""
+    from datetime import timedelta
+    from src.app.models.animal import Animal as AnimalModel
+    from sqlalchemy import text
+
+    today = date_type.today()
+    future_date = today + timedelta(days=days)
+
+    query = text("""
+        SELECT 
+            i.id::text,
+            i.animal_id::text,
+            a.name as animal_name,
+            a.species as animal_species,
+            a.primary_photo_url as animal_photo_url,
+            a.public_code as animal_public_code,
+            i.planned_outcome_date,
+            i.planned_person_id::text,
+            i.reason,
+            i.intake_date,
+            c.name as planned_person_name
+        FROM intakes i
+        JOIN animals a ON i.animal_id = a.id
+        LEFT JOIN contacts c ON i.planned_person_id = c.id
+        WHERE i.organization_id = :org_id
+        AND i.deleted_at IS NULL
+        AND i.actual_outcome_date IS NULL
+        AND i.planned_outcome_date IS NOT NULL
+        AND i.planned_outcome_date >= :today
+        AND i.planned_outcome_date <= :future_date
+        ORDER BY i.planned_outcome_date ASC
+    """)
+
+    result = await db.execute(
+        query,
+        {
+            "org_id": str(organization_id),
+            "today": today.isoformat(),
+            "future_date": future_date.isoformat(),
+        },
+    )
+    rows = result.fetchall()
+
+    return [
+        {
+            "id": row.id,
+            "animal_id": row.animal_id,
+            "animal_name": row.animal_name,
+            "animal_species": row.animal_species,
+            "animal_photo_url": row.animal_photo_url,
+            "animal_public_code": row.animal_public_code,
+            "planned_outcome_date": row.planned_outcome_date.isoformat()
+            if row.planned_outcome_date
+            else None,
+            "planned_person_id": row.planned_person_id,
+            "planned_person_name": row.planned_person_name,
+            "reason": row.reason,
+            "intake_date": row.intake_date.isoformat() if row.intake_date else None,
+        }
+        for row in rows
+    ]
+
+
 @router.post("", response_model=IntakeResponse, status_code=status.HTTP_201_CREATED)
 async def create_intake(
     data: IntakeCreate,

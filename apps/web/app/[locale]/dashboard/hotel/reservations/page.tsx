@@ -190,7 +190,7 @@ export default function HotelReservationsPage() {
                     <TableCell className="font-medium">{res.animal_name}</TableCell>
                     <TableCell className="capitalize">{res.animal_species}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">Kotec {res.kennel_id.slice(0, 8)}</Badge>
+                      <Badge variant="outline">{res.kennel_name || `Kotec ${res.kennel_id.slice(0, 8)}`}</Badge>
                     </TableCell>
                     <TableCell>
                       {res.total_price ? `${res.total_price} Kč` : '-'}

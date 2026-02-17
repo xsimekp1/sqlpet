@@ -311,6 +311,20 @@ export interface KennelStay {
   moved_by?: string | null;
 }
 
+export interface UpcomingOutcome {
+  id: string;
+  animal_id: string;
+  animal_name: string;
+  animal_species: string;
+  animal_photo_url?: string | null;
+  animal_public_code?: string | null;
+  planned_outcome_date: string | null;
+  planned_person_id?: string | null;
+  planned_person_name?: string | null;
+  reason?: string | null;
+  intake_date?: string | null;
+}
+
 export interface KennelTimelineStay {
   id: string;
   animal_id: string;
@@ -1273,6 +1287,22 @@ class ApiClient {
     data: { outcome: 'adopted' | 'deceased' | 'lost' | 'hotel_end'; notes?: string },
   ): Promise<any> {
     return this.post(`/intakes/${intakeId}/close`, data);
+  }
+
+  // Upcoming outcomes types
+  static async getUpcomingOutcomes(days: number = 30): Promise<UpcomingOutcome[]> {
+    try {
+      const response = await axios.get<UpcomingOutcome[]>(
+        `${API_URL}/intakes/upcoming-outcomes?days=${days}`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.detail || 'Failed to fetch upcoming outcomes');
+      }
+      throw new Error('An unexpected error occurred');
+    }
   }
 
   static async createIncident(data: {
