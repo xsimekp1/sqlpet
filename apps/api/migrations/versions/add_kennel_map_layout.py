@@ -5,10 +5,11 @@ Revises: None
 Create Date: 2026-02-17
 
 """
+
 from alembic import op
 
-revision = 'add_kennel_map_layout'
-down_revision = 'None'
+revision = "add_kennel_map_layout"
+down_revision = "initial_schema"
 branch_labels = None
 depends_on = None
 
