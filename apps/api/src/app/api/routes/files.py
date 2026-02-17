@@ -258,6 +258,9 @@ async def upload_primary_animal_photo(
     # Use thumbnail for better performance, fall back to full image
     animal.primary_photo_url = thumbnail_url or file_url
 
+    # Clear default_image_url since we now have a real photo
+    animal.default_image_url = None
+
     await db.commit()
 
     return {

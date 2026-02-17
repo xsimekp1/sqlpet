@@ -35,10 +35,14 @@ from src.app.schemas.animal import (
 from src.app.schemas.weight_log import WeightLogCreate, WeightLogResponse
 from src.app.schemas.bcs_log import BCSLogCreate, BCSLogResponse
 from src.app.services.animal_service import AnimalService
-from src.app.services.default_image_service import DefaultImageService
 
 
-async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
+async def _build_animal_response(
+    animal,
+    db: AsyncSession,
+    kennel_data: dict | None = None,
+    intake_data: dict | None = None,
+) -> AnimalResponse:
     """Build AnimalResponse from ORM object with nested breeds and identifiers."""
     breeds = [
         AnimalBreedResponse(
@@ -56,22 +60,20 @@ async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
     resp = AnimalResponse.model_validate(animal)
     resp.breeds = breeds
     resp.identifiers = identifiers
-    breed_id = animal.animal_breeds[0].breed_id if animal.animal_breeds else None
-    svc = DefaultImageService(db)
-    try:
-        async with db.begin_nested():
-            default_img = await svc.get_default_image_for_animal(
-                species=animal.species,
-                breed_id=breed_id,
-                color=animal.color,
-            )
-            resp.default_image_url = default_img.public_url if default_img else None
-    except Exception:
-        pass  # savepoint rolled back; default image is optional
-    # Use savepoints so a failing raw-SQL query can't abort the outer transaction
-    # and poison subsequent queries for other animals in the same request.
-    try:
-        async with db.begin_nested():
+
+    # default_image_url is now stored in DB - use it directly
+    # (no query needed)
+
+    # Use pre-loaded kennel/intake data if provided (list endpoint)
+    animal_id_str = str(animal.id)
+    if kennel_data and animal_id_str in kennel_data:
+        kd = kennel_data[animal_id_str]
+        resp.current_kennel_id = kd["kennel_id"]
+        resp.current_kennel_name = kd["kennel_name"]
+        resp.current_kennel_code = kd["kennel_code"]
+    elif kennel_data is None:
+        # Fallback: single animal fetch - query if not provided
+        try:
             stay_result = await db.execute(
                 text("""
                     SELECT ks.kennel_id::text, k.name, k.code
@@ -80,17 +82,21 @@ async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
                     WHERE ks.animal_id = :animal_id AND ks.end_at IS NULL
                     LIMIT 1
                 """),
-                {"animal_id": str(animal.id)},
+                {"animal_id": animal_id_str},
             )
             stay_row = stay_result.first()
             if stay_row:
                 resp.current_kennel_id = stay_row[0]
                 resp.current_kennel_name = stay_row[1]
                 resp.current_kennel_code = stay_row[2]
-    except Exception:
-        pass  # savepoint rolled back; outer transaction continues
-    try:
-        async with db.begin_nested():
+        except Exception:
+            pass
+
+    if intake_data and animal_id_str in intake_data:
+        resp.current_intake_date = intake_data[animal_id_str]
+    elif intake_data is None:
+        # Fallback: single animal fetch - query if not provided
+        try:
             intake_result = await db.execute(
                 text("""
                     SELECT intake_date FROM intakes
@@ -98,13 +104,13 @@ async def _build_animal_response(animal, db: AsyncSession) -> AnimalResponse:
                     ORDER BY intake_date DESC
                     LIMIT 1
                 """),
-                {"animal_id": str(animal.id)},
+                {"animal_id": animal_id_str},
             )
             intake_row = intake_result.first()
             if intake_row:
                 resp.current_intake_date = intake_row[0]
-    except Exception:
-        pass  # savepoint rolled back; outer transaction continues
+        except Exception:
+            pass
 
     # Generate thumbnail URL from primary_photo_url
     if animal.primary_photo_url:
@@ -182,7 +188,7 @@ async def list_animals(
 
     try:
         svc = AnimalService(db)
-        items, count, has_more = await svc.list_animals(
+        items, count, has_more, extra_data = await svc.list_animals(
             organization_id=organization_id,
             page=page,
             page_size=page_size,
@@ -192,9 +198,13 @@ async def list_animals(
             search=search,
             available_for_intake=available_for_intake,
         )
+        kennel_data = extra_data.get("kennels", {})
+        intake_data = extra_data.get("intakes", {})
         built_items = []
         for a in items:
-            built_items.append(await _build_animal_response(a, db))
+            built_items.append(
+                await _build_animal_response(a, db, kennel_data, intake_data)
+            )
         return AnimalListResponse(
             items=built_items,
             total=count,

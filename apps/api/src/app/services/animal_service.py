@@ -48,6 +48,75 @@ class AnimalService:
         self.db = db
         self.audit = AuditService(db)
 
+    async def _compute_default_image_url(
+        self,
+        species: str,
+        breed_ids: list[uuid.UUID] | None,
+        color: str | None,
+    ) -> str | None:
+        """Compute default image URL based on species, breed, and color."""
+        from src.app.models.file import DefaultAnimalImage
+        from sqlalchemy import or_
+
+        breed_id = breed_ids[0] if breed_ids else None
+
+        queries = []
+        if breed_id and color:
+            queries.append(
+                select(DefaultAnimalImage)
+                .where(
+                    DefaultAnimalImage.species == species,
+                    DefaultAnimalImage.breed_id == breed_id,
+                    DefaultAnimalImage.color_pattern == color,
+                    DefaultAnimalImage.is_active == True,
+                )
+                .order_by(DefaultAnimalImage.priority.desc())
+                .limit(1)
+            )
+        if breed_id:
+            queries.append(
+                select(DefaultAnimalImage)
+                .where(
+                    DefaultAnimalImage.species == species,
+                    DefaultAnimalImage.breed_id == breed_id,
+                    DefaultAnimalImage.color_pattern.is_(None),
+                    DefaultAnimalImage.is_active == True,
+                )
+                .order_by(DefaultAnimalImage.priority.desc())
+                .limit(1)
+            )
+        if color:
+            queries.append(
+                select(DefaultAnimalImage)
+                .where(
+                    DefaultAnimalImage.species == species,
+                    DefaultAnimalImage.breed_id.is_(None),
+                    DefaultAnimalImage.color_pattern == color,
+                    DefaultAnimalImage.is_active == True,
+                )
+                .order_by(DefaultAnimalImage.priority.desc())
+                .limit(1)
+            )
+        queries.append(
+            select(DefaultAnimalImage)
+            .where(
+                DefaultAnimalImage.species == species,
+                DefaultAnimalImage.breed_id.is_(None),
+                DefaultAnimalImage.color_pattern.is_(None),
+                DefaultAnimalImage.is_active == True,
+            )
+            .order_by(DefaultAnimalImage.priority.desc())
+            .limit(1)
+        )
+
+        for q in queries:
+            result = await self.db.execute(q)
+            img = result.scalar_one_or_none()
+            if img:
+                return img.public_url
+
+        return None
+
     async def _generate_public_code(self, organization_id: uuid.UUID) -> str:
         year = datetime.now(timezone.utc).year
         prefix = f"A-{year}-"
@@ -176,6 +245,15 @@ class AnimalService:
                 self.db.add(ai)
             await self.db.flush()
 
+        # Compute and save default image URL
+        breed_ids = [entry.breed_id for entry in data.breeds] if data.breeds else None
+        animal.default_image_url = await self._compute_default_image_url(
+            species=data.species,
+            breed_ids=breed_ids,
+            color=data.color,
+        )
+        await self.db.flush()
+
         # Audit log
         await self.audit.log_action(
             organization_id=organization_id,
@@ -216,8 +294,9 @@ class AnimalService:
         sex: str | None = None,
         search: str | None = None,
         available_for_intake: bool = False,
-    ) -> tuple[list[Animal], int, bool]:
+    ) -> tuple[list[Animal], int, bool, dict]:
         from sqlalchemy.orm import selectinload
+        from sqlalchemy import text
 
         base = select(Animal).where(
             Animal.organization_id == organization_id,
@@ -255,7 +334,49 @@ class AnimalService:
         if has_more:
             items = items[:page_size]
 
-        return items, len(items), has_more
+        # Bulk load kennel stays and intake dates
+        animal_ids = [a.id for a in items]
+        kennel_data: dict = {}
+        intake_data: dict = {}
+
+        if animal_ids:
+            # Bulk load kennel stays
+            kennel_result = await self.db.execute(
+                text("""
+                    SELECT ks.animal_id::text, k.id::text, k.name, k.code
+                    FROM kennel_stays ks
+                    JOIN kennels k ON k.id = ks.kennel_id
+                    WHERE ks.animal_id = ANY(:animal_ids) AND ks.end_at IS NULL
+                """),
+                {"animal_ids": [str(aid) for aid in animal_ids]},
+            )
+            for row in kennel_result.fetchall():
+                kennel_data[row[0]] = {
+                    "kennel_id": row[1],
+                    "kennel_name": row[2],
+                    "kennel_code": row[3],
+                }
+
+            # Bulk load intake dates
+            intake_result = await self.db.execute(
+                text("""
+                    SELECT animal_id::text, MAX(intake_date) as intake_date
+                    FROM intakes
+                    WHERE animal_id = ANY(:animal_ids) AND deleted_at IS NULL
+                    GROUP BY animal_id
+                """),
+                {"animal_ids": [str(aid) for aid in animal_ids]},
+            )
+            for row in intake_result.fetchall():
+                intake_data[row[0]] = row[1]
+
+        # Build extra data dict
+        extra_data = {
+            "kennels": kennel_data,
+            "intakes": intake_data,
+        }
+
+        return items, len(items), has_more, extra_data
 
     async def update_animal(
         self,
@@ -322,6 +443,27 @@ class AnimalService:
             setattr(animal, field, value)
 
         await self.db.flush()
+
+        # Recompute default_image_url if species, breed, or color changed
+        # Only if no real photo exists (primary_photo_url is null)
+        if animal.primary_photo_url is None:
+            needs_recompute = (
+                "species" in update_data
+                or "breeds" in update_data
+                or "color" in update_data
+            )
+            if needs_recompute:
+                breed_ids = (
+                    [ab.breed_id for ab in animal.animal_breeds]
+                    if animal.animal_breeds
+                    else None
+                )
+                animal.default_image_url = await self._compute_default_image_url(
+                    species=animal.species,
+                    breed_ids=breed_ids,
+                    color=animal.color,
+                )
+                await self.db.flush()
 
         after = _animal_to_dict(animal)
 
