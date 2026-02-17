@@ -6,7 +6,6 @@ import { Send, Loader2, User, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cs, enUS } from 'date-fns/locale';
@@ -122,7 +121,7 @@ export default function ChatPage() {
         <div className="p-4 border-b">
           <h2 className="text-lg font-semibold">Zprávy</h2>
         </div>
-        <ScrollArea className="h-[calc(100vh-130px)]">
+        <div className="h-[calc(100vh-130px)] overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -169,7 +168,7 @@ export default function ChatPage() {
               ))}
             </div>
           )}
-        </ScrollArea>
+            </div>
       </div>
 
       {/* Messages */}
@@ -184,7 +183,7 @@ export default function ChatPage() {
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 p-4">
+            <div className="flex-1 p-4 overflow-y-auto">
               {loadingMessages ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -221,7 +220,7 @@ export default function ChatPage() {
                   <div ref={messagesEndRef} />
                 </div>
               )}
-            </ScrollArea>
+        </div>
 
             {/* Input */}
             <div className="p-4 border-t bg-card">
