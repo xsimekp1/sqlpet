@@ -55,4 +55,3 @@ class AnimalEvent(Base):
     related_user = relationship("User")
     related_kennel = relationship("Kennel")
     related_intake = relationship("Intake")
-    related_outcome = relationship("Outcome")
