@@ -209,7 +209,9 @@ async def get_today_walks(
 ):
     import logging
 
-    logging.warning(f"WALKS DEBUG: Starting endpoint for org={organization_id}")
+    logging.warning(
+        f"WALKS_DEBUG_V2: Starting endpoint for org={organization_id}, user={current_user.id}"
+    )
 
     today = datetime.utcnow().date()
     start_of_day = datetime.combine(today, datetime.min.time())
