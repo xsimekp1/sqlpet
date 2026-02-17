@@ -18,6 +18,19 @@ import {
 import { toast } from 'sonner';
 import Link from 'next/link';
 
+function getAuthHeaders(): HeadersInit {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const org = typeof window !== 'undefined' ? localStorage.getItem('selectedOrg') : null;
+  const headers: HeadersInit = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (org) {
+    try {
+      headers['x-organization-id'] = JSON.parse(org).id;
+    } catch {}
+  }
+  return headers;
+}
+
 interface Kennel {
   id: string;
   name: string;
@@ -87,7 +100,9 @@ export default function NewHotelReservationPage() {
     setCheckingAvailability(true);
     try {
       const url = `/api/hotel/reservations/kennels/${formData.kennel_id}/availability?from_date=${formData.reserved_from}&to_date=${formData.reserved_to}`;
-      const data = await fetch(url).then(r => r.json());
+      const res = await fetch(url, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Unauthorized');
+      const data = await res.json();
       setIsAvailable(data.is_available);
     } catch {
       setIsAvailable(false);
@@ -125,7 +140,10 @@ export default function NewHotelReservationPage() {
 
       await fetch('/api/hotel/reservations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify(payload),
       });
 

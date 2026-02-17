@@ -28,6 +28,19 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { cs, enUS } from 'date-fns/locale';
 
+function getAuthHeaders(): HeadersInit {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const org = typeof window !== 'undefined' ? localStorage.getItem('selectedOrg') : null;
+  const headers: HeadersInit = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (org) {
+    try {
+      headers['x-organization-id'] = JSON.parse(org).id;
+    } catch {}
+  }
+  return headers;
+}
+
 interface HotelReservation {
   id: string;
   kennel_id: string;
@@ -73,7 +86,9 @@ export default function HotelReservationsPage() {
     setLoading(true);
     try {
       const params = statusFilter ? `?status=${statusFilter}` : '';
-      const data = await fetch(`/api/hotel/reservations${params}`).then(r => r.json());
+      const res = await fetch(`/api/hotel/reservations${params}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Unauthorized');
+      const data = await res.json();
       setReservations(data);
     } catch {
       toast.error('Nepodařilo se načíst rezervace');
@@ -84,7 +99,11 @@ export default function HotelReservationsPage() {
 
   const handleCancel = async (id: string) => {
     try {
-      await fetch(`/api/hotel/reservations/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/hotel/reservations/${id}`, { 
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) throw new Error('Unauthorized');
       toast.success('Rezervace zrušena');
       loadReservations();
     } catch {
@@ -94,7 +113,11 @@ export default function HotelReservationsPage() {
 
   const handleCheckin = async (id: string) => {
     try {
-      await fetch(`/api/hotel/reservations/${id}/checkin`, { method: 'POST' });
+      const res = await fetch(`/api/hotel/reservations/${id}/checkin`, { 
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) throw new Error('Unauthorized');
       toast.success('Check-in proveden');
       loadReservations();
     } catch (error: any) {
