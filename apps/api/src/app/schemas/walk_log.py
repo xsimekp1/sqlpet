@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class WalkCreate(BaseModel):
@@ -38,6 +38,18 @@ class WalkResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("duration_minutes", mode="before")
+    @classmethod
+    def convert_duration(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except (ValueError, TypeError):
+                return None
+        return v
 
 
 class WalkWithAnimalsResponse(WalkResponse):

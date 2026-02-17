@@ -219,7 +219,15 @@ export default function TasksPage() {
       high: 'default',
       urgent: 'destructive',
     };
-    return <Badge variant={variants[priority] || 'outline'} className={priority === 'urgent' ? 'animate-urgent-shake' : ''}>{PRIORITY_LABELS[priority] || priority}</Badge>;
+    if (priority === 'urgent') {
+      return (
+        <Badge variant={variants[priority]} className="animate-urgent-pulse">
+          <img src="/petslog.png" alt="urgent" className="h-4 w-4 mr-1" />
+          {PRIORITY_LABELS[priority] || priority}
+        </Badge>
+      );
+    }
+    return <Badge variant={variants[priority] || 'outline'}>{PRIORITY_LABELS[priority] || priority}</Badge>;
   };
 
   const handleCompleteTask = (task: Task) => {

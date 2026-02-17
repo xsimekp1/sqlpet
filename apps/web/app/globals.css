@@ -131,13 +131,11 @@
   }
 }
 
-@keyframes urgent-shake {
-  0%, 100% { transform: rotate(0deg); }
-  4% { transform: rotate(-3deg); }
-  8% { transform: rotate(3deg); }
-  12% { transform: rotate(0deg); }
+@keyframes urgent-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
 }
 
-.animate-urgent-shake {
-  animation: urgent-shake 2.5s ease-in-out infinite;
+.animate-urgent-pulse {
+  animation: urgent-pulse 3s ease-in-out infinite;
 }
