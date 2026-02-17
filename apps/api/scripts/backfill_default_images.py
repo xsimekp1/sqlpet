@@ -95,7 +95,7 @@ async def main():
     print("🚀 Starting backfill of default_image_url...")
 
     # Create async engine
-    database_url = settings.DATABASE_URL
+    database_url = settings.DATABASE_URL_ASYNC
     engine = create_async_engine(database_url, echo=False)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
