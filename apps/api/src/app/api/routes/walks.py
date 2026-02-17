@@ -201,7 +201,7 @@ async def get_walk(
     return await _to_response_with_animals(walk, db)
 
 
-@router.get("/today", response_model=WalkListResponse)
+@router.get("/today")
 async def get_today_walks(
     current_user: User = Depends(get_current_user),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
@@ -209,9 +209,7 @@ async def get_today_walks(
 ):
     import logging
 
-    logging.warning(
-        f"WALKS_DEBUG_V2: Starting endpoint for org={organization_id}, user={current_user.id}"
-    )
+    logging.warning("WALKS_DIRECT_START")
 
     today = datetime.utcnow().date()
     start_of_day = datetime.combine(today, datetime.min.time())
@@ -226,46 +224,22 @@ async def get_today_walks(
     result = await db.execute(q.order_by(WalkLog.started_at.desc()))
     walks = result.scalars().all()
 
-    logging.warning(f"WALKS DEBUG: Found {len(walks)} walks")
-
-    items = []
-    for w in walks:
-        try:
-            item = await _to_response_with_animals(w, db)
-            items.append(item)
-        except Exception as e:
-            logging.error(f"WALKS DEBUG: Error processing walk {w.id}: {e}")
-            raise
-
-    logging.warning(f"WALKS DEBUG: Built {len(items)} items, now returning")
-
-    try:
-        response = WalkListResponse(
-            items=items,
-            total=len(items),
-            page=1,
-            page_size=100,
-        )
-        logging.warning(f"WALKS DEBUG: Response created successfully")
-        return response
-    except Exception as e:
-        logging.error(f"WALKS DEBUG: Error creating response: {e}")
-        raise
-
-    result = await db.execute(q.order_by(WalkLog.started_at.desc()))
-    walks = result.scalars().all()
+    logging.warning(f"WALKS_DIRECT_FOUND: {len(walks)}")
 
     items = []
     for w in walks:
         item = await _to_response_with_animals(w, db)
         items.append(item)
 
-    return WalkListResponse(
-        items=items,
-        total=len(items),
-        page=1,
-        page_size=100,
-    )
+    logging.warning(f"WALKS_DIRECT_RETURNING: {len(items)}")
+
+    # Return as JSON directly without response_model to avoid Pydantic issues
+    return {
+        "items": [dict(item) for item in items],
+        "total": len(items),
+        "page": 1,
+        "page_size": 100,
+    }
 
 
 @router.patch("/{walk_id}", response_model=WalkResponse)
