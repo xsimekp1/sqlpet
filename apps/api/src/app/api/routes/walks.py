@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -61,7 +61,7 @@ async def create_walk(
         organization_id=organization_id,
         animal_ids=data.animal_ids,
         walk_type=data.walk_type,
-        started_at=data.started_at or datetime.utcnow(),
+        started_at=data.started_at or datetime.now(timezone.utc),
         started_by_id=current_user.id,
         status="in_progress",
     )
@@ -191,7 +191,7 @@ async def get_today_walks(
 
     logging.warning("WALKS_DIRECT_START")
 
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     start_of_day = datetime.combine(today, datetime.min.time())
     end_of_day = datetime.combine(today, datetime.max.time())
 
@@ -334,7 +334,7 @@ async def complete_walk(
         )
 
     walk.status = "completed"
-    walk.ended_at = datetime.utcnow()
+    walk.ended_at = datetime.now(timezone.utc)
     walk.ended_by_id = current_user.id
 
     if walk.started_at:

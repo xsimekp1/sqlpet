@@ -1,14 +1,18 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 
+def _utc_now():
+    return datetime.now(timezone.utc)
+
+
 class WalkCreate(BaseModel):
     animal_ids: list[uuid.UUID] = Field(..., min_length=1)
     walk_type: str = Field(default="walk", pattern="^(walk|visit|exercise)$")
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=_utc_now)
     distance_km: Optional[float] = None
     notes: Optional[str] = None
 
