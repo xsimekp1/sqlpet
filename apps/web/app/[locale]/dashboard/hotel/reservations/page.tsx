@@ -124,7 +124,7 @@ export default function HotelReservationsPage() {
             <SelectValue placeholder="Všechny statusy" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Všechny statusy</SelectItem>
+            <SelectItem value="all">Všechny statusy</SelectItem>
             <SelectItem value="pending">Čeká na potvrzení</SelectItem>
             <SelectItem value="confirmed">Potvrzeno</SelectItem>
             <SelectItem value="completed">Dokončeno</SelectItem>

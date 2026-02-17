@@ -285,12 +285,12 @@ const getPriorityColor = (priority: string) => {
         <CardContent>
           {/* Filters */}
           <div className="flex gap-2 mb-4">
-            <Select value={vaccineFilterType} onValueChange={(v) => { setVaccineFilterType(v); setVaccinationsPage(1); }}>
+            <Select value={vaccineFilterType || undefined} onValueChange={(v) => { setVaccineFilterType(v === 'all' ? '' : v); setVaccinationsPage(1); }}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Typ očkování" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Všechny typy</SelectItem>
+                <SelectItem value="all">Všechny typy</SelectItem>
                 <SelectItem value="rabies">Vzteklina</SelectItem>
                 <SelectItem value="distemper">Psinka</SelectItem>
                 <SelectItem value="parvovirus">Parvoviróza</SelectItem>
@@ -444,14 +444,15 @@ const getPriorityColor = (priority: string) => {
                 <Label>Šarže (volitelné)</Label>
                 <Select 
                   value={selectedLotId} 
-                  onValueChange={setSelectedLotId}
+                  value={selectedLotId || undefined}
+                  onValueChange={(v) => setSelectedLotId(v === 'none' ? '' : v)}
                   disabled={!vaccineType || loadingLots || availableLots.length === 0}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={loadingLots ? "Načítání..." : "Vyberte šarži"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Bez šarže</SelectItem>
+                    <SelectItem value="none">Bez šarže</SelectItem>
                     {availableLots.map(lot => (
                       <SelectItem key={lot.id} value={lot.id}>
                         {lot.lot_number || 'Bez čísla'} ({lot.quantity} ks)

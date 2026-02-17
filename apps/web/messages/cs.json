@@ -32,7 +32,7 @@
     "shelterStats": "Přehled útulku",
     "stats": {
       "total": "Celkem zvířat",
-      "available": "Ke adopci",
+      "available": "K adopci",
       "intake": "V příjmu",
       "quarantine": "V karanténě"
     },
@@ -738,7 +738,7 @@
     "status": {
       "registered": "Registrováno",
       "intake": "Příjem",
-      "available": "Ke adopci",
+      "available": "K adopci",
       "reserved": "Rezervováno",
       "adopted": "Adoptováno",
       "fostered": "V pěstounské péči",
