@@ -46,27 +46,9 @@ from src.app.core.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Run database migrations on startup
-    try:
-        from alembic.config import Config
-        from alembic import command as alembic_command
-        import asyncio
-
-        alembic_cfg = Config("alembic.ini")
-
-        # Stamp DB to current head (fix stale migration references)
-        try:
-            await asyncio.to_thread(
-                alembic_command.stamp, alembic_cfg, "create_all_missing_tables"
-            )
-            print("✓ Database stamped to current revision")
-        except Exception as stamp_err:
-            print(f"Stamp warning: {stamp_err}")
-
-        await asyncio.to_thread(alembic_command.upgrade, alembic_cfg, "head")
-        print("✓ Database migrations applied")
-    except Exception as e:
-        print(f"✗ Migration failed: {e}")
+    # Skip alembic migrations - tables already exist in production
+    # Migrations are handled manually when needed
+    print("⚠ Skipping alembic migrations - using existing tables")
 
     # Sync missing tables (fallback if migrations fail)
     try:
