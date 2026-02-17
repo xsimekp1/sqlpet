@@ -66,7 +66,7 @@ export function WalksTodayWidget({ editMode, onRemove, dragHandleProps }: WalksT
                   <PawPrint className="h-4 w-4 text-green-600" />
                   <div>
                     <p className="text-sm font-medium">
-                      {walk.animals?.map(a => a.name).join(', ') || {walk.animal_ids?.[0] ? walk.animal_ids[0].slice(0, 8) : '-'}}
+                      {walk.animals?.map(a => a.name).join(', ') || (walk.animal_ids?.[0] ? walk.animal_ids[0].slice(0, 8) : '-')}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(walk.started_at), 'HH:mm')}
