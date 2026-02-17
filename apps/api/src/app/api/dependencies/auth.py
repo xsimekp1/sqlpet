@@ -35,6 +35,7 @@ async def get_current_organization_id(
     try:
         payload = decode_token(token)
     except Exception as e:
+        print(f"DEBUG: decode_token failed in get_current_organization_id: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)[:100]}",
@@ -56,37 +57,14 @@ async def get_current_organization_id(
             detail=f"Invalid organization ID: {org_id_str}",
         )
 
-    try:
-        payload = decode_token(token)
-    except Exception as e:
-        print(f"DEBUG: decode_token failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    org_id_str = x_organization_id or payload.get("org_id")
-
-    if org_id_str is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No organization selected. Please select an organization first.",
-        )
-    try:
-        return uuid.UUID(org_id_str)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid organization ID",
-        )
-
 
 async def get_current_user(
     token: str | None = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
+    print(f"DEBUG get_current_user called, token present: {token is not None}")
     if token is None:
+        print("DEBUG: No token in get_current_user")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
@@ -94,9 +72,14 @@ async def get_current_user(
         )
     try:
         payload = decode_token(token)
+        print(f"DEBUG: token decoded, sub: {payload.get('sub')}")
     except Exception as e:
+        print(f"DEBUG: decode_token failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
             detail=f"Token decode error: {str(e)}",
         )
 

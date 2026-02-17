@@ -126,6 +126,40 @@ class PerfMiddleware(BaseHTTPMiddleware):
                 **extra_data,
             )
 
+        # Save metrics to database (fire and forget)
+        try:
+            import asyncio
+            from src.app.models.api_metric import ApiMetric
+            from src.app.db.session import AsyncSessionLocal
+            import uuid
+
+            async def save_metric():
+                try:
+                    async with AsyncSessionLocal() as db:
+                        metric = ApiMetric(
+                            id=uuid.uuid4(),
+                            organization_id=org_id,
+                            user_id=user_id,
+                            method=request.method,
+                            path=request.url.path[:500],
+                            status_code=response.status_code,
+                            duration_ms=int(total_ms),
+                            db_ms=int(db_ms),
+                            query_count=query_count,
+                            ip_address=request.client.host if request.client else None,
+                            user_agent=request.headers.get("user-agent", "")[:500]
+                            if request.headers.get("user-agent")
+                            else None,
+                        )
+                        db.add(metric)
+                        await db.commit()
+                except Exception:
+                    pass  # Never crash request due to metrics
+
+            asyncio.create_task(save_metric())
+        except Exception:
+            pass  # Never crash request due to metrics
+
         sql_instrumentation = get_sql_instrumentation()
         sql_instrumentation.handle_request_end(trace_id)
 
