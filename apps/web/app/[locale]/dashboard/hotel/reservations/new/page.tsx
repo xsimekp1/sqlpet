@@ -493,22 +493,23 @@ export default function NewHotelReservationPage() {
             <div className="space-y-2">
               <Label>Kontakt (volitelné)</Label>
               <div className="flex gap-2">
-                <Select
-                  value={formData.contact_id || undefined}
-                  onValueChange={(v) => setFormData(p => ({ ...p, contact_id: v }))}
-                  className="flex-1"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Vyberte kontakt" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contacts.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name} {c.phone ? `(${c.phone})` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex-1">
+                  <Select
+                    value={formData.contact_id || undefined}
+                    onValueChange={(v) => setFormData(p => ({ ...p, contact_id: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Vyberte kontakt" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {contacts.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name} {c.phone ? `(${c.phone})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Dialog open={showNewContact} onOpenChange={setShowNewContact}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="icon">
