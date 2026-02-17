@@ -10,6 +10,7 @@ from src.app.models.role import Role
 from src.app.models.role_permission import RolePermission
 
 PERMISSIONS = [
+    ("metrics.read", "View performance metrics"),
     ("animals.read", "View animals"),
     ("animals.write", "Create and manage animals"),
     ("kennels.read", "View kennels"),

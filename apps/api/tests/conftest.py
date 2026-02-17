@@ -2,23 +2,26 @@ import uuid
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, select
+from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-# ── Test with SQLite in-memory (no PostgreSQL required for testing) ───────────
+# ── Patch DB session with NullPool engine BEFORE importing app ────────────────
+# This ensures that each async test gets a fresh connection (no event-loop
+# reuse across tests), avoiding "Event loop is closed" errors with asyncpg.
+import src.app.db.session as _db_session
+from src.app.core.config import settings
+
 _test_engine = create_async_engine(
-    "sqlite+aiosqlite:///:memory:",
-    connect_args={"check_same_thread": False},
+    settings.DATABASE_URL_ASYNC,
+    poolclass=NullPool,
+    connect_args={"statement_cache_size": 0, "ssl": "require"},
 )
 _TestSessionLocal = async_sessionmaker(
     bind=_test_engine,
     class_=AsyncSession,
     expire_on_commit=False,
 )
-
-# ── Patch DB session with test engine BEFORE importing app ────────────────────
-import src.app.db.session as _db_session
-
 _db_session.async_engine = _test_engine
 _db_session.AsyncSessionLocal = _TestSessionLocal
 
@@ -51,19 +54,10 @@ def anyio_backend():
 async def db_session() -> AsyncSession:
     async with _TestSessionLocal() as session:
         yield session
-        await session.rollback()
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def create_tables():
-    """Create all tables in SQLite in-memory DB before tests."""
-    from src.app.db.base import Base
-
-    async with _test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with _test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        try:
+            await session.rollback()
+        except Exception:
+            pass
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -92,10 +86,17 @@ async def test_user(db_session: AsyncSession):
         is_superadmin=False,
     )
     db_session.add(user)
-    await db_session.commit()
+    try:
+        await db_session.commit()
+    except Exception:
+        await db_session.rollback()
+        raise
     yield user
-    await db_session.execute(delete(User).where(User.id == uid))
-    await db_session.commit()
+    try:
+        await db_session.execute(delete(User).where(User.id == uid))
+        await db_session.commit()
+    except Exception:
+        await db_session.rollback()
 
 
 @pytest.fixture()
@@ -147,13 +148,18 @@ async def test_org_with_membership(db_session: AsyncSession, test_user: User):
     yield org, membership, role
 
     # Cleanup
-    await db_session.execute(
-        delete(RolePermission).where(RolePermission.role_id == role_id)
-    )
-    await db_session.execute(delete(Membership).where(Membership.id == membership_id))
-    await db_session.execute(delete(Role).where(Role.id == role_id))
-    await db_session.execute(delete(Organization).where(Organization.id == org_id))
-    await db_session.commit()
+    try:
+        await db_session.execute(
+            delete(RolePermission).where(RolePermission.role_id == role_id)
+        )
+        await db_session.execute(
+            delete(Membership).where(Membership.id == membership_id)
+        )
+        await db_session.execute(delete(Role).where(Role.id == role_id))
+        await db_session.execute(delete(Organization).where(Organization.id == org_id))
+        await db_session.commit()
+    except Exception:
+        await db_session.rollback()
 
 
 @pytest.fixture()
@@ -200,23 +206,32 @@ async def test_org_with_write_permission(db_session: AsyncSession, test_user: Us
     yield org, membership, role
 
     # Cleanup — delete animals and related data first
-    animal_result = await db_session.execute(
-        select(Animal.id).where(Animal.organization_id == org_id)
-    )
-    animal_ids = [row[0] for row in animal_result.all()]
-    if animal_ids:
-        await db_session.execute(
-            delete(AnimalIdentifier).where(AnimalIdentifier.animal_id.in_(animal_ids))
+    try:
+        animal_result = await db_session.execute(
+            select(Animal.id).where(Animal.organization_id == org_id)
         )
-        await db_session.execute(
-            delete(AnimalBreed).where(AnimalBreed.animal_id.in_(animal_ids))
-        )
-        await db_session.execute(delete(Animal).where(Animal.organization_id == org_id))
+        animal_ids = [row[0] for row in animal_result.all()]
+        if animal_ids:
+            await db_session.execute(
+                delete(AnimalIdentifier).where(
+                    AnimalIdentifier.animal_id.in_(animal_ids)
+                )
+            )
+            await db_session.execute(
+                delete(AnimalBreed).where(AnimalBreed.animal_id.in_(animal_ids))
+            )
+            await db_session.execute(
+                delete(Animal).where(Animal.organization_id == org_id)
+            )
 
-    await db_session.execute(
-        delete(RolePermission).where(RolePermission.role_id == role_id)
-    )
-    await db_session.execute(delete(Membership).where(Membership.id == membership_id))
-    await db_session.execute(delete(Role).where(Role.id == role_id))
-    await db_session.execute(delete(Organization).where(Organization.id == org_id))
-    await db_session.commit()
+        await db_session.execute(
+            delete(RolePermission).where(RolePermission.role_id == role_id)
+        )
+        await db_session.execute(
+            delete(Membership).where(Membership.id == membership_id)
+        )
+        await db_session.execute(delete(Role).where(Role.id == role_id))
+        await db_session.execute(delete(Organization).where(Organization.id == org_id))
+        await db_session.commit()
+    except Exception:
+        await db_session.rollback()

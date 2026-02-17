@@ -1302,6 +1302,34 @@ class ApiClient {
     return response.data;
   }
 
+  // PERFORMANCE METRICS
+  static async getMetricsSummary(hours: number = 24, limit: number = 20): Promise<{
+    total_requests: number;
+    avg_duration_ms: number;
+    avg_queries: number;
+    slowest_requests: Array<{
+      method: string;
+      path: string;
+      status_code: number;
+      duration_ms: number;
+      query_count: number | null;
+      created_at: string;
+    }>;
+    top_endpoints: Array<{
+      path: string;
+      count: number;
+      avg_duration_ms: number;
+      avg_queries: number;
+    }>;
+    requests_by_hour: Array<{ hour: string; count: number }>;
+  }> {
+    const response = await axios.get(
+      `${API_URL}/metrics`,
+      { params: { hours, limit }, headers: this.getAuthHeaders() }
+    );
+    return response.data;
+  }
+
   static async globalSearch(q: string, limit = 5): Promise<SearchResults> {
     const response = await axios.get<SearchResults>(
       `${API_URL}/search`,

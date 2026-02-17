@@ -18,6 +18,7 @@ import {
   HelpCircle,
   CalendarDays,
   Camera,
+  Zap,
   Loader2,
   MessageSquare,
   Hotel,
@@ -116,6 +117,7 @@ export function Sidebar() {
         { label: 'nav.intake', href: '/dashboard/intake', icon: Inbox, permission: 'intake.create' },
         { label: 'nav.reports', href: '/dashboard/reports', icon: BarChart3, permission: 'reports.view' },
         { label: 'nav.settings', href: '/dashboard/settings', icon: Settings, permission: 'settings.view' },
+        { label: 'nav.performance', href: '/dashboard/settings/performance', icon: Zap, permission: 'metrics.read' },
         { label: 'nav.help', href: '/dashboard/help', icon: HelpCircle, permission: null },
       ]
     }
