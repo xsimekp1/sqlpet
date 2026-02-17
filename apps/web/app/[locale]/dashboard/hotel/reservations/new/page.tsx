@@ -165,7 +165,7 @@ export default function NewHotelReservationPage() {
           <div className="space-y-2">
             <Label>Kotec *</Label>
             <Select
-              value={formData.kennel_id}
+              value={formData.kennel_id || undefined}
               onValueChange={(v) => { setFormData(p => ({ ...p, kennel_id: v })); setIsAvailable(null); }}
             >
               <SelectTrigger>
@@ -257,7 +257,7 @@ export default function NewHotelReservationPage() {
             <div className="space-y-2">
               <Label>Druh *</Label>
               <Select
-                value={formData.animal_species}
+                value={formData.animal_species || undefined}
                 onValueChange={(v) => setFormData(p => ({ ...p, animal_species: v }))}
               >
                 <SelectTrigger>
@@ -298,14 +298,13 @@ export default function NewHotelReservationPage() {
           <div className="space-y-2">
             <Label>Majitel (volitelné)</Label>
             <Select
-              value={formData.contact_id}
+              value={formData.contact_id || undefined}
               onValueChange={(v) => setFormData(p => ({ ...p, contact_id: v }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Vyberte kontakt nebo zadejte nový" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">-- Bez kontaktu --</SelectItem>
                 {contacts.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name} {c.phone ? `(${c.phone})` : ''}

@@ -119,7 +119,7 @@ export default function HotelReservationsPage() {
 
       {/* Filters */}
       <div className="flex gap-4">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Všechny statusy" />
           </SelectTrigger>
