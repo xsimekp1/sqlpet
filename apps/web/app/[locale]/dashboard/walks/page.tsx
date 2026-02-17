@@ -151,7 +151,7 @@ export default function WalksPage() {
                 <SelectValue placeholder="Vyberte zvíře" />
               </SelectTrigger>
               <SelectContent>
-                {animals.filter((a) => a.status === 'intake' || a.status === 'hotel').map((animal) => (
+                {animals.filter((a) => a.status === 'available' || a.status === 'hold' || a.status === 'quarantine').map((animal) => (
                   <SelectItem key={animal.id} value={animal.id}>
                     {animal.name} ({animal.public_code})
                   </SelectItem>
