@@ -57,7 +57,7 @@ async def lifespan(app: FastAPI):
         # Stamp DB to current head (fix stale migration references)
         try:
             await asyncio.to_thread(
-                alembic_command.stamp, alembic_cfg, "add_hotel_price_per_day"
+                alembic_command.stamp, alembic_cfg, "create_all_missing_tables"
             )
             print("✓ Database stamped to current revision")
         except Exception as stamp_err:
