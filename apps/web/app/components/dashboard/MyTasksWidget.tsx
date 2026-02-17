@@ -72,6 +72,7 @@ export function MyTasksWidget({ editMode, onRemove, dragHandleProps }: MyTasksWi
     <WidgetCard
       id="my-tasks"
       title={t('myTasks')}
+      icon={CheckSquare}
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}

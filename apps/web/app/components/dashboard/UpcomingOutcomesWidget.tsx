@@ -79,6 +79,7 @@ export function UpcomingOutcomesWidget({ editMode, onRemove, dragHandleProps }: 
     <WidgetCard
       id="upcoming-outcomes"
       title={t('upcomingOutcomes')}
+      icon={Calendar}
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
