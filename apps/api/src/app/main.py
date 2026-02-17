@@ -129,21 +129,10 @@ app = FastAPI(title="SQLpet API", lifespan=lifespan)
 # Performance monitoring middleware
 @app.middleware("http")
 async def track_request_metrics(request: Request, call_next):
-    """Track request duration and query count, store in database."""
-    from src.app.db.session import async_engine
-
+    """Track request duration, store in database."""
     start_time = time.time()
     method = request.method
     path = request.url.path
-
-    # Reset query counter
-    query_count = 0
-    original_execute = async_engine.sync_engine.pool._execute
-
-    def counting_execute(*args, **kwargs):
-        nonlocal query_count
-        query_count += 1
-        return original_execute(*args, **kwargs)
 
     # Skip metrics for health and non-api routes
     skip_paths = ["/health", "/metrics", "/docs", "/openapi.json", "/redoc"]
@@ -160,12 +149,10 @@ async def track_request_metrics(request: Request, call_next):
     finally:
         duration_ms = int((time.time() - start_time) * 1000)
 
-        # Log to console (for Railway logs) - includes query count!
-        print(
-            f"PERF: {method} {path} status={status_code} duration_ms={duration_ms} queries={query_count}"
-        )
+        # Log to console (for Railway logs)
+        print(f"PERF: {method} {path} status={status_code} duration_ms={duration_ms}")
 
-        # Store in database asynchronously
+        # Store in database asynchronously (with error handling to never crash request)
         try:
             from src.app.models.api_metric import ApiMetric
             from src.app.db.session import AsyncSessionLocal
@@ -187,7 +174,7 @@ async def track_request_metrics(request: Request, call_next):
                         status_code=status_code,
                         duration_ms=duration_ms,
                         db_ms=duration_ms,  # Approximate - total includes DB
-                        query_count=query_count,
+                        query_count=None,  # Query counting disabled - was causing crashes
                         ip_address=request.client.host if request.client else None,
                         user_agent=request.headers.get("user-agent", "")[:500],
                     )
@@ -198,56 +185,8 @@ async def track_request_metrics(request: Request, call_next):
             import asyncio
 
             asyncio.create_task(save_metric())
-        except Exception as e:
-            print(f"Failed to save metric: {e}")
-
-    return response
-
-    try:
-        response = await call_next(request)
-        status_code = response.status_code
-    except Exception as e:
-        status_code = 500
-        raise e
-    finally:
-        duration_ms = int((time.time() - start_time) * 1000)
-
-        # Log to console (for Railway logs)
-        print(f"PERF: {method} {path} status={status_code} duration_ms={duration_ms}")
-
-        # Store in database asynchronously
-        try:
-            from src.app.models.api_metric import ApiMetric
-            from src.app.db.session import AsyncSessionLocal
-            import uuid
-
-            # Get organization and user from request state if available
-            org_id = getattr(request.state, "organization_id", None)
-            user_id = getattr(request.state, "user_id", None)
-
-            # Run in background without awaiting
-            async def save_metric():
-                async with AsyncSessionLocal() as db:
-                    metric = ApiMetric(
-                        id=uuid.uuid4(),
-                        organization_id=str(org_id) if org_id else None,
-                        user_id=str(user_id) if user_id else None,
-                        method=method,
-                        path=path[:500],  # Truncate long paths
-                        status_code=status_code,
-                        duration_ms=duration_ms,
-                        ip_address=request.client.host if request.client else None,
-                        user_agent=request.headers.get("user-agent", "")[:500],
-                    )
-                    db.add(metric)
-                    await db.commit()
-
-            # Don't await - run in background
-            import asyncio
-
-            asyncio.create_task(save_metric())
-        except Exception as e:
-            print(f"Failed to save metric: {e}")
+        except Exception:
+            pass  # Never crash the request due to metrics
 
     return response
 
