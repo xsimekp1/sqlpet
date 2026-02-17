@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList } from 'lucide-react';
+import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList, Dog } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -92,6 +92,7 @@ export default function AnimalsPage() {
   const [bulkTaskForm, setBulkTaskForm] = useState({ title: '', task_type: 'medical', priority: 'high', due_at: '', notes: '' });
   const [creatingBulkTask, setCreatingBulkTask] = useState(false);
   const [createChoiceOpen, setCreateChoiceOpen] = useState(false);
+  const [walkingAnimals, setWalkingAnimals] = useState<Set<string>>(new Set());
 
   // Fetch animals from API
   useEffect(() => {
@@ -158,6 +159,25 @@ export default function AnimalsPage() {
       toast.error('Nepodařilo se vytvořit úkoly: ' + (err.message || ''));
     } finally {
       setCreatingBulkTask(false);
+    }
+  };
+
+  const handleMarkAsWalked = async (animalId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setWalkingAnimals(prev => new Set(prev).add(animalId));
+    try {
+      const updated = await ApiClient.markAnimalWalked(animalId);
+      setAnimals(prev => prev.map(a => a.id === animalId ? updated : a));
+      toast.success(t('animals.walked'));
+    } catch (err: any) {
+      toast.error('Nepodařilo se označit jako venčené');
+    } finally {
+      setWalkingAnimals(prev => {
+        const next = new Set(prev);
+        next.delete(animalId);
+        return next;
+      });
     }
   };
 
@@ -351,6 +371,26 @@ export default function AnimalsPage() {
                       </span>
                     ))}
                   </div>
+                  {/* Walk button - only for dogs with active status */}
+                  {animal.species === 'dog' && !['deceased', 'quarantine', 'adopted', 'transferred', 'returned_to_owner', 'euthanized', 'escaped'].includes(animal.status) && (
+                    <div className="flex items-center justify-between mt-1">
+                      {animal.last_walked_at && (
+                        <span className="text-xs text-muted-foreground">
+                          {t('animals.lastWalked')}: {new Date(animal.last_walked_at).toLocaleDateString('cs-CZ')}
+                        </span>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={(e) => handleMarkAsWalked(animal.id, e)}
+                        disabled={walkingAnimals.has(animal.id)}
+                      >
+                        <Dog className="h-3 w-3 mr-1" />
+                        {walkingAnimals.has(animal.id) ? '...' : t('animals.markAsWalked')}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </Card>
             </Link>

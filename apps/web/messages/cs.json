@@ -25,6 +25,7 @@
     "feedingToday": "Krmení dnes",
     "tasks": "Úkoly",
     "alerts": "Upozornění",
+    "walksToday": "Dnešní venčení",
     "occupancy": "Obsazenost",
     "recent": "Nedávno zobrazeno",
     "recentlyAdmitted": "Naposledy přijatí",
@@ -753,6 +754,9 @@
       "hotel": "Hotel",
       "with_owner": "S majitelem"
     },
+    "walked": "Venčeno",
+    "lastWalked": "Naposledy venčeno",
+    "markAsWalked": "Venčit",
     "intake": {
       "closeIntake": "Ukončit pobyt",
       "registerIntake": "Zaregistrovat příjem",

@@ -15,6 +15,7 @@ class AnimalEventType(str, Enum):
     NOTE = "NOTE"
     MEDICAL = "MEDICAL"
     OUTCOME = "OUTCOME"
+    WALK = "WALK"
 
 
 class AnimalEvent(Base):

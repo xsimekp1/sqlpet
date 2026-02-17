@@ -25,6 +25,7 @@
     "feedingToday": "Feeding Today",
     "tasks": "Tasks",
     "alerts": "Alerts",
+    "walksToday": "Today's walks",
     "occupancy": "Occupancy",
     "recent": "Recently Viewed",
     "recentlyAdmitted": "Recently Admitted",
@@ -810,6 +811,9 @@
       "hotel": "Hotel",
       "with_owner": "With Owner"
     },
+    "walked": "Walked",
+    "lastWalked": "Last walked",
+    "markAsWalked": "Walk",
     "intake": {
       "closeIntake": "Close Intake",
       "registerIntake": "Register intake",
