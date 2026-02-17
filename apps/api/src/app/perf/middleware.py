@@ -16,6 +16,9 @@ class PerfMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.logger = get_perf_logger()
         self.enabled = settings.PERF_ENABLED
+        self._request_count = 0
+        self._last_log_reset = time.time()
+        self._logs_this_second = 0
 
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Response]
@@ -78,20 +81,50 @@ class PerfMiddleware(BaseHTTPMiddleware):
         if query_count > 20:
             extra_data["n1_warning"] = "possible N+1"
 
-        self.logger.request_summary(
-            trace_id=trace_id,
-            method=request.method,
-            path=request.url.path,
-            status=response.status_code,
-            total_ms=total_ms,
-            sql_ms=db_ms,
-            sql_count=query_count,
-            http_ms=http_ms,
-            response_bytes=response_bytes,
-            org_id=org_id,
-            user_id=user_id,
-            **extra_data,
-        )
+        # Rate limiting: only log slow requests or sample 1% of requests
+        # This prevents flooding Railway logs
+        should_log = False
+        current_time = time.time()
+
+        # Reset counter every second
+        if current_time - self._last_log_reset >= 1.0:
+            self._logs_this_second = 0
+            self._last_log_reset = current_time
+
+        # Only log if:
+        # 1. Very slow request (>800ms) - always log
+        # 2. Slow request (>200ms) - log if under rate limit
+        # 3. Sample 1% of other requests for baseline
+        is_very_slow = total_ms >= settings.PERF_VERY_SLOW_THRESHOLD_MS
+        is_slow = total_ms >= settings.PERF_SLOW_THRESHOLD_MS
+
+        if is_very_slow:
+            should_log = True
+        elif is_slow and self._logs_this_second < 50:
+            should_log = True
+            self._logs_this_second += 1
+        elif self._request_count % 100 == 0 and self._logs_this_second < 50:
+            # Sample 1% of requests
+            should_log = True
+            self._logs_this_second += 1
+
+        self._request_count += 1
+
+        if should_log:
+            self.logger.request_summary(
+                trace_id=trace_id,
+                method=request.method,
+                path=request.url.path,
+                status=response.status_code,
+                total_ms=total_ms,
+                sql_ms=db_ms,
+                sql_count=query_count,
+                http_ms=http_ms,
+                response_bytes=response_bytes,
+                org_id=org_id,
+                user_id=user_id,
+                **extra_data,
+            )
 
         sql_instrumentation = get_sql_instrumentation()
         sql_instrumentation.handle_request_end(trace_id)
