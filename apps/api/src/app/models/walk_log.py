@@ -1,0 +1,52 @@
+import uuid
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, Float, String, Text, JSON
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
+
+
+class WalkLog(Base, UUIDPrimaryKeyMixin, TimestampMixin):
+    __tablename__ = "walk_logs"
+
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    animal_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+    walk_type: Mapped[str] = mapped_column(String(20), nullable=False, default="walk")
+
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    ended_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    duration_minutes: Mapped[int | None] = mapped_column(String(10), nullable=True)
+
+    started_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    ended_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    distance_km: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="in_progress"
+    )
+
+    organization = relationship("Organization")
+    started_by = relationship("User", foreign_keys=[started_by_id])
+    ended_by = relationship("User", foreign_keys=[ended_by_id])
