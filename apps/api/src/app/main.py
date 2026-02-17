@@ -77,55 +77,10 @@ async def lifespan(app: FastAPI):
                 print(f"✗ Table sync failed: {result.stderr}")
                 print(f"  Stdout: {result.stdout}")
     except Exception as e:
-        print(f"✗ Table sync error: {e}")
-
-    # Create missing tables that can't be auto-created
-    try:
-        script_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "scripts", "create_missing_tables.py"
-        )
-        if os.path.exists(script_path):
-            result = subprocess.run(
-                [sys.executable, script_path],
-                capture_output=True,
-                text=True,
-                env={
-                    **os.environ,
-                    "PYTHONPATH": os.path.join(os.path.dirname(__file__), ".."),
-                },
-            )
-            if result.returncode == 0:
-                print("✓ Missing tables created")
-            else:
-                print(f"✗ Create tables failed: {result.stderr}")
-    except Exception as e:
         print(f"✗ Create tables error: {e}")
 
-    # Backfill default_image_url for existing animals
-    try:
-        script_path = os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "..",
-            "scripts",
-            "backfill_default_images.py",
-        )
-        if os.path.exists(script_path):
-            result = subprocess.run(
-                [sys.executable, script_path],
-                capture_output=True,
-                text=True,
-                env={
-                    **os.environ,
-                    "PYTHONPATH": os.path.join(os.path.dirname(__file__), ".."),
-                },
-            )
-            if result.returncode == 0:
-                print("✓ Default images backfilled")
-            else:
-                print(f"✗ Backfill failed: {result.stderr}")
-    except Exception as e:
-        print(f"✗ Backfill error: {e}")
+    # Note: backfill_default_images.py was run once to populate default_image_url
+    # It can be deleted or run manually if needed in the future
 
     # Seed permissions and role templates on startup
     try:
