@@ -181,27 +181,6 @@ async def get_animal_walks(
     )
 
 
-@router.get("/{walk_id}", response_model=WalkWithAnimalsResponse)
-async def get_walk(
-    walk_id: uuid.UUID,
-    current_user: User = Depends(require_permission("walks.read")),
-    organization_id: uuid.UUID = Depends(get_current_organization_id),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(
-        select(WalkLog).where(
-            WalkLog.id == walk_id,
-            WalkLog.organization_id == organization_id,
-        )
-    )
-    walk = result.scalar_one_or_none()
-    if not walk:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Walk not found"
-        )
-    return await _to_response_with_animals(walk, db)
-
-
 @router.get("/today")
 async def get_today_walks(
     current_user: User = Depends(get_current_user),
@@ -234,8 +213,6 @@ async def get_today_walks(
 
     logging.warning(f"WALKS_DIRECT_RETURNING: {len(items)}")
 
-    # Convert to JSON-serializable dict
-    # animal_ids is now PostgreSQL ARRAY of UUID - convert to list of strings
     def _convert_animal_ids(ids):
         if ids is None:
             return []
@@ -271,6 +248,27 @@ async def get_today_walks(
 
     logging.warning(f"WALKS_DIRECT_DONE")
     return JSONResponse(content=result)
+
+
+@router.get("/{walk_id}", response_model=WalkWithAnimalsResponse)
+async def get_walk(
+    walk_id: uuid.UUID,
+    current_user: User = Depends(require_permission("walks.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(WalkLog).where(
+            WalkLog.id == walk_id,
+            WalkLog.organization_id == organization_id,
+        )
+    )
+    walk = result.scalar_one_or_none()
+    if not walk:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Walk not found"
+        )
+    return await _to_response_with_animals(walk, db)
 
 
 @router.patch("/{walk_id}", response_model=WalkResponse)
