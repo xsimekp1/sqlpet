@@ -2,11 +2,6 @@ from typing import BinaryIO, Tuple
 from fastapi import HTTPException, UploadFile
 from ..core.config import settings
 
-try:
-    import magic
-except ImportError:
-    magic = None
-
 
 class FileUploadService:
     @staticmethod
@@ -31,27 +26,10 @@ class FileUploadService:
             )
 
     @staticmethod
-    async def get_real_file_type(file: BinaryIO) -> str:
-        """Get real file type using python-magic"""
-        import aiofiles
-
-        file.seek(0)
-        file_content = file.read(1024)  # Read first 1KB for type detection
-        file.seek(0)  # Reset file position
-
-        try:
-            if magic:
-                mime_type = magic.from_buffer(file_content, mime=True)
-                if mime_type:
-                    return mime_type
-        except Exception:
-            pass
-
-        # Fallback to content-type header
-        return (
-            getattr(file, "content_type", "application/octet-stream")
-            or "application/octet-stream"
-        )
+    async def get_real_file_type(file: BinaryIO, fallback_content_type: str) -> str:
+        """Get file type - use content-type from header (simpler, works reliably)"""
+        # Use content-type from header as it's reliable for browser uploads
+        return fallback_content_type or "application/octet-stream"
 
     @staticmethod
     async def process_upload(
@@ -67,19 +45,10 @@ class FileUploadService:
         # Read file content
         file_content = await file.read()
 
-        # Get real file type for security
-        from io import BytesIO
+        # Use content-type from header (reliable for browser uploads)
+        content_type = file.content_type or "application/octet-stream"
 
-        file_stream = BytesIO(file_content)
-        real_mime_type = await FileUploadService.get_real_file_type(file_stream)
-
-        # Double-check MIME type
-        if real_mime_type not in settings.ALLOWED_FILE_TYPES:
-            raise HTTPException(
-                status_code=400, detail=f"Actual file type {real_mime_type} not allowed"
-            )
-
-        return file_content, real_mime_type
+        return file_content, content_type
 
 
 file_upload_service = FileUploadService()

@@ -11,7 +11,7 @@ from typing import Optional
 from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.app.models.base import Base
+from src.app.db.base import Base
 
 
 class ApiMetric(Base):
