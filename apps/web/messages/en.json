@@ -502,7 +502,9 @@
       "general": "General",
       "defaultImages": "Default Images",
       "breeds": "Breeds",
-      "colors": "Colors"
+      "colors": "Colors",
+      "members": "Members",
+      "roles": "Roles"
     },
     "preferences": "Preferences",
     "weightUnit": "Weight Unit",

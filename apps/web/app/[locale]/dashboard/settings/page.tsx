@@ -13,6 +13,7 @@ import {
   Plus,
   KeyRound,
   Users,
+  Shield,
 } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -529,7 +530,11 @@ export default function SettingsPage() {
           <TabsTrigger value="colors">{t('tabs.colors')}</TabsTrigger>
           <TabsTrigger value="members">
             <Users className="h-4 w-4 mr-1.5" />
-            Členové
+            {t('tabs.members')}
+          </TabsTrigger>
+          <TabsTrigger value="roles">
+            <Shield className="h-4 w-4 mr-1.5" />
+            {t('tabs.roles')}
           </TabsTrigger>
         </TabsList>
 
@@ -1118,6 +1123,21 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ── Roles tab ── */}
+        <TabsContent value="roles" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Role a oprávnění
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RolesOverview />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Add user dialog */}
@@ -1279,6 +1299,140 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Helper to get readable permission name
+function getPermissionLabel(key: string): string {
+  const labels: Record<string, string> = {
+    'org.manage': 'Správa organizace',
+    'users.manage': 'Správa uživatelů',
+    'animals.read': 'Čtení zvířat',
+    'animals.write': 'Zápis zvířat',
+    'intakes.write': 'Příjem zvířat',
+    'outcomes.write': 'Výdej zvířat',
+    'kennels.manage': 'Správa kotců',
+    'medical.read': 'Čtení zdravotních záznamů',
+    'medical.write': 'Zápis zdravotních záznamů',
+    'inventory.read': 'Čtení skladu',
+    'inventory.write': 'Zápis skladu',
+    'people.read': 'Čtení kontaktů',
+    'people.write': 'Zápis kontaktů',
+    'forms.manage': 'Správa formulářů',
+    'contracts.manage': 'Správa smluv',
+    'reports.run': 'Spouštění reportů',
+    'reports.schedule': 'Plánování reportů',
+    'public.manage': 'Správa veřejného profilu',
+    'ai.use': 'Použití AI',
+    'payments.write': 'Zápis plateb',
+    'audits.read': 'Čtení auditních logů',
+    'tasks.read': 'Čtení úkolů',
+    'tasks.write': 'Zápis úkolů',
+    'feeding.read': 'Čtení krmení',
+    'feeding.write': 'Zápis krmení',
+    'chat.use': 'Použití chatu',
+  };
+  return labels[key] || key;
+}
+
+// Role overview component
+function RolesOverview() {
+  const [roles, setRoles] = useState<{id: string; name: string; description: string}[]>([]);
+  const [rolePermissions, setRolePermissions] = useState<Record<string, {key: string; allowed: boolean}[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [expandedRole, setExpandedRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadRoles();
+  }, []);
+
+  const loadRoles = async () => {
+    try {
+      // Get all roles
+      const rolesRes = await fetch(`${API_URL}/admin/roles`, { headers: getAuthHeaders() });
+      const rolesData = await rolesRes.json();
+      setRoles(rolesData);
+
+      // Get permissions for each role
+      const perms: Record<string, {key: string; allowed: boolean}[]> = {};
+      for (const role of rolesData) {
+        const permRes = await fetch(`${API_URL}/admin/roles/${role.id}/permissions`, { headers: getAuthHeaders() });
+        perms[role.id] = await permRes.json();
+      }
+      setRolePermissions(perms);
+    } catch (err) {
+      console.error('Failed to load roles:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (roles.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <Shield className="h-8 w-8 mx-auto mb-2 opacity-50" />
+        <p>Žádné role v organizaci</p>
+        <p className="text-sm">Klikněte na "Inicializovat standardní role" v záložce Členové</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {roles.map((role) => {
+        const perms = rolePermissions[role.id] || [];
+        const allowedPerms = perms.filter(p => p.allowed);
+        const isExpanded = expandedRole === role.id;
+
+        return (
+          <div key={role.id} className="border rounded-lg overflow-hidden">
+            <button
+              onClick={() => setExpandedRole(isExpanded ? null : role.id)}
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-muted-foreground" />
+                <div className="text-left">
+                  <p className="font-medium">{role.name}</p>
+                  {role.description && (
+                    <p className="text-sm text-muted-foreground">{role.description}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {allowedPerms.length} oprávnění
+                </Badge>
+              </div>
+            </button>
+
+            {isExpanded && (
+              <div className="border-t bg-muted/20 p-4">
+                {allowedPerms.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Žádná oprávnění</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {allowedPerms.map((perm) => (
+                      <Badge key={perm.key} variant="outline" className="bg-background">
+                        {getPermissionLabel(perm.key)}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

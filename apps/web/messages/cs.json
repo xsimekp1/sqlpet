@@ -441,7 +441,9 @@
       "general": "Obecné",
       "defaultImages": "Výchozí obrázky",
       "breeds": "Plemena",
-      "colors": "Barvy"
+      "colors": "Barvy",
+      "members": "Členové",
+      "roles": "Role"
     },
     "preferences": "Předvolby",
     "weightUnit": "Jednotka hmotnosti",
