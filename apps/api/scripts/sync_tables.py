@@ -15,10 +15,13 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import TypeEngine
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Use settings from the app
+from src.app.core.config import settings
+
+DATABASE_URL = settings.DATABASE_URL_ASYNC
 
 if not DATABASE_URL:
-    print("ERROR: DATABASE_URL not set")
+    print("ERROR: DATABASE_URL_ASYNC not set")
     sys.exit(1)
 
 
@@ -82,8 +85,8 @@ def main():
 
     # Sync engine for checking tables
     sync_url = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg2://")
-    if not sync_url:
-        sync_url = DATABASE_URL
+    if "postgresql+psycopg2://" not in sync_url:
+        sync_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
     engine = create_engine(sync_url)
 
     with engine.connect() as conn:
