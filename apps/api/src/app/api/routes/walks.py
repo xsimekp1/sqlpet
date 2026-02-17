@@ -207,10 +207,9 @@ async def get_today_walks(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-    print(f"DEBUG /walks/today: org={organization_id}, user={current_user.id}")
     import logging
 
-    logging.warning(f"WALKS DEBUG: Reached endpoint with org={organization_id}")
+    logging.warning(f"WALKS DEBUG: Starting endpoint for org={organization_id}")
 
     today = datetime.utcnow().date()
     start_of_day = datetime.combine(today, datetime.min.time())
@@ -221,6 +220,35 @@ async def get_today_walks(
         WalkLog.started_at >= start_of_day,
         WalkLog.started_at <= end_of_day,
     )
+
+    result = await db.execute(q.order_by(WalkLog.started_at.desc()))
+    walks = result.scalars().all()
+
+    logging.warning(f"WALKS DEBUG: Found {len(walks)} walks")
+
+    items = []
+    for w in walks:
+        try:
+            item = await _to_response_with_animals(w, db)
+            items.append(item)
+        except Exception as e:
+            logging.error(f"WALKS DEBUG: Error processing walk {w.id}: {e}")
+            raise
+
+    logging.warning(f"WALKS DEBUG: Built {len(items)} items, now returning")
+
+    try:
+        response = WalkListResponse(
+            items=items,
+            total=len(items),
+            page=1,
+            page_size=100,
+        )
+        logging.warning(f"WALKS DEBUG: Response created successfully")
+        return response
+    except Exception as e:
+        logging.error(f"WALKS DEBUG: Error creating response: {e}")
+        raise
 
     result = await db.execute(q.order_by(WalkLog.started_at.desc()))
     walks = result.scalars().all()
