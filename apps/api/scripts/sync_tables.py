@@ -7,19 +7,17 @@ Run on startup to ensure all tables and columns exist.
 import os
 import sys
 
-# Add parent directory to path for imports
 script_dir = os.path.dirname(os.path.abspath(__file__))
 api_dir = os.path.dirname(script_dir)
 sys.path.insert(0, api_dir)
 sys.path.insert(0, os.path.join(api_dir, "src"))
 
 import asyncio
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import TypeEngine
 
-# Use settings from the app
 from src.app.core.config import settings
 
 DATABASE_URL = settings.DATABASE_URL_ASYNC
@@ -29,28 +27,7 @@ if not DATABASE_URL:
     sys.exit(1)
 
 
-def get_existing_tables(conn):
-    result = conn.execute(
-        text("""
-        SELECT table_name FROM information_schema.tables 
-        WHERE table_schema = 'public'
-    """)
-    )
-    return {row[0] for row in result.fetchall()}
-
-
-def get_existing_columns(conn, table_name):
-    result = conn.execute(
-        text(f"""
-        SELECT column_name FROM information_schema.columns 
-        WHERE table_name = '{table_name}' AND table_schema = 'public'
-    """)
-    )
-    return {row[0] for row in result.fetchall()}
-
-
 def get_column_sql_type(col) -> str:
-    """Map SQLAlchemy type to PostgreSQL column definition."""
     type_ = col.type
 
     if isinstance(type_, UUID):
@@ -84,20 +61,33 @@ def get_column_sql_type(col) -> str:
     return "TEXT"
 
 
-def main():
+async def get_existing_tables(conn):
+    result = await conn.execute(
+        text(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
+        )
+    )
+    return {row[0] for row in result.fetchall()}
+
+
+async def get_existing_columns(conn, table_name):
+    result = await conn.execute(
+        text(
+            f"SELECT column_name FROM information_schema.columns WHERE table_name = '{table_name}' AND table_schema = 'public'"
+        )
+    )
+    return {row[0] for row in result.fetchall()}
+
+
+async def main():
     print("Checking database schema...")
 
-    # Sync engine for checking tables
-    sync_url = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg2://")
-    if "postgresql+psycopg2://" not in sync_url:
-        sync_url = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
-    engine = create_engine(sync_url)
+    engine = create_async_engine(DATABASE_URL)
 
-    with engine.connect() as conn:
-        existing = get_existing_tables(conn)
+    async with engine.begin() as conn:
+        existing = await get_existing_tables(conn)
         print(f"Existing tables: {len(existing)}")
 
-        # Import Base and all models from models package
         from src.app.db.base import Base
         from src.app.models import (
             Organization,
@@ -134,7 +124,6 @@ def main():
             HotelReservation,
         )
 
-        # Try to import optional models
         try:
             from src.app.models.user_shortcut import UserShortcut
         except ImportError:
@@ -164,31 +153,15 @@ def main():
         except ImportError:
             pass
 
-        # Check for missing tables
         tables_in_models = set(Base.metadata.tables.keys())
         missing_tables = tables_in_models - existing
 
         if missing_tables:
             print(f"Missing tables: {sorted(missing_tables)}")
             print("Creating missing tables...")
-
-            async_url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-            if (
-                "postgresql+asyncpg://" not in async_url
-                and "postgresql://" in async_url
-            ):
-                async_url = async_url.replace("postgresql://", "postgresql+asyncpg://")
-            async_engine = create_async_engine(async_url)
-
-            async def create_tables():
-                async with async_engine.begin() as conn:
-                    await conn.run_sync(Base.metadata.create_all)
-
-            asyncio.run(create_tables())
-            async_engine.dispose()
+            await conn.run_sync(Base.metadata.create_all)
             print("Tables created successfully!")
 
-        # Check for missing columns
         print("Checking for missing columns...")
         fixes_applied = 0
 
@@ -196,7 +169,7 @@ def main():
             if table_name not in existing:
                 continue
 
-            db_cols = get_existing_columns(conn, table_name)
+            db_cols = await get_existing_columns(conn, table_name)
             model_cols = {c.name: c for c in model.columns}
 
             for col_name, col in model_cols.items():
@@ -207,7 +180,7 @@ def main():
                     print(f"  Adding column: {table_name}.{col_name} ({sql_type})")
 
                     try:
-                        conn.execute(
+                        await conn.execute(
                             text(f"""
                             ALTER TABLE {table_name} 
                             ADD COLUMN {col_name} {sql_type} {nullable}
@@ -218,14 +191,13 @@ def main():
                         print(f"    Error: {e}")
 
         if fixes_applied > 0:
-            conn.commit()
             print(f"Added {fixes_applied} missing columns!")
         else:
             print("All columns exist.")
 
-    engine.dispose()
+    await engine.dispose()
     print("Database sync complete!")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
