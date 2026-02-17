@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
 from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
+from src.app.api.dependencies.db import get_db
 from src.app.models.user import User
 
 
