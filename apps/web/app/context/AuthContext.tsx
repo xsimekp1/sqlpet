@@ -126,6 +126,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(orgResponse.access_token);
         setRefreshTokenState(orgResponse.refresh_token);
 
+        // Fetch permissions for the new organization
+        try {
+          const permResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/auth/permissions`, {
+            headers: { 'Authorization': `Bearer ${orgResponse.access_token}` },
+          });
+          if (permResponse.ok) {
+            const permData = await permResponse.json();
+            setPermissions(permData.permissions || []);
+          }
+        } catch (e) {
+          console.error('Failed to fetch permissions:', e);
+          setPermissions([]);
+        }
+
         const orgData = {
           id: membership.organization_id,
           name: membership.organization_name,
