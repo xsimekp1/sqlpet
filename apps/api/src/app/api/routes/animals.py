@@ -626,9 +626,9 @@ async def get_daily_animal_count(
     rows = result.fetchall()
     return [
         {
-            "date": row.day.isoformat()
-            if hasattr(row.day, "isoformat")
-            else str(row.day),
+            "date": row.day.strftime("%Y-%m-%d")
+            if hasattr(row.day, "strftime")
+            else str(row.day)[:10],
             "count": row.count,
         }
         for row in rows

@@ -2,6 +2,10 @@
   "app": {
     "name": "PawShelter"
   },
+  "reports": {
+    "animalCountTitle": "Počet zvířat v útulku (posledních 90 dní)",
+    "animalCountDesc": "Denní stav — počet zvířat s aktivním pobytem (od příjmu do výdeje)"
+  },
   "login": {
     "title": "Přihlášení",
     "subtitle": "Systém správy útulku",

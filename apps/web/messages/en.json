@@ -2,6 +2,10 @@
   "app": {
     "name": "PawShelter"
   },
+  "reports": {
+    "animalCountTitle": "Animal count in shelter (last 90 days)",
+    "animalCountDesc": "Daily count — animals with active stay (from intake to outcome)"
+  },
   "login": {
     "title": "Sign in",
     "subtitle": "Shelter management system",

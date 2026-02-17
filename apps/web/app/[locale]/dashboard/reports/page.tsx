@@ -93,7 +93,7 @@ function DailyCountChart({ data }: { data: { date: string; count: number }[] }) 
         if (i % labelStep !== 0 && i !== data.length - 1) return null;
         return (
           <text key={i} x={toX(i)} y={H - 4} fontSize="9" fill="hsl(var(--muted-foreground))" textAnchor="middle">
-            {d.date.slice(5)}
+            {d.date.slice(5, 10)}
           </text>
         );
       })}
@@ -134,10 +134,10 @@ const plannedReports = [
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Počet zvířat v útulku (posledních 90 dní)
+            {t('reports.animalCountTitle')}
           </CardTitle>
           <CardDescription>
-            Denní stav — počet zvířat s aktivním pobytem (od příjmu do výdeje)
+            {t('reports.animalCountDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
