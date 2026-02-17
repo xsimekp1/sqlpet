@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
+import { PawPrint } from 'lucide-react';
 
 const formSchema = z.object({
   email: z
@@ -40,6 +41,7 @@ export default function LoginPage() {
   const t = useTranslations();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,11 +52,13 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: FormValues) => {
+    setIsLoggingIn(true);
     setIsLoading(true);
     try {
       await login(data.email, data.password);
       toast.success(t('common.success'));
     } catch (error) {
+      setIsLoggingIn(false);
       const errorMessage = error instanceof Error ? error.message : t('login.error');
       toast.error(errorMessage);
       form.setError('root', {
@@ -66,74 +70,101 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="border-slate-200 dark:border-slate-700 shadow-xl">
-      <CardHeader className="space-y-1">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold">
-            {t('login.title')}
-          </CardTitle>
-          <LanguageSwitcher />
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
+      {/* Logo - always visible, animates on login */}
+      <div
+        className={`absolute top-8 transition-all duration-700 ease-in-out ${
+          isLoggingIn
+            ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-125'
+            : ''
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary shadow-lg">
+            <PawPrint className="h-7 w-7 text-primary-foreground" />
+          </div>
+          <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+            {t('app.name')}
+          </span>
         </div>
-        <CardDescription>
-          {t('login.subtitle')}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('login.email')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="email"
-                      placeholder="admin@example.com"
-                      disabled={isLoading}
-                      autoComplete="email"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('login.password')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="••••••••"
-                      disabled={isLoading}
-                      autoComplete="current-password"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {form.formState.errors.root && (
-              <div className="text-sm text-red-500">
-                {form.formState.errors.root.message}
-              </div>
-            )}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? t('common.loading') : t('login.submit')}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Login Form - fades out on submit */}
+      <div
+        className={`w-full max-w-md transition-all duration-500 ease-out ${
+          isLoggingIn
+            ? 'translate-y-8 opacity-0 scale-95'
+            : 'translate-y-0 opacity-100 scale-100'
+        }`}
+      >
+        <Card className="border-slate-200 dark:border-slate-700 shadow-xl">
+          <CardHeader className="space-y-1">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl font-bold">
+                {t('login.title')}
+              </CardTitle>
+              <LanguageSwitcher />
+            </div>
+            <CardDescription>{t('login.subtitle')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('login.email')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="admin@example.com"
+                          disabled={isLoading}
+                          autoComplete="email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('login.password')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          placeholder="••••••••"
+                          disabled={isLoading}
+                          autoComplete="current-password"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {form.formState.errors.root && (
+                  <div className="text-sm text-red-500">
+                    {form.formState.errors.root.message}
+                  </div>
+                )}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? t('common.loading') : t('login.submit')}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

@@ -1,4 +1,7 @@
 {
+  "app": {
+    "name": "PawShelter"
+  },
   "login": {
     "title": "Přihlášení",
     "subtitle": "Systém správy útulku",
