@@ -234,13 +234,37 @@ async def get_today_walks(
 
     logging.warning(f"WALKS_DIRECT_RETURNING: {len(items)}")
 
-    # Return as JSON directly without response_model to avoid Pydantic issues
-    return {
-        "items": [dict(item) for item in items],
+    # Convert to JSON-serializable dict
+    result = {
+        "items": [
+            {
+                "id": str(item.id),
+                "organization_id": str(item.organization_id),
+                "animal_ids": item.animal_ids,
+                "walk_type": item.walk_type,
+                "started_at": item.started_at.isoformat() if item.started_at else None,
+                "ended_at": item.ended_at.isoformat() if item.ended_at else None,
+                "duration_minutes": item.duration_minutes,
+                "started_by_id": str(item.started_by_id)
+                if item.started_by_id
+                else None,
+                "ended_by_id": str(item.ended_by_id) if item.ended_by_id else None,
+                "distance_km": item.distance_km,
+                "notes": item.notes,
+                "status": item.status,
+                "created_at": item.created_at.isoformat(),
+                "updated_at": item.updated_at.isoformat(),
+                "animals": item.animals,
+            }
+            for item in items
+        ],
         "total": len(items),
         "page": 1,
         "page_size": 100,
     }
+
+    logging.warning(f"WALKS_DIRECT_DONE")
+    return JSONResponse(content=result)
 
 
 @router.patch("/{walk_id}", response_model=WalkResponse)
