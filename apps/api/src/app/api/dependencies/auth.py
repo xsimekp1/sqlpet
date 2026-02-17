@@ -25,6 +25,10 @@ async def get_current_organization_id(
     M4: Also accept x-organization-id header for compatibility.
     TODO M4: Validate user has active membership in this organization.
     """
+    print(
+        f"DEBUG get_current_organization_id called, token present: {token is not None}, x_org_id: {x_organization_id}"
+    )
+
     if token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -34,6 +38,7 @@ async def get_current_organization_id(
 
     try:
         payload = decode_token(token)
+        print(f"DEBUG: org_id from token: {payload.get('org_id')}")
     except Exception as e:
         print(f"DEBUG: decode_token failed in get_current_organization_id: {e}")
         raise HTTPException(
