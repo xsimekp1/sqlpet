@@ -125,6 +125,10 @@ async def get_me(
             )
         )
 
+    # Hardcode admin@example.com as superadmin (not persisted in DB)
+    if current_user.email == "admin@example.com":
+        current_user.is_superadmin = True
+
     return CurrentUserResponse(
         user=UserResponse.model_validate(current_user),
         memberships=membership_infos,
