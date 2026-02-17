@@ -49,7 +49,7 @@ async def _to_response_with_animals(
 @router.post("", response_model=WalkResponse, status_code=status.HTTP_201_CREATED)
 async def create_walk(
     data: WalkCreate,
-    current_user: User = Depends(require_permission("tasks.write")),
+    current_user: User = Depends(require_permission("walks.write")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -77,7 +77,7 @@ async def list_walks(
     walk_type: Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
-    current_user: User = Depends(require_permission("tasks.read")),
+    current_user: User = Depends(require_permission("walks.read")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -132,7 +132,7 @@ async def get_animal_walks(
     animal_id: uuid.UUID,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: User = Depends(require_permission("tasks.read")),
+    current_user: User = Depends(require_permission("walks.read")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -181,7 +181,7 @@ async def get_animal_walks(
 @router.get("/{walk_id}", response_model=WalkWithAnimalsResponse)
 async def get_walk(
     walk_id: uuid.UUID,
-    current_user: User = Depends(require_permission("tasks.read")),
+    current_user: User = Depends(require_permission("walks.read")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -201,7 +201,7 @@ async def get_walk(
 
 @router.get("/today", response_model=WalkListResponse)
 async def get_today_walks(
-    current_user: User = Depends(require_permission("tasks.read")),
+    current_user: User = Depends(require_permission("walks.read")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -235,7 +235,7 @@ async def get_today_walks(
 async def update_walk(
     walk_id: uuid.UUID,
     data: WalkUpdate,
-    current_user: User = Depends(require_permission("tasks.write")),
+    current_user: User = Depends(require_permission("walks.write")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -272,7 +272,7 @@ async def complete_walk(
     walk_id: uuid.UUID,
     distance_km: Optional[float] = Query(None),
     notes: Optional[str] = Query(None),
-    current_user: User = Depends(require_permission("tasks.write")),
+    current_user: User = Depends(require_permission("walks.write")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -314,7 +314,7 @@ async def complete_walk(
 @router.delete("/{walk_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_walk(
     walk_id: uuid.UUID,
-    current_user: User = Depends(require_permission("tasks.write")),
+    current_user: User = Depends(require_permission("walks.write")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
