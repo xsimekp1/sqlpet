@@ -208,7 +208,7 @@ export default function TasksPage() {
       high: 'default',
       urgent: 'destructive',
     };
-    return <Badge variant={variants[priority] || 'outline'}>{PRIORITY_LABELS[priority] || priority}</Badge>;
+    return <Badge variant={variants[priority] || 'outline'} className={priority === 'urgent' ? 'animate-urgent-shake' : ''}>{PRIORITY_LABELS[priority] || priority}</Badge>;
   };
 
   const handleCompleteTask = (task: Task) => {

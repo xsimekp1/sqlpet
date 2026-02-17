@@ -130,3 +130,13 @@
     box-shadow: 0 1px 3px oklch(0 0 0 / 6%), 0 1px 2px oklch(0 0 0 / 4%);
   }
 }
+
+@keyframes urgent-shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+.animate-urgent-shake {
+  animation: urgent-shake 0.3s ease-in-out 2s infinite;
+}
