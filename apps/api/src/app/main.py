@@ -101,6 +101,32 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"✗ Create tables error: {e}")
 
+    # Backfill default_image_url for existing animals
+    try:
+        script_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "scripts",
+            "backfill_default_images.py",
+        )
+        if os.path.exists(script_path):
+            result = subprocess.run(
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                env={
+                    **os.environ,
+                    "PYTHONPATH": os.path.join(os.path.dirname(__file__), ".."),
+                },
+            )
+            if result.returncode == 0:
+                print("✓ Default images backfilled")
+            else:
+                print(f"✗ Backfill failed: {result.stderr}")
+    except Exception as e:
+        print(f"✗ Backfill error: {e}")
+
     # Seed permissions and role templates on startup
     try:
         from src.app.db.seed_data import (
