@@ -73,7 +73,7 @@ function AnimalMedallion({ animal, title }: { animal: CalendarEventAnimal; title
       ) : (
         <div className="w-12 h-12 rounded-full bg-primary/20 border-2 border-white shadow flex items-center justify-center group-hover:scale-110 transition-transform">
           <span className="text-[10px] font-bold text-primary">
-            {animal.name.slice(0, 2).toUpperCase()}
+            {(animal.name || '').slice(0, 2).toUpperCase()}
           </span>
         </div>
       )}

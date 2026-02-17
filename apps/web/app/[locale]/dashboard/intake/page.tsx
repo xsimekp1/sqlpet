@@ -235,7 +235,7 @@ export default function IntakePage() {
                         href={`/dashboard/animals/${intake.animal_id}`}
                         className="text-primary hover:underline font-medium text-sm"
                       >
-                        {intake.animal_name ?? `${intake.animal_id.slice(0, 8)}…`}
+                        {intake.animal_name ?? (intake.animal_id ? `${intake.animal_id.slice(0, 8)}…` : 'Neznámé')}
                       </Link>
                       {intake.animal_species && (
                         <span className="ml-2 text-xs text-muted-foreground capitalize">{intake.animal_species}</span>
