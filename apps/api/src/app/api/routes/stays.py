@@ -210,8 +210,8 @@ async def get_stays_timeline(
         stays_query,
         {
             "org_id": str(organization_id),
-            "start_date": start_date.isoformat(),
-            "end_date": end_date.isoformat(),
+            "start_date": start_date,
+            "end_date": end_date,
         },
     )
     stays = stays_result.fetchall()
