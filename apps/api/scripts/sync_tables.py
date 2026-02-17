@@ -154,15 +154,9 @@ async def main():
             pass
 
         tables_in_models = set(Base.metadata.tables.keys())
-        missing_tables = tables_in_models - existing
 
-        if missing_tables:
-            print(f"Missing tables: {sorted(missing_tables)}")
-            print("Creating missing tables...")
-            await conn.run_sync(Base.metadata.create_all)
-            print("Tables created successfully!")
-
-        print("Checking for missing columns...")
+        # Skip table creation - only sync columns for existing tables
+        print("Checking for missing columns in existing tables...")
         fixes_applied = 0
 
         for table_name, model in Base.metadata.tables.items():
