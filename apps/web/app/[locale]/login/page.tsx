@@ -72,9 +72,9 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
       {/* Logo - always visible, animates on login */}
       <div
-        className={`absolute transition-all duration-[1500ms] ease-out ${
+        className={`absolute left-1/2 -translate-x-1/2 transition-all duration-[1500ms] ease-out ${
           isLoggingIn
-            ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-125'
+            ? 'top-1/2 -translate-y-1/2 scale-125'
             : 'top-12'
         }`}
       >
@@ -83,9 +83,7 @@ export default function LoginPage() {
           alt="Petslog"
           width={360}
           height={240}
-          className={`drop-shadow-md transition-transform duration-[1500ms] ease-out ${
-            isLoggingIn ? 'scale-125' : 'scale-100'
-          }`}
+          className="drop-shadow-md"
           priority
         />
       </div>
