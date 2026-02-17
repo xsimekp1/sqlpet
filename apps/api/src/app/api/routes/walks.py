@@ -59,7 +59,7 @@ async def create_walk(
     walk = WalkLog(
         id=uuid.uuid4(),
         organization_id=organization_id,
-        animal_ids=[str(aid) for aid in data.animal_ids],
+        animal_ids=data.animal_ids,
         walk_type=data.walk_type,
         started_at=data.started_at or datetime.utcnow(),
         started_by_id=current_user.id,

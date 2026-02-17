@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Float, String, Text, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, ForeignKey, Float, String, Text, ARRAY
+from sqlalchemy.dialects.postgresql import UUID, ARRAY as PG_ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
@@ -17,7 +17,9 @@ class WalkLog(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         nullable=False,
         index=True,
     )
-    animal_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    animal_ids: Mapped[list[uuid.UUID]] = mapped_column(
+        PG_ARRAY(UUID(as_uuid=True)), nullable=False, default=list
+    )
 
     walk_type: Mapped[str] = mapped_column(String(20), nullable=False, default="walk")
 
