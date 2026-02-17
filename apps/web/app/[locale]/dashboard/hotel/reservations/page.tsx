@@ -44,6 +44,7 @@ function getAuthHeaders(): HeadersInit {
 interface HotelReservation {
   id: string;
   kennel_id: string;
+  kennel_name: string | null;
   contact_id: string | null;
   animal_name: string;
   animal_species: string;
