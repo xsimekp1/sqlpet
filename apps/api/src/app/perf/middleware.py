@@ -23,6 +23,8 @@ class PerfMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Response]
     ) -> Response:
+        import uuid  # Import locally to avoid any scoping issues
+
         if not self.enabled:
             return await call_next(request)
 
