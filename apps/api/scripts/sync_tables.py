@@ -7,7 +7,11 @@ Run on startup to ensure all tables and columns exist.
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+# Add parent directory to path for imports
+script_dir = os.path.dirname(os.path.abspath(__file__))
+api_dir = os.path.dirname(script_dir)
+sys.path.insert(0, api_dir)
+sys.path.insert(0, os.path.join(api_dir, "src"))
 
 import asyncio
 from sqlalchemy import create_engine, text
