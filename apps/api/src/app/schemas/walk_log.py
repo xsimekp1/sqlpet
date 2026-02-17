@@ -61,3 +61,5 @@ class WalkListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+    model_config = {"from_attributes": True}
