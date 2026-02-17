@@ -203,7 +203,7 @@ export default function WalksPage() {
                     <PawPrint className="h-5 w-5 text-primary" />
                     <div>
                       <p className="font-medium">
-                        {walk.animals?.map(a => a.name).join(', ') || {walk.animal_ids?.[0] ? walk.animal_ids[0].slice(0, 8) : '-'}}
+                        {walk.animals?.map(a => a.name).join(', ') || (walk.animal_ids?.[0] ? walk.animal_ids[0].slice(0, 8) : '-')}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Začalo: {format(new Date(walk.started_at), 'HH:mm')}
@@ -244,7 +244,7 @@ export default function WalksPage() {
                     <PawPrint className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <p className="font-medium">
-                        {walk.animals?.map(a => a.name).join(', ') || {walk.animal_ids?.[0] ? walk.animal_ids[0].slice(0, 8) : '-'}}
+                        {walk.animals?.map(a => a.name).join(', ') || (walk.animal_ids?.[0] ? walk.animal_ids[0].slice(0, 8) : '-')}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {format(new Date(walk.started_at), 'd.M. HH:mm')} • {walk.duration_minutes} min
