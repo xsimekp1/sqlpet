@@ -29,6 +29,10 @@
     "occupancy": "Occupancy",
     "recent": "Recently Viewed",
     "recentlyAdmitted": "Recently Admitted",
+    "myTasks": "My Tasks",
+    "upcomingOutcomes": "Upcoming Outcomes",
+    "noMyTasks": "You have no tasks",
+    "noUpcomingOutcomes": "No upcoming outcomes",
     "noAnimals": "No animals",
     "shelterStats": "Shelter Stats",
     "stats": {
@@ -1235,7 +1239,6 @@
   "help": {
     "title": "Help",
     "description": "PawShelter (ÚtulekOS) is a shelter management system covering daily operations: animal records, kennel assignments, medical tasks, feeding plans, and inventory.",
-    "comingSoon": "Coming soon",
     "shortcuts": {
       "title": "Keyboard Shortcuts",
       "search": "Open global search"
@@ -1247,6 +1250,35 @@
     "support": {
       "title": "Contact Support",
       "description": "Need help? Reach out to our support team"
+    },
+    "guide": {
+      "title": "Application Guide",
+      "main": "Main",
+      "operations": "Operations",
+      "people": "People",
+      "system": "System",
+      "auth": "Authentication"
+    },
+    "pages": {
+      "dashboard": { "title": "Dashboard", "description": "Shelter overview: animals, tasks, alerts and quick actions" },
+      "animals": { "title": "Animals", "description": "List and management of all animals in the shelter" },
+      "kennels": { "title": "Kennels", "description": "Kennel management, occupancy, walk mode and animal moves" },
+      "hotel": { "title": "Hotel", "description": "Hotel reservations for animals, check-in and check-out" },
+      "walks": { "title": "Walks", "description": "Recording and history of animal walks" },
+      "medical": { "title": "Medical Care", "description": "Health records, quarantine, vaccinations and medications" },
+      "feeding": { "title": "Feeding", "description": "Feeding plans, dosing and feeding logs" },
+      "inventory": { "title": "Inventory", "description": "Inventory of medicines, food and supplies, stock tracking" },
+      "tasks": { "title": "Tasks", "description": "Task management, assignment and completion tracking" },
+      "calendar": { "title": "Calendar", "description": "Calendar of events: intakes, vet visits, planned adoptions" },
+      "people": { "title": "People", "description": "Contacts, fosters, volunteers and relationships" },
+      "chat": { "title": "Messages", "description": "Internal chat between organization members" },
+      "adoptions": { "title": "Adoptions", "description": "Adoption process and pipeline management" },
+      "intake": { "title": "Intake", "description": "Intake of new animals into the shelter" },
+      "reports": { "title": "Reports", "description": "Statistics and overviews of shelter operations" },
+      "settings": { "title": "Settings", "description": "Organization settings, users, roles and preferences" },
+      "help": { "title": "Help", "description": "Keyboard shortcuts and application guide" },
+      "selectOrg": { "title": "Select Organization", "description": "Organization selection after login" },
+      "login": { "title": "Login", "description": "System login using email and password" }
     }
   },
   "search": {

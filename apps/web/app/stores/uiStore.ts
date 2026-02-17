@@ -43,7 +43,9 @@ export const useUIStore = create<UIState>()(
         'tasks',
         'shelter-stats',
         'occupancy',
-        'recently-admitted'
+        'recently-admitted',
+        'my-tasks',
+        'upcoming-outcomes'
       ],
       setDashboardWidgets: (widgets) => set({ dashboardWidgets: widgets }),
 

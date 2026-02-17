@@ -29,6 +29,10 @@
     "occupancy": "Obsazenost",
     "recent": "Nedávno zobrazeno",
     "recentlyAdmitted": "Naposledy přijatí",
+    "myTasks": "Moje úkoly",
+    "upcomingOutcomes": "Plánované výdaje",
+    "noMyTasks": "Nemáte žádné úkoly",
+    "noUpcomingOutcomes": "Žádné plánované výdaje",
     "noAnimals": "Žádná zvířata",
     "shelterStats": "Přehled útulku",
     "stats": {
@@ -1258,7 +1262,6 @@
   "help": {
     "title": "Nápověda",
     "description": "PawShelter (ÚtulekOS) je systém pro správu útulku. Pokrývá každodenní provoz: evidenci zvířat, přiřazení ke kotcům, zdravotní úkoly, plány krmení a inventář.",
-    "comingSoon": "Připravujeme",
     "shortcuts": {
       "title": "Klávesové zkratky",
       "search": "Otevřít globální vyhledávání"
@@ -1270,6 +1273,35 @@
     "support": {
       "title": "Kontaktovat podporu",
       "description": "Potřebujete pomoc? Kontaktujte náš tým podpory"
+    },
+    "guide": {
+      "title": "Průvodce aplikací",
+      "main": "Hlavní",
+      "operations": "Provoz",
+      "people": "Lidé",
+      "system": "Systém",
+      "auth": "Přihlášení"
+    },
+    "pages": {
+      "dashboard": { "title": "Dashboard", "description": "Přehled útulku: zvířata, úkoly, upozornění a rychlé akce" },
+      "animals": { "title": "Zvířata", "description": "Seznam a správa všech zvířat v útulku, jejich profily a záznamy" },
+      "kennels": { "title": "Kotce", "description": "Správa kotců, obsazenost, režim obchůzky a přesun zvířat" },
+      "hotel": { "title": "Hotel", "description": "Rezervace hotelových pobytů pro zvířata, check-in a check-out" },
+      "walks": { "title": "Venčení", "description": "Zaznamenávání a historie venčení zvířat" },
+      "medical": { "title": "Lékařská péče", "description": "Zdravotní záznamy, karanténa, očkování a léky" },
+      "feeding": { "title": "Krmení", "description": "Krmné plány, dávkování a záznamy krmení" },
+      "inventory": { "title": "Sklad", "description": "Sklad léků, krmiv a potřeb, sledování zásob" },
+      "tasks": { "title": "Úkoly", "description": "Správa úkolů, jejich přidělování a sledování splnění" },
+      "calendar": { "title": "Kalendář", "description": "Kalendář událostí: příjmy, návštěvy veterináře, plánované adopce" },
+      "people": { "title": "Lidé", "description": "Kontakty, pěstouni, dobrovolníci a vztahy" },
+      "chat": { "title": "Zprávy", "description": "Interní chat mezi členy organizace" },
+      "adoptions": { "title": "Adopce", "description": "Správa adopčního procesu a pipeline" },
+      "intake": { "title": "Příjem", "description": "Příjem nových zvířat do útulku" },
+      "reports": { "title": "Reporty", "description": "Statistiky a přehledy o provozu útulku" },
+      "settings": { "title": "Nastavení", "description": "Nastavení organizace, uživatelé, role a předvolby" },
+      "help": { "title": "Nápověda", "description": "Klávesové zkratky a průvodce aplikací" },
+      "selectOrg": { "title": "Výběr organizace", "description": "Výběr organizace po přihlášení" },
+      "login": { "title": "Přihlášení", "description": "Přihlášení do systému pomocí e-mailu a hesla" }
     }
   },
   "search": {
