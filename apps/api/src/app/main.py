@@ -80,8 +80,31 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"✗ Create tables error: {e}")
 
-    # Note: backfill_default_images.py was run once to populate default_image_url
-    # It can be deleted or run manually if needed in the future
+    # Create api_metrics table if not exists
+    try:
+        script_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "scripts",
+            "create_api_metrics_table.py",
+        )
+        if os.path.exists(script_path):
+            result = subprocess.run(
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                env={
+                    **os.environ,
+                    "PYTHONPATH": os.path.join(os.path.dirname(__file__), ".."),
+                },
+            )
+            if result.returncode == 0:
+                print("✓ API metrics table ready")
+            else:
+                print(f"✗ API metrics table error: {result.stderr}")
+    except Exception as e:
+        print(f"✗ API metrics error: {e}")
 
     # Seed permissions and role templates on startup
     try:
