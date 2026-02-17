@@ -235,12 +235,18 @@ async def get_today_walks(
     logging.warning(f"WALKS_DIRECT_RETURNING: {len(items)}")
 
     # Convert to JSON-serializable dict
+    # animal_ids is now PostgreSQL ARRAY of UUID - convert to list of strings
+    def _convert_animal_ids(ids):
+        if ids is None:
+            return []
+        return [str(x) for x in ids]
+
     result = {
         "items": [
             {
                 "id": str(item.id),
                 "organization_id": str(item.organization_id),
-                "animal_ids": item.animal_ids,
+                "animal_ids": _convert_animal_ids(item.animal_ids),
                 "walk_type": item.walk_type,
                 "started_at": item.started_at.isoformat() if item.started_at else None,
                 "ended_at": item.ended_at.isoformat() if item.ended_at else None,
