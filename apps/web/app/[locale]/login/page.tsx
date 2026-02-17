@@ -56,7 +56,6 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login(data.email, data.password);
-      toast.success(t('common.success'));
     } catch (error) {
       setIsLoggingIn(false);
       const errorMessage = error instanceof Error ? error.message : t('login.error');
@@ -73,10 +72,10 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
       {/* Logo - always visible, animates on login */}
       <div
-        className={`absolute transition-all duration-1000 ease-in-out ${
+        className={`absolute transition-all duration-[1500ms] ease-out ${
           isLoggingIn
             ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-125'
-            : 'top-8'
+            : 'top-12'
         }`}
       >
         <Image
@@ -84,16 +83,18 @@ export default function LoginPage() {
           alt="Petslog"
           width={360}
           height={240}
-          className="drop-shadow-md"
+          className={`drop-shadow-md transition-transform duration-[1500ms] ease-out ${
+            isLoggingIn ? 'scale-125' : 'scale-100'
+          }`}
           priority
         />
       </div>
 
       {/* Login Form - fades out on submit */}
       <div
-        className={`w-full max-w-md transition-all duration-700 ease-out ${
+        className={`w-full max-w-md transition-all duration-[800ms] ease-in ${
           isLoggingIn
-            ? 'translate-y-8 opacity-0 scale-95'
+            ? 'opacity-0 scale-90'
             : 'translate-y-0 opacity-100 scale-100'
         }`}
       >
