@@ -19,6 +19,9 @@ import {
   CalendarDays,
   Camera,
   Loader2,
+  MessageSquare,
+  Hotel,
+  Footprints,
 } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
@@ -90,6 +93,8 @@ export function Sidebar() {
       title: 'nav.operations',
       items: [
         { label: 'nav.kennels', href: '/dashboard/kennels', icon: Grid3x3, permission: 'kennels.view' },
+        { label: 'nav.hotel', href: '/dashboard/hotel/reservations', icon: Hotel, permission: 'kennels.view' },
+        { label: 'nav.walks', href: '/dashboard/walks', icon: Footprints, permission: 'tasks.view' },
         { label: 'nav.medical', href: '/dashboard/medical', icon: HeartPulse, permission: 'medical.view' },
         { label: 'nav.feeding', href: '/dashboard/feeding', icon: Bone, permission: 'feeding.view' },
         { label: 'nav.inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory.view' },
@@ -101,6 +106,7 @@ export function Sidebar() {
       title: 'nav.people',
       items: [
         { label: 'nav.people', href: '/dashboard/people', icon: Users, permission: 'people.view' },
+        { label: 'nav.chat', href: '/dashboard/chat', icon: MessageSquare, permission: null },
         { label: 'nav.adoptions', href: '/dashboard/adoptions', icon: Heart, permission: 'adoptions.view' },
       ]
     },
