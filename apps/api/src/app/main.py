@@ -35,6 +35,8 @@ from src.app.api.routes.finding import router as finding_router
 from src.app.api.routes.vaccinations import router as vaccinations_router
 from src.app.api.routes.walks import router as walks_router
 from src.app.api.routes.chat import router as chat_router
+from src.app.api.routes.calendar import router as calendar_router
+from src.app.api.routes.animals_stats import router as animals_stats_router
 
 # Files router is now working properly after fixing import issues
 
@@ -55,6 +57,31 @@ async def lifespan(app: FastAPI):
         print("✓ Database migrations applied")
     except Exception as e:
         print(f"✗ Migration failed: {e}")
+
+    # Sync missing tables (fallback if migrations fail)
+    try:
+        import subprocess
+        import sys
+
+        script_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "scripts", "sync_tables.py"
+        )
+        if os.path.exists(script_path):
+            result = subprocess.run(
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                env={
+                    **os.environ,
+                    "PYTHONPATH": os.path.join(os.path.dirname(__file__), ".."),
+                },
+            )
+            if result.returncode == 0:
+                print("✓ Database tables synced")
+            else:
+                print(f"✗ Table sync failed: {result.stderr}")
+    except Exception as e:
+        print(f"✗ Table sync error: {e}")
 
     # Seed permissions and role templates on startup
     try:
@@ -245,3 +272,5 @@ app.include_router(finding_router)
 app.include_router(vaccinations_router)
 app.include_router(walks_router)
 app.include_router(chat_router)
+app.include_router(calendar_router)
+app.include_router(animals_stats_router)

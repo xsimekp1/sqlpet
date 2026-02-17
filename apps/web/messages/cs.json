@@ -16,6 +16,9 @@
     "role": "Role",
     "select": "Vybrat"
   },
+  "errors": {
+    "noPermission": "Nemáte oprávnění k této akci"
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Vítejte",

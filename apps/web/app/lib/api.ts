@@ -767,6 +767,33 @@ class ApiClient {
   }
 
   // ========================================
+  // CALENDAR
+  // ========================================
+
+  static async getCalendarEvents(year: number, month: number): Promise<{
+    intakes: Array<{ date: string; animal_id: string; animal_name: string; animal_photo_url: string | null }>;
+    litters: Array<{ date: string; animal_id: string; animal_name: string; animal_photo_url: string | null }>;
+    escapes: Array<{ date: string; animal_id: string; animal_name: string; animal_photo_url: string | null }>;
+    outcomes: Array<{ date: string; animal_id: string; animal_name: string; animal_photo_url: string | null; outcome_type: string }>;
+  }> {
+    if (!this.getOrganizationId()) {
+      throw new Error('No organization selected');
+    }
+    try {
+      const response = await axios.get(
+        `${API_URL}/calendar/events?year=${year}&month=${month}`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.detail || 'Failed to fetch calendar events');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  // ========================================
   // ANIMALS
   // ========================================
 

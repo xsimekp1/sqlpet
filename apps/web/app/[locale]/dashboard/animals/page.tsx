@@ -33,6 +33,8 @@ import {
 import ApiClient, { Animal, AnimalIdentifier } from '@/app/lib/api';
 import { getAnimalImageUrl } from '@/app/lib/utils';
 import { toast } from 'sonner';
+import { useAuth } from '@/app/context/AuthContext';
+import { userHasPermission } from '@/app/lib/permissions';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -78,6 +80,7 @@ export default function AnimalsPage() {
   const router = useRouter();
   const t = useTranslations();
   const tSpecies = useTranslations('animals.species');
+  const { user, permissions } = useAuth();
   const [search, setSearch] = useState('');
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'active' | 'available' | 'all'>('active');
@@ -384,7 +387,8 @@ export default function AnimalsPage() {
                         variant="outline"
                         className="h-7 text-xs"
                         onClick={(e) => handleMarkAsWalked(animal.id, e)}
-                        disabled={walkingAnimals.has(animal.id)}
+                        disabled={walkingAnimals.has(animal.id) || !userHasPermission(user, 'tasks.write', permissions)}
+                        title={!userHasPermission(user, 'tasks.write', permissions) ? t('errors.noPermission') : undefined}
                       >
                         <Dog className="h-3 w-3 mr-1" />
                         {walkingAnimals.has(animal.id) ? '...' : t('animals.markAsWalked')}

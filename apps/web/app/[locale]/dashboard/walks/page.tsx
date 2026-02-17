@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import ApiClient, { Animal, Walk, WalkListResponse } from '@/app/lib/api';
+import { useAuth } from '@/app/context/AuthContext';
+import { userHasPermission } from '@/app/lib/permissions';
 
 const STATUS_COLORS: Record<string, string> = {
   in_progress: 'bg-yellow-100 text-yellow-800',
@@ -38,6 +40,8 @@ const WALK_TYPE_LABELS: Record<string, string> = {
 
 export default function WalksPage() {
   const t = useTranslations('walks');
+  const tRoot = useTranslations();
+  const { user, permissions } = useAuth();
   const [walks, setWalks] = useState<Walk[]>([]);
   const [loading, setLoading] = useState(true);
   const [animals, setAnimals] = useState<Animal[]>([]);
@@ -174,7 +178,7 @@ export default function WalksPage() {
               </SelectContent>
             </Select>
 
-            <Button onClick={startWalk} disabled={creating || newWalk.animal_ids.length === 0}>
+            <Button onClick={startWalk} disabled={creating || newWalk.animal_ids.length === 0 || !userHasPermission(user, 'tasks.write', permissions)} title={!userHasPermission(user, 'tasks.write', permissions) ? tRoot('errors.noPermission') : undefined}>
               {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
               Spustit
             </Button>
@@ -206,7 +210,7 @@ export default function WalksPage() {
                       </p>
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => completeWalk(walk.id)}>
+                  <Button size="sm" onClick={() => completeWalk(walk.id)} disabled={!userHasPermission(user, 'tasks.write', permissions)} title={!userHasPermission(user, 'tasks.write', permissions) ? tRoot('errors.noPermission') : undefined}>
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Dokončit
                   </Button>

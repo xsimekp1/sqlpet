@@ -16,6 +16,9 @@
     "role": "Role",
     "select": "Select"
   },
+  "errors": {
+    "noPermission": "You do not have permission for this action"
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",

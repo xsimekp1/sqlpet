@@ -42,6 +42,12 @@ class HotelReservation(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     animal_species: Mapped[str] = mapped_column(String(50), nullable=False)
     animal_breed: Mapped[str | None] = mapped_column(String(255), nullable=True)
     animal_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    animal_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("animals.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     reserved_from: Mapped[date] = mapped_column(Date, nullable=False)
     reserved_to: Mapped[date] = mapped_column(Date, nullable=False)
@@ -50,7 +56,9 @@ class HotelReservation(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     total_price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     is_paid: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    requires_single_cage: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    requires_single_cage: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
 
     status: Mapped[str] = mapped_column(
         String(50),

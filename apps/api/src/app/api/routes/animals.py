@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime, timezone, timedelta
+from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
@@ -593,33 +593,36 @@ async def get_daily_animal_count(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Return daily animal count for the last N days."""
-    today = date.today()
-    result = []
-
-    for i in range(days - 1, -1, -1):
-        day = today - timedelta(days=i)
-        count = 0
-        try:
-            async with db.begin_nested():
-                count_result = await db.execute(
-                    text("""
-                        SELECT COUNT(DISTINCT a.id)
-                        FROM animals a
-                        JOIN intakes i ON i.animal_id = a.id
-                        WHERE a.organization_id = :org_id
-                          AND a.deleted_at IS NULL
-                          AND i.intake_date <= :day
-                          AND (i.deleted_at IS NULL OR i.deleted_at > :day)
-                    """),
-                    {"org_id": str(organization_id), "day": day},
-                )
-                count = count_result.scalar() or 0
-        except Exception:
-            pass  # savepoint rolled back; intakes table may not exist yet
-        result.append({"date": day.isoformat(), "count": count})
-
-    return result
+    """Return daily animal count for the last N days. Single query with generate_series."""
+    result = await db.execute(
+        text("""
+            SELECT 
+                d.day,
+                COUNT(DISTINCT a.id)::int as count
+            FROM generate_series(
+                CURRENT_DATE - (:days - 1) * INTERVAL '1 day',
+                CURRENT_DATE,
+                '1 day'::interval
+            ) AS d(day)
+            LEFT JOIN animals a ON a.organization_id = :org_id AND a.deleted_at IS NULL
+            LEFT JOIN intakes i ON i.animal_id = a.id 
+                AND i.intake_date <= d.day 
+                AND (i.deleted_at IS NULL OR i.deleted_at > d.day)
+            GROUP BY d.day
+            ORDER BY d.day ASC
+        """),
+        {"org_id": str(organization_id), "days": days},
+    )
+    rows = result.fetchall()
+    return [
+        {
+            "date": row.day.isoformat()
+            if hasattr(row.day, "isoformat")
+            else str(row.day),
+            "count": row.count,
+        }
+        for row in rows
+    ]
 
 
 # --- Identifier endpoints ---

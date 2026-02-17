@@ -9,40 +9,64 @@ import { ChevronLeft, ChevronRight, Baby, LogIn, PersonStanding, Heart, LogOut }
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-interface CalendarAnimal {
+interface CalendarEventAnimal {
   id: string;
   name: string;
-  primary_photo_url: string | null;
-  current_intake_date: string | null;
-  expected_litter_date: string | null;
-  status: string;
-  sex: string;
-  is_pregnant: boolean;
+  photo_url: string | null;
 }
 
-interface Incident {
-  id: string;
+interface CalendarIntakeEvent {
+  date: string;
   animal_id: string;
-  incident_type: string;
-  incident_date: string;
+  animal_name: string;
+  animal_photo_url: string | null;
+}
+
+interface CalendarLitterEvent {
+  date: string;
+  animal_id: string;
+  animal_name: string;
+  animal_photo_url: string | null;
+}
+
+interface CalendarEscapeEvent {
+  date: string;
+  animal_id: string;
+  animal_name: string;
+  animal_photo_url: string | null;
+}
+
+interface CalendarOutcomeEvent {
+  date: string;
+  animal_id: string;
+  animal_name: string;
+  animal_photo_url: string | null;
+  outcome_type: string;
+}
+
+interface CalendarEventsData {
+  intakes: CalendarIntakeEvent[];
+  litters: CalendarLitterEvent[];
+  escapes: CalendarEscapeEvent[];
+  outcomes: CalendarOutcomeEvent[];
 }
 
 interface CalendarEvent {
   date: string;
   type: 'intake' | 'litter' | 'escaped' | 'planned_adoption' | 'planned_outcome';
-  animal: CalendarAnimal;
+  animal: CalendarEventAnimal;
 }
 
-function AnimalMedallion({ animal, title }: { animal: CalendarAnimal; title: string }) {
+function AnimalMedallion({ animal, title }: { animal: CalendarEventAnimal; title: string }) {
   return (
     <Link
       href={`/dashboard/animals/${animal.id}`}
       title={`${animal.name} — ${title}`}
       className="group relative inline-flex"
     >
-      {animal.primary_photo_url ? (
+      {animal.photo_url ? (
         <img
-          src={animal.primary_photo_url}
+          src={animal.photo_url}
           alt={animal.name}
           className="w-12 h-12 rounded-full object-cover border-2 border-white shadow group-hover:scale-110 transition-transform"
         />
@@ -64,110 +88,63 @@ export default function CalendarPage() {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()); // 0-indexed
 
-  // Fetch all animals (large page size to get enough data)
-  console.time('[CALENDAR] Total load time');
-  console.time('[CALENDAR] Fetch animals');
-  const { data: animalsData, isLoading: animalsLoading } = useQuery<{ items: CalendarAnimal[] }>({
-    queryKey: ['animals-calendar'],
-    queryFn: async () => {
-      const start = Date.now();
-      const result = await ApiClient.getAnimals({ page_size: 500 });
-      console.timeEnd('[CALENDAR] Fetch animals');
-      console.log(`[CALENDAR] Animals received: ${result.items.length}, time: ${Date.now() - start}ms`);
-      return result;
-    },
-    staleTime: 2 * 60 * 1000,
+  // Single optimized API call - fetches all events for the month in one request
+  const { data: eventsData, isLoading } = useQuery<CalendarEventsData>({
+    queryKey: ['calendar-events', year, month],
+    queryFn: () => ApiClient.getCalendarEvents(year, month + 1), // JS months are 0-indexed
+    staleTime: 60 * 1000, // 1 minute
   });
-  console.time('[CALENDAR] Fetch incidents');
-  // Fetch escape incidents
-  const { data: incidents = [] } = useQuery<Incident[]>({
-    queryKey: ['incidents-escape'],
-    queryFn: async () => {
-      const start = Date.now();
-      const result = await ApiClient.getIncidents({ incident_type: 'escape' });
-      console.log(`[CALENDAR] Incidents received: ${result.length}, time: ${Date.now() - start}ms`);
-      console.timeEnd('[CALENDAR] Fetch incidents');
-      return result;
-    },
-    staleTime: 2 * 60 * 1000,
-  });
-
-  console.time('[CALENDAR] Fetch intakes');
-  // Fetch intakes for planned_adoption events
-  const { data: intakesData = [] } = useQuery({
-    queryKey: ['intakes-calendar'],
-    queryFn: async () => {
-      const start = Date.now();
-      const result = await ApiClient.get('/intakes');
-      console.log(`[CALENDAR] Intakes received: ${(result as any[]).length}, time: ${Date.now() - start}ms`);
-      console.timeEnd('[CALENDAR] Fetch intakes');
-      return result;
-    },
-    staleTime: 2 * 60 * 1000,
-  });
-
-  // Loading complete
-  useMemo(() => {
-    if (!animalsLoading && animalsData) {
-      console.timeEnd('[CALENDAR] Total load time');
-    }
-  }, [animalsLoading, animalsData]);
-
-  const animals: CalendarAnimal[] = animalsData?.items ?? [];
-
-  // Build animal lookup map for incidents
-  const animalById = useMemo(() => {
-    const m: Record<string, CalendarAnimal> = {};
-    for (const a of animals) m[a.id] = a;
-    return m;
-  }, [animals]);
 
   // Build events map: "YYYY-MM-DD" -> events[]
   const eventsMap = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
 
-    const addEvent = (dateStr: string | null, type: CalendarEvent['type'], animal: CalendarAnimal) => {
+    const addEvent = (dateStr: string, type: CalendarEvent['type'], animal: CalendarEventAnimal) => {
       if (!dateStr) return;
       if (!map[dateStr]) map[dateStr] = [];
       map[dateStr].push({ date: dateStr, type, animal });
     };
 
-    for (const animal of animals) {
-      addEvent(animal.current_intake_date, 'intake', animal);
-      if (animal.expected_litter_date && animal.sex === 'female' && animal.is_pregnant) {
-        addEvent(animal.expected_litter_date, 'litter', animal);
-      }
+    // Add intakes
+    for (const intake of eventsData?.intakes ?? []) {
+      addEvent(intake.date, 'intake', {
+        id: intake.animal_id,
+        name: intake.animal_name,
+        photo_url: intake.animal_photo_url,
+      });
     }
 
-    // Add escape incidents
-    for (const incident of incidents) {
-      const animal = animalById[incident.animal_id];
-      if (animal) {
-        addEvent(incident.incident_date, 'escaped', animal);
-      }
+    // Add litters
+    for (const litter of eventsData?.litters ?? []) {
+      addEvent(litter.date, 'litter', {
+        id: litter.animal_id,
+        name: litter.animal_name,
+        photo_url: litter.animal_photo_url,
+      });
     }
 
-    // Add planned and actual outcome events
-    for (const intake of intakesData as any[]) {
-      const animal = animalById[intake.animal_id];
-      if (animal) {
-        // Planned outcome (future)
-        if (intake.planned_outcome_date) {
-          addEvent(intake.planned_outcome_date, 'planned_outcome', animal);
-        }
-        // Actual outcome (past)
-        if (intake.actual_outcome_date) {
-          addEvent(intake.actual_outcome_date, 'planned_outcome', animal);
-        }
-        // Legacy: planned_end_date as planned adoption
-        if (intake.planned_end_date) {
-          addEvent(intake.planned_end_date, 'planned_adoption', animal);
-        }
-      }
+    // Add escapes
+    for (const escape of eventsData?.escapes ?? []) {
+      addEvent(escape.date, 'escaped', {
+        id: escape.animal_id,
+        name: escape.animal_name,
+        photo_url: escape.animal_photo_url,
+      });
+    }
+
+    // Add outcomes
+    for (const outcome of eventsData?.outcomes ?? []) {
+      // planned vs actual - use different types for display
+      const eventType = outcome.outcome_type === 'planned' ? 'planned_outcome' : 'planned_outcome';
+      addEvent(outcome.date, eventType, {
+        id: outcome.animal_id,
+        name: outcome.animal_name,
+        photo_url: outcome.animal_photo_url,
+      });
     }
 
     return map;
-  }, [animals, incidents, intakesData, animalById]);
+  }, [eventsData]);
 
   // Calendar grid calculation
   const firstDay = new Date(year, month, 1);
@@ -203,6 +180,14 @@ export default function CalendarPage() {
   const pad2 = (n: number) => String(n).padStart(2, '0');
   const dateKey = (d: number) => `${year}-${pad2(month + 1)}-${pad2(d)}`;
   const todayKey = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Loading calendar...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

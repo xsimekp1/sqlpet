@@ -121,10 +121,10 @@ export function Sidebar() {
     }
   ]
 
-  // Filter nav sections by RBAC
+  // Show all nav items - filterNavByPermissions only used for disabled state
   const filteredSections = navSections.map(section => ({
     ...section,
-    items: filterNavByPermissions(section.items, user, permissions)
+    items: section.items
   })).filter(section => section.items.length > 0)
 
   return (
@@ -197,6 +197,7 @@ export function Sidebar() {
                   icon={item.icon}
                   label={item.label}
                   collapsed={sidebarCollapsed}
+                  permission={item.permission}
                 />
               ))}
             </div>
