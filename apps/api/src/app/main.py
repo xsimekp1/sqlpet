@@ -169,7 +169,7 @@ async def cors_aware_general_exception_handler(request: Request, exc: Exception)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",  # All Vercel preview deployments
+    allow_origin_regex=r"https://([a-zA-Z0-9-]+\.)?vercel\.app",  # All Vercel deployments
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
