@@ -9,6 +9,7 @@ from src.app.models.animal import (
     AgeGroup,
     SizeEstimated,
 )
+from src.app.models.animal_event import AnimalEvent, AnimalEventType
 from src.app.models.breed import Breed
 from src.app.models.breed_i18n import BreedI18n
 from src.app.models.animal_breed import AnimalBreed
@@ -50,6 +51,11 @@ from src.app.models.contact import Contact
 from src.app.models.intake import Intake, IntakeReason
 from src.app.models.animal_vaccination import AnimalVaccination
 from src.app.models.walk_log import WalkLog
+from src.app.models.hotel_reservation import HotelReservation, HotelReservationStatus
+from src.app.models.chat import ChatMessage
+from src.app.models.finding import Finding
+from src.app.models.user_shortcut import UserKeyboardShortcut
+from src.app.models.incident import AnimalIncident
 
 __all__ = [
     "Base",
@@ -61,6 +67,8 @@ __all__ = [
     "AlteredStatus",
     "AgeGroup",
     "SizeEstimated",
+    "AnimalEvent",
+    "AnimalEventType",
     "Breed",
     "BreedI18n",
     "AnimalBreed",
@@ -107,4 +115,8 @@ __all__ = [
     "IntakeReason",
     "HotelReservation",
     "HotelReservationStatus",
+    "ChatMessage",
+    "Finding",
+    "UserKeyboardShortcut",
+    "AnimalIncident",
 ]
