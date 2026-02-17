@@ -178,6 +178,27 @@ async def get_animal_walks(
     )
 
 
+@router.get("/{walk_id}", response_model=WalkWithAnimalsResponse)
+async def get_walk(
+    walk_id: uuid.UUID,
+    current_user: User = Depends(require_permission("tasks.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(WalkLog).where(
+            WalkLog.id == walk_id,
+            WalkLog.organization_id == organization_id,
+        )
+    )
+    walk = result.scalar_one_or_none()
+    if not walk:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Walk not found"
+        )
+    return await _to_response_with_animals(walk, db)
+
+
 @router.get("/today", response_model=WalkListResponse)
 async def get_today_walks(
     current_user: User = Depends(require_permission("tasks.read")),
@@ -208,27 +229,6 @@ async def get_today_walks(
         page=1,
         page_size=100,
     )
-
-
-@router.get("/{walk_id}", response_model=WalkWithAnimalsResponse)
-async def get_walk(
-    walk_id: uuid.UUID,
-    current_user: User = Depends(require_permission("tasks.read")),
-    organization_id: uuid.UUID = Depends(get_current_organization_id),
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(
-        select(WalkLog).where(
-            WalkLog.id == walk_id,
-            WalkLog.organization_id == organization_id,
-        )
-    )
-    walk = result.scalar_one_or_none()
-    if not walk:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Walk not found"
-        )
-    return await _to_response_with_animals(walk, db)
 
 
 @router.patch("/{walk_id}", response_model=WalkResponse)
