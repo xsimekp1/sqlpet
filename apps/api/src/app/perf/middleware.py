@@ -110,23 +110,7 @@ class PerfMiddleware(BaseHTTPMiddleware):
 
         self._request_count += 1
 
-        if should_log:
-            self.logger.request_summary(
-                trace_id=trace_id,
-                method=request.method,
-                path=request.url.path,
-                status=response.status_code,
-                total_ms=total_ms,
-                sql_ms=db_ms,
-                sql_count=query_count,
-                http_ms=http_ms,
-                response_bytes=response_bytes,
-                org_id=org_id,
-                user_id=user_id,
-                **extra_data,
-            )
-
-        # Save metrics to database (fire and forget)
+        # Save ALL metrics to database (not just sampled)
         try:
             import asyncio
             from src.app.models.api_metric import ApiMetric
@@ -159,6 +143,23 @@ class PerfMiddleware(BaseHTTPMiddleware):
             asyncio.create_task(save_metric())
         except Exception:
             pass  # Never crash request due to metrics
+
+        # Log to console (only sampled requests to avoid flooding)
+        if should_log:
+            self.logger.request_summary(
+                trace_id=trace_id,
+                method=request.method,
+                path=request.url.path,
+                status=response.status_code,
+                total_ms=total_ms,
+                sql_ms=db_ms,
+                sql_count=query_count,
+                http_ms=http_ms,
+                response_bytes=response_bytes,
+                org_id=org_id,
+                user_id=user_id,
+                **extra_data,
+            )
 
         sql_instrumentation = get_sql_instrumentation()
         sql_instrumentation.handle_request_end(trace_id)
