@@ -77,18 +77,24 @@ export default function NewHotelReservationPage() {
 
   const loadKennels = async () => {
     try {
-      const data = await fetch('/api/kennels').then(r => r.json());
-      setKennels(data);
+      const res = await fetch('/api/kennels', { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Unauthorized');
+      const data = await res.json();
+      setKennels(Array.isArray(data) ? data : (data.items || []));
     } catch {
+      setKennels([]);
       toast.error('Nepodařilo se načíst kotce');
     }
   };
 
   const loadContacts = async () => {
     try {
-      const data = await fetch('/api/contacts').then(r => r.json());
-      setContacts(data.items || []);
+      const res = await fetch('/api/contacts', { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Unauthorized');
+      const data = await res.json();
+      setContacts(Array.isArray(data) ? data : (data.items || []));
     } catch {
+      setContacts([]);
       toast.error('Nepodařilo se načíst kontakty');
     }
   };
@@ -138,7 +144,7 @@ export default function NewHotelReservationPage() {
         notes: formData.notes || null,
       };
 
-      await fetch('/api/hotel/reservations', {
+      const res = await fetch('/api/hotel/reservations', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -146,6 +152,11 @@ export default function NewHotelReservationPage() {
         },
         body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'Failed to create reservation' }));
+        throw new Error(err.detail || 'Failed to create reservation');
+      }
 
       toast.success('Rezervace vytvořena');
       router.push('/dashboard/hotel/reservations');
