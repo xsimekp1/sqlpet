@@ -140,7 +140,8 @@
     "alerts": "Alerts",
     "menu": "Menu",
     "help": "Help",
-    "calendar": "Calendar"
+    "calendar": "Calendar",
+    "newOrg": "New Organization"
   },
   "topbar": {
     "search": "Search animals, people, tasks...",

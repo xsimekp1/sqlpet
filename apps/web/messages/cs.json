@@ -135,7 +135,8 @@
     "alerts": "Upozornění",
     "menu": "Menu",
     "help": "Nápověda",
-    "calendar": "Kalendář"
+    "calendar": "Kalendář",
+    "newOrg": "Nová organizace"
   },
   "topbar": {
     "search": "Hledat zvířata, lidi, úkoly...",

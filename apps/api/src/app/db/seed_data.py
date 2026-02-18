@@ -35,6 +35,14 @@ PERMISSIONS = [
     ("feeding.read", "View feeding logs"),
     ("feeding.write", "Manage feeding"),
     ("chat.use", "Use chat"),
+    ("settings.read", "View settings"),
+    ("settings.write", "Manage settings"),
+    ("intakes.write", "Manage intakes"),
+    ("outcomes.write", "Manage outcomes"),
+    ("adoptions.read", "View adoptions"),
+    ("adoptions.write", "Manage adoptions"),
+    ("org.manage", "Manage organization"),
+    ("users.manage", "Manage users"),
 ]
 
 # Role templates: name -> list of permission keys

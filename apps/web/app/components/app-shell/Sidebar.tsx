@@ -1,29 +1,30 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import {
-  Home,
-  PawPrint,
-  Grid3x3,
-  HeartPulse,
-  Bone,
-  CheckSquare,
-  Users,
-  BarChart3,
-  Settings,
-  Inbox,
-  Heart,
-  ChevronLeft,
-  Package,
-  HelpCircle,
-  CalendarDays,
-  Camera,
-  Zap,
-  Loader2,
-  MessageSquare,
-  Hotel,
-  Footprints,
-} from 'lucide-react'
+  import {
+    Home,
+    PawPrint,
+    Grid3x3,
+    HeartPulse,
+    Bone,
+    CheckSquare,
+    Users,
+    BarChart3,
+    Settings,
+    Inbox,
+    Heart,
+    ChevronLeft,
+    Package,
+    HelpCircle,
+    CalendarDays,
+    Camera,
+    Zap,
+    Loader2,
+    MessageSquare,
+    Hotel,
+    Footprints,
+    PlusCircle,
+  } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
 import { filterNavByPermissions } from '@/app/lib/permissions'
@@ -86,36 +87,37 @@ export function Sidebar() {
       title: 'nav.main',
       items: [
         { label: 'nav.dashboard', href: '/dashboard', icon: Home, permission: null },
-        { label: 'nav.animals', href: '/dashboard/animals', icon: PawPrint, permission: 'animals.view' },
+        { label: 'nav.animals', href: '/dashboard/animals', icon: PawPrint, permission: 'animals.read' },
       ]
     },
     {
       title: 'nav.operations',
       items: [
-        { label: 'nav.kennels', href: '/dashboard/kennels', icon: Grid3x3, permission: 'kennels.view' },
-        { label: 'nav.hotel', href: '/dashboard/hotel/reservations', icon: Hotel, permission: 'kennels.view' },
-        { label: 'nav.walks', href: '/dashboard/walks', icon: Footprints, permission: 'tasks.view' },
-        { label: 'nav.medical', href: '/dashboard/medical', icon: HeartPulse, permission: 'medical.view' },
-        { label: 'nav.feeding', href: '/dashboard/feeding', icon: Bone, permission: 'feeding.view' },
-        { label: 'nav.inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory.view' },
-        { label: 'nav.tasks', href: '/dashboard/tasks', icon: CheckSquare, permission: 'tasks.view' },
+        { label: 'nav.kennels', href: '/dashboard/kennels', icon: Grid3x3, permission: 'kennels.read' },
+        { label: 'nav.hotel', href: '/dashboard/hotel/reservations', icon: Hotel, permission: 'kennels.read' },
+        { label: 'nav.walks', href: '/dashboard/walks', icon: Footprints, permission: 'walks.read' },
+        { label: 'nav.medical', href: '/dashboard/medical', icon: HeartPulse, permission: 'medical.read' },
+        { label: 'nav.feeding', href: '/dashboard/feeding', icon: Bone, permission: 'feeding.read' },
+        { label: 'nav.inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory.read' },
+        { label: 'nav.tasks', href: '/dashboard/tasks', icon: CheckSquare, permission: 'tasks.read' },
         { label: 'nav.calendar', href: '/dashboard/calendar', icon: CalendarDays, permission: null },
       ]
     },
     {
       title: 'nav.people',
       items: [
-        { label: 'nav.people', href: '/dashboard/people', icon: Users, permission: 'people.view' },
+        { label: 'nav.people', href: '/dashboard/people', icon: Users, permission: 'people.read' },
         { label: 'nav.chat', href: '/dashboard/chat', icon: MessageSquare, permission: 'chat.use' },
-        { label: 'nav.adoptions', href: '/dashboard/adoptions', icon: Heart, permission: 'adoptions.view' },
+        { label: 'nav.adoptions', href: '/dashboard/adoptions', icon: Heart, permission: 'adoptions.read' },
       ]
     },
     {
       title: 'nav.system',
       items: [
-        { label: 'nav.intake', href: '/dashboard/intake', icon: Inbox, permission: 'intake.create' },
-        { label: 'nav.reports', href: '/dashboard/reports', icon: BarChart3, permission: 'reports.view' },
-        { label: 'nav.settings', href: '/dashboard/settings', icon: Settings, permission: 'settings.view' },
+        { label: 'nav.intake', href: '/dashboard/intake', icon: Inbox, permission: 'intakes.write' },
+        { label: 'nav.reports', href: '/dashboard/reports', icon: BarChart3, permission: 'reports.run' },
+        { label: 'nav.settings', href: '/dashboard/settings', icon: Settings, permission: 'settings.read' },
+        ...(user?.is_superadmin ? [{ label: 'nav.newOrg', href: '/dashboard/new-org', icon: PlusCircle, permission: null }] : []),
         ...(user?.is_superadmin ? [{ label: 'nav.performance', href: '/dashboard/settings/performance', icon: Zap, permission: null }] : []),
         { label: 'nav.help', href: '/dashboard/help', icon: HelpCircle, permission: null },
       ]

@@ -44,31 +44,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedToken = localStorage.getItem('token');
         const storedRefreshToken = localStorage.getItem('refreshToken');
         const storedSelectedOrg = localStorage.getItem('selectedOrg');
+        console.log('[Auth] Init - storedToken:', !!storedToken, 'storedSelectedOrg:', storedSelectedOrg);
 
         if (storedToken) {
           setToken(storedToken);
 
           // Verify token by fetching user profile
           const profile = await ApiClient.getUserProfile();
+          console.log('[Auth] Profile loaded:', profile.user.email, 'memberships:', profile.memberships.length);
           setUser(profile.user);
           setMemberships(profile.memberships);
 
           // Restore selected org if available
           if (storedSelectedOrg) {
             const orgData = JSON.parse(storedSelectedOrg);
+            console.log('[Auth] Restoring org:', orgData);
             setSelectedOrg(orgData);
             
-            // Fetch permissions for the stored org
+            // IMPORTANT: Need to get a fresh token with org_id claim first
+            // The old token from localStorage doesn't have org_id
             try {
+              const orgResponse = await ApiClient.selectOrganization(orgData.id);
+              console.log('[Auth] Got new token with org_id');
+              localStorage.setItem('token', orgResponse.access_token);
+              localStorage.setItem('refreshToken', orgResponse.refresh_token);
+              setToken(orgResponse.access_token);
+              setRefreshTokenState(orgResponse.refresh_token);
+              
+              // Now fetch permissions with the new token
               const permResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/auth/permissions`, {
-                headers: { 'Authorization': `Bearer ${storedToken}` },
+                headers: { 'Authorization': `Bearer ${orgResponse.access_token}` },
               });
               if (permResponse.ok) {
                 const permData = await permResponse.json();
+                console.log('[Auth] Permissions loaded:', permData.permissions.length);
                 setPermissions(permData.permissions || []);
               }
             } catch (e) {
-              console.error('Failed to fetch permissions:', e);
+              console.error('[Auth] Failed to refresh token or fetch permissions:', e);
               setPermissions([]);
             }
           }
@@ -79,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         // Token is invalid, clear everything
-        console.error('Auth initialization failed:', error);
+        console.error('[Auth] Initialization failed:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('selectedOrg');
@@ -91,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setPermissions([]);
       } finally {
         setIsLoading(false);
+        console.log('[Auth] Init complete');
       }
     };
 
