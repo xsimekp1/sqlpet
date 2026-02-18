@@ -327,8 +327,18 @@ async def log_weight(
         recorded_by_user_id=current_user.id,
     )
     db.add(log)
-    # Also update the animal's current weight
+    # Update the animal's current weight
     animal.weight_current_kg = data.weight_kg
+    # Recalculate MER based on new weight
+    if animal.weight_current_kg and animal.weight_current_kg > 0:
+        rer = 70 * (float(animal.weight_current_kg) ** 0.75)
+        if animal.species.value == "cat":
+            activity_factor = 1.2
+        elif animal.altered_status.value in ("intact",):
+            activity_factor = 1.8
+        else:
+            activity_factor = 1.4
+        animal.mer_kcal_per_day = int(rer * activity_factor)
     await db.commit()
     await db.refresh(log)
     return WeightLogResponse.model_validate(log)
