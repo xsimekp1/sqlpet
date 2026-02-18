@@ -475,6 +475,6 @@ async def upload_animal_document(
         size_bytes=db_file.size_bytes,
         purpose=purpose,
         uploaded_by_user_id=str(current_user.id),
-        uploaded_by_user_name=current_user.full_name,
+        uploaded_by_user_name=current_user.name,
         created_at=db_file.created_at.isoformat() if db_file.created_at else "",
     )
