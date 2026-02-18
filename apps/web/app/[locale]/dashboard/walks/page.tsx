@@ -88,11 +88,8 @@ export default function WalksPage() {
         : await ApiClient.getWalks({ page_size: 100 });
       setWalks(data.items || []);
     } catch (error: any) {
-      toast.error('Nepodařilo se načíst procházky');
-    } finally {
-      setLoading(false);
-    }
-  };
+      toast.error(t('noActivity'));
+
 
   const loadAnimals = async () => {
     try {
@@ -105,7 +102,7 @@ export default function WalksPage() {
 
   const startWalk = async () => {
     if (newWalk.animal_ids.length === 0) {
-      toast.error('Vyberte alespoň jedno zvíře');
+      toast.error(t('selectAtLeastOne'));
       return;
     }
     setCreating(true);
@@ -115,12 +112,12 @@ export default function WalksPage() {
         walk_type: newWalk.walk_type,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
-      toast.success('Aktivita začala');
+      toast.success(t('activityStarted'));
       setNewWalk({ animal_ids: [], walk_type: 'walk', enrichment_types: [], intensity: '' });
       setShowEnrichment(false);
       loadWalks();
     } catch (error: any) {
-      toast.error(error.message || 'Nepodařilo se spustit aktivitu');
+      toast.error(error.message || t('failedToStart'));
     } finally {
       setCreating(false);
     }
@@ -129,10 +126,10 @@ export default function WalksPage() {
   const completeWalk = async (walkId: string) => {
     try {
       await ApiClient.completeWalk(walkId);
-      toast.success('Procházka dokončena');
+      toast.success(t('activityCompleted'));
       loadWalks();
     } catch (error: any) {
-      toast.error(error.message || 'Nepodařilo se dokončit procházku');
+      toast.error(error.message || t('failedToComplete'));
     }
   };
 
@@ -255,7 +252,7 @@ export default function WalksPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-yellow-500" />
-              Probíhající ({inProgressWalks.length})
+              {t('inProgress')} ({inProgressWalks.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -269,7 +266,7 @@ export default function WalksPage() {
                         {walk.animals?.map(a => a.name).join(', ') || (walk.animal_ids?.[0] ? walk.animal_ids[0].slice(0, 8) : '-')}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Začalo: {format(new Date(walk.started_at), 'HH:mm')}
+                        {t('startedAt')} {format(new Date(walk.started_at), 'HH:mm')}
                       </p>
                     </div>
                   </div>
@@ -289,7 +286,7 @@ export default function WalksPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-500" />
-            {view === 'today' ? 'Dokončené dnes' : 'Historie'}
+            {view === 'today' ? t('completedToday') : t('history')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -298,7 +295,7 @@ export default function WalksPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : completedWalks.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">Žádné procházky</p>
+            <p className="text-muted-foreground text-center py-8">{t('noWalks')}</p>
           ) : (
             <div className="space-y-2">
               {completedWalks.map((walk) => (
