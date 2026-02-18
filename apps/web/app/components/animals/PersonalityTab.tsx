@@ -14,23 +14,23 @@ const DOG_AXES = [
   {
     key: 'social',
     lowLabel: 'social_friendly',
-    highLabel: 'social_reactive',
-    lowIcon: '/personality/dog_social_friendly_noglow.png',
-    highIcon: '/personality/dog_social_reactive_noglow.png',
+    highLabel: 'social_risk',
+    lowIcon: '/personality/dog_symbols_social_friendly_alpha01.png',
+    highIcon: '/personality/dog_symbols_social_risk_alpha01.png',
   },
   {
     key: 'activity',
     lowLabel: 'activity_calm',
     highLabel: 'activity_hyper',
-    lowIcon: '/personality/dog_activity_calm_noglow.png',
-    highIcon: '/personality/dog_activity_hyper_noglow.png',
+    lowIcon: '/personality/dog_symbols_activity_calm_alpha01.png',
+    highIcon: '/personality/dog_symbols_activity_hyper_alpha01.png',
   },
   {
     key: 'kids',
     lowLabel: 'kids_gentle',
     highLabel: 'kids_risk',
-    lowIcon: '/personality/dog_kids_gentle_noglow.png',
-    highIcon: '/personality/dog_kids_risk_noglow.png',
+    lowIcon: '/personality/dog_symbols_kids_gentle_alpha01.png',
+    highIcon: '/personality/dog_symbols_kids_risk_alpha01.png',
   },
 ] as const;
 
@@ -76,15 +76,15 @@ function StepSlider({
   const t = useTranslations('personality');
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Image
             src={lowIcon}
             alt={t(lowLabel)}
-            width={32}
-            height={32}
-            className="w-8 h-8 object-contain"
+            width={48}
+            height={48}
+            className="w-12 h-12 object-contain"
           />
           <span className="text-sm font-medium">{t(lowLabel)}</span>
         </div>
@@ -93,27 +93,27 @@ function StepSlider({
           <Image
             src={highIcon}
             alt={t(highLabel)}
-            width={32}
-            height={32}
-            className="w-8 h-8 object-contain"
+            width={48}
+            height={48}
+            className="w-12 h-12 object-contain"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {[0, 1, 2, 3, 4].map((step) => (
           <button
             key={step}
             type="button"
             onClick={() => onChange(step)}
             className={cn(
-              'flex-1 h-10 rounded-lg border-2 transition-all',
+              'flex-1 h-8 rounded border-2 transition-all text-sm font-semibold',
               value === step
                 ? 'border-primary bg-primary/10'
                 : 'border-muted hover:border-muted-foreground'
             )}
           >
-            <span className="text-lg font-bold">{step + 1}</span>
+            {step + 1}
           </button>
         ))}
       </div>
@@ -139,7 +139,7 @@ export default function PersonalityTab({ species }: PersonalityTabProps) {
       <CardHeader>
         <CardTitle>{species === 'dog' ? '🐕' : '🐱'} Personality</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-8">
+      <CardContent className="space-y-6">
         {axes.map((axis) => (
           <StepSlider
             key={axis.key}

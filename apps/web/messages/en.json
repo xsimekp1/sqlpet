@@ -801,10 +801,10 @@
     },
     "personality": {
       "social_friendly": "Friendly",
-      "social_reactive": "Reactive",
+      "social_risk": "Risky",
       "social_solo": "Solo",
       "activity_calm": "Calm",
-      "activity_hyper": "Hyper",
+      "activity_hyper": "Hyperactive",
       "kids_gentle": "Gentle with kids",
       "kids_risk": "Risky with kids",
       "cudliness_not": "Not cuddly",
