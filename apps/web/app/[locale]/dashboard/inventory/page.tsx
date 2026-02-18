@@ -48,7 +48,7 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [lowStockOnly, setLowStockOnly] = useState(false);
 
-  const { addLowStockItems, setIsOpen } = useShoppingListStore();
+  const { addLowStockItems, items: shoppingItems } = useShoppingListStore();
 
   // Fetch inventory items
   const { data: itemsData, isLoading } = useQuery({
@@ -95,7 +95,7 @@ export default function InventoryPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${shoppingItems.length > 0 ? 'lg:mr-80' : ''}`}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>

@@ -37,6 +37,7 @@ export function AddToCartButton({ item, totalQuantity }: AddToCartButtonProps) {
     }
 
     addItem(itemData)
+    setIsOpen(true)
     
     toast({
       title: t('added'),

@@ -18,6 +18,7 @@ import {
   Clipboard,
   Download,
   ShoppingCart,
+  X,
 } from 'lucide-react'
 import { getUnitSymbol } from '@/app/lib/constants'
 import { useToast } from '@/hooks/use-toast'
@@ -178,14 +179,16 @@ export function ShoppingListPanel() {
 
   return (
     <>
-      {/* Desktop: right sheet - hidden on mobile */}
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent side="right" className="w-full flex flex-col hidden lg:flex">
-          {renderContent()}
-        </SheetContent>
-      </Sheet>
+      {/* Desktop: Non-modal sticky panel - always visible when items exist */}
+      {items.length > 0 && (
+        <div className="hidden lg:flex fixed right-0 top-16 bottom-0 w-80 flex-col border-l bg-background z-30">
+          <div className="flex flex-col h-full p-4">
+            {renderContent()}
+          </div>
+        </div>
+      )}
 
-      {/* Mobile: bottom sheet - hidden on lg+ */}
+      {/* Mobile: Bottom sheet - only on small screens */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent side="bottom" className="h-[70vh] flex flex-col lg:hidden">
           {renderContent()}
