@@ -33,10 +33,29 @@ const STATUS_LABELS: Record<string, string> = {
 
 const WALK_TYPE_LABELS: Record<string, string> = {
   walk: 'Venčení',
+  enrichment: 'Enrichment',
+  combo: 'Combo',
   short_walk: 'Krátká procházka',
   long_walk: 'Dlouhá procházka',
   potty: 'Na toaletu',
 };
+
+const ENRICHMENT_TYPES = [
+  { value: 'nosework', label: 'Čichání' },
+  { value: 'kong', label: 'Kong/Lízání' },
+  { value: 'puzzle', label: 'Hlavolam' },
+  { value: 'treats', label: 'Hledání pamlsků' },
+  { value: 'training', label: 'Trénink' },
+  { value: 'play', label: 'Hra' },
+  { value: 'chewing', label: 'Žvýkání' },
+  { value: 'calm', label: 'Klidový' },
+];
+
+const INTENSITY_OPTIONS = [
+  { value: 'low', label: 'Nízká' },
+  { value: 'medium', label: 'Střední' },
+  { value: 'high', label: 'Vysoká' },
+];
 
 export default function WalksPage() {
   const t = useTranslations('walks');
@@ -50,7 +69,10 @@ export default function WalksPage() {
   const [newWalk, setNewWalk] = useState({
     animal_ids: [] as string[],
     walk_type: 'walk',
+    enrichment_types: [] as string[],
+    intensity: '',
   });
+  const [showEnrichment, setShowEnrichment] = useState(false);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -91,12 +113,14 @@ export default function WalksPage() {
       await ApiClient.createWalk({
         animal_ids: newWalk.animal_ids,
         walk_type: newWalk.walk_type,
-      });
-      toast.success('Procházka začala');
-      setNewWalk({ animal_ids: [], walk_type: 'walk' });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+      toast.success('Aktivita začala');
+      setNewWalk({ animal_ids: [], walk_type: 'walk', enrichment_types: [], intensity: '' });
+      setShowEnrichment(false);
       loadWalks();
     } catch (error: any) {
-      toast.error(error.message || 'Nepodařilo se spustit procházku');
+      toast.error(error.message || 'Nepodařilo se spustit aktivitu');
     } finally {
       setCreating(false);
     }
@@ -119,8 +143,8 @@ export default function WalksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Venčení</h1>
-          <p className="text-muted-foreground">Správa procházek a venčení zvířat</p>
+          <h1 className="text-3xl font-bold tracking-tight">Aktivity</h1>
+          <p className="text-muted-foreground">Správa venčení a enrichment aktivit</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -143,7 +167,7 @@ export default function WalksPage() {
       {/* Start new walk */}
       <Card>
         <CardHeader>
-          <CardTitle>Spustit novou procházku</CardTitle>
+          <CardTitle>Spustit novou aktivitu</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4 flex-wrap">
@@ -165,18 +189,57 @@ export default function WalksPage() {
 
             <Select
               value={newWalk.walk_type}
-              onValueChange={(v) => setNewWalk(p => ({ ...p, walk_type: v }))}
+              onValueChange={(v) => {
+                setNewWalk(p => ({ ...p, walk_type: v }));
+                setShowEnrichment(v === 'enrichment' || v === 'combo');
+              }}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="walk">Venčení</SelectItem>
+                <SelectItem value="walk">🐾 Venčení</SelectItem>
+                <SelectItem value="enrichment">🧠 Enrichment</SelectItem>
+                <SelectItem value="combo">⚡ Combo</SelectItem>
                 <SelectItem value="short_walk">Krátká procházka</SelectItem>
                 <SelectItem value="long_walk">Dlouhá procházka</SelectItem>
                 <SelectItem value="potty">Na toaletu</SelectItem>
               </SelectContent>
             </Select>
+
+            {(showEnrichment || newWalk.walk_type === 'combo') && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {ENRICHMENT_TYPES.map((type) => (
+                  <Badge
+                    key={type.value}
+                    variant={newWalk.enrichment_types.includes(type.value) ? 'default' : 'outline'}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      const current = newWalk.enrichment_types;
+                      const updated = current.includes(type.value)
+                        ? current.filter(t => t !== type.value)
+                        : [...current, type.value];
+                      setNewWalk(p => ({ ...p, enrichment_types: updated }));
+                    }}
+                  >
+                    {type.label}
+                  </Badge>
+                ))}
+                <Select
+                  value={newWalk.intensity}
+                  onValueChange={(v) => setNewWalk(p => ({ ...p, intensity: v }))}
+                >
+                  <SelectTrigger className="w-[120px] h-8">
+                    <SelectValue placeholder="Intenzita" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INTENSITY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <Button onClick={startWalk} disabled={creating || newWalk.animal_ids.length === 0 || !userHasPermission(user, 'tasks.write', permissions)} title={!userHasPermission(user, 'tasks.write', permissions) ? tRoot('errors.noPermission') : undefined}>
               {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
