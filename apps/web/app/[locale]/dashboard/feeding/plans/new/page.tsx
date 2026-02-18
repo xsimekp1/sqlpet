@@ -264,15 +264,21 @@ export default function NewFeedingPlanPage() {
           <Label htmlFor="animal_id">{t('fields.animal')} *</Label>
           <Select
             value={selectedAnimalId}
-            onValueChange={(value) => { setSelectedAnimalId(value); setValue('animal_id', value); }}
+            onValueChange={(value) => { 
+              console.log('[DEBUG] Animal selected, value:', value); 
+              console.log('[DEBUG] Animal from list:', animals.find(a => a.id === value));
+              setSelectedAnimalId(value); 
+              setValue('animal_id', value); 
+            }}
             required
           >
             <SelectTrigger className="bg-white data-[placeholder]:text-muted-foreground">
-              <SelectValue placeholder={t('selectFoodOptional')} />
+              <SelectValue placeholder={t('selectAnimal')} />
             </SelectTrigger>
             <SelectContent>
               {animals.map((animal: any) => {
                 const mer = calculateAnimalMER(animal);
+                console.log('[DEBUG] Animal in list:', animal.name, 'weight:', animal.weight_current_kg, 'mer:', mer);
                 return (
                   <SelectItem key={animal.id} value={animal.id}>
                     <span className="flex justify-between w-full gap-4">
@@ -284,6 +290,17 @@ export default function NewFeedingPlanPage() {
               })}
             </SelectContent>
           </Select>
+          {/* Selected animal info */}
+          {selectedAnimal && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm font-medium text-green-800">
+                {selectedAnimal.name} - denní kalorická potřeba: <span className="text-green-600">{calculateAnimalMER(selectedAnimal)} kcal</span>
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                Váha: {selectedAnimal.weight_current_kg || 'neuvedena'} kg
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Food Selection */}
