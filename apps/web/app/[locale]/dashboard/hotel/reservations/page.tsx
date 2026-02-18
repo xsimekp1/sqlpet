@@ -343,17 +343,6 @@ export default function HotelReservationsPage() {
                           
                           // Calculate if this is the middle day of the reservation
                           const span = entry.reservation_id ? reservationSpans[entry.reservation_id] : null;
-                          const isMiddleDay = span && entry.reservation_id && entry.date === span.to && entry.date === span.from 
-                            ? true 
-                            : span && entry.reservation_id && entry.date === span.to && entry.date === span.from
-                            ? true
-                            : span && entry.reservation_id && entry.date === span.to && span.from !== span.to
-                            ? false
-                            : span && entry.reservation_id && entry.date === span.from && span.from !== span.to
-                            ? false
-                            : false;
-                          
-                          // Better middle calculation
                           const isActuallyMiddle = (() => {
                             if (!span || !entry.reservation_id) return false;
                             const fromDate = new Date(span.from);
@@ -383,9 +372,9 @@ export default function HotelReservationsPage() {
                               title={entry.animal_name ? `${entry.animal_name} (${entry.status}) - klikněte pro editaci` : 'Volno'}
                               onClick={() => entry.reservation_id && setSelectedReservationId(entry.reservation_id)}
                             >
-                              {entry.reservation_id && isActuallyMiddle && (
-                                <span className="truncate px-1 font-medium">
-                                  {entry.animal_name?.substring(0, 5)}
+                              {entry.reservation_id && isActuallyMiddle && entry.animal_name && (
+                                <span className="truncate px-1 font-medium text-[10px]">
+                                  {entry.animal_name.substring(0, 6)}
                                 </span>
                               )}
                             </div>
