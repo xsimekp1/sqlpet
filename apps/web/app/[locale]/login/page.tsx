@@ -66,12 +66,12 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
-      {/* Logo - above form, fixed position */}
+      {/* Logo - above form, fixed position from top */}
       <div
         className={`absolute left-1/2 -translate-x-1/2 z-50 ${
           isLoggingIn
             ? 'top-1/2 -translate-y-1/2 scale-125 transition-all duration-[1200ms] ease-in-out'
-            : 'top-[20%] transition-all duration-[1200ms] ease-in-out'
+            : 'top-8 transition-all duration-[1200ms] ease-in-out'
         }`}
       >
         <Image
@@ -86,7 +86,7 @@ export default function LoginPage() {
 
       {/* Login Form - below logo */}
       <div
-        className={`w-full max-w-md transition-all duration-[600ms] ease-out ${
+        className={`w-full max-w-md transition-all duration-[600ms] ease-out mt-48 ${
           isLoggingIn
             ? 'opacity-0 translate-y-4'
             : 'translate-y-0 opacity-100'
