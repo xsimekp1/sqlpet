@@ -1175,7 +1175,10 @@
       "cancel": "Zrušit",
       "deleting": "Mažu...",
       "lots": "Šarže",
-      "actions": "Akce"
+      "actions": "Akce",
+      "actions.viewDetails": "Detaily",
+      "showingItems": "Zobrazeno {count} položek",
+      "outOfStock": "Není na skladě"
     }
   },
   "colors": {
@@ -1427,5 +1430,18 @@
       "loadMessages": "Nepodařilo se načíst zprávy",
       "sendMessage": "Nepodařilo se odeslat zprávu"
     }
+  },
+  "shoppingList": {
+    "title": "Nákupní seznam",
+    "addToCart": "Do nákupu",
+    "inCart": "V nákupu",
+    "itemsCount": "{count} položek",
+    "clear": "Vyčistit",
+    "copy": "Kopírovat",
+    "export": "Export JSON",
+    "empty": "Nákupní seznam je prázdný",
+    "added": "Přidáno do nákupu",
+    "copied": "Zkopírováno do schránky",
+    "addAllLowStock": "Přidat nízké zásoby"
   }
 }

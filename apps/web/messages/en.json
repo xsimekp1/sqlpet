@@ -1235,7 +1235,10 @@
       "cancel": "Cancel",
       "deleting": "Deleting...",
       "lots": "Lots",
-      "actions": "Actions"
+      "actions": "Actions",
+      "actions.viewDetails": "Details",
+      "showingItems": "Showing {count} items",
+      "outOfStock": "Out of stock"
     }
   },
   "colors": {
@@ -1399,5 +1402,18 @@
       "loadMessages": "Failed to load messages",
       "sendMessage": "Failed to send message"
     }
+  },
+  "shoppingList": {
+    "title": "Shopping List",
+    "addToCart": "Add to cart",
+    "inCart": "In cart",
+    "itemsCount": "{count} items",
+    "clear": "Clear",
+    "copy": "Copy",
+    "export": "Export JSON",
+    "empty": "Shopping list is empty",
+    "added": "Added to shopping list",
+    "copied": "Copied to clipboard",
+    "addAllLowStock": "Add low stock items"
   }
 }

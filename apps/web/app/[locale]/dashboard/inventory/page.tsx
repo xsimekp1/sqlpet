@@ -21,9 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, AlertTriangle, Package, AlertCircle } from 'lucide-react';
+import { Plus, AlertTriangle, Package, AlertCircle, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { getUnitSymbol } from '@/app/lib/constants';
+import { AddToCartButton } from '@/app/components/inventory/AddToCartButton';
+import { ShoppingListPanel } from '@/app/components/inventory/ShoppingListPanel';
+import { ShoppingListFloatingButton } from '@/app/components/inventory/ShoppingListFloatingButton';
+import { useShoppingListStore } from '@/app/stores/shoppingListStore';
 
 const DECIMAL_UNITS = ['kg', 'g', 'l', 'ml'];
 
@@ -39,9 +43,12 @@ type CategoryFilter = 'all' | 'medication' | 'vaccine' | 'food' | 'supply' | 'ot
 
 export default function InventoryPage() {
   const t = useTranslations('inventory');
+  const tShoppingList = useTranslations('shoppingList');
 
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [lowStockOnly, setLowStockOnly] = useState(false);
+
+  const { addLowStockItems, setIsOpen } = useShoppingListStore();
 
   // Fetch inventory items
   const { data: itemsData, isLoading } = useQuery({
@@ -105,7 +112,7 @@ export default function InventoryPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 items-center">
+      <div className="flex gap-4 items-center flex-wrap">
         <div className="w-48">
           <Select
             value={categoryFilter}
@@ -133,6 +140,17 @@ export default function InventoryPage() {
           />
           <span className="text-sm">{t('lowStock')} only</span>
         </label>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            addLowStockItems(items);
+          }}
+          className="ml-auto"
+        >
+          <ShoppingCart className="h-4 w-4 mr-2" />
+          {tShoppingList('addAllLowStock')}
+        </Button>
       </div>
 
       {/* Items Table */}
@@ -147,7 +165,7 @@ export default function InventoryPage() {
               <TableHead>{t('fields.unit')}</TableHead>
               <TableHead>{t('lots')}</TableHead>
               <TableHead>{t('reorderThreshold')}</TableHead>
-              <TableHead className="text-right">{t('actions')}</TableHead>
+              <TableHead className="text-right">{t('messages.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -213,11 +231,17 @@ export default function InventoryPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/dashboard/inventory/items/${stock.item.id}`}>
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <AddToCartButton
+                        item={stock.item}
+                        totalQuantity={stock.total_quantity}
+                      />
+                      <Link href={`/dashboard/inventory/items/${stock.item.id}`}>
+                        <Button size="sm" variant="ghost">
+                          {t('actions.viewDetails')}
+                        </Button>
+                      </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -230,20 +254,23 @@ export default function InventoryPage() {
       {items.length > 0 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div>
-            Showing {items.length} item{items.length !== 1 ? 's' : ''}
+            {t('messages.showingItems', { count: items.length })}
           </div>
           <div className="flex gap-4">
             <span className="flex items-center gap-1">
               <AlertTriangle className="h-3 w-3 text-red-600" />
-              Out of stock: {items.filter((s: any) => isOutOfStock(s)).length}
+              {t('messages.outOfStock')}: {items.filter((s: any) => isOutOfStock(s)).length}
             </span>
             <span className="flex items-center gap-1">
               <AlertTriangle className="h-3 w-3 text-yellow-600" />
-              Low stock: {items.filter((s: any) => !isOutOfStock(s) && isLowStock(s)).length}
+              {t('lowStock')}: {items.filter((s: any) => !isOutOfStock(s) && isLowStock(s)).length}
             </span>
           </div>
         </div>
       )}
+
+      <ShoppingListPanel />
+      <ShoppingListFloatingButton />
     </div>
   );
 }
