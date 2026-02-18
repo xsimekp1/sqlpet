@@ -81,6 +81,8 @@ export default function NewFeedingPlanPage() {
   const animals = (animalsData?.items || []).filter(
     (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
   );
+  
+  console.log('[DEBUG] animals raw:', JSON.stringify(animals, null, 2));
   // GET /inventory/items returns List[InventoryStockResponse] — each element is {item: {...}, total_quantity, ...}
   const rawFoods = Array.isArray(foodsData) ? foodsData : [];
   const foods = rawFoods.map((s: any) => s.item ?? s);
@@ -266,7 +268,8 @@ export default function NewFeedingPlanPage() {
             value={selectedAnimalId}
             onValueChange={(value) => { 
               console.log('[DEBUG] Animal selected, value:', value); 
-              console.log('[DEBUG] Animal from list:', animals.find(a => a.id === value));
+              const found = animals.find(a => a.id === value);
+              console.log('[DEBUG] Animal found:', JSON.stringify(found, null, 2));
               setSelectedAnimalId(value); 
               setValue('animal_id', value); 
             }}
