@@ -31,8 +31,10 @@ class File(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         index=True,
     )
 
-    storage_provider: StorageProvider = Column(
-        Enum(StorageProvider), default=StorageProvider.SUPABASE, nullable=False
+    storage_provider: str = Column(
+        Enum(StorageProvider, values_callable=lambda x: [e.value for e in x]),
+        default=StorageProvider.SUPABASE.value,
+        nullable=False,
     )
     storage_path: str = Column(Text, nullable=False)  # Supabase path or local path
     original_filename: str = Column(Text, nullable=False)
