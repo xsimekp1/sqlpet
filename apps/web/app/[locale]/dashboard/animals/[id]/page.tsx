@@ -52,6 +52,7 @@ import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedic
 import BirthDialog from '@/app/components/animals/BirthDialog';
 import { EditableAnimalName, EditableAnimalDetails, AssignKennelButton } from '@/app/components/animals';
 import { calcMER, calcRER, getMERFactor, getMERFactorLabel } from '@/app/lib/energy';
+import PersonalityTab from '@/app/components/animals/PersonalityTab';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -798,6 +799,7 @@ setWeightLogs(wLogs);
           <TabsTrigger value="feeding">{t('tabs.feeding')}</TabsTrigger>
           <TabsTrigger value="medical">{t('tabs.medical')}</TabsTrigger>
           <TabsTrigger value="behavior">{t('tabs.behavior')}</TabsTrigger>
+          <TabsTrigger value="personality">{t('tabs.personality')}</TabsTrigger>
           <TabsTrigger value="documents">{t('tabs.documents')}</TabsTrigger>
         </TabsList>
 
@@ -1296,6 +1298,11 @@ setWeightLogs(wLogs);
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Personality ── */}
+        <TabsContent value="personality">
+          <PersonalityTab species={animal.species} />
         </TabsContent>
 
 {/* ── Documents ── */}

@@ -731,7 +731,19 @@
       "feeding": "Krmení",
       "medical": "Zdraví",
       "behavior": "Chování",
-      "documents": "Dokumenty"
+      "documents": "Dokumenty",
+      "personality": "Osobnost"
+    },
+    "personality": {
+      "social_friendly": "Přátelský",
+      "social_reactive": "Reaktivní",
+      "social_solo": "Samostatář",
+      "activity_calm": "Klidný",
+      "activity_hyper": "Hyperaktivní",
+      "kids_gentle": "Jemný k dětem",
+      "kids_risk": "Rizikový k dětem",
+      "cudliness_not": "Nepřítulný",
+      "cudliness_cuddly": "Přítulný"
     },
     "overview": {
       "basicInfo": "Základní informace",
