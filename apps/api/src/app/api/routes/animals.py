@@ -205,12 +205,6 @@ async def list_animals(
             built_items.append(
                 await _build_animal_response(a, db, kennel_data, intake_data)
             )
-        # Debug: print first animal's weight data
-        if built_items:
-            first = built_items[0]
-            print(
-                f"[DEBUG] list_animals: first animal={first.name}, weight_current_kg={first.weight_current_kg}, mer_kcal_per_day={getattr(first, 'mer_kcal_per_day', 'N/A')}"
-            )
         return AnimalListResponse(
             items=built_items,
             total=count,
@@ -335,12 +329,8 @@ async def log_weight(
     db.add(log)
     # Also update the animal's current weight
     animal.weight_current_kg = data.weight_kg
-    print(
-        f"[DEBUG] Weight logged: animal_id={animal_id}, weight={data.weight_kg}, weight_current_kg now={animal.weight_current_kg}"
-    )
     await db.commit()
     await db.refresh(log)
-    print(f"[DEBUG] After commit, animal.weight_current_kg={animal.weight_current_kg}")
     return WeightLogResponse.model_validate(log)
 
 

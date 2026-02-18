@@ -62,10 +62,6 @@ export default function NewFeedingPlanPage() {
     staleTime: 10 * 60 * 1000,
   });
 
-  // DEBUG: Log animals data to see weight
-  console.log('[DEBUG] animalsData:', animalsData);
-  console.log('[DEBUG] animalsData items sample:', animalsData?.items?.[0]);
-
   // Fetch food inventory items (category=food)
   const { data: foodsData } = useQuery({
     queryKey: ['inventory-items', 'food'],
@@ -73,22 +69,12 @@ export default function NewFeedingPlanPage() {
     staleTime: 10 * 60 * 1000,
   });
 
-  // DEBUG: Log foods data to see kcal
-  console.log('[DEBUG] foodsData raw:', foodsData);
-  console.log('[DEBUG] foodsData[0]:', foodsData?.[0]);
-  console.log('[DEBUG] foodsData[0].item:', foodsData?.[0]?.item);
-
   const animals = (animalsData?.items || []).filter(
     (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
   );
-  
-  console.log('[DEBUG] animals raw:', JSON.stringify(animals, null, 2));
   // GET /inventory/items returns List[InventoryStockResponse] — each element is {item: {...}, total_quantity, ...}
   const rawFoods = Array.isArray(foodsData) ? foodsData : [];
   const foods = rawFoods.map((s: any) => s.item ?? s);
-  
-  console.log('[DEBUG] mapped foods:', foods);
-  console.log('[DEBUG] first food kcal_per_100g:', foods[0]?.kcal_per_100g);
 
   const watchedAnimalId = watch('animal_id');
   const selectedAnimal = animals.find((a: any) => a.id === selectedAnimalId);
@@ -160,12 +146,7 @@ export default function NewFeedingPlanPage() {
   };
 
   const calculateRecommendedAmount = (animal: any, food: any) => {
-    console.log('[DEBUG] calculateRecommendedAmount called:', { animal, food });
-    console.log('[DEBUG] food object keys:', food ? Object.keys(food) : 'food is null');
-    console.log('[DEBUG] food.kcal_per_100g directly:', food?.kcal_per_100g);
-    
     const weight = animal.weight_current_kg;
-    console.log('[DEBUG] animal weight:', weight);
     
     if (!weight || weight <= 0) {
       toast({
@@ -178,7 +159,6 @@ export default function NewFeedingPlanPage() {
     }
 
     const kcalPer100g = food.kcal_per_100g;
-    console.log('[DEBUG] food kcal_per_100g:', kcalPer100g);
     if (!kcalPer100g || kcalPer100g <= 0) {
       toast({
         title: 'Krmivo nemá kalorickou hodnotu',
@@ -267,9 +247,6 @@ export default function NewFeedingPlanPage() {
           <Select
             value={selectedAnimalId}
             onValueChange={(value) => { 
-              console.log('[DEBUG] Animal selected, value:', value); 
-              const found = animals.find(a => a.id === value);
-              console.log('[DEBUG] Animal found:', JSON.stringify(found, null, 2));
               setSelectedAnimalId(value); 
               setValue('animal_id', value); 
             }}
@@ -280,30 +257,14 @@ export default function NewFeedingPlanPage() {
             </SelectTrigger>
             <SelectContent>
               {animals.map((animal: any) => {
-                const mer = calculateAnimalMER(animal);
-                console.log('[DEBUG] Animal in list:', animal.name, 'weight:', animal.weight_current_kg, 'mer:', mer);
                 return (
                   <SelectItem key={animal.id} value={animal.id}>
-                    <span className="flex justify-between w-full gap-4">
-                      <span>{animal.name} ({animal.public_code})</span>
-                      {mer && <span className="text-green-600 font-medium">{mer} kcal/den</span>}
-                    </span>
+                    {animal.name} ({animal.public_code})
                   </SelectItem>
                 );
               })}
             </SelectContent>
           </Select>
-          {/* Selected animal info */}
-          {selectedAnimal && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm font-medium text-green-800">
-                {selectedAnimal.name} - denní kalorická potřeba: <span className="text-green-600">{calculateAnimalMER(selectedAnimal)} kcal</span>
-              </p>
-              <p className="text-xs text-green-600 mt-1">
-                Váha: {selectedAnimal.weight_current_kg || 'neuvedena'} kg
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Food Selection */}
@@ -319,10 +280,7 @@ export default function NewFeedingPlanPage() {
             <SelectContent>
               {filteredFoods.map((food: any) => (
                 <SelectItem key={food.id} value={food.id}>
-                  <span className="flex justify-between w-full gap-4">
-                    <span>{food.name} {food.brand && `(${food.brand})`}</span>
-                    {food.kcal_per_100g && <span className="text-blue-600">{food.kcal_per_100g} kcal/100g</span>}
-                  </span>
+                  {food.name} {food.brand && `(${food.brand})`}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -348,34 +306,7 @@ export default function NewFeedingPlanPage() {
 
         {/* Amount */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="amount_g">{t('fields.amountGrams')}</Label>
-            {selectedAnimalId && selectedFoodId && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  console.log('[DEBUG] Button clicked!');
-                  console.log('[DEBUG] selectedAnimalId:', selectedAnimalId);
-                  console.log('[DEBUG] selectedFoodId:', selectedFoodId);
-                  console.log('[DEBUG] selectedAnimal:', selectedAnimal);
-                  console.log('[DEBUG] foods:', foods);
-                  const animal = selectedAnimal;
-                  const food = foods.find((f: any) => f.id === selectedFoodId);
-                  console.log('[DEBUG] found food:', food);
-                  if (animal && food) {
-                    calculateRecommendedAmount(animal, food);
-                  } else {
-                    console.log('[DEBUG] Missing animal or food!');
-                  }
-                }}
-                className="h-7 text-xs"
-              >
-                {recommendedAmount ? `Přepočítat (${recommendedAmount}g)` : 'Spočítat dávku'}
-              </Button>
-            )}
-          </div>
+          <Label htmlFor="amount_g">{t('fields.amountGrams')}</Label>
           <Input className="bg-white"
             id="amount_g"
             type="number"
