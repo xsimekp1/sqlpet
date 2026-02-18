@@ -736,9 +736,9 @@ async def test_get_weight_history(client, auth_headers, test_org_with_write_perm
     history = resp.json()
     assert len(history) == 3
     # Should be newest first
-    assert history[0]["weight_kg"] == 11.0
-    assert history[1]["weight_kg"] == 9.5
-    assert history[2]["weight_kg"] == 8.0
+    assert float(history[0]["weight_kg"]) == 11.0
+    assert float(history[1]["weight_kg"]) == 9.5
+    assert float(history[2]["weight_kg"]) == 8.0
 
 
 async def test_list_animals_includes_weight(
