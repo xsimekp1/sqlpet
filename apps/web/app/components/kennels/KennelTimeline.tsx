@@ -43,6 +43,17 @@ function getSpeciesColor(species: string, isHotel: boolean = false) {
   return { ...base, badge: isHotel };
 }
 
+function doStaysOverlap(stay1: KennelTimelineStay, stay2: KennelTimelineStay): boolean {
+  const start1 = new Date(stay1.start_at).getTime();
+  const end1 = stay1.end_at ? new Date(stay1.end_at).getTime() : null;
+  const start2 = new Date(stay2.start_at).getTime();
+  const end2 = stay2.end_at ? new Date(stay2.end_at).getTime() : null;
+
+  if (end1 === null || end2 === null) return true;
+  
+  return start1 < end2 && end1 > start2;
+}
+
 function packStaysIntoLanes(stays: KennelTimelineStay[], capacity: number) {
   const lanes: KennelTimelineStay[][] = Array.from({ length: capacity }, () => []);
   
@@ -61,6 +72,12 @@ function packStaysIntoLanes(stays: KennelTimelineStay[], capacity: number) {
         if (existingEnd === null) return false;
         if (endDate === null) return false;
         
+        // Same animal = not overlapping if times don't actually overlap
+        if (stay.animal_id === existing.animal_id) {
+          return !doStaysOverlap(stay, existing);
+        }
+        
+        // Different animals = check for any overlap
         return !(startDate < existingEnd && endDate > existingStart);
       });
       
@@ -83,8 +100,12 @@ function packStaysIntoLanes(stays: KennelTimelineStay[], capacity: number) {
             continue;
           }
           
-          if (startDate < existingEnd && endDate > existingStart) {
-            overlapCount++;
+          if (stay.animal_id === existing.animal_id) {
+            if (doStaysOverlap(stay, existing)) overlapCount++;
+          } else {
+            if (startDate < existingEnd && endDate > existingStart) {
+              overlapCount++;
+            }
           }
         }
         
@@ -92,8 +113,11 @@ function packStaysIntoLanes(stays: KennelTimelineStay[], capacity: number) {
           const exStart = new Date(ex.start_at);
           const exEnd = ex.end_at ? new Date(ex.end_at) : null;
           if (exEnd === null || endDate === null) return count + 1;
-          if (startDate < exEnd && endDate > exStart) return count + 1;
-          return count;
+          
+          if (stay.animal_id === ex.animal_id) {
+            return doStaysOverlap(stay, ex) ? count + 1 : count;
+          }
+          return startDate < exEnd && endDate > exStart ? count + 1 : count;
         }, 0);
         
         return overlapCount < minOverlap ? idx : minIdx;
@@ -393,11 +417,17 @@ export default function KennelTimeline() {
                                 {stay.animal_species}
                                 {stay.is_hotel && <BedDouble className="w-3 h-3 ml-1" />}
                               </div>
-                              <div className="text-xs">
-                                {new Date(stay.start_at).toLocaleDateString('cs-CZ')}
+                              <div className="text-xs font-mono">
+                                {new Date(stay.start_at).toLocaleString('cs-CZ', { 
+                                  day: '2-digit', month: '2-digit', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                })}
                                 {' → '}
                                 {stay.end_at 
-                                  ? new Date(stay.end_at).toLocaleDateString('cs-CZ')
+                                  ? new Date(stay.end_at).toLocaleString('cs-CZ', { 
+                                      day: '2-digit', month: '2-digit', year: 'numeric',
+                                      hour: '2-digit', minute: '2-digit'
+                                    })
                                   : '∞'
                                 }
                               </div>
