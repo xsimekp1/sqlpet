@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Loader2, List, LayoutGrid, Check, X, AlertCircle } from 'lucide-react';
+import { Plus, Loader2, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -202,31 +202,11 @@ export default function HotelReservationsPage() {
             </SelectContent>
           </Select>
         </div>
-        
-        <div className="flex gap-1 bg-muted rounded-lg p-1">
-          <Button
-            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('table')}
-          >
-            <List className="h-4 w-4 mr-1" />
-            Tabulka
-          </Button>
-          <Button
-            variant={viewMode === 'timeline' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('timeline')}
-          >
-            <LayoutGrid className="h-4 w-4 mr-1" />
-            Timeline
-          </Button>
-        </div>
       </div>
 
-      {viewMode === 'table' ? (
-        <Card>
+      <Card>
           <CardContent className="p-0">
-            {loading ? (
+            {loadingTable ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
@@ -300,7 +280,7 @@ export default function HotelReservationsPage() {
             <CardTitle className="text-lg">Timeline - přehled obsazenosti</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {loadingTable ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
@@ -373,13 +353,12 @@ export default function HotelReservationsPage() {
         </Card>
       )}
 
-      {viewMode === 'table' && (
-        <Card>
+      <Card>
           <CardHeader>
             <CardTitle className="text-lg">Poslední rezervace</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {loadingTable ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
@@ -414,7 +393,6 @@ export default function HotelReservationsPage() {
             )}
           </CardContent>
         </Card>
-      )}
     </div>
   );
 }
