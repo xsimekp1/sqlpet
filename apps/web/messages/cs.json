@@ -1223,7 +1223,7 @@
       "deleting": "Mažu...",
       "lots": "Šarže",
       "actions": "Akce",
-      "actions.viewDetails": "Detaily",
+      "viewDetails": "Detaily",
       "showingItems": "Zobrazeno {count} položek",
       "outOfStock": "Není na skladě"
     }
