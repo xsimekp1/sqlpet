@@ -48,9 +48,17 @@ function doStaysOverlap(stay1: KennelTimelineStay, stay2: KennelTimelineStay): b
   const end1 = stay1.end_at ? new Date(stay1.end_at).getTime() : null;
   const start2 = new Date(stay2.start_at).getTime();
   const end2 = stay2.end_at ? new Date(stay2.end_at).getTime() : null;
-
-  if (end1 === null || end2 === null) return true;
   
+  // Both ongoing - they overlap
+  if (end1 === null && end2 === null) return true;
+  
+  // Stay1 ongoing, stay2 has end - overlap if stay2 is still active when stay1 started
+  if (end1 === null && end2 !== null) return start1 < end2;
+  
+  // Stay1 has end, stay2 ongoing - overlap if stay1 is still active when stay2 started  
+  if (end1 !== null && end2 === null) return end1 > start2;
+  
+  // Both have end times - standard overlap check
   return start1 < end2 && end1 > start2;
 }
 
@@ -69,16 +77,18 @@ function packStaysIntoLanes(stays: KennelTimelineStay[], capacity: number) {
         const existingStart = new Date(existing.start_at);
         const existingEnd = existing.end_at ? new Date(existing.end_at) : null;
         
-        if (existingEnd === null) return false;
-        if (endDate === null) return false;
-        
-        // Same animal = not overlapping if times don't actually overlap
-        if (stay.animal_id === existing.animal_id) {
-          return !doStaysOverlap(stay, existing);
+        // Different animals - only check time overlap
+        if (stay.animal_id !== existing.animal_id) {
+          // No overlap = can share lane
+          if (endDate === null && existingEnd === null) return false; // both ongoing - can't share
+          if (endDate === null) return startDate < existingEnd; // stay ongoing, check vs existing end
+          if (existingEnd === null) return endDate > existingStart; // existing ongoing, check vs stay end
+          // Both have ends - check overlap
+          return !(startDate < existingEnd && endDate > existingStart);
         }
         
-        // Different animals = check for any overlap
-        return !(startDate < existingEnd && endDate > existingStart);
+        // Same animal - check time overlap (allow if no time overlap)
+        return !doStaysOverlap(stay, existing);
       });
       
       if (canPlace) {
@@ -89,41 +99,25 @@ function packStaysIntoLanes(stays: KennelTimelineStay[], capacity: number) {
     }
     
     if (!placed) {
+      // Find lane with minimum time overlap
       const minOverlapLane = lanes.reduce((minIdx, lane, idx, arr) => {
         let overlapCount = 0;
         for (const existing of lane) {
-          const existingStart = new Date(existing.start_at);
-          const existingEnd = existing.end_at ? new Date(existing.end_at) : null;
-          
-          if (existingEnd === null || endDate === null) {
+          if (doStaysOverlap(stay, existing)) {
             overlapCount++;
-            continue;
-          }
-          
-          if (stay.animal_id === existing.animal_id) {
-            if (doStaysOverlap(stay, existing)) overlapCount++;
-          } else {
-            if (startDate < existingEnd && endDate > existingStart) {
-              overlapCount++;
-            }
           }
         }
         
         const minOverlap = arr[minIdx].reduce((count, ex) => {
-          const exStart = new Date(ex.start_at);
-          const exEnd = ex.end_at ? new Date(ex.end_at) : null;
-          if (exEnd === null || endDate === null) return count + 1;
-          
-          if (stay.animal_id === ex.animal_id) {
-            return doStaysOverlap(stay, ex) ? count + 1 : count;
-          }
-          return startDate < exEnd && endDate > exStart ? count + 1 : count;
+          return doStaysOverlap(stay, ex) ? count + 1 : count;
         }, 0);
         
         return overlapCount < minOverlap ? idx : minIdx;
       }, 0);
       
-      lanes[minOverlapLane].push({ ...stay, lane: minOverlapLane, has_conflict: true });
+      // Only mark as conflict if there's actual time overlap
+      const hasTimeOverlap = lanes[minOverlapLane].some(existing => doStaysOverlap(stay, existing));
+      lanes[minOverlapLane].push({ ...stay, lane: minOverlapLane, has_conflict: hasTimeOverlap });
     }
   }
   
