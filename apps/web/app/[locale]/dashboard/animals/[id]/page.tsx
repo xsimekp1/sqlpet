@@ -799,7 +799,9 @@ setWeightLogs(wLogs);
           <TabsTrigger value="feeding">{t('tabs.feeding')}</TabsTrigger>
           <TabsTrigger value="medical">{t('tabs.medical')}</TabsTrigger>
           <TabsTrigger value="behavior">{t('tabs.behavior')}</TabsTrigger>
-          <TabsTrigger value="personality">{t('tabs.personality')}</TabsTrigger>
+          {(animal.species === 'dog' || animal.species === 'cat') && (
+            <TabsTrigger value="personality">{t('tabs.personality')}</TabsTrigger>
+          )}
           <TabsTrigger value="documents">{t('tabs.documents')}</TabsTrigger>
         </TabsList>
 
@@ -1302,7 +1304,9 @@ setWeightLogs(wLogs);
 
         {/* ── Personality ── */}
         <TabsContent value="personality">
-          <PersonalityTab species={animal.species} />
+          {(animal.species === 'dog' || animal.species === 'cat') && (
+            <PersonalityTab species={animal.species} />
+          )}
         </TabsContent>
 
 {/* ── Documents ── */}
