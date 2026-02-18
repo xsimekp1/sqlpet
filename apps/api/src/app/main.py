@@ -154,7 +154,7 @@ async def lifespan(app: FastAPI):
 
         import asyncio
 
-        asyncio.run(check_tables())
+        await check_tables()
     except Exception as e:
         print(f"⚠️  Table check error (non-fatal): {e}")
 

@@ -523,3 +523,116 @@ async def check_kennel_availability(
         "blocking_reservations": blocking_reservations,
         "blocking_intakes": blocking_intakes,
     }
+
+
+class TimelineEntry(BaseModel):
+    date: date
+    kennel_id: str
+    kennel_name: str
+    reservation_id: Optional[str] = None
+    animal_name: Optional[str] = None
+    species: Optional[str] = None
+    status: Optional[str] = None
+    entry_type: str  # 'reservation' or 'empty'
+
+
+class HotelTimelineResponse(BaseModel):
+    start_date: date
+    end_date: date
+    kennels: list[dict]
+    timeline: list[TimelineEntry]
+
+
+@router.get("/timeline", response_model=HotelTimelineResponse)
+async def get_hotel_timeline(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get hotel timeline view - reservations organized by date and kennel."""
+    from src.app.models.kennel import Kennel
+
+    # Default to current month
+    if not start_date:
+        today = date.today()
+        start_date = today.replace(day=1)
+    if not end_date:
+        end_date = start_date.replace(
+            month=start_date.month % 12 + 1, day=1
+        ) - timedelta(days=1)
+
+    # Get all kennels for the organization
+    kennel_result = await db.execute(
+        select(Kennel)
+        .where(
+            Kennel.organization_id == organization_id,
+            Kennel.is_active == True,  # noqa: E712
+        )
+        .order_by(Kennel.name)
+    )
+    kennels = kennel_result.scalars().all()
+
+    # Get all reservations in date range
+    reservations_result = await db.execute(
+        select(HotelReservation).where(
+            HotelReservation.organization_id == organization_id,
+            HotelReservation.reserved_from <= end_date,
+            HotelReservation.reserved_to >= start_date,
+        )
+    )
+    reservations = reservations_result.scalars().all()
+
+    # Build kennel lookup
+    kennel_map = {str(k.id): k.name for k in kennels}
+
+    # Generate timeline entries for each day
+    timeline = []
+    current = start_date
+    while current <= end_date:
+        for kennel in kennels:
+            # Find reservation for this kennel on this day
+            res = next(
+                (
+                    r
+                    for r in reservations
+                    if str(r.kennel_id) == str(kennel.id)
+                    and r.reserved_from <= current <= r.reserved_to
+                ),
+                None,
+            )
+
+            if res:
+                timeline.append(
+                    TimelineEntry(
+                        date=current,
+                        kennel_id=str(kennel.id),
+                        kennel_name=kennel.name,
+                        reservation_id=str(res.id),
+                        animal_name=res.animal_name,
+                        species=res.animal_species,
+                        status=res.status,
+                        entry_type="reservation",
+                    )
+                )
+            else:
+                timeline.append(
+                    TimelineEntry(
+                        date=current,
+                        kennel_id=str(kennel.id),
+                        kennel_name=kennel.name,
+                        entry_type="empty",
+                    )
+                )
+        current += timedelta(days=1)
+
+    # Build kennels list for response
+    kennels_list = [{"id": str(k.id), "name": k.name} for k in kennels]
+
+    return {
+        "start_date": start_date,
+        "end_date": end_date,
+        "kennels": kennels_list,
+        "timeline": timeline,
+    }

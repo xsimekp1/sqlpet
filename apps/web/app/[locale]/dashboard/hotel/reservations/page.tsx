@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Loader2, Calendar, DollarSign, User, Home, Check, X, AlertCircle, List } from 'lucide-react';
+import { Plus, Loader2, Calendar, DollarSign, User, Home, Check, X, AlertCircle, List, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,6 +59,24 @@ interface HotelReservation {
   notes: string | null;
 }
 
+interface TimelineEntry {
+  date: string;
+  kennel_id: string;
+  kennel_name: string;
+  reservation_id: string | null;
+  animal_name: string | null;
+  species: string | null;
+  status: string | null;
+  entry_type: 'reservation' | 'empty';
+}
+
+interface TimelineData {
+  start_date: string;
+  end_date: string;
+  kennels: { id: string; name: string }[];
+  timeline: TimelineEntry[];
+}
+
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Čeká',
   confirmed: 'Potvrzeno',
@@ -78,12 +96,18 @@ const STATUS_COLORS: Record<string, string> = {
 export default function HotelReservationsPage() {
   const t = useTranslations('hotel');
   const [reservations, setReservations] = useState<HotelReservation[]>([]);
+  const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
 
   useEffect(() => {
-    loadReservations();
-  }, [statusFilter]);
+    if (viewMode === 'table') {
+      loadReservations();
+    } else {
+      loadTimeline();
+    }
+  }, [statusFilter, viewMode]);
 
   const loadReservations = async () => {
     setLoading(true);
@@ -95,6 +119,26 @@ export default function HotelReservationsPage() {
       setReservations(data);
     } catch {
       toast.error('Nepodařilo se načíst rezervace');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTimeline = async () => {
+    setLoading(true);
+    try {
+      const today = new Date();
+      const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+      const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+      
+      const res = await fetch(`/api/hotel/reservations/timeline?start_date=${startDate}&end_date=${endDate}`, { 
+        headers: getAuthHeaders() 
+      });
+      if (!res.ok) throw new Error('Unauthorized');
+      const data = await res.json();
+      setTimelineData(data);
+    } catch {
+      toast.error('Nepodařilo se načíst timeline');
     } finally {
       setLoading(false);
     }
@@ -158,24 +202,44 @@ export default function HotelReservationsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 items-center">
-        <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Všechny statusy" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Všechny statusy</SelectItem>
-            <SelectItem value="pending">Čeká na potvrzení</SelectItem>
-            <SelectItem value="confirmed">Potvrzeno</SelectItem>
-            <SelectItem value="completed">Dokončeno</SelectItem>
-            <SelectItem value="cancelled">Zrušeno</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex gap-4 items-center justify-between">
+        <div className="flex gap-4 items-center">
+          <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Všechny statusy" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Všechny statusy</SelectItem>
+              <SelectItem value="pending">Čeká na potvrzení</SelectItem>
+              <SelectItem value="confirmed">Potvrzeno</SelectItem>
+              <SelectItem value="completed">Dokončeno</SelectItem>
+              <SelectItem value="cancelled">Zrušeno</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+        
+        {/* View Toggle */}
+        <div className="flex gap-1 bg-muted rounded-lg p-1">
+          <Button
+            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('table')}
+          >
+            <List className="h-4 w-4 mr-1" />
+            Tabulka
+          </Button>
+          <Button
+            variant={viewMode === 'timeline' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('timeline')}
+          >
+            <LayoutGrid className="h-4 w-4 mr-1" />
+            Timeline
+          </Button>
+        </div>
+      </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {loading ? (
+      {viewMode === 'table' ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
@@ -303,6 +367,87 @@ export default function HotelReservationsPage() {
           )}
         </CardContent>
       </Card>
+      ) : (
+        /* Timeline View */
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Timeline - přehled obsazenosti</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : !timelineData || timelineData.timeline.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <AlertCircle className="h-8 w-8 mb-2" />
+                <p>Žádná data pro timeline</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <div className="min-w-[800px]">
+                  {/* Timeline header with dates */}
+                  <div className="flex border-b sticky top-0 bg-background z-10">
+                    <div className="w-32 flex-shrink-0 p-2 font-medium text-sm border-r">Kotec</div>
+                    {(() => {
+                      const dates: string[] = [];
+                      const current = new Date(timelineData.start_date);
+                      const end = new Date(timelineData.end_date);
+                      while (current <= end) {
+                        dates.push(current.toISOString().split('T')[0]);
+                        current.setDate(current.getDate() + 1);
+                      }
+                      return dates.map(d => (
+                        <div key={d} className="flex-1 min-w-[40px] p-1 text-center text-xs border-r">
+                          <div className="font-medium">{format(new Date(d), 'd.M')}</div>
+                          <div className="text-muted-foreground text-[10px]">{format(new Date(d), 'EEE')}</div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                  
+                  {/* Timeline rows by kennel */}
+                  {timelineData.kennels.map(kennel => {
+                    const kennelEntries = timelineData.timeline.filter(t => t.kennel_id === kennel.id);
+                    return (
+                      <div key={kennel.id} className="flex border-b hover:bg-muted/30">
+                        <div className="w-32 flex-shrink-0 p-2 font-medium text-sm border-r flex items-center">
+                          {kennel.name}
+                        </div>
+                        <div className="flex-1 flex">
+                          {kennelEntries.map((entry, idx) => (
+                            <div 
+                              key={idx} 
+                              className={`flex-1 min-w-[40px] h-12 border-r flex items-center justify-center text-xs ${
+                                entry.entry_type === 'reservation' 
+                                  ? entry.status === 'pending' 
+                                    ? 'bg-yellow-100' 
+                                    : entry.status === 'confirmed'
+                                    ? 'bg-blue-100'
+                                    : entry.status === 'checked_in'
+                                    ? 'bg-green-100'
+                                    : 'bg-gray-100'
+                                  : 'bg-muted/20'
+                              }`}
+                              title={entry.animal_name ? `${entry.animal_name} (${entry.status})` : 'Volno'}
+                            >
+                              {entry.animal_name && (
+                                <span className="truncate px-1 font-medium">
+                                  {entry.animal_name.substring(0, 5)}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
