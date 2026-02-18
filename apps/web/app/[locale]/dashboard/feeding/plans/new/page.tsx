@@ -74,8 +74,9 @@ export default function NewFeedingPlanPage() {
   });
 
   // DEBUG: Log foods data to see kcal
-  console.log('[DEBUG] foodsData:', foodsData);
-  console.log('[DEBUG] foodsData sample:', foodsData?.[0]);
+  console.log('[DEBUG] foodsData raw:', foodsData);
+  console.log('[DEBUG] foodsData[0]:', foodsData?.[0]);
+  console.log('[DEBUG] foodsData[0].item:', foodsData?.[0]?.item);
 
   const animals = (animalsData?.items || []).filter(
     (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
@@ -83,6 +84,9 @@ export default function NewFeedingPlanPage() {
   // GET /inventory/items returns List[InventoryStockResponse] — each element is {item: {...}, total_quantity, ...}
   const rawFoods = Array.isArray(foodsData) ? foodsData : [];
   const foods = rawFoods.map((s: any) => s.item ?? s);
+  
+  console.log('[DEBUG] mapped foods:', foods);
+  console.log('[DEBUG] first food kcal_per_100g:', foods[0]?.kcal_per_100g);
 
   const watchedAnimalId = watch('animal_id');
   const selectedAnimal = animals.find((a: any) => a.id === watchedAnimalId);
@@ -137,6 +141,8 @@ export default function NewFeedingPlanPage() {
 
   const calculateRecommendedAmount = (animal: any, food: any) => {
     console.log('[DEBUG] calculateRecommendedAmount called:', { animal, food });
+    console.log('[DEBUG] food object keys:', food ? Object.keys(food) : 'food is null');
+    console.log('[DEBUG] food.kcal_per_100g directly:', food?.kcal_per_100g);
     
     const weight = animal.weight_current_kg;
     console.log('[DEBUG] animal weight:', weight);
