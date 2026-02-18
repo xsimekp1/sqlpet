@@ -219,9 +219,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const result = await ApiClient.post(`/files/animal/${animal.id}/upload-document`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const result = await ApiClient.post(`/files/animal/${animal.id}/upload-document`, formData);
       setDocuments(prev => [result, ...prev]);
       toast.success('Dokument nahrán');
     } catch (err: any) {

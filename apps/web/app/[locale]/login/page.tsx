@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -42,6 +42,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [formHidden, setFormHidden] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -68,12 +69,22 @@ export default function LoginPage() {
     }
   };
 
+  // Trigger logo animation after form fades out
+  useEffect(() => {
+    if (isLoggingIn) {
+      const timer = setTimeout(() => setFormHidden(true), 800);
+      return () => clearTimeout(timer);
+    } else {
+      setFormHidden(false);
+    }
+  }, [isLoggingIn]);
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
-      {/* Logo - always visible, animates on login */}
+      {/* Logo - always visible, animates after form disappears */}
       <div
-        className={`absolute left-1/2 -translate-x-1/2 transition-all duration-[1500ms] ease-out ${
-          isLoggingIn
+        className={`absolute left-1/2 -translate-x-1/2 transition-all duration-[1500ms] ease-in-out ${
+          formHidden
             ? 'top-1/2 -translate-y-1/2 scale-125'
             : 'top-12'
         }`}

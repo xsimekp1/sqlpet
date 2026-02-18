@@ -226,7 +226,7 @@ export default function NewFeedingPlanPage() {
             onValueChange={(value) => { setSelectedAnimalId(value); setValue('animal_id', value); }}
             required
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-background">
               <SelectValue placeholder={t('selectAnimal')} />
             </SelectTrigger>
             <SelectContent>
@@ -246,7 +246,7 @@ export default function NewFeedingPlanPage() {
             value={selectedFoodId}
             onValueChange={handleFoodChange}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-background">
               <SelectValue placeholder={t('selectFoodOptional')} />
             </SelectTrigger>
             <SelectContent>
