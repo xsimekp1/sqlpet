@@ -94,6 +94,24 @@ export default function NewFeedingPlanPage() {
     (f: any) => !f.allowed_species?.length || !selectedAnimal || f.allowed_species.includes(selectedAnimal.species)
   );
 
+  // Calculate MER (calorie needs) for an animal
+  const calculateAnimalMER = (animal: any): number | null => {
+    const weight = animal?.weight_current_kg;
+    if (!weight || weight <= 0) return null;
+    
+    // RER = 70 × weight_kg^0.75
+    const rer = 70 * Math.pow(weight, 0.75);
+    
+    // Activity factor - default for shelter neutered animals
+    let activityFactor = 1.4;
+    if (animal.species === 'cat') activityFactor = 1.2;
+    if (animal.altered_status === 'intact') {
+      activityFactor = animal.species === 'cat' ? 1.4 : 1.8;
+    }
+    
+    return Math.round(rer * activityFactor);
+  };
+
   // Create plan mutation
   const createPlanMutation = useMutation({
     mutationFn: async (data: FeedingPlanFormData) => {
@@ -253,11 +271,17 @@ export default function NewFeedingPlanPage() {
               <SelectValue placeholder={t('selectFoodOptional')} />
             </SelectTrigger>
             <SelectContent>
-              {animals.map((animal: any) => (
-                <SelectItem key={animal.id} value={animal.id}>
-                  {animal.name} ({animal.public_code})
-                </SelectItem>
-              ))}
+              {animals.map((animal: any) => {
+                const mer = calculateAnimalMER(animal);
+                return (
+                  <SelectItem key={animal.id} value={animal.id}>
+                    <span className="flex justify-between w-full gap-4">
+                      <span>{animal.name} ({animal.public_code})</span>
+                      {mer && <span className="text-green-600 font-medium">{mer} kcal/den</span>}
+                    </span>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -275,7 +299,10 @@ export default function NewFeedingPlanPage() {
             <SelectContent>
               {filteredFoods.map((food: any) => (
                 <SelectItem key={food.id} value={food.id}>
-                  {food.name} {food.brand && `(${food.brand})`}
+                  <span className="flex justify-between w-full gap-4">
+                    <span>{food.name} {food.brand && `(${food.brand})`}</span>
+                    {food.kcal_per_100g && <span className="text-blue-600">{food.kcal_per_100g} kcal/100g</span>}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
