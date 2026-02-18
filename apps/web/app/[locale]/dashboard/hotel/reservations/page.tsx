@@ -86,20 +86,17 @@ const STATUS_COLORS: Record<string, string> = {
 export default function HotelReservationsPage() {
   const [reservations, setReservations] = useState<HotelReservation[]>([]);
   const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingTable, setLoadingTable] = useState(true);
+  const [loadingTimeline, setLoadingTimeline] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
 
   useEffect(() => {
-    if (viewMode === 'table') {
-      loadReservations();
-    } else {
-      loadTimeline();
-    }
-  }, [statusFilter, viewMode]);
+    loadReservations();
+    loadTimeline();
+  }, [statusFilter]);
 
   const loadReservations = async () => {
-    setLoading(true);
+    setLoadingTable(true);
     try {
       const params = statusFilter ? `?status=${statusFilter}` : '';
       const res = await fetch(`/api/hotel/reservations${params}`, { headers: getAuthHeaders() });
@@ -109,12 +106,12 @@ export default function HotelReservationsPage() {
     } catch {
       toast.error('Nepodařilo se načíst rezervace');
     } finally {
-      setLoading(false);
+      setLoadingTable(false);
     }
   };
 
   const loadTimeline = async () => {
-    setLoading(true);
+    setLoadingTimeline(true);
     try {
       const today = new Date();
       const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
@@ -129,7 +126,7 @@ export default function HotelReservationsPage() {
     } catch {
       toast.error('Nepodařilo se načíst timeline');
     } finally {
-      setLoading(false);
+      setLoadingTimeline(false);
     }
   };
 
