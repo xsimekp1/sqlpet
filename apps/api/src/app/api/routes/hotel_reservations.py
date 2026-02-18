@@ -584,9 +584,6 @@ async def get_hotel_timeline(
     )
     reservations = reservations_result.scalars().all()
 
-    # Build kennel lookup
-    kennel_map = {str(k.id): k.name for k in kennels}
-
     # Generate timeline entries for each day
     timeline = []
     current = start_date
