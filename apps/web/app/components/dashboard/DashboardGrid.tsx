@@ -3,7 +3,7 @@
 import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useUIStore } from '@/app/stores/uiStore'
+import { useUIStore, WidgetConfig, WidgetSize } from '@/app/stores/uiStore'
 import { useTranslations } from 'next-intl'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,18 @@ import { WalksTodayWidget } from './WalksTodayWidget'
 import { MyTasksWidget } from './MyTasksWidget'
 import { UpcomingOutcomesWidget } from './UpcomingOutcomesWidget'
 
-const ALL_WIDGETS = ['medical-today', 'feeding-today', 'tasks', 'shelter-stats', 'occupancy', 'recently-admitted', 'walks-today', 'my-tasks', 'upcoming-outcomes'] as const
+const ALL_WIDGETS: { id: string; size: WidgetSize }[] = [
+  { id: 'medical-today', size: 'large' },
+  { id: 'feeding-today', size: 'large' },
+  { id: 'tasks', size: 'small' },
+  { id: 'shelter-stats', size: 'large' },
+  { id: 'occupancy', size: 'large' },
+  { id: 'recently-admitted', size: 'small' },
+  { id: 'walks-today', size: 'small' },
+  { id: 'my-tasks', size: 'small' },
+  { id: 'upcoming-outcomes', size: 'small' },
+]
+
 const widgetLabels: Record<string, string> = {
   'medical-today': 'medicalToday',
   'feeding-today': 'feedingToday',
@@ -44,12 +55,12 @@ const widgetComponents = {
 }
 
 interface SortableWidgetProps {
-  id: string
+  widget: WidgetConfig
   editMode: boolean
   onRemove: () => void
 }
 
-function SortableWidget({ id, editMode, onRemove }: SortableWidgetProps) {
+function SortableWidget({ widget, editMode, onRemove }: SortableWidgetProps) {
   const {
     attributes,
     listeners,
@@ -57,7 +68,7 @@ function SortableWidget({ id, editMode, onRemove }: SortableWidgetProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id })
+  } = useSortable({ id: widget.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -65,14 +76,14 @@ function SortableWidget({ id, editMode, onRemove }: SortableWidgetProps) {
     opacity: isDragging ? 0.5 : 1,
   }
 
-  const WidgetComponent = widgetComponents[id as keyof typeof widgetComponents]
+  const WidgetComponent = widgetComponents[widget.id as keyof typeof widgetComponents]
 
   if (!WidgetComponent) {
     return null
   }
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className={widget.size === 'large' ? 'md:col-span-2' : ''}>
       <WidgetComponent
         editMode={editMode}
         onRemove={onRemove}
@@ -98,17 +109,17 @@ export function DashboardGrid() {
     const { active, over } = event
 
     if (over && active.id !== over.id) {
-      const oldIndex = dashboardWidgets.indexOf(active.id as string)
-      const newIndex = dashboardWidgets.indexOf(over.id as string)
+      const oldIndex = dashboardWidgets.findIndex(w => w.id === active.id)
+      const newIndex = dashboardWidgets.findIndex(w => w.id === over.id)
       setDashboardWidgets(arrayMove(dashboardWidgets, oldIndex, newIndex))
     }
   }
 
   const handleRemoveWidget = (widgetId: string) => {
-    setDashboardWidgets(dashboardWidgets.filter(id => id !== widgetId))
+    setDashboardWidgets(dashboardWidgets.filter(w => w.id !== widgetId))
   }
 
-  const hiddenWidgets = ALL_WIDGETS.filter(id => !dashboardWidgets.includes(id))
+  const hiddenWidgets = ALL_WIDGETS.filter(w => !dashboardWidgets.some(dw => dw.id === w.id))
 
   return (
     <DndContext
@@ -116,14 +127,14 @@ export function DashboardGrid() {
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext items={dashboardWidgets} strategy={rectSortingStrategy}>
+      <SortableContext items={dashboardWidgets.map(w => w.id)} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {dashboardWidgets.map((widgetId) => (
+          {dashboardWidgets.map((widget) => (
             <SortableWidget
-              key={widgetId}
-              id={widgetId}
+              key={widget.id}
+              widget={widget}
               editMode={dashboardEditMode}
-              onRemove={() => handleRemoveWidget(widgetId)}
+              onRemove={() => handleRemoveWidget(widget.id)}
             />
           ))}
         </div>
@@ -133,15 +144,15 @@ export function DashboardGrid() {
         <div className="mt-4 p-4 border border-dashed rounded-lg">
           <p className="text-xs text-muted-foreground mb-2">{t('hiddenWidgets')}</p>
           <div className="flex flex-wrap gap-2">
-            {hiddenWidgets.map(id => (
+            {hiddenWidgets.map(w => (
               <Button
-                key={id}
+                key={w.id}
                 variant="outline"
                 size="sm"
-                onClick={() => setDashboardWidgets([...dashboardWidgets, id])}
+                onClick={() => setDashboardWidgets([...dashboardWidgets, { id: w.id, size: w.size }])}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                {t(widgetLabels[id] as any)}
+                {t(widgetLabels[w.id] as any)}
               </Button>
             ))}
           </div>

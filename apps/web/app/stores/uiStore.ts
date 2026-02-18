@@ -77,10 +77,10 @@ export const useUIStore = create<UIState>()(
       setSearchOpen: (open) => set({ searchOpen: open }),
 
       dashboardWidgets: DEFAULT_WIDGETS,
-      setDashboardWidgets: (widgets) => set({ dashboardWidgets      weightUnit: 'kg',
-      setWeightUnit:: widgets }),
+      setDashboardWidgets: (widgets) => set({ dashboardWidgets: widgets }),
 
- (unit) => set({ weightUnit: unit }),
+      weightUnit: 'kg',
+      setWeightUnit: (unit) => set({ weightUnit: unit }),
     }),
     {
       name: 'pawshelter-ui-storage',

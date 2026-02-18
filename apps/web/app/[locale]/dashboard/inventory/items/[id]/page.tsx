@@ -29,7 +29,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive } from 'lucide-react';
+import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
@@ -72,6 +72,7 @@ export default function InventoryItemDetailPage() {
 
   const [addLotOpen, setAddLotOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [lotFormData, setLotFormData] = useState({
     lot_number: '',
     expires_at: '',
@@ -145,6 +146,19 @@ export default function InventoryItemDetailPage() {
     onError: (error: Error) => {
       toast({ title: t('messages.error'), description: error.message, variant: 'destructive' });
       setDeleteConfirmOpen(false);
+    },
+  });
+
+  const editItemMutation = useMutation({
+    mutationFn: (data: { name?: string; kcal_per_100g?: number; reorder_threshold?: number }) => 
+      ApiClient.put(`/inventory/items/${itemId}`, data),
+    onSuccess: () => {
+      toast({ title: t('messages.itemUpdated'), description: t('messages.itemUpdatedDesc') });
+      queryClient.invalidateQueries({ queryKey: ['inventory-item', itemId] });
+      setEditOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: t('messages.error'), description: error.message, variant: 'destructive' });
     },
   });
 
@@ -274,6 +288,68 @@ export default function InventoryItemDetailPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        {/* Edit Button */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Pencil className="h-4 w-4 mr-1.5" />
+              {t('actions.editItem')}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('actions.editItem')}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">{t('fields.name')}</Label>
+                <Input
+                  id="edit-name"
+                  defaultValue={item?.name}
+                  onChange={(e) => {}}
+                />
+              </div>
+              {item?.category === 'food' && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-kcal">{t('fields.kcalPer100g')}</Label>
+                  <Input
+                    id="edit-kcal"
+                    type="number"
+                    defaultValue={item?.kcal_per_100g || ''}
+                    placeholder="např. 350"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="edit-reorder">{t('fields.reorderThreshold')}</Label>
+                <Input
+                  id="edit-reorder"
+                  type="number"
+                  defaultValue={item?.reorder_threshold || ''}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>{t('cancel')}</Button>
+              <Button
+                onClick={() => {
+                  const name = (document.getElementById('edit-name') as HTMLInputElement).value;
+                  const kcal = (document.getElementById('edit-kcal') as HTMLInputElement).value;
+                  const reorder = (document.getElementById('edit-reorder') as HTMLInputElement).value;
+                  editItemMutation.mutate({
+                    name: name || undefined,
+                    kcal_per_100g: kcal ? Number(kcal) : undefined,
+                    reorder_threshold: reorder ? Number(reorder) : undefined,
+                  });
+                }}
+                disabled={editItemMutation.isPending}
+              >
+                {editItemMutation.isPending ? t('messages.saving') : t('actions.editItem')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Item Info Cards */}
@@ -301,11 +377,24 @@ export default function InventoryItemDetailPage() {
             <TrendingDown className="h-4 w-4" />
             {t('reorderThreshold')}
           </div>
-          <div className="text-2xl font-bold">
-            {item.reorder_threshold || '-'}
+Name="text-          <div class2xl font-bold.reorder_threshold ||">
+            {item '-'}
           </div>
         </div>
       </div>
+
+      {/* Kcal (food only) */}
+      {item.category === 'food' && item.kcal_per_100g && (
+        <div className="border rounded-lg p-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <UtensilsCrossed className="h-4 w-4" />
+            {t('fields.kcalPer100g')}
+          </div>
+          <div className="text-2xl font-bold">
+            {item.kcal_per_100g} kcal / 100g
+          </div>
+        </div>
+      )}
 
       {/* Allowed species (food only) */}
       {item.category === 'food' && item.allowed_species?.length > 0 && (

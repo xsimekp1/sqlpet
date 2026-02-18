@@ -69,7 +69,7 @@ async def upload_file(
     # Create file record
     db_file = FileModel(
         organization_id=organization_id,
-        storage_provider="supabase",
+        storage_provider=StorageProvider.SUPABASE.value,
         storage_path=storage_path,
         original_filename=file.filename or "unknown",
         mime_type=content_type,
@@ -212,7 +212,7 @@ async def upload_primary_animal_photo(
     # Create file record
     db_file = FileModel(
         organization_id=animal.organization_id,
-        storage_provider="supabase",
+        storage_provider=StorageProvider.SUPABASE.value,
         storage_path=storage_path,
         original_filename=file.filename or "unknown",
         mime_type=content_type,
@@ -434,7 +434,7 @@ async def upload_animal_document(
 
     db_file = FileModel(
         organization_id=organization_id,
-        storage_provider="supabase",
+        storage_provider=StorageProvider.SUPABASE.value,
         storage_path=storage_path,
         original_filename=file.filename or "document",
         mime_type=content_type,
