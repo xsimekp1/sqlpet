@@ -437,14 +437,12 @@ async def upload_animal_document(
 
     from io import BytesIO
 
-    file_stream = BytesIO(file_content)
-
     (
         file_url,
         storage_path,
         thumbnail_url,
     ) = await supabase_storage_service.upload_file_with_thumbnail(
-        file_content=file_content,
+        file_content=BytesIO(file_content),
         filename=file.filename or "document",
         content_type=content_type,
         organization_id=str(organization_id),
