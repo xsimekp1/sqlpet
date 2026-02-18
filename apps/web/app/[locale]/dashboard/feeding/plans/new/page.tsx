@@ -292,7 +292,7 @@ export default function NewFeedingPlanPage() {
               </Button>
             )}
           </div>
-          <Input
+          <Input className="bg-background"
             id="amount_g"
             type="number"
             step="1"
@@ -309,7 +309,7 @@ export default function NewFeedingPlanPage() {
         {/* Amount text */}
         <div className="space-y-2">
           <Label htmlFor="amount_text">{t('fields.amountText')}</Label>
-          <Input
+          <Input className="bg-background"
             id="amount_text"
             placeholder="např. 1 kelímek, půl konzervy"
             {...register('amount_text')}
@@ -319,7 +319,7 @@ export default function NewFeedingPlanPage() {
         {/* Times per day */}
         <div className="space-y-2">
           <Label htmlFor="times_per_day">{t('fields.timesPerDay')}</Label>
-          <Input
+          <Input className="bg-background"
             id="times_per_day"
             type="number"
             min="1"
@@ -332,7 +332,7 @@ export default function NewFeedingPlanPage() {
         <div className="space-y-2">
           <Label>{t('fields.schedule')}</Label>
           <div className="flex gap-2">
-            <Input
+            <Input className="bg-background"
               type="time"
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
@@ -367,7 +367,7 @@ export default function NewFeedingPlanPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="start_date">{t('fields.startDate')} *</Label>
-            <Input
+            <Input className="bg-background"
               id="start_date"
               type="date"
               {...register('start_date', { required: true })}
@@ -375,7 +375,7 @@ export default function NewFeedingPlanPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="end_date">{t('fields.endDate')}</Label>
-            <Input
+            <Input className="bg-background"
               id="end_date"
               type="date"
               {...register('end_date')}
