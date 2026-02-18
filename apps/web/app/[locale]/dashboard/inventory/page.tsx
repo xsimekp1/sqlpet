@@ -238,7 +238,7 @@ export default function InventoryPage() {
                       />
                       <Link href={`/dashboard/inventory/items/${stock.item.id}`}>
                         <Button size="sm" variant="ghost">
-                          {t('actions.viewDetails')}
+                          {t('messages.actions.viewDetails')}
                         </Button>
                       </Link>
                     </div>

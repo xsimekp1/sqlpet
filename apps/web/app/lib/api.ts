@@ -423,12 +423,16 @@ class ApiClient {
    */
   static async post<T = any>(endpoint: string, data?: any, options?: { headers?: Record<string, string> }): Promise<T> {
     try {
+      const headers = {
+        ...this.getAuthHeaders(),
+        ...options?.headers,
+      };
+      if (!(data instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
+
       const response = await axios.post<T>(`${API_URL}${endpoint}`, data, {
-        headers: {
-          ...this.getAuthHeaders(),
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        },
+        headers,
       });
       return response.data;
     } catch (error) {

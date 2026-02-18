@@ -53,6 +53,7 @@ export default function LoginPage() {
   const onSubmit = async (data: FormValues) => {
     setIsLoggingIn(true);
     try {
+      sessionStorage.setItem('logoAnimated', 'true');
       await login(data.email, data.password);
     } catch (error) {
       setIsLoggingIn(false);
@@ -71,7 +72,7 @@ export default function LoginPage() {
         className={`absolute left-1/2 -translate-x-1/2 transition-all duration-[1200ms] ease-in-out z-50 ${
           isLoggingIn
             ? 'top-1/2 -translate-y-1/2 scale-125'
-            : 'top-12'
+            : 'top-[45%]'
         }`}
       >
         <Image
