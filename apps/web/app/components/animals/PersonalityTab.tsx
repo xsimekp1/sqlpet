@@ -37,24 +37,24 @@ const DOG_AXES = [
 const CAT_AXES = [
   {
     key: 'social',
-    lowLabel: 'social_solo',
-    highLabel: 'social_friendly',
-    lowIcon: '/personality/cat_social_solo_noglow.png',
-    highIcon: '/personality/cat_social_friendly_noglow.png',
+    lowLabel: 'social_friendly',
+    highLabel: 'social_risk',
+    lowIcon: '/personality/cat_symbols_social_friendly_alpha01.png',
+    highIcon: '/personality/cat_symbols_social_risk_alpha01.png',
   },
   {
     key: 'activity',
     lowLabel: 'activity_calm',
     highLabel: 'activity_hyper',
-    lowIcon: '/personality/cat_activity_calm_noglow.png',
-    highIcon: '/personality/cat_activity_hyper_noglow.png',
+    lowIcon: '/personality/cat_symbols_activity_calm_alpha01.png',
+    highIcon: '/personality/cat_symbols_activity_hyper_alpha01.png',
   },
   {
     key: 'cudliness',
     lowLabel: 'cudliness_not',
     highLabel: 'cudliness_cuddly',
-    lowIcon: '/personality/cat_cudliness_not_cuddly_noglow.png',
-    highIcon: '/personality/cat_cudliness_cuddly_noglow.png',
+    lowIcon: '/personality/cat_symbols_cudliness_not_cuddly_alpha01.png',
+    highIcon: '/personality/cat_symbols_cudliness_cuddly_alpha01.png',
   },
 ] as const;
 
