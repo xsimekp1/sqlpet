@@ -1452,8 +1452,7 @@
       "open_tasks": "Otevřít úkoly",
       "open_inventory": "Otevřít sklad",
       "open_feeding": "Otevřít krmení"
-    },
-    "resetToDefault": "Obnovit výchozí"
+    }
   },
   "calendar": {
     "title": "Kalendář",
