@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import {
   Home,
   PawPrint,
@@ -56,15 +56,7 @@ export function Sidebar() {
   const t = useTranslations()
   const queryClient = useQueryClient()
   const [uploadingLogo, setUploadingLogo] = useState(false)
-  const [logoAnimated, setLogoAnimated] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (sessionStorage.getItem('logoAnimated')) {
-      sessionStorage.removeItem('logoAnimated')
-      setLogoAnimated(true)
-    }
-  }, [])
 
   const { data: orgInfo } = useQuery({
     queryKey: ['org-info'],
@@ -144,10 +136,7 @@ export function Sidebar() {
       )}
     >
       {/* Logo / Header */}
-      <div className={cn(
-        "flex h-16 items-center justify-between px-4 border-b",
-        logoAnimated && "animate-logo-drop"
-      )}>
+      <div className="flex h-16 items-center justify-between px-4 border-b">
         {/* Hidden file input (shared) */}
         <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
 

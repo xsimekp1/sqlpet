@@ -53,7 +53,6 @@ export default function LoginPage() {
   const onSubmit = async (data: FormValues) => {
     setIsLoggingIn(true);
     try {
-      sessionStorage.setItem('logoAnimated', 'true');
       await login(data.email, data.password);
     } catch (error) {
       setIsLoggingIn(false);
@@ -67,9 +66,9 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
-      {/* Logo - always visible, stays on top */}
+      {/* Logo - always visible */}
       <div
-        className={`absolute left-1/2 -translate-x-1/2 transition-all duration-[1200ms] ease-in-out z-50 ${
+        className={`absolute left-1/2 -translate-x-1/2 transition-all duration-[1200ms] ease-in-out ${
           isLoggingIn
             ? 'top-1/2 -translate-y-1/2 scale-125'
             : 'top-[45%]'
@@ -87,7 +86,7 @@ export default function LoginPage() {
 
       {/* Login Form - fades out on submit */}
       <div
-        className={`w-full max-w-md transition-all duration-[600ms] ease-out ${
+        className={`w-full max-w-md transition-all duration-[600ms] ease-out z-10 ${
           isLoggingIn
             ? 'opacity-0 translate-y-4'
             : 'translate-y-0 opacity-100'
