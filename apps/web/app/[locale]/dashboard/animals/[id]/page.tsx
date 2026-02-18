@@ -1097,6 +1097,23 @@ setWeightLogs(wLogs);
               />
             </CardContent>
           </Card>
+          
+          {/* Current MER from DB */}
+          {animal.mer_kcal_per_day && (
+            <Card className="bg-green-50 border-green-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-green-800">Denní energetická potřeba</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold text-green-700">
+                  {animal.mer_kcal_per_day} <span className="text-lg font-normal">kcal/den</span>
+                </p>
+                <p className="text-sm text-green-600 mt-1">
+                  Vypočteno z váhy {animal.weight_current_kg} kg
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* ── Timeline ── */}
