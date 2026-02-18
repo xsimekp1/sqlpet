@@ -71,7 +71,7 @@ async def main():
                 continue
 
             # Calculate RER = 70 × weight^0.75
-            rer = 70 * (weight**0.75)
+            rer = 70 * (float(weight) ** 0.75)
 
             # Activity factor
             if species == "cat":
