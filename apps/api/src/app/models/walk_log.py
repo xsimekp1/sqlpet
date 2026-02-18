@@ -49,6 +49,13 @@ class WalkLog(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         String(20), nullable=False, default="in_progress"
     )
 
+    # Enrichment fields (for dogs only)
+    enrichment_types: Mapped[list[str] | None] = mapped_column(
+        PG_ARRAY(String(50)), nullable=True
+    )
+    intensity: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    reaction: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
     organization = relationship("Organization")
     started_by = relationship("User", foreign_keys=[started_by_id])
     ended_by = relationship("User", foreign_keys=[ended_by_id])

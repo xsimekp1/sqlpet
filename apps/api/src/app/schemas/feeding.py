@@ -8,6 +8,7 @@ import uuid
 
 # MER / RER calculation schemas
 
+
 class MERFactor(BaseModel):
     value: float
     label: str
@@ -101,6 +102,11 @@ class FeedingPlanResponse(FeedingPlanBase):
 
     class Config:
         from_attributes = True
+
+
+class FeedingPlanListResponse(BaseModel):
+    items: list[FeedingPlanResponse]
+    total: int
 
 
 # Feeding Log schemas

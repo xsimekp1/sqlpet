@@ -16,6 +16,7 @@ from src.app.schemas.feeding import (
     FeedingPlanCreate,
     FeedingPlanUpdate,
     FeedingPlanResponse,
+    FeedingPlanListResponse,
     FeedingLogCreate,
     FeedingLogResponse,
     CompleteFeedingTaskRequest,
@@ -94,7 +95,7 @@ async def create_feeding_plan(
     return plan
 
 
-@router.get("/plans", response_model=List[FeedingPlanResponse])
+@router.get("/plans", response_model=FeedingPlanListResponse)
 async def list_feeding_plans(
     animal_id: Optional[uuid.UUID] = Query(None, description="Filter by animal"),
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
