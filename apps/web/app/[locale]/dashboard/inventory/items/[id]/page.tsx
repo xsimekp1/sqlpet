@@ -377,8 +377,8 @@ export default function InventoryItemDetailPage() {
             <TrendingDown className="h-4 w-4" />
             {t('reorderThreshold')}
           </div>
-Name="text-          <div class2xl font-bold.reorder_threshold ||">
-            {item '-'}
+          <div className="text-2xl font-bold">
+            {item.reorder_threshold || '-'}
           </div>
         </div>
       </div>

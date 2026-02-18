@@ -1398,6 +1398,17 @@ class ApiClient {
     await ApiClient.delete(`/inventory/items/${itemId}`);
   }
 
+  static async updateInventoryItem(itemId: string, data: {
+    name?: string;
+    kcal_per_100g?: number;
+    reorder_threshold?: number;
+    category?: string;
+    unit?: string;
+  }): Promise<any> {
+    const response = await ApiClient.put(`/inventory/items/${itemId}`, data);
+    return response;
+  }
+
   static async deleteInventoryLot(lotId: string): Promise<void> {
     await ApiClient.delete(`/inventory/lots/${lotId}`);
   }
