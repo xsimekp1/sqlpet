@@ -1169,7 +1169,8 @@
       "editItem": "Upravit položku",
       "addLot": "Přidat šarži",
       "recordTransaction": "Zaznamenat transakci",
-      "viewHistory": "Zobrazit historii"
+      "viewHistory": "Zobrazit historii",
+      "viewDetails": "Zobrazit detail"
     },
     "units": {
       "can": "Konzerva",
@@ -1225,13 +1226,6 @@
       "noLotsFound": "Žádné šarže nenalezeny. Přidejte šarži pro sledování zásob.",
       "vial": "lahvička",
       "ampule": "ampule"
-    }
-  },
-  "lots": "Šarže",
-      "actions": "Akce",
-      "viewDetails": "Detaily",
-      "showingItems": "Zobrazeno {count} položek",
-      "outOfStock": "Není na skladě"
     }
   },
   "colors": {

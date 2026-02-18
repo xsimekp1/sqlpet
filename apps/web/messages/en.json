@@ -1229,7 +1229,8 @@
       "editItem": "Edit Item",
       "addLot": "Add Lot",
       "recordTransaction": "Record Transaction",
-      "viewHistory": "View History"
+      "viewHistory": "View History",
+      "viewDetails": "View Details"
     },
     "units": {
       "can": "Can",
