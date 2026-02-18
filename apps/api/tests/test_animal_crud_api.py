@@ -60,7 +60,7 @@ async def test_create_animal_full_fields(
             "age_group": "adult",
             "color": "tabby",
             "coat": "short",
-            "size_estimated": "m",
+            "size_estimated": "unknown",
             "weight_current_kg": 4.5,
             "weight_estimated_kg": 5.0,
             "description": "Friendly cat",
@@ -77,7 +77,7 @@ async def test_create_animal_full_fields(
     assert body["altered_status"] == "spayed"
     assert body["age_group"] == "adult"
     assert body["color"] == "tabby"
-    assert body["size_estimated"] == "m"
+    assert body["size_estimated"] == "unknown"
     assert body["public_visibility"] is True
     assert body["featured"] is True
 
