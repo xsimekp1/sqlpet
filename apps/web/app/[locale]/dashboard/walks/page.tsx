@@ -41,20 +41,20 @@ const WALK_TYPE_LABELS: Record<string, string> = {
 };
 
 const ENRICHMENT_TYPES = [
-  { value: 'nosework', label: 'Čichání' },
-  { value: 'kong', label: 'Kong/Lízání' },
-  { value: 'puzzle', label: 'Hlavolam' },
-  { value: 'treats', label: 'Hledání pamlsků' },
-  { value: 'training', label: 'Trénink' },
-  { value: 'play', label: 'Hra' },
-  { value: 'chewing', label: 'Žvýkání' },
-  { value: 'calm', label: 'Klidový' },
+  { value: 'nosework', key: 'nosework' },
+  { value: 'kong', key: 'kong' },
+  { value: 'puzzle', key: 'puzzle' },
+  { value: 'treats', key: 'treats' },
+  { value: 'training', key: 'training' },
+  { value: 'play', key: 'play' },
+  { value: 'chewing', key: 'chewing' },
+  { value: 'calm', key: 'calm' },
 ];
 
 const INTENSITY_OPTIONS = [
-  { value: 'low', label: 'Nízká' },
-  { value: 'medium', label: 'Střední' },
-  { value: 'high', label: 'Vysoká' },
+  { value: 'low', key: 'intensityLow' },
+  { value: 'medium', key: 'intensityMedium' },
+  { value: 'high', key: 'intensityHigh' },
 ];
 
 export default function WalksPage() {
@@ -144,7 +144,7 @@ export default function WalksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Aktivity</h1>
-          <p className="text-muted-foreground">Správa venčení a enrichment aktivit</p>
+          <p className="text-muted-foreground">{t('management')}</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -152,14 +152,14 @@ export default function WalksPage() {
             size="sm"
             onClick={() => setView('today')}
           >
-            Dnes
+            {t('today')}
           </Button>
           <Button
             variant={view === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setView('all')}
           >
-            Všechny
+            {t('all')}
           </Button>
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function WalksPage() {
       {/* Start new walk */}
       <Card>
         <CardHeader>
-          <CardTitle>Spustit novou aktivitu</CardTitle>
+          <CardTitle>{t('startNew')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4 flex-wrap">
@@ -176,7 +176,7 @@ export default function WalksPage() {
               onValueChange={(v) => setNewWalk(p => ({ ...p, animal_ids: [v] }))}
             >
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Vyberte zvíře" />
+                <SelectValue placeholder={t('selectAnimal') || 'Vyberte zvíře'} />
               </SelectTrigger>
               <SelectContent>
                 {animals.filter((a) => a.status === 'available' || a.status === 'hold' || a.status === 'quarantine').map((animal) => (
@@ -198,12 +198,12 @@ export default function WalksPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="walk">🐾 Venčení</SelectItem>
-                <SelectItem value="enrichment">🧠 Enrichment</SelectItem>
-                <SelectItem value="combo">⚡ Combo</SelectItem>
-                <SelectItem value="short_walk">Krátká procházka</SelectItem>
-                <SelectItem value="long_walk">Dlouhá procházka</SelectItem>
-                <SelectItem value="potty">Na toaletu</SelectItem>
+                <SelectItem value="walk">🐾 {t('walk')}</SelectItem>
+                <SelectItem value="enrichment">🧠 {t('enrichment')}</SelectItem>
+                <SelectItem value="combo">⚡ {t('combo')}</SelectItem>
+                <SelectItem value="short_walk">{t('shortWalk')}</SelectItem>
+                <SelectItem value="long_walk">{t('longWalk')}</SelectItem>
+                <SelectItem value="potty">{t('potty')}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -222,7 +222,7 @@ export default function WalksPage() {
                       setNewWalk(p => ({ ...p, enrichment_types: updated }));
                     }}
                   >
-                    {type.label}
+                    {t(type.key)}
                   </Badge>
                 ))}
                 <Select
@@ -230,11 +230,11 @@ export default function WalksPage() {
                   onValueChange={(v) => setNewWalk(p => ({ ...p, intensity: v }))}
                 >
                   <SelectTrigger className="w-[120px] h-8">
-                    <SelectValue placeholder="Intenzita" />
+                    <SelectValue placeholder={t('intensity')} />
                   </SelectTrigger>
                   <SelectContent>
                     {INTENSITY_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      <SelectItem key={opt.value} value={opt.value}>{t(opt.key)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -243,7 +243,7 @@ export default function WalksPage() {
 
             <Button onClick={startWalk} disabled={creating || newWalk.animal_ids.length === 0 || !userHasPermission(user, 'tasks.write', permissions)} title={!userHasPermission(user, 'tasks.write', permissions) ? tRoot('errors.noPermission') : undefined}>
               {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
-              Spustit
+              {t('start')}
             </Button>
           </div>
         </CardContent>

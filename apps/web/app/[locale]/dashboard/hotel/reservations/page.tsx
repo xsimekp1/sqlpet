@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Loader2, Calendar, DollarSign, User, Home, Check, X, AlertCircle, List, LayoutGrid } from 'lucide-react';
+import { Plus, Loader2, List, LayoutGrid, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -26,7 +24,6 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { cs, enUS } from 'date-fns/locale';
 
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -45,18 +42,12 @@ interface HotelReservation {
   id: string;
   kennel_id: string;
   kennel_name: string | null;
-  contact_id: string | null;
   animal_name: string;
   animal_species: string;
-  animal_breed: string | null;
   reserved_from: string;
   reserved_to: string;
-  price_per_day: number | null;
   total_price: number | null;
-  is_paid: boolean;
-  requires_single_cage: boolean;
   status: string;
-  notes: string | null;
 }
 
 interface TimelineEntry {
@@ -65,7 +56,6 @@ interface TimelineEntry {
   kennel_name: string;
   reservation_id: string | null;
   animal_name: string | null;
-  species: string | null;
   status: string | null;
   entry_type: 'reservation' | 'empty';
 }
@@ -94,7 +84,6 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function HotelReservationsPage() {
-  const t = useTranslations('hotel');
   const [reservations, setReservations] = useState<HotelReservation[]>([]);
   const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -201,7 +190,6 @@ export default function HotelReservationsPage() {
         </Link>
       </div>
 
-      {/* Filters */}
       <div className="flex gap-4 items-center justify-between">
         <div className="flex gap-4 items-center">
           <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
@@ -218,7 +206,6 @@ export default function HotelReservationsPage() {
           </Select>
         </div>
         
-        {/* View Toggle */}
         <div className="flex gap-1 bg-muted rounded-lg p-1">
           <Button
             variant={viewMode === 'table' ? 'secondary' : 'ghost'}
@@ -240,135 +227,77 @@ export default function HotelReservationsPage() {
       </div>
 
       {viewMode === 'table' ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : reservations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <AlertCircle className="h-8 w-8 mb-2" />
-              <p>Žádné rezervace</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Od</TableHead>
-                  <TableHead>Do</TableHead>
-                  <TableHead>Zvíře</TableHead>
-                  <TableHead>Druh</TableHead>
-                  <TableHead>Kotec</TableHead>
-                  <TableHead>Cena</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Akce</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reservations.map((res) => (
-                  <TableRow key={res.id}>
-                    <TableCell>{format(new Date(res.reserved_from), 'd.M.yyyy')}</TableCell>
-                    <TableCell>{format(new Date(res.reserved_to), 'd.M.yyyy')}</TableCell>
-                    <TableCell className="font-medium">{res.animal_name}</TableCell>
-                    <TableCell className="capitalize">{res.animal_species}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{res.kennel_name || (res.kennel_id ? `Kotec ${res.kennel_id.slice(0, 8)}` : '-')}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {res.total_price ? `${res.total_price} Kč` : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={STATUS_COLORS[res.status]}>
-                        {STATUS_LABELS[res.status] || res.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {res.status === 'pending' || res.status === 'confirmed' ? (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleCheckin(res.id)}
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Check-in
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive"
-                              onClick={() => handleCancel(res.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : res.status === 'checked_in' ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCheckout(res.id)}
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Check-out
-                          </Button>
-                        ) : null}
-                      </div>
-                    </TableCell>
+        <Card>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : reservations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <AlertCircle className="h-8 w-8 mb-2" />
+                <p>Žádné rezervace</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Od</TableHead>
+                    <TableHead>Do</TableHead>
+                    <TableHead>Zvíře</TableHead>
+                    <TableHead>Druh</TableHead>
+                    <TableHead>Kotec</TableHead>
+                    <TableHead>Cena</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Akce</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Recent reservations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Poslední rezervace</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {reservations
-                .filter(r => r.status !== 'cancelled' && r.status !== 'checked_out')
-                .sort((a, b) => new Date(b.reserved_from).getTime() - new Date(a.reserved_from).getTime())
-                .slice(0, 10)
-                .map((res) => (
-                  <div
-                    key={res.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-medium">
-                          {res.animal_name.slice(0, 2).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-medium">{res.animal_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(res.reserved_from), 'd.M.yyyy')} - {format(new Date(res.reserved_to), 'd.M.yyyy')}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge className={STATUS_COLORS[res.status]}>
-                      {STATUS_LABELS[res.status] || res.status}
-                    </Badge>
-                  </div>
-                ))}
-              {reservations.filter(r => r.status !== 'cancelled' && r.status !== 'checked_out').length === 0 && (
-                <p className="text-muted-foreground text-sm text-center py-4">Žádné aktivní rezervace</p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {reservations.map((res) => (
+                    <TableRow key={res.id}>
+                      <TableCell>{format(new Date(res.reserved_from), 'd.M.yyyy')}</TableCell>
+                      <TableCell>{format(new Date(res.reserved_to), 'd.M.yyyy')}</TableCell>
+                      <TableCell className="font-medium">{res.animal_name}</TableCell>
+                      <TableCell className="capitalize">{res.animal_species}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{res.kennel_name || '-'}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {res.total_price ? `${res.total_price} Kč` : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={STATUS_COLORS[res.status]}>
+                          {STATUS_LABELS[res.status] || res.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {res.status === 'pending' || res.status === 'confirmed' ? (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => handleCheckin(res.id)}>
+                                <Check className="h-4 w-4 mr-1" />
+                                Check-in
+                              </Button>
+                              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleCancel(res.id)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : res.status === 'checked_in' ? (
+                            <Button size="sm" variant="outline" onClick={() => handleCheckout(res.id)}>
+                              <X className="h-4 w-4 mr-1" />
+                              Check-out
+                            </Button>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       ) : (
-        /* Timeline View */
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Timeline - přehled obsazenosti</CardTitle>
@@ -386,7 +315,6 @@ export default function HotelReservationsPage() {
             ) : (
               <div className="overflow-x-auto">
                 <div className="min-w-[800px]">
-                  {/* Timeline header with dates */}
                   <div className="flex border-b sticky top-0 bg-background z-10">
                     <div className="w-32 flex-shrink-0 p-2 font-medium text-sm border-r">Kotec</div>
                     {(() => {
@@ -406,7 +334,6 @@ export default function HotelReservationsPage() {
                     })()}
                   </div>
                   
-                  {/* Timeline rows by kennel */}
                   {timelineData.kennels.map(kennel => {
                     const kennelEntries = timelineData.timeline.filter(t => t.kennel_id === kennel.id);
                     return (
@@ -443,6 +370,49 @@ export default function HotelReservationsPage() {
                     );
                   })}
                 </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {viewMode === 'table' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Poslední rezervace</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {reservations
+                  .filter(r => r.status !== 'cancelled' && r.status !== 'checked_out')
+                  .sort((a, b) => new Date(b.reserved_from).getTime() - new Date(a.reserved_from).getTime())
+                  .slice(0, 10)
+                  .map((res) => (
+                    <div key={res.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-sm font-medium">{res.animal_name.slice(0, 2).toUpperCase()}</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">{res.animal_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(new Date(res.reserved_from), 'd.M.yyyy')} - {format(new Date(res.reserved_to), 'd.M.yyyy')}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge className={STATUS_COLORS[res.status]}>
+                        {STATUS_LABELS[res.status] || res.status}
+                      </Badge>
+                    </div>
+                  ))}
+                {reservations.filter(r => r.status !== 'cancelled' && r.status !== 'checked_out').length === 0 && (
+                  <p className="text-muted-foreground text-sm text-center py-4">Žádné aktivní rezervace</p>
+                )}
               </div>
             )}
           </CardContent>
