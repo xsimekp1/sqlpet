@@ -624,3 +624,179 @@ async def test_list_breeds_filter_species(client, auth_headers):
     assert len(body) > 0
     for breed in body:
         assert breed["species"] == "cat"
+
+
+# ---- Weight Logging ----
+
+
+async def test_log_weight_updates_animal_weight(
+    client, auth_headers, test_org_with_write_permission
+):
+    """Test that logging a weight also updates the animal's weight_current_kg field."""
+    org, _, _ = test_org_with_write_permission
+    headers = {**auth_headers, "x-organization-id": str(org.id)}
+
+    # Create an animal first
+    resp = await client.post(
+        "/animals",
+        json={"name": "Kikina", "species": "dog"},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+    animal = resp.json()
+    animal_id = animal["id"]
+
+    # Animal should have no weight initially
+    assert animal.get("weight_current_kg") is None
+
+    # Log a weight
+    resp = await client.post(
+        f"/animals/{animal_id}/weight",
+        json={"weight_kg": 12.5},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+    weight_log = resp.json()
+    assert float(weight_log["weight_kg"]) == 12.5
+
+    # Fetch the animal again and verify weight_current_kg was updated
+    resp = await client.get(f"/animals/{animal_id}", headers=headers)
+    assert resp.status_code == 200
+    animal = resp.json()
+    assert float(animal["weight_current_kg"]) == 12.5
+
+
+async def test_log_weight_multiple_times(
+    client, auth_headers, test_org_with_write_permission
+):
+    """Test that logging multiple weights updates to the latest value."""
+    org, _, _ = test_org_with_write_permission
+    headers = {**auth_headers, "x-organization-id": str(org.id)}
+
+    # Create an animal
+    resp = await client.post(
+        "/animals",
+        json={"name": "Rex", "species": "dog"},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+    animal = resp.json()
+    animal_id = animal["id"]
+
+    # Log first weight
+    resp = await client.post(
+        f"/animals/{animal_id}/weight",
+        json={"weight_kg": 10.0},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+
+    # Log second weight (newer)
+    resp = await client.post(
+        f"/animals/{animal_id}/weight",
+        json={"weight_kg": 12.0},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+
+    # Verify current weight is the latest
+    resp = await client.get(f"/animals/{animal_id}", headers=headers)
+    assert resp.status_code == 200
+    animal = resp.json()
+    assert float(animal["weight_current_kg"]) == 12.0
+
+
+async def test_get_weight_history(client, auth_headers, test_org_with_write_permission):
+    """Test that weight history is returned correctly, newest first."""
+    org, _, _ = test_org_with_write_permission
+    headers = {**auth_headers, "x-organization-id": str(org.id)}
+
+    # Create an animal
+    resp = await client.post(
+        "/animals",
+        json={"name": "Buddy", "species": "dog"},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+    animal = resp.json()
+    animal_id = animal["id"]
+
+    # Log multiple weights
+    for weight in [8.0, 9.5, 11.0]:
+        resp = await client.post(
+            f"/animals/{animal_id}/weight",
+            json={"weight_kg": weight},
+            headers=headers,
+        )
+        assert resp.status_code == 201
+
+    # Get weight history
+    resp = await client.get(f"/animals/{animal_id}/weight", headers=headers)
+    assert resp.status_code == 200
+    history = resp.json()
+    assert len(history) == 3
+    # Should be newest first
+    assert history[0]["weight_kg"] == 11.0
+    assert history[1]["weight_kg"] == 9.5
+    assert history[2]["weight_kg"] == 8.0
+
+
+async def test_list_animals_includes_weight(
+    client, auth_headers, test_org_with_write_permission
+):
+    """Test that the animals list endpoint returns weight_current_kg."""
+    org, _, _ = test_org_with_write_permission
+    headers = {**auth_headers, "x-organization-id": str(org.id)}
+
+    # Create animal with initial weight
+    resp = await client.post(
+        "/animals",
+        json={"name": "Max", "species": "dog", "weight_current_kg": 15.0},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+    animal_id = resp.json()["id"]
+
+    # List animals
+    resp = await client.get("/animals", headers=headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "items" in body
+
+    # Find our animal in the list
+    our_animal = next((a for a in body["items"] if a["id"] == animal_id), None)
+    assert our_animal is not None
+    assert float(our_animal["weight_current_kg"]) == 15.0
+
+
+async def test_list_animals_weight_after_logging(
+    client, auth_headers, test_org_with_write_permission
+):
+    """Test that weight_current_kg is updated in list after logging weight."""
+    org, _, _ = test_org_with_write_permission
+    headers = {**auth_headers, "x-organization-id": str(org.id)}
+
+    # Create animal without weight
+    resp = await client.post(
+        "/animals",
+        json={"name": "Luna", "species": "cat"},
+        headers=headers,
+    )
+    assert resp.status_code == 201
+    animal_id = resp.json()["id"]
+
+    # Log a weight
+    await client.post(
+        f"/animals/{animal_id}/weight",
+        json={"weight_kg": 4.5},
+        headers=headers,
+    )
+
+    # List animals - weight should now be present
+    resp = await client.get("/animals", headers=headers)
+    assert resp.status_code == 200
+    body = resp.json()
+
+    our_animal = next((a for a in body["items"] if a["id"] == animal_id), None)
+    assert our_animal is not None
+    assert float(our_animal["weight_current_kg"]) == 4.5

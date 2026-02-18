@@ -59,12 +59,8 @@ async def upload_file(
     )
 
     # Upload to Supabase
-    from io import BytesIO
-
-    file_stream = BytesIO(file_content)
-
     file_url, storage_path = await supabase_storage_service.upload_file(
-        file_content=file_stream,
+        file_content=file_content,
         filename=file.filename or "unknown",
         content_type=content_type,
         organization_id=organization_id,
@@ -202,8 +198,6 @@ async def upload_primary_animal_photo(
     )
 
     # Upload to Supabase with thumbnail
-    from io import BytesIO
-
     (
         file_url,
         storage_path,
@@ -289,12 +283,8 @@ async def upload_contact_avatar(
         is_public=True,
     )
 
-    from io import BytesIO
-
-    file_stream = BytesIO(file_content)
-
     file_url, storage_path = await supabase_storage_service.upload_file(
-        file_content=file_stream,
+        file_content=file_content,
         filename=file.filename or "unknown",
         content_type=content_type,
         organization_id=str(contact.organization_id),
@@ -325,12 +315,8 @@ async def upload_organization_logo(
         is_public=True,
     )
 
-    from io import BytesIO
-
-    file_stream = BytesIO(file_content)
-
     file_url, storage_path = await supabase_storage_service.upload_file(
-        file_content=file_stream,
+        file_content=file_content,
         filename=file.filename or "logo",
         content_type=content_type,
         organization_id=str(organization_id),
@@ -435,14 +421,12 @@ async def upload_animal_document(
         is_public=True,
     )
 
-    from io import BytesIO
-
     (
         file_url,
         storage_path,
         thumbnail_url,
     ) = await supabase_storage_service.upload_file_with_thumbnail(
-        file_content=BytesIO(file_content),
+        file_content=file_content,
         filename=file.filename or "document",
         content_type=content_type,
         organization_id=str(organization_id),

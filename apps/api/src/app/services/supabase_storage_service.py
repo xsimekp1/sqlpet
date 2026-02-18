@@ -27,7 +27,7 @@ class SupabaseStorageService:
 
     async def upload_file(
         self,
-        file_content: BinaryIO,
+        file_content: bytes,
         filename: str,
         content_type: str,
         organization_id: str,
@@ -151,7 +151,7 @@ class SupabaseStorageService:
 
     async def upload_file_with_thumbnail(
         self,
-        file_content: BinaryIO | bytes,
+        file_content: bytes,
         filename: str,
         content_type: str,
         organization_id: str,
@@ -160,20 +160,8 @@ class SupabaseStorageService:
     ) -> Tuple[str, str, Optional[str]]:
         """Upload file to Supabase Storage with auto-generated thumbnail for images"""
 
-        # Ensure we have a BinaryIO for upload
-        upload_content: BinaryIO
-        if isinstance(file_content, bytes):
-            upload_content = BytesIO(file_content)
-            thumbnail_bytes = file_content
-        else:
-            # It's already a BinaryIO, seek to beginning and read for thumbnail
-            file_content.seek(0)
-            thumbnail_bytes = file_content.read()
-            file_content.seek(0)
-            upload_content = file_content
-
         file_url, storage_path = await self.upload_file(
-            file_content=upload_content,
+            file_content=file_content,
             filename=filename,
             content_type=content_type,
             organization_id=organization_id,
@@ -182,8 +170,8 @@ class SupabaseStorageService:
         )
 
         thumbnail_url = None
-        if content_type.startswith("image/") and PIL_AVAILABLE and thumbnail_bytes:
-            thumbnail_content = self.generate_thumbnail(thumbnail_bytes)
+        if content_type.startswith("image/") and PIL_AVAILABLE and file_content:
+            thumbnail_content = self.generate_thumbnail(file_content)
             if thumbnail_content:
                 thumbnail_ext = os.path.splitext(filename)[1] or ".jpg"
                 thumbnail_filename = f"thumb_{uuid.uuid4()}{thumbnail_ext}"
