@@ -35,7 +35,6 @@ import { cn } from '@/lib/utils'
 import { LucideIcon } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiClient } from '@/app/lib/api'
-import { useState } from 'react'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
