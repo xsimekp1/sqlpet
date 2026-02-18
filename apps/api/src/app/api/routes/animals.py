@@ -327,6 +327,8 @@ async def log_weight(
         recorded_by_user_id=current_user.id,
     )
     db.add(log)
+    # Also update the animal's current weight
+    animal.weight_current_kg = data.weight_kg
     await db.commit()
     await db.refresh(log)
     return WeightLogResponse.model_validate(log)
