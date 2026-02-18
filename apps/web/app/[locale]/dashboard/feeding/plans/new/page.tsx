@@ -234,7 +234,7 @@ export default function NewFeedingPlanPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-background p-6 rounded-lg border">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg border">
         {/* Animal Selection */}
         <div className="space-y-2">
           <Label htmlFor="animal_id">{t('fields.animal')} *</Label>
@@ -297,19 +297,25 @@ export default function NewFeedingPlanPage() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="amount_g">{t('fields.amountGrams')}</Label>
-            {recommendedAmount && (
+            {selectedAnimalId && selectedFoodId && (
               <Button 
                 type="button" 
                 variant="outline" 
                 size="sm"
-                onClick={applyRecommendedAmount}
+                onClick={() => {
+                  const animal = selectedAnimal;
+                  const food = foods.find((f: any) => f.id === selectedFoodId);
+                  if (animal && food) {
+                    calculateRecommendedAmount(animal, food);
+                  }
+                }}
                 className="h-7 text-xs"
               >
-                Použít doporučených {recommendedAmount}g
+                {recommendedAmount ? `Přepočítat (${recommendedAmount}g)` : 'Spočítat dávku'}
               </Button>
             )}
           </div>
-          <Input className="bg-background"
+          <Input className="bg-white"
             id="amount_g"
             type="number"
             step="1"
@@ -317,16 +323,27 @@ export default function NewFeedingPlanPage() {
             {...register('amount_g')}
           />
           {recommendedAmount && (
-            <p className="text-xs text-muted-foreground">
-              Doporučená denní dávka: {recommendedAmount}g (vypočteno z váhy {selectedAnimal?.weight_current_kg}kg)
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                Doporučená denní dávka: <span className="font-medium text-green-600">{recommendedAmount}g</span> (váha: {selectedAnimal?.weight_current_kg}kg)
+              </p>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm"
+                onClick={applyRecommendedAmount}
+                className="h-6 text-xs text-green-600 hover:text-green-700"
+              >
+                Použít
+              </Button>
+            </div>
           )}
         </div>
 
         {/* Amount text */}
         <div className="space-y-2">
           <Label htmlFor="amount_text">{t('fields.amountText')}</Label>
-          <Input className="bg-background"
+          <Input className="bg-white"
             id="amount_text"
             placeholder="např. 1 kelímek, půl konzervy"
             {...register('amount_text')}
@@ -336,7 +353,7 @@ export default function NewFeedingPlanPage() {
         {/* Times per day */}
         <div className="space-y-2">
           <Label htmlFor="times_per_day">{t('fields.timesPerDay')}</Label>
-          <Input className="bg-background"
+          <Input className="bg-white"
             id="times_per_day"
             type="number"
             min="1"
@@ -349,7 +366,7 @@ export default function NewFeedingPlanPage() {
         <div className="space-y-2">
           <Label>{t('fields.schedule')}</Label>
           <div className="flex gap-2">
-            <Input className="bg-background"
+            <Input className="bg-white"
               type="time"
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
@@ -384,7 +401,7 @@ export default function NewFeedingPlanPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="start_date">{t('fields.startDate')} *</Label>
-            <Input className="bg-background"
+            <Input className="bg-white"
               id="start_date"
               type="date"
               {...register('start_date', { required: true })}
@@ -392,7 +409,7 @@ export default function NewFeedingPlanPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="end_date">{t('fields.endDate')}</Label>
-            <Input className="bg-background"
+            <Input className="bg-white"
               id="end_date"
               type="date"
               {...register('end_date')}
