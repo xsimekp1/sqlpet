@@ -89,6 +89,7 @@ export default function HotelReservationsPage() {
   const [loadingTable, setLoadingTable] = useState(true);
   const [loadingTimeline, setLoadingTimeline] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
 
   useEffect(() => {
     loadReservations();
@@ -302,92 +303,99 @@ export default function HotelReservationsPage() {
                       dates.push(current.toISOString().split('T')[0]);
                       current.setDate(current.getDate() + 1);
                     }
-                    return dates.map(d => (
-                      <div key={d} className="flex-1 min-w-[40px] p-1 text-center text-xs border-r">
-                        <div className="font-medium">{format(new Date(d), 'd.M')}</div>
-                        <div className="text-muted-foreground text-[10px]">{format(new Date(d), 'EEE')}</div>
-                      </div>
-                    ));
+                    return dates.map(d => {
+                      const dayOfWeek = new Date(d).getDay();
+                      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                      return (
+                        <div key={d} className={`flex-1 min-w-[40px] p-1 text-center text-xs border-r ${isWeekend ? 'bg-gray-200' : ''}`}>
+                          <div className="font-medium">{format(new Date(d), 'd.M')}</div>
+                          <div className={`text-muted-foreground text-[10px] ${isWeekend ? 'font-semibold' : ''}`}>{format(new Date(d), 'EEE')}</div>
+                        </div>
+                      );
+                    });
                   })()}
                 </div>
                 
                 {timelineData.kennels.map(kennel => {
                   const kennelEntries = timelineData.timeline.filter(t => t.kennel_id === kennel.id);
+                  
+                  // Find reservation spans for calculating middle day
+                  const reservationSpans: Record<string, {from: string, to: string}> = {};
+                  kennelEntries.forEach(entry => {
+                    if (entry.reservation_id && entry.entry_type === 'reservation') {
+                      if (!reservationSpans[entry.reservation_id]) {
+                        reservationSpans[entry.reservation_id] = { from: entry.date, to: entry.date };
+                      } else {
+                        reservationSpans[entry.reservation_id].to = entry.date;
+                      }
+                    }
+                  });
+
                   return (
                     <div key={kennel.id} className="flex border-b hover:bg-muted/30">
                       <div className="w-32 flex-shrink-0 p-2 font-medium text-sm border-r flex items-center">
                         {kennel.name}
                       </div>
                       <div className="flex-1 flex">
-                        {kennelEntries.map((entry, idx) => (
-                          <div 
-                            key={idx} 
-                            className={`flex-1 min-w-[40px] h-12 border-r flex items-center justify-center text-xs ${
-                              entry.entry_type === 'reservation' 
-                                ? entry.status === 'pending' 
-                                  ? 'bg-yellow-100' 
-                                  : entry.status === 'confirmed'
-                                  ? 'bg-blue-100'
-                                  : entry.status === 'checked_in'
-                                  ? 'bg-green-100'
-                                  : 'bg-gray-100'
-                                : 'bg-muted/20'
-                            }`}
-                            title={entry.animal_name ? `${entry.animal_name} (${entry.status})` : 'Volno'}
-                          >
-                            {entry.animal_name && (
-                              <span className="truncate px-1 font-medium">
-                                {entry.animal_name.substring(0, 5)}
-                              </span>
-                            )}
-                          </div>
-                        ))}
+                        {kennelEntries.map((entry, idx) => {
+                          const dayOfWeek = new Date(entry.date).getDay();
+                          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                          
+                          // Calculate if this is the middle day of the reservation
+                          const span = entry.reservation_id ? reservationSpans[entry.reservation_id] : null;
+                          const isMiddleDay = span && entry.reservation_id && entry.date === span.to && entry.date === span.from 
+                            ? true 
+                            : span && entry.reservation_id && entry.date === span.to && entry.date === span.from
+                            ? true
+                            : span && entry.reservation_id && entry.date === span.to && span.from !== span.to
+                            ? false
+                            : span && entry.reservation_id && entry.date === span.from && span.from !== span.to
+                            ? false
+                            : false;
+                          
+                          // Better middle calculation
+                          const isActuallyMiddle = (() => {
+                            if (!span || !entry.reservation_id) return false;
+                            const fromDate = new Date(span.from);
+                            const toDate = new Date(span.to);
+                            const currentDate = new Date(entry.date);
+                            const totalDays = Math.round((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24));
+                            const currentDayNum = Math.round((currentDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24));
+                            return currentDayNum === Math.floor(totalDays / 2);
+                          })();
+
+                          return (
+                            <div 
+                              key={idx} 
+                              className={`flex-1 min-w-[40px] h-12 border-r flex items-center justify-center text-xs cursor-pointer ${
+                                entry.entry_type === 'reservation' 
+                                  ? entry.status === 'pending' 
+                                    ? 'bg-yellow-100 hover:bg-yellow-200' 
+                                    : entry.status === 'confirmed'
+                                    ? 'bg-blue-100 hover:bg-blue-200'
+                                    : entry.status === 'checked_in'
+                                    ? 'bg-green-100 hover:bg-green-200'
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                                  : isWeekend 
+                                    ? 'bg-gray-100 hover:bg-gray-200' 
+                                    : 'bg-muted/20 hover:bg-muted/40'
+                              }`}
+                              title={entry.animal_name ? `${entry.animal_name} (${entry.status}) - klikněte pro editaci` : 'Volno'}
+                              onClick={() => entry.reservation_id && setSelectedReservationId(entry.reservation_id)}
+                            >
+                              {entry.reservation_id && isActuallyMiddle && (
+                                <span className="truncate px-1 font-medium">
+                                  {entry.animal_name?.substring(0, 5)}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Poslední rezervace</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingTable ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {reservations
-                .filter(r => r.status !== 'cancelled' && r.status !== 'checked_out')
-                .sort((a, b) => new Date(b.reserved_from).getTime() - new Date(a.reserved_from).getTime())
-                .slice(0, 10)
-                .map((res) => (
-                  <div key={res.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-medium">{res.animal_name.slice(0, 2).toUpperCase()}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium">{res.animal_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(res.reserved_from), 'd.M.yyyy')} - {format(new Date(res.reserved_to), 'd.M.yyyy')}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge className={STATUS_COLORS[res.status]}>
-                      {STATUS_LABELS[res.status] || res.status}
-                    </Badge>
-                  </div>
-                ))}
-              {reservations.filter(r => r.status !== 'cancelled' && r.status !== 'checked_out').length === 0 && (
-                <p className="text-muted-foreground text-sm text-center py-4">Žádné aktivní rezervace</p>
-              )}
             </div>
           )}
         </CardContent>
