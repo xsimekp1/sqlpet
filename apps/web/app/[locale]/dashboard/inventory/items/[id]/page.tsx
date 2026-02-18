@@ -378,7 +378,7 @@ export default function InventoryItemDetailPage() {
             {t('reorderThreshold')}
           </div>
           <div className="text-2xl font-bold">
-            {item.reorder_threshold || '-'}
+            {item.reorder_threshold !== null && item.reorder_threshold !== undefined ? item.reorder_threshold : '-'}
           </div>
         </div>
       </div>
@@ -516,7 +516,7 @@ export default function InventoryItemDetailPage() {
                     <TableRow key={lot.id}>
                       <TableCell>
                         <span className="font-mono text-sm">
-                          {lot.lot_number || '-'}
+                          {lot.lot_number !== null && lot.lot_number !== undefined ? lot.lot_number : '-'}
                         </span>
                       </TableCell>
                       <TableCell>
