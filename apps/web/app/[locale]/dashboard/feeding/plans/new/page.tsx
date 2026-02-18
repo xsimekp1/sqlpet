@@ -89,7 +89,7 @@ export default function NewFeedingPlanPage() {
   console.log('[DEBUG] first food kcal_per_100g:', foods[0]?.kcal_per_100g);
 
   const watchedAnimalId = watch('animal_id');
-  const selectedAnimal = animals.find((a: any) => a.id === watchedAnimalId);
+  const selectedAnimal = animals.find((a: any) => a.id === selectedAnimalId);
   const filteredFoods = foods.filter(
     (f: any) => !f.allowed_species?.length || !selectedAnimal || f.allowed_species.includes(selectedAnimal.species)
   );
@@ -309,10 +309,18 @@ export default function NewFeedingPlanPage() {
                 variant="outline" 
                 size="sm"
                 onClick={() => {
+                  console.log('[DEBUG] Button clicked!');
+                  console.log('[DEBUG] selectedAnimalId:', selectedAnimalId);
+                  console.log('[DEBUG] selectedFoodId:', selectedFoodId);
+                  console.log('[DEBUG] selectedAnimal:', selectedAnimal);
+                  console.log('[DEBUG] foods:', foods);
                   const animal = selectedAnimal;
                   const food = foods.find((f: any) => f.id === selectedFoodId);
+                  console.log('[DEBUG] found food:', food);
                   if (animal && food) {
                     calculateRecommendedAmount(animal, food);
+                  } else {
+                    console.log('[DEBUG] Missing animal or food!');
                   }
                 }}
                 className="h-7 text-xs"
