@@ -107,6 +107,32 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"✗ API metrics error: {e}")
 
+    # Add enrichment columns to walk_logs if not exists
+    try:
+        script_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "scripts",
+            "add_enrichment_columns.py",
+        )
+        if os.path.exists(script_path):
+            result = subprocess.run(
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                env={
+                    **os.environ,
+                    "PYTHONPATH": os.path.join(os.path.dirname(__file__), ".."),
+                },
+            )
+            if result.returncode == 0:
+                print("✓ Enrichment columns ready")
+            else:
+                print(f"⚠️  Enrichment columns: {result.stderr}")
+    except Exception as e:
+        print(f"⚠️  Enrichment columns error (non-fatal): {e}")
+
     # Check critical tables exist - fail fast with clear error
     try:
         from sqlalchemy import text, inspect
