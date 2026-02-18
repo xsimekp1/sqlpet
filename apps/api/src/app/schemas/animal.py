@@ -84,6 +84,7 @@ class AnimalCreate(BaseModel):
     coat: str | None = None
     size_estimated: SizeEstimated = "unknown"
     weight_current_kg: Decimal | None = None
+    mer_kcal_per_day: int | None = None
     weight_estimated_kg: Decimal | None = None
     status_reason: str | None = None
     outcome_date: date | None = None
@@ -113,6 +114,7 @@ class AnimalUpdate(BaseModel):
     coat: str | None = None
     size_estimated: SizeEstimated | None = None
     weight_current_kg: Decimal | None = None
+    mer_kcal_per_day: int | None = None
     weight_estimated_kg: Decimal | None = None
     status_reason: str | None = None
     outcome_date: date | None = None
@@ -145,6 +147,7 @@ class AnimalResponse(BaseModel):
     coat: str | None = None
     size_estimated: SizeEstimated
     weight_current_kg: Decimal | None = None
+    mer_kcal_per_day: int | None = None
     weight_estimated_kg: Decimal | None = None
     status_reason: str | None = None
     outcome_date: date | None = None

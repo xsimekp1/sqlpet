@@ -133,6 +133,32 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"⚠️  Enrichment columns error (non-fatal): {e}")
 
+    # Backfill animal MER values if needed
+    try:
+        script_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "scripts",
+            "backfill_animal_mer.py",
+        )
+        if os.path.exists(script_path):
+            result = subprocess.run(
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                env={
+                    **os.environ,
+                    "PYTHONPATH": os.path.join(os.path.dirname(__file__), ".."),
+                },
+            )
+            if result.returncode == 0:
+                print("✓ Animal MER values ready")
+            else:
+                print(f"⚠️  Animal MER backfill: {result.stderr}")
+    except Exception as e:
+        print(f"⚠️  Animal MER error (non-fatal): {e}")
+
     # Check critical tables exist - fail fast with clear error
     try:
         from sqlalchemy import text, inspect

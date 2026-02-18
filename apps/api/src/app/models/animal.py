@@ -163,6 +163,7 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     weight_current_kg: Mapped[float | None] = mapped_column(
         Numeric(6, 2), nullable=True
     )
+    mer_kcal_per_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
     weight_estimated_kg: Mapped[float | None] = mapped_column(
         Numeric(6, 2), nullable=True
     )
