@@ -98,6 +98,12 @@
       "intake": "In intake",
       "quarantine": "Quarantine"
     },
+    "views": {
+      "grid": "Grid - overview of all kennels",
+      "table": "Table - list with details",
+      "map": "Map - visual placement",
+      "timeline": "Timeline - stay history"
+    },
     "medicationsDue": "Medications due",
     "animalsPending": "Animals pending",
     "tasksDue": "Tasks due",

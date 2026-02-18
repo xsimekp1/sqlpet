@@ -543,38 +543,60 @@ export default function KennelsPage() {
         </div>
         <div className="flex gap-2">
           <div className="flex rounded-md border divide-x overflow-hidden">
-            <Button
-              variant={view === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none border-0"
-              onClick={() => setView('grid')}
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={view === 'table' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none border-0"
-              onClick={() => setView('table')}
-            >
-              <Table className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={view === 'map' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none border-0"
-              onClick={() => setView('map')}
-            >
-              <Map className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={view === 'timeline' ? 'default' : 'ghost'}
-              size="sm"
-              className="rounded-none border-0"
-              onClick={() => setView('timeline')}
-            >
-              <Calendar className="h-4 w-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={view === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="rounded-none border-0"
+                    onClick={() => setView('grid')}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('views.grid')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={view === 'table' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="rounded-none border-0"
+                    onClick={() => setView('table')}
+                  >
+                    <Table className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('views.table')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={view === 'map' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="rounded-none border-0"
+                    onClick={() => setView('map')}
+                  >
+                    <Map className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('views.map')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={view === 'timeline' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="rounded-none border-0"
+                    onClick={() => setView('timeline')}
+                  >
+                    <Calendar className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t('views.timeline')}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <TooltipProvider>
             <Tooltip>

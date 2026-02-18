@@ -93,6 +93,12 @@
       "intake": "V příjmu",
       "quarantine": "V karanténě"
     },
+    "views": {
+      "grid": "Mřížka - přehled všech kocenů",
+      "table": "Tabulka - seznam s detaily",
+      "map": "Mapa - vizuální rozmístění",
+      "timeline": "Časová osa - historie pobytů"
+    },
     "medicationsDue": "Léky na pořadu",
     "animalsPending": "Zvířat čeká",
     "tasksDue": "Úkolů dnes",
