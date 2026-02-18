@@ -124,6 +124,7 @@ export interface Animal {
   behavior_notes: string | null;
   is_special_needs: boolean;
   weight_current_kg: number | null;
+  mer_kcal_per_day: number | null;
   weight_estimated_kg: number | null;
   age_group: 'baby' | 'young' | 'adult' | 'senior' | 'unknown';
   breeds?: AnimalBreed[];
