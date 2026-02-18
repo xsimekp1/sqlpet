@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
 from src.app.api.dependencies.db import get_db
@@ -157,6 +158,10 @@ async def list_intakes(
     q = (
         select(Intake, AnimalModel)
         .outerjoin(AnimalModel, AnimalModel.id == Intake.animal_id)
+        .options(
+            selectinload(AnimalModel.animal_breeds),
+            selectinload(AnimalModel.tags),
+        )
         .where(
             Intake.organization_id == organization_id,
             Intake.deleted_at.is_(None),

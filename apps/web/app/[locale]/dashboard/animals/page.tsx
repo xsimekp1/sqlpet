@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList, Dog } from 'lucide-react';
+import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList, Dog, Download } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -80,7 +80,7 @@ export default function AnimalsPage() {
   const router = useRouter();
   const t = useTranslations();
   const tSpecies = useTranslations('animals.species');
-  const { user, permissions } = useAuth();
+  const { user, permissions, selectedOrg } = useAuth();
   const [search, setSearch] = useState('');
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'active' | 'available' | 'all'>('active');
@@ -96,6 +96,65 @@ export default function AnimalsPage() {
   const [creatingBulkTask, setCreatingBulkTask] = useState(false);
   const [createChoiceOpen, setCreateChoiceOpen] = useState(false);
   const [walkingAnimals, setWalkingAnimals] = useState<Set<string>>(new Set());
+
+  // Export permission check
+  const canExport = user?.is_superadmin || selectedOrg?.role === 'admin';
+
+  // Export all animals to CSV
+  const handleExportCSV = () => {
+    if (animals.length === 0) return;
+
+    const headers = [
+      'id', 'public_code', 'name', 'species', 'sex', 'status', 'color',
+      'altered_status', 'age_group', 'birth_date_estimated',
+      'current_kennel_name', 'current_kennel_code', 'current_intake_date',
+      'is_dewormed', 'is_aggressive', 'is_pregnant', 'is_special_needs',
+      'behavior_notes', 'weight_current_kg', 'weight_estimated_kg', 'bcs',
+      'expected_litter_date', 'last_walked_at', 'created_at', 'updated_at',
+      'breeds', 'tags', 'identifiers',
+    ];
+
+    const rows = animals.map(animal => {
+      const row: Record<string, any> = {};
+      for (const header of headers) {
+        const value = (animal as any)[header];
+        if (value === null || value === undefined) {
+          row[header] = '';
+        } else if (Array.isArray(value)) {
+          row[header] = value.map((item: any) => 
+            typeof item === 'object' 
+              ? item.name || item.breed_name || item.display_name || JSON.stringify(item)
+              : item
+          ).join('; ');
+        } else if (typeof value === 'boolean') {
+          row[header] = value ? '1' : '0';
+        } else {
+          row[header] = String(value);
+        }
+      }
+      return row;
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => headers.map(h => {
+        const val = row[h] || '';
+        const escaped = String(val).replace(/"/g, '""');
+        return `"${escaped}"`;
+      }).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `animals_export_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Export dokončen');
+  };
 
   // Fetch animals from API
   useEffect(() => {
@@ -680,6 +739,21 @@ export default function AnimalsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Export button - bottom right */}
+      {canExport && animals.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="gap-2 shadow-lg"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
