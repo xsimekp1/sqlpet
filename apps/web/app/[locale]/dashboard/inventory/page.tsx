@@ -165,7 +165,7 @@ export default function InventoryPage() {
               <TableHead>{t('fields.unit')}</TableHead>
               <TableHead>{t('lots')}</TableHead>
               <TableHead>{t('reorderThreshold')}</TableHead>
-              <TableHead className="text-right">{t('messages.actions')}</TableHead>
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -238,7 +238,7 @@ export default function InventoryPage() {
                       />
                       <Link href={`/dashboard/inventory/items/${stock.item.id}`}>
                         <Button size="sm" variant="ghost">
-                          {t('viewDetails')}
+                          {t('actions.viewDetails')}
                         </Button>
                       </Link>
                     </div>
