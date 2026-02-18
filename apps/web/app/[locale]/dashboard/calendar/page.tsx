@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { ApiClient } from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Baby, LogIn, PersonStanding, Heart, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -87,6 +88,7 @@ export default function CalendarPage() {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()); // 0-indexed
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   // Single optimized API call - fetches all events for the month in one request
   const { data: eventsData, isLoading } = useQuery<CalendarEventsData>({
@@ -264,9 +266,11 @@ export default function CalendarPage() {
             return (
               <div
                 key={key}
+                onClick={() => setSelectedDay(day)}
                 className={cn(
-                  'min-h-[100px] border-b border-r last:border-r-0 p-1.5 flex flex-col gap-1',
-                  isToday && 'bg-primary/5 ring-1 ring-inset ring-primary/30'
+                  'min-h-[100px] border-b border-r last:border-r-0 p-1.5 flex flex-col gap-1 cursor-pointer hover:bg-muted/30 transition-colors',
+                  isToday && 'bg-primary/5 ring-1 ring-inset ring-primary/30',
+                  selectedDay === day && 'ring-2 ring-blue-500 bg-blue-50'
                 )}
               >
                 {/* Day number */}
@@ -345,6 +349,62 @@ export default function CalendarPage() {
           })}
         </div>
       </div>
+
+      {/* Selected day details */}
+      {selectedDay && (
+        <div className="border rounded-lg p-4 bg-card">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            {selectedDay}. {monthName}
+            <Button variant="ghost" size="sm" onClick={() => setSelectedDay(null)} className="ml-auto h-6 px-2 text-xs">
+              ✕ zavřít
+            </Button>
+          </h3>
+          {(() => {
+            const selectedKey = `${year}-${pad2(month + 1)}-${pad2(selectedDay)}`;
+            const dayEvents = eventsMap[selectedKey] ?? [];
+            
+            if (dayEvents.length === 0) {
+              return <p className="text-muted-foreground text-sm">Žádné události</p>;
+            }
+
+            return (
+              <ul className="space-y-2">
+                {dayEvents.map((ev, i) => {
+                  const typeLabels: Record<string, string> = {
+                    intake: t('intakeStart'),
+                    litter: t('expectedLitter'),
+                    escaped: t('escaped'),
+                    planned_adoption: t('plannedAdoption'),
+                    planned_outcome: t('plannedOutcome'),
+                  };
+                  const typeColors: Record<string, string> = {
+                    intake: 'bg-blue-100 text-blue-700 border-blue-200',
+                    litter: 'bg-pink-100 text-pink-700 border-pink-200',
+                    escaped: 'bg-orange-100 text-orange-700 border-orange-200',
+                    planned_adoption: 'bg-green-100 text-green-700 border-green-200',
+                    planned_outcome: 'bg-red-100 text-red-700 border-red-200',
+                  };
+
+                  return (
+                    <li key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                      <AnimalMedallion animal={ev.animal} title={typeLabels[ev.type] || ev.type} />
+                      <Link 
+                        href={`/dashboard/animals/${ev.animal.id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {ev.animal.name}
+                      </Link>
+                      <Badge variant="outline" className={typeColors[ev.type] || ''}>
+                        {typeLabels[ev.type] || ev.type}
+                      </Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 }
