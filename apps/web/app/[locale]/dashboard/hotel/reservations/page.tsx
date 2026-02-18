@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Loader2, Calendar, DollarSign, User, Home, Check, X, AlertCircle } from 'lucide-react';
+import { Plus, Loader2, Calendar, DollarSign, User, Home, Check, X, AlertCircle, LayoutGrid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { cs, enUS } from 'date-fns/locale';
+import HotelTimeline from '@/components/hotel/HotelTimeline';
 
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -78,6 +79,7 @@ export default function HotelReservationsPage() {
   const [reservations, setReservations] = useState<HotelReservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
 
   useEffect(() => {
     loadReservations();
@@ -142,7 +144,7 @@ export default function HotelReservationsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 items-center">
         <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Všechny statusy" />
@@ -155,9 +157,36 @@ export default function HotelReservationsPage() {
             <SelectItem value="cancelled">Zrušeno</SelectItem>
           </SelectContent>
         </Select>
+        
+        <div className="flex border rounded-md ml-auto">
+          <Button
+            variant={viewMode === 'table' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('table')}
+            className="rounded-r-none"
+          >
+            <List className="h-4 w-4 mr-1" />
+            Tabulka
+          </Button>
+          <Button
+            variant={viewMode === 'timeline' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setViewMode('timeline')}
+            className="rounded-l-none"
+          >
+            <LayoutGrid className="h-4 w-4 mr-1" />
+            Časová osa
+          </Button>
+        </div>
       </div>
 
-      {/* Table */}
+      {viewMode === 'timeline' ? (
+        <Card>
+          <CardContent className="p-4">
+            <HotelTimeline />
+          </CardContent>
+        </Card>
+      ) : (
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -232,6 +261,7 @@ export default function HotelReservationsPage() {
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
