@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useUIStore } from '@/app/stores/uiStore';
+import { useAuth } from '@/app/context/AuthContext';
 import ApiClient from '@/app/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -86,6 +87,7 @@ export default function SettingsPage() {
   const t = useTranslations('settings');
   const locale = useLocale();
   const { weightUnit, setWeightUnit } = useUIStore();
+  const { user } = useAuth();
 
   // Default images state
   const [images, setImages] = useState<DefaultImage[]>([]);
@@ -526,8 +528,12 @@ export default function SettingsPage() {
         <TabsList>
           <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
           <TabsTrigger value="defaultImages">{t('tabs.defaultImages')}</TabsTrigger>
-          <TabsTrigger value="breeds">{t('tabs.breeds')}</TabsTrigger>
-          <TabsTrigger value="colors">{t('tabs.colors')}</TabsTrigger>
+          {user?.is_superadmin && (
+            <>
+              <TabsTrigger value="breeds">{t('tabs.breeds')}</TabsTrigger>
+              <TabsTrigger value="colors">{t('tabs.colors')}</TabsTrigger>
+            </>
+          )}
           <TabsTrigger value="members">
             <Users className="h-4 w-4 mr-1.5" />
             {t('tabs.members')}
