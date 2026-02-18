@@ -137,6 +137,13 @@ export default function KennelDetailPage() {
 
   // Species editing
   const [editingSpecies, setEditingSpecies] = useState(false);
+
+  // Maintenance editing
+  const [editingMaintenance, setEditingMaintenance] = useState(false);
+  const [maintenanceStart, setMaintenanceStart] = useState('');
+  const [maintenanceEnd, setMaintenanceEnd] = useState('');
+  const [maintenanceReason, setMaintenanceReason] = useState('');
+  const [savingMaintenance, setSavingMaintenance] = useState(false);
   const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
   const [savingSpecies, setSavingSpecies] = useState(false);
 
@@ -278,6 +285,37 @@ export default function KennelDetailPage() {
     }
   };
 
+  const handleSaveMaintenance = async () => {
+    if (!kennel) return;
+    setSavingMaintenance(true);
+    try {
+      await ApiClient.setKennelMaintenance(kennel.id, {
+        start_at: maintenanceStart ? new Date(maintenanceStart).toISOString() : null,
+        end_at: maintenanceEnd ? new Date(maintenanceEnd).toISOString() : null,
+        reason: maintenanceReason || null,
+      });
+      // Refresh kennel data
+      const res = await fetch(`/api/kennels/${kennelId}`, { headers: getAuthHeaders() });
+      const updated = await res.json();
+      setKennel(updated);
+      toast.success(t('detail.updateSuccess'));
+      setEditingMaintenance(false);
+    } catch (e: any) {
+      toast.error(e.message || 'Chyba při ukládání');
+    } finally {
+      setSavingMaintenance(false);
+    }
+  };
+
+  const startEditMaintenance = () => {
+    if (kennel) {
+      setMaintenanceStart(kennel.maintenance_start_at ? kennel.maintenance_start_at.split('T')[0] : '');
+      setMaintenanceEnd(kennel.maintenance_end_at ? kennel.maintenance_end_at.split('T')[0] : '');
+      setMaintenanceReason(kennel.maintenance_reason || '');
+    }
+    setEditingMaintenance(true);
+  };
+
   const handleDelete = async () => {
     if (!kennel) return;
     if (kennel.occupied_count > 0) {
@@ -347,368 +385,31 @@ export default function KennelDetailPage() {
             <Link href="/dashboard/kennels">
               <Button className="mt-4">Zpět na kotce</Button>
             </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+            </CardContent>
+          </Card>
 
-  const occupancyPercent = Math.min((kennel.occupied_count / kennel.capacity) * 100, 100);
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <Link href="/dashboard/kennels">
-          <Button variant="ghost" size="icon" className="mt-0.5">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            {editingName ? (
-              <div className="flex items-center gap-1.5">
-                <Input
-                  value={nameInput}
-                  onChange={e => setNameInput(e.target.value)}
-                  className="h-9 text-xl font-bold w-48"
-                  autoFocus
-                  onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setEditingName(false); }}
-                />
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleSaveName} disabled={savingName}>
-                  {savingName ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 text-green-600" />}
-                </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingName(false)}>
-                  <X className="h-4 w-4 text-red-500" />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 group">
-                <h1 className="text-2xl font-bold truncate">{kennel.name}</h1>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => { setNameInput(kennel.name); setEditingName(true); }}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            )}
-
-            {/* Inline status select */}
-            <Select value={kennel.status} onValueChange={handleStatusChange} disabled={changingStatus}>
-              <SelectTrigger className={`h-7 text-xs px-2.5 w-auto border-0 rounded-full ${getStatusColor(kennel.status)}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(['available', 'maintenance', 'closed'] as const).map(s => (
-                  <SelectItem key={s} value={s}>
-                    {getStatusLabel(s)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Species badges */}
-            {kennel.allowed_species && kennel.allowed_species.length > 0 && (
-              <div className="flex gap-1">
-                {kennel.allowed_species.map(s => {
-                  const cfg = SPECIES_CONFIG[s] || SPECIES_CONFIG.other;
-                  return (
-                    <span key={s} title={cfg.label} className={`text-sm px-1.5 py-0.5 rounded-full ${cfg.bg}`}>
-                      {cfg.emoji}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {kennel.code} · {kennel.zone_name}
-          </p>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex gap-2 shrink-0">
-          <Button size="sm" onClick={() => setTaskDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            {t('detail.addTask')}
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)}>
-            <QrCode className="h-4 w-4 mr-1" />
-            QR kód
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleCopy} disabled={copying}>
-            {copying ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Copy className="h-4 w-4 mr-1" />}
-            {t('detail.copyKennel')}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleDelete} disabled={deleting} className="text-destructive hover:text-destructive">
-            {deleting ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Trash2 className="h-4 w-4 mr-1" />}
-            {t('detail.deleteKennel')}
-          </Button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">{t('detail.overviewTab')}</TabsTrigger>
-          <TabsTrigger value="history">{t('detail.historyTab')}</TabsTrigger>
-          <TabsTrigger value="tasks">
-            {t('detail.tasksTab')}
-            {tasks.filter(tk => tk.status !== 'completed' && tk.status !== 'cancelled').length > 0 && (
-              <span className="ml-1.5 bg-primary text-primary-foreground text-xs rounded-full px-1.5 py-0.5">
-                {tasks.filter(tk => tk.status !== 'completed' && tk.status !== 'cancelled').length}
-              </span>
-            )}
-          </TabsTrigger>
-        </TabsList>
-
-        {/* ── Overview Tab ─────────────────────────────────────────────── */}
-        <TabsContent value="overview" className="space-y-4">
-          {/* Alerts */}
-          {kennel.alerts && kennel.alerts.length > 0 && (
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardContent className="pt-4 pb-3">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0" />
-                  <div className="flex flex-wrap gap-2">
-                    {kennel.alerts.map((a, i) => (
-                      <span key={i} className="text-sm text-yellow-800">{a}</span>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Info card */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">{t('detail.infoCard')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{t('detail.type')}</span>
-                  {editingType ? (
-                    <div className="flex items-center gap-1.5">
-                      <Select
-                        value={kennel.type}
-                        onValueChange={v => { handleSaveType(v); }}
-                        disabled={savingType}
-                      >
-                        <SelectTrigger className="h-7 w-36 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="indoor">Vnitřní</SelectItem>
-                          <SelectItem value="outdoor">Venkovní</SelectItem>
-                          <SelectItem value="isolation">Izolace</SelectItem>
-                          <SelectItem value="quarantine">Karanténa</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {savingType && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingType(false)}>
-                        <X className="h-3.5 w-3.5 text-red-500" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-medium">{getTypeLabel(kennel.type)}</span>
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingType(true)}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('detail.zone')}</span>
-                  <span className="font-medium">{kennel.zone_name}</span>
-                </div>
-
-                {/* Capacity — inline edit */}
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">{t('detail.capacity')}</span>
-                  {editingCapacity ? (
-                    <div className="flex items-center gap-1.5">
-                      <Input
-                        type="number"
-                        min={1}
-                        value={capacityInput}
-                        onChange={e => setCapacityInput(e.target.value)}
-                        className="h-7 w-20 text-sm"
-                        autoFocus
-                      />
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSaveCapacity} disabled={savingCapacity}>
-                        {savingCapacity ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 text-green-600" />}
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingCapacity(false)}>
-                        <X className="h-3.5 w-3.5 text-red-500" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-medium">{kennel.capacity}</span>
-                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { setCapacityInput(String(kennel.capacity)); setEditingCapacity(true); }}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Dimensions — inline edit */}
-                <div className="flex justify-between items-start">
-                  <span className="text-muted-foreground">{t('detail.dimensions')}</span>
-                  {editingDimensions ? (
-                    <div className="flex flex-col items-end gap-1.5">
-                      <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          placeholder="Délka (m)"
-                          value={dimLength}
-                          onChange={e => setDimLength(e.target.value)}
-                          className="h-7 w-20 text-xs"
-                          autoFocus
-                        />
-                        <span className="text-xs text-muted-foreground">×</span>
-                        <Input
-                          type="number"
-                          placeholder="Šířka (m)"
-                          value={dimWidth}
-                          onChange={e => setDimWidth(e.target.value)}
-                          className="h-7 w-20 text-xs"
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Výška cm"
-                          value={dimHeight}
-                          onChange={e => setDimHeight(e.target.value)}
-                          className="h-7 w-20 text-xs"
-                        />
-                      </div>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleSaveDimensions} disabled={savingDimensions}>
-                          {savingDimensions ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 text-green-600" />}
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingDimensions(false)}>
-                          <X className="h-3.5 w-3.5 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5">
-                      {kennel.dimensions?.length && kennel.dimensions?.width ? (
-                        <DimensionsDisplay dimensions={kennel.dimensions} />
-                      ) : (
-                        <span className="text-muted-foreground text-xs">Neuvedeno</span>
-                      )}
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6"
-                        onClick={() => {
-                          setDimLength(kennel.dimensions?.length ? (kennel.dimensions.length / 100).toString() : '');
-                          setDimWidth(kennel.dimensions?.width ? (kennel.dimensions.width / 100).toString() : '');
-                          setDimHeight(kennel.dimensions?.height ? (kennel.dimensions.height / 100).toString() : '');
-                          setEditingDimensions(true);
-                        }}
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Last cleaned */}
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Poslední čištění</span>
-                  <span className={`text-sm font-medium ${!kennel.last_cleaned_at ? 'text-muted-foreground/50 italic' : ''}`}>
-                    {kennel.last_cleaned_at
-                      ? new Date(kennel.last_cleaned_at).toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                      : 'Nezaznamenáno'}
-                  </span>
-                </div>
-
-                {kennel.notes && (
-                  <div>
-                    <span className="text-muted-foreground block mb-0.5">{t('detail.notes')}</span>
-                    <p className="text-sm">{kennel.notes}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Occupancy card */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  {t('detail.occupancyCard')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-muted-foreground">Obsazenost</span>
-                  <span className="font-medium">{kennel.occupied_count}/{kennel.capacity}</span>
-                </div>
-                <Progress value={occupancyPercent} className="h-3" />
-                <p className="text-xs text-muted-foreground text-right">{occupancyPercent.toFixed(0)}%</p>
-
-                {kennel.animals_preview && kennel.animals_preview.length > 0 && (
-                  <div className="pt-1 space-y-2">
-                    {kennel.animals_preview.map(a => (
-                      <Link
-                        key={a.id}
-                        href={`/dashboard/animals/${a.id}`}
-                        className="flex items-center gap-2 hover:text-primary transition-colors"
-                      >
-                        <div className="relative h-8 w-8 rounded-full overflow-hidden bg-muted shrink-0">
-                          <Image
-                            src={a.photo_url || (a.species === 'dog' ? '/dog-default.png' : a.species === 'cat' ? '/cat_default.png' : '/placeholder-animal.svg')}
-                            alt={a.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium hover:underline truncate">{a.name}</p>
-                          {a.start_at && (
-                            <p className="text-xs text-muted-foreground">od {formatDate(a.start_at)}</p>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Species card */}
-          <Card>
+          {/* Maintenance card */}
+          <Card className={kennel.maintenance_start_at && new Date(kennel.maintenance_start_at) <= new Date() && (!kennel.maintenance_end_at || new Date(kennel.maintenance_end_at) >= new Date()) ? 'border-yellow-400 bg-yellow-50' : ''}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">{t('detail.speciesCard')}</CardTitle>
-                {!editingSpecies ? (
+                <CardTitle className="text-base flex items-center gap-2">
+                  🔧 {t('maintenance.title') || 'Plánovaná odstávka'}
+                </CardTitle>
+                {!editingMaintenance ? (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => { setSelectedSpecies(kennel.allowed_species ?? []); setEditingSpecies(true); }}
+                    onClick={startEditMaintenance}
                   >
                     <Pencil className="h-3.5 w-3.5 mr-1" /> Upravit
                   </Button>
                 ) : (
                   <div className="flex gap-1">
-                    <Button size="sm" onClick={handleSaveSpecies} disabled={savingSpecies}>
-                      {savingSpecies ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
-                      Uložit
+                    <Button size="sm" onClick={handleSaveMaintenance} disabled={savingMaintenance}>
+                      {savingMaintenance ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+                      {t('maintenance.save') || 'Uložit'}
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditingSpecies(false)}>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingMaintenance(false)}>
                       <X className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -716,43 +417,74 @@ export default function KennelDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {editingSpecies ? (
-                <div className="flex flex-wrap gap-2">
-                  {ALL_SPECIES.map(s => {
-                    const cfg = SPECIES_CONFIG[s] || SPECIES_CONFIG.other;
-                    const active = selectedSpecies.includes(s);
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setSelectedSpecies(prev =>
-                          active ? prev.filter(x => x !== s) : [...prev, s]
-                        )}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                          active
-                            ? `${cfg.bg} border-current`
-                            : 'bg-muted/30 text-muted-foreground border-transparent hover:border-muted'
-                        }`}
-                      >
-                        {cfg.emoji} {cfg.label}
-                        {active && <CheckCircle2 className="h-3.5 w-3.5" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : kennel.allowed_species && kennel.allowed_species.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {kennel.allowed_species.map(s => {
-                    const cfg = SPECIES_CONFIG[s] || SPECIES_CONFIG.other;
-                    return (
-                      <span key={s} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${cfg.bg}`}>
-                        {cfg.emoji} {cfg.label}
-                      </span>
-                    );
-                  })}
+              {editingMaintenance ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">{t('maintenance.from') || 'Od'}</label>
+                      <Input
+                        type="date"
+                        value={maintenanceStart}
+                        onChange={(e) => setMaintenanceStart(e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1">{t('maintenance.to') || 'Do'}</label>
+                      <Input
+                        type="date"
+                        value={maintenanceEnd}
+                        onChange={(e) => setMaintenanceEnd(e.target.value)}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">{t('maintenance.reason') || 'Důvod'}</label>
+                    <Input
+                      value={maintenanceReason}
+                      onChange={(e) => setMaintenanceReason(e.target.value)}
+                      placeholder="Např. Malování, oprava..."
+                      className="text-sm"
+                    />
+                  </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">{t('noSpeciesRestriction')}</p>
+                <div className="space-y-2">
+                  {kennel.maintenance_start_at || kennel.maintenance_reason ? (
+                    <>
+                      {kennel.maintenance_start_at && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">{t('maintenance.from') || 'Od'}:</span>
+                          <span className="font-medium">
+                            {new Date(kennel.maintenance_start_at).toLocaleDateString('cs-CZ')}
+                          </span>
+                        </div>
+                      )}
+                      {kennel.maintenance_end_at && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">{t('maintenance.to') || 'Do'}:</span>
+                          <span className="font-medium">
+                            {new Date(kennel.maintenance_end_at).toLocaleDateString('cs-CZ')}
+                          </span>
+                        </div>
+                      )}
+                      {kennel.maintenance_reason && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">{t('maintenance.reason') || 'Důvod'}: </span>
+                          <span className="font-medium">{kennel.maintenance_reason}</span>
+                        </div>
+                      )}
+                      {kennel.maintenance_start_at && new Date(kennel.maintenance_start_at) <= new Date() && (!kennel.maintenance_end_at || new Date(kennel.maintenance_end_at) >= new Date()) && (
+                        <div className="mt-2 px-3 py-2 bg-yellow-100 text-yellow-800 rounded-md text-sm font-medium flex items-center gap-2">
+                          🔧 {t('maintenance.active') || 'Nyní v rekonstrukci'}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Žádná odstávka není naplánována</p>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>

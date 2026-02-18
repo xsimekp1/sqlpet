@@ -16,6 +16,7 @@ from src.app.models.hotel_reservation import HotelReservation, HotelReservationS
 from src.app.models.intake import Intake, IntakeReason
 from src.app.models.user import User
 from src.app.models.animal import Animal, AnimalStatus
+from src.app.models.kennel import Kennel
 
 router = APIRouter(prefix="/hotel/reservations", tags=["hotel_reservations"])
 
@@ -586,6 +587,41 @@ async def check_kennel_availability(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid kennel_id")
 
+    # Get kennel to check maintenance status
+    kennel_result = await db.execute(
+        select(Kennel).where(Kennel.id == kennel_uuid, Kennel.deleted_at.is_(None))
+    )
+    kennel = kennel_result.scalar_one_or_none()
+    if not kennel:
+        raise HTTPException(status_code=404, detail="Kennel not found")
+
+    # Check if kennel is in maintenance during the requested period
+    from datetime import datetime
+
+    maintenance_blocking = None
+    if kennel.maintenance_start_at:
+        maint_start = kennel.maintenance_start_at
+        maint_end = kennel.maintenance_end_at
+        # Maintenance blocks if:
+        # - Start date is within maintenance period, OR
+        # - End date is within maintenance period, OR
+        # - Requested period completely contains maintenance period
+        if maint_end:
+            if from_date <= maint_end.date() and to_date >= maint_start.date():
+                maintenance_blocking = {
+                    "from": maint_start.date(),
+                    "to": maint_end.date(),
+                    "reason": kennel.maintenance_reason,
+                }
+        else:
+            # No end date = indefinite maintenance
+            if to_date >= maint_start.date():
+                maintenance_blocking = {
+                    "from": maint_start.date(),
+                    "to": None,
+                    "reason": kennel.maintenance_reason,
+                }
+
     # Check reservations
     reservations_result = await db.execute(
         select(HotelReservation).where(
@@ -628,7 +664,11 @@ async def check_kennel_availability(
         for i in intakes_result.scalars().all()
     ]
 
-    is_available = len(blocking_reservations) == 0 and len(blocking_intakes) == 0
+    is_available = (
+        len(blocking_reservations) == 0
+        and len(blocking_intakes) == 0
+        and maintenance_blocking is None
+    )
 
     return {
         "kennel_id": kennel_id,
@@ -637,4 +677,5 @@ async def check_kennel_availability(
         "is_available": is_available,
         "blocking_reservations": blocking_reservations,
         "blocking_intakes": blocking_intakes,
+        "maintenance_blocking": maintenance_blocking,
     }

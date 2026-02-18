@@ -349,6 +349,76 @@ export default function KennelTimeline() {
                     </div>
                   )}
                   
+                  {/* Maintenance bar */}
+                  {kennel.maintenance_start_at && (
+                    (() => {
+                      const maintStart = new Date(kennel.maintenance_start_at);
+                      const maintEnd = kennel.maintenance_end_at ? new Date(kennel.maintenance_end_at) : null;
+                      const viewStart = new Date(data!.from_date);
+                      const viewEnd = new Date(data!.to_date);
+                      
+                      // Calculate position only if maintenance overlaps with view
+                      if (maintEnd && maintEnd < viewStart) return null;
+                      if (maintStart > viewEnd) return null;
+                      
+                      const startOffset = Math.max(0, Math.floor((maintStart.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24)));
+                      const endDate = maintEnd || viewEnd;
+                      const duration = Math.max(1, Math.floor((endDate.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24)) - startOffset);
+                      
+                      const isActive = maintStart <= today && (!maintEnd || maintEnd >= today);
+                      
+                      return (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className={cn(
+                                "absolute h-full rounded-md flex items-center justify-center z-0",
+                                isActive ? "bg-yellow-400/40" : "bg-yellow-200/30",
+                                isActive && "animate-pulse"
+                              )}
+                              style={{
+                                left: startOffset * CELL_WIDTH,
+                                width: duration * CELL_WIDTH,
+                              }}
+                            >
+                              <span className={cn(
+                                "text-xs font-bold rotate-[-45deg] whitespace-nowrap",
+                                isActive ? "text-yellow-700" : "text-yellow-600/70"
+                              )}>
+                                🔧
+                              </span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="space-y-1">
+                              <div className="font-semibold flex items-center gap-1">
+                                🔧 {t('maintenance.title') || 'Rekonstrukce'}
+                              </div>
+                              <div>
+                                {t('maintenance.from') || 'Od'}: {maintStart.toLocaleDateString('cs-CZ')}
+                              </div>
+                              {maintEnd && (
+                                <div>
+                                  {t('maintenance.to') || 'Do'}: {maintEnd.toLocaleDateString('cs-CZ')}
+                                </div>
+                              )}
+                              {kennel.maintenance_reason && (
+                                <div className="text-muted-foreground">
+                                  {kennel.maintenance_reason}
+                                </div>
+                              )}
+                              {isActive && (
+                                <div className="font-medium text-yellow-600">
+                                  {t('maintenance.active') || 'Nyní v rekonstrukci'}
+                                </div>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })()
+                  )}
+                  
                   {/* Stay bars */}
                   {kennel.laneData.map((lane, laneIdx) => 
                     lane.map((stay) => {

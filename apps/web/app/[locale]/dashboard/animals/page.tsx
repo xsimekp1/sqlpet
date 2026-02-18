@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList, Dog, Download } from 'lucide-react';
+import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList, Dog, Download, Zap, Syringe, Milk, Heart } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -561,6 +561,42 @@ export default function AnimalsPage() {
                             title={t('animals.health.pregnant')}
                           >
                             <Baby className="h-3.5 w-3.5 text-pink-500" />
+                          </div>
+                        )}
+                        {/* Lactating */}
+                        {animal.is_lactating && (
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-100"
+                            title={t('animals.health.lactating')}
+                          >
+                            <Milk className="h-3.5 w-3.5 text-amber-600" />
+                          </div>
+                        )}
+                        {/* Critical */}
+                        {animal.is_critical && (
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-red-100"
+                            title={t('animals.health.critical')}
+                          >
+                            <Zap className="h-3.5 w-3.5 text-red-600" />
+                          </div>
+                        )}
+                        {/* Diabetic */}
+                        {animal.is_diabetic && (
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-blue-100"
+                            title={t('animals.health.diabetic')}
+                          >
+                            <Syringe className="h-3.5 w-3.5 text-blue-600" />
+                          </div>
+                        )}
+                        {/* Cancer */}
+                        {animal.is_cancer && (
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-rose-100"
+                            title={t('animals.health.cancer')}
+                          >
+                            <Heart className="h-3.5 w-3.5 text-rose-600" />
                           </div>
                         )}
                         {/* Special needs */}

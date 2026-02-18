@@ -119,6 +119,11 @@ export interface Animal {
   is_dewormed: boolean;
   is_aggressive: boolean;
   is_pregnant: boolean;
+  is_lactating: boolean;
+  is_critical: boolean;
+  is_diabetic: boolean;
+  is_cancer: boolean;
+  intake_date: string | null;
   bcs: number | null;
   expected_litter_date: string | null;
   behavior_notes: string | null;
@@ -262,6 +267,9 @@ export interface Kennel {
   map_y: number;
   map_w: number;
   map_h: number;
+  maintenance_start_at?: string | null;
+  maintenance_end_at?: string | null;
+  maintenance_reason?: string | null;
 }
 
 export interface KennelAnimal {
@@ -353,6 +361,9 @@ export interface KennelTimelineKennel {
   zone_name?: string | null;
   zone_color?: string | null;
   stays: KennelTimelineStay[];
+  maintenance_start_at?: string | null;
+  maintenance_end_at?: string | null;
+  maintenance_reason?: string | null;
 }
 
 export interface KennelTimelineData {
@@ -721,6 +732,25 @@ class ApiClient {
     }
   }
 
+  static async setKennelMaintenance(
+    id: string,
+    data: { start_at?: string | null; end_at?: string | null; reason?: string | null }
+  ): Promise<void> {
+    try {
+      await axios.patch(
+        `${API_URL}/kennels/${id}/maintenance`,
+        data,
+        { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
+      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to set maintenance');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
   static async moveAnimal(request: MoveAnimalRequest): Promise<any> {
     try {
       const response = await axios.post<any>(
@@ -893,6 +923,18 @@ class ApiClient {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
         throw new Error(axiosError.response?.data?.detail || 'Failed to delete animal');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async deleteStay(stayId: string): Promise<void> {
+    try {
+      await axios.delete(`${API_URL}/stays/${stayId}`, { headers: this.getAuthHeaders() });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to delete stay');
       }
       throw new Error('An unexpected error occurred');
     }

@@ -6,6 +6,7 @@ import ApiClient from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ export default function BirthDialog({
   const t = useTranslations('birth');
   const [litterCount, setLitterCount] = useState(1);
   const [birthDate, setBirthDate] = useState(new Date().toISOString().split('T')[0]);
+  const [motherLactating, setMotherLactating] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const getOffspringLabel = (count: number): string => {
@@ -57,6 +59,13 @@ export default function BirthDialog({
         birthDate || undefined,
       );
       toast.success(t('success', { count: result.created }));
+      
+      // Set mother as lactating if checkbox is checked
+      if (motherLactating) {
+        await ApiClient.updateAnimal(animalId, { is_lactating: true } as any);
+        toast.success(t('motherLactatingSet'));
+      }
+      
       onOpenChange(false);
       onBirthRegistered?.(result.created);
     } catch (err: any) {
@@ -101,6 +110,16 @@ export default function BirthDialog({
               onChange={e => setBirthDate(e.target.value)}
               className="w-48"
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="mother-lactating"
+              checked={motherLactating}
+              onCheckedChange={(checked) => setMotherLactating(checked === true)}
+            />
+            <Label htmlFor="mother-lactating" className="text-sm font-normal">
+              {t('motherLactating') || 'Matka kojí'}
+            </Label>
           </div>
         </div>
 

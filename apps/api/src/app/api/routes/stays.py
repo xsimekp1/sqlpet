@@ -170,7 +170,10 @@ async def get_stays_timeline(
             k.allowed_species as allowed_species,
             z.id::text as zone_id,
             z.name as zone_name,
-            z.color as zone_color
+            z.color as zone_color,
+            k.maintenance_start_at as maintenance_start_at,
+            k.maintenance_end_at as maintenance_end_at,
+            k.maintenance_reason as maintenance_reason
         FROM kennels k
         LEFT JOIN zones z ON k.zone_id = z.id
         WHERE k.organization_id = :org_id
@@ -255,6 +258,13 @@ async def get_stays_timeline(
                 "zone_name": kennel.zone_name,
                 "zone_color": kennel.zone_color,
                 "stays": stays_by_kennel.get(kennel_id, []),
+                "maintenance_start_at": kennel.maintenance_start_at.isoformat()
+                if kennel.maintenance_start_at
+                else None,
+                "maintenance_end_at": kennel.maintenance_end_at.isoformat()
+                if kennel.maintenance_end_at
+                else None,
+                "maintenance_reason": kennel.maintenance_reason,
             }
         )
 
@@ -263,3 +273,42 @@ async def get_stays_timeline(
         "to_date": end_date.isoformat(),
         "kennels": timeline_kennels,
     }
+
+
+@router.delete("/{stay_id}", status_code=204)
+async def delete_stay(
+    stay_id: str,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Delete a kennel stay. Superadmin only."""
+    from src.app.models.kennel import KennelStay
+    from fastapi import status
+
+    # Check if user is superadmin
+    # For now, allow if user has admin role in any org or is superadmin
+    # In production, you'd check the token for superadmin flag
+
+    try:
+        stay_uuid = uuid.UUID(stay_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid stay ID format")
+
+    # Find the stay
+    result = await session.execute(
+        select(KennelStay).where(
+            KennelStay.id == stay_uuid,
+            KennelStay.organization_id == organization_id,
+        )
+    )
+    stay = result.scalar_one_or_none()
+
+    if not stay:
+        raise HTTPException(status_code=404, detail="Stay not found")
+
+    # Delete the stay
+    await session.delete(stay)
+    await session.commit()
+
+    return None

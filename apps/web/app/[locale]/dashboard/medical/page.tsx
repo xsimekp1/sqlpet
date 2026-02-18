@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { AlertTriangle, Package, Stethoscope, Calendar, Loader2, Syringe, Check, X } from 'lucide-react';
+import { AlertTriangle, Package, Stethoscope, Calendar, Loader2, Syringe, Check, X, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -56,6 +56,27 @@ export default function MedicalPage() {
   const [medicationStock, setMedicationStock] = useState<InventoryItem[]>([]);
   const [medicalTasks, setMedicalTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Health issues filter
+  const [healthFilter, setHealthFilter] = useState<string>('all');
+
+  // Compute animals with health issues
+  const healthIssuesAnimals = allAnimals.filter(a => 
+    a.is_critical || a.is_pregnant || a.is_diabetic || a.is_lactating || a.is_cancer
+  );
+
+  const filteredHealthAnimals = healthFilter === 'all' 
+    ? healthIssuesAnimals 
+    : healthIssuesAnimals.filter(a => {
+        switch (healthFilter) {
+          case 'critical': return a.is_critical;
+          case 'pregnant': return a.is_pregnant;
+          case 'diabetic': return a.is_diabetic;
+          case 'lactating': return a.is_lactating;
+          case 'cancer': return a.is_cancer;
+          default: return true;
+        }
+      });
 
   // Bulk vaccination state
   const [bulkVaccineOpen, setBulkVaccineOpen] = useState(false);
@@ -239,6 +260,115 @@ const getPriorityColor = (priority: string) => {
                         <AlertTriangle className="h-3 w-3" />
                         Karanténa
                       </Badge>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Section: Animals with Health Issues */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-red-600" />
+              <CardTitle>{t('medical.healthIssues.title')}</CardTitle>
+            </div>
+            <Badge variant="outline">
+              {t('medical.healthIssues.count', { count: healthIssuesAnimals.length })}
+            </Badge>
+          </div>
+          <CardDescription>{t('medical.healthIssues.description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Filter buttons */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Button
+              variant={healthFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setHealthFilter('all')}
+            >
+              {t('medical.healthIssues.filterAll')}
+            </Button>
+            <Button
+              variant={healthFilter === 'critical' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setHealthFilter('critical')}
+              className={healthFilter === 'critical' ? '' : 'border-red-300 text-red-700 hover:bg-red-50'}
+            >
+              🔥 {t('medical.healthIssues.filterCritical')}
+            </Button>
+            <Button
+              variant={healthFilter === 'pregnant' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setHealthFilter('pregnant')}
+              className={healthFilter === 'pregnant' ? '' : 'border-pink-300 text-pink-700 hover:bg-pink-50'}
+            >
+              🤰 {t('medical.healthIssues.filterPregnant')}
+            </Button>
+            <Button
+              variant={healthFilter === 'lactating' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setHealthFilter('lactating')}
+              className={healthFilter === 'lactating' ? '' : 'border-amber-300 text-amber-700 hover:bg-amber-50'}
+            >
+              🍼 {t('medical.healthIssues.filterLactating')}
+            </Button>
+            <Button
+              variant={healthFilter === 'diabetic' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setHealthFilter('diabetic')}
+              className={healthFilter === 'diabetic' ? '' : 'border-blue-300 text-blue-700 hover:bg-blue-50'}
+            >
+              💉 {t('medical.healthIssues.filterDiabetic')}
+            </Button>
+            <Button
+              variant={healthFilter === 'cancer' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setHealthFilter('cancer')}
+              className={healthFilter === 'cancer' ? '' : 'border-rose-300 text-rose-700 hover:bg-rose-50'}
+            >
+              🎗️ {t('medical.healthIssues.filterCancer')}
+            </Button>
+          </div>
+
+          {filteredHealthAnimals.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Zap className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>{t('medical.healthIssues.noAnimals')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredHealthAnimals.map((animal) => (
+                <Link key={animal.id} href={`/dashboard/animals/${animal.id}`}>
+                  <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <AnimalImage animal={animal} size="md" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{animal.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        #{animal.public_code}
+                        {animal.current_kennel_code && <> · <span className="font-mono">{animal.current_kennel_code}</span></>}
+                      </p>
+                      <div className="flex gap-1 mt-1.5 flex-wrap">
+                        {animal.is_critical && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded-full">🔥 Kritický</span>
+                        )}
+                        {animal.is_pregnant && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-pink-100 text-pink-700 rounded-full">🤰 Těhotná</span>
+                        )}
+                        {animal.is_lactating && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full">🍼 Kojící</span>
+                        )}
+                        {animal.is_diabetic && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full">💉 Diabetes</span>
+                        )}
+                        {animal.is_cancer && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-rose-100 text-rose-700 rounded-full">🎗️ Rakovina</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Link>

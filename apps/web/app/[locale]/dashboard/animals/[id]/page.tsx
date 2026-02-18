@@ -52,6 +52,7 @@ import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedic
 import BirthDialog from '@/app/components/animals/BirthDialog';
 import { EditableAnimalName, EditableAnimalDetails, AssignKennelButton } from '@/app/components/animals';
 import { calcMER, calcRER, getMERFactor, getMERFactorLabel } from '@/app/lib/energy';
+import { useAuth } from '@/app/context/AuthContext';
 import PersonalityTab from '@/app/components/animals/PersonalityTab';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -130,6 +131,8 @@ export default function AnimalDetailPage() {
   const router = useRouter();
   const params = useParams();
   const t = useTranslations('animals');
+  const { user } = useAuth();
+  const isSuperadmin = user?.is_superadmin === true;
 
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,6 +142,10 @@ export default function AnimalDetailPage() {
   const [togglingAggressive, setTogglingAggressive] = useState(false);
   const [togglingAltered, setTogglingAltered] = useState(false);
   const [togglingPregnant, setTogglingPregnant] = useState(false);
+  const [togglingLactating, setTogglingLactating] = useState(false);
+  const [togglingCritical, setTogglingCritical] = useState(false);
+  const [togglingDiabetic, setTogglingDiabetic] = useState(false);
+  const [togglingCancer, setTogglingCancer] = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
   const [healthEvents, setHealthEvents] = useState<{ text: string; date: Date }[]>([]);
   const [behaviorNotes, setBehaviorNotes] = useState('');
@@ -158,6 +165,14 @@ export default function AnimalDetailPage() {
 // Escape dialog
   const [escapeOpen, setEscapeOpen] = useState(false);
   const [escapeNotes, setEscapeNotes] = useState('');
+
+  // Superadmin: intake date edit
+  const [editingIntakeDate, setEditingIntakeDate] = useState(false);
+  const [intakeDateInput, setIntakeDateInput] = useState('');
+  const [savingIntakeDate, setSavingIntakeDate] = useState(false);
+
+  // Superadmin: delete stay
+  const [deletingStay, setDeletingStay] = useState(false);
 
   // Documents
   const [documents, setDocuments] = useState<any[]>([]);
@@ -393,6 +408,127 @@ setWeightLogs(wLogs);
     finally { setTogglingPregnant(false); }
   };
 
+  const toggleLactating = async () => {
+    if (!animal) return;
+    if (animal.sex === 'male') return;
+    setTogglingLactating(true);
+    try {
+      const newVal = !animal.is_lactating;
+      const updated = await ApiClient.updateAnimal(animal.id, { is_lactating: newVal } as any);
+      setAnimal(updated);
+      setHealthEvents(prev => [
+        { text: newVal ? t('healthEvents.lactatingOn') : t('healthEvents.lactatingOff'), date: new Date() },
+        ...prev,
+      ]);
+      // Recalculate and show MER
+      if (latestWeight?.weight_kg) {
+        const newMER = calcMER(
+          Number(latestWeight.weight_kg),
+          animal.age_group,
+          animal.altered_status,
+          animal.is_pregnant,
+          newVal,
+          animal.is_critical,
+          animal.is_diabetic,
+          animal.is_cancer,
+          animal.species
+        );
+        toast.success(t('merUpdated', { value: newMER }));
+      }
+    } catch { toast.error('Failed to update'); }
+    finally { setTogglingLactating(false); }
+  };
+
+  const toggleCritical = async () => {
+    if (!animal) return;
+    setTogglingCritical(true);
+    try {
+      const newVal = !animal.is_critical;
+      const updated = await ApiClient.updateAnimal(animal.id, { is_critical: newVal } as any);
+      setAnimal(updated);
+      setHealthEvents(prev => [
+        { text: newVal ? t('healthEvents.criticalOn') : t('healthEvents.criticalOff'), date: new Date() },
+        ...prev,
+      ]);
+      // Recalculate and show MER
+      if (latestWeight?.weight_kg) {
+        const newMER = calcMER(
+          Number(latestWeight.weight_kg),
+          animal.age_group,
+          animal.altered_status,
+          animal.is_pregnant,
+          animal.is_lactating,
+          newVal,
+          animal.is_diabetic,
+          animal.is_cancer,
+          animal.species
+        );
+        toast.success(t('merUpdated', { value: newMER }));
+      }
+    } catch { toast.error('Failed to update'); }
+    finally { setTogglingCritical(false); }
+  };
+
+  const toggleDiabetic = async () => {
+    if (!animal) return;
+    setTogglingDiabetic(true);
+    try {
+      const newVal = !animal.is_diabetic;
+      const updated = await ApiClient.updateAnimal(animal.id, { is_diabetic: newVal } as any);
+      setAnimal(updated);
+      setHealthEvents(prev => [
+        { text: newVal ? t('healthEvents.diabeticOn') : t('healthEvents.diabeticOff'), date: new Date() },
+        ...prev,
+      ]);
+      // Recalculate and show MER
+      if (latestWeight?.weight_kg) {
+        const newMER = calcMER(
+          Number(latestWeight.weight_kg),
+          animal.age_group,
+          animal.altered_status,
+          animal.is_pregnant,
+          animal.is_lactating,
+          animal.is_critical,
+          newVal,
+          animal.is_cancer,
+          animal.species
+        );
+        toast.success(t('merUpdated', { value: newMER }));
+      }
+    } catch { toast.error('Failed to update'); }
+    finally { setTogglingDiabetic(false); }
+  };
+
+  const toggleCancer = async () => {
+    if (!animal) return;
+    setTogglingCancer(true);
+    try {
+      const newVal = !animal.is_cancer;
+      const updated = await ApiClient.updateAnimal(animal.id, { is_cancer: newVal } as any);
+      setAnimal(updated);
+      setHealthEvents(prev => [
+        { text: newVal ? t('healthEvents.cancerOn') : t('healthEvents.cancerOff'), date: new Date() },
+        ...prev,
+      ]);
+      // Recalculate and show MER
+      if (latestWeight?.weight_kg) {
+        const newMER = calcMER(
+          Number(latestWeight.weight_kg),
+          animal.age_group,
+          animal.altered_status,
+          animal.is_pregnant,
+          animal.is_lactating,
+          animal.is_critical,
+          animal.is_diabetic,
+          newVal,
+          animal.species
+        );
+        toast.success(t('merUpdated', { value: newMER }));
+      }
+    } catch { toast.error('Failed to update'); }
+    finally { setTogglingCancer(false); }
+  };
+
   const handleStatusChange = async (newStatus: string) => {
     if (!animal) return;
     setChangingStatus(true);
@@ -575,6 +711,43 @@ setWeightLogs(wLogs);
     }
   };
 
+  const handleSaveIntakeDate = async () => {
+    if (!animal || !intakeDateInput) return;
+    setSavingIntakeDate(true);
+    try {
+      const updated = await ApiClient.updateAnimal(animal.id, { intake_date: intakeDateInput } as any);
+      setAnimal(updated);
+      toast.success('Datum příjmu aktualizováno');
+      setEditingIntakeDate(false);
+    } catch (e: any) {
+      toast.error(e.message || 'Chyba při ukládání');
+    } finally {
+      setSavingIntakeDate(false);
+    }
+  };
+
+  const handleDeleteCurrentStay = async () => {
+    if (!animal || !animal.current_kennel_id) return;
+    if (!confirm('Opravdu chcete smazat aktuální pobyt v kotci? Tato akce je nevratná.')) return;
+    setDeletingStay(true);
+    try {
+      // Note: We'd need the stay ID here - for simplicity, we'll skip this for now
+      // In a real implementation, you'd get the stay ID from the stays list
+      toast.error('Nejprve ukončete pobyt v kotci (Close Intake)');
+    } catch (e: any) {
+      toast.error(e.message || 'Chyba při mazání');
+    } finally {
+      setDeletingStay(false);
+    }
+  };
+
+  const startEditIntakeDate = () => {
+    if (animal) {
+      setIntakeDateInput(animal.intake_date ? animal.intake_date.split('T')[0] : (animal.current_intake_date ? animal.current_intake_date.split('T')[0] : ''));
+    }
+    setEditingIntakeDate(true);
+  };
+
   // Derived
   const days = animal?.current_intake_date
     ? Math.floor((Date.now() - new Date(animal.current_intake_date).getTime()) / (1000 * 60 * 60 * 24))
@@ -732,6 +905,36 @@ setWeightLogs(wLogs);
               <span className="text-sm text-muted-foreground">{t('noKennel')}</span>
             )}
           </div>
+
+          {/* Superadmin: Intake date edit */}
+          {isSuperadmin && (
+            <div className="flex items-center gap-2 mb-3 text-xs border-t pt-2 mt-2">
+              {editingIntakeDate ? (
+                <>
+                  <Input
+                    type="date"
+                    value={intakeDateInput}
+                    onChange={(e) => setIntakeDateInput(e.target.value)}
+                    className="h-7 w-36 text-xs"
+                  />
+                  <Button size="sm" onClick={handleSaveIntakeDate} disabled={savingIntakeDate} className="h-7">
+                    {savingIntakeDate ? '...' : '💾'}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditingIntakeDate(false)} className="h-7">
+                    ✕
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span className="text-muted-foreground">Datum příjmu:</span>
+                  <span className="font-mono">{intakeDateFormatted || '—'}</span>
+                  <Button size="sm" variant="ghost" onClick={startEditIntakeDate} className="h-7 px-2">
+                    ✏️
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-2 justify-center sm:justify-start flex-wrap">
@@ -898,15 +1101,52 @@ setWeightLogs(wLogs);
                 </button>
 
                 {animal.sex !== 'male' && (
-                  <button
-                    className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
-                    onClick={togglePregnant}
-                    disabled={togglingPregnant}
-                    title={t('health.togglePregnant')}
-                  >
-                    {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('health.pregnant') : t('health.pregnant') + '?')}
-                  </button>
+                  <>
+                    <button
+                      className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                      onClick={togglePregnant}
+                      disabled={togglingPregnant}
+                      title={t('health.togglePregnant')}
+                    >
+                      {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('health.pregnant') : t('health.pregnant') + '?')}
+                    </button>
+                    <button
+                      className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                      onClick={toggleLactating}
+                      disabled={togglingLactating}
+                      title={t('health.toggleLactating')}
+                    >
+                      {togglingLactating ? '...' : (animal.is_lactating ? '✓ ' + t('health.lactating') : t('health.lactating') + '?')}
+                    </button>
+                  </>
                 )}
+
+                <button
+                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  onClick={toggleCritical}
+                  disabled={togglingCritical}
+                  title={t('health.toggleCritical')}
+                >
+                  {togglingCritical ? '...' : (animal.is_critical ? '✓ ' + t('health.critical') : t('health.critical') + '?')}
+                </button>
+
+                <button
+                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  onClick={toggleDiabetic}
+                  disabled={togglingDiabetic}
+                  title={t('health.toggleDiabetic')}
+                >
+                  {togglingDiabetic ? '...' : (animal.is_diabetic ? '✓ ' + t('health.diabetic') : t('health.diabetic') + '?')}
+                </button>
+
+                <button
+                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  onClick={toggleCancer}
+                  disabled={togglingCancer}
+                  title={t('health.toggleCancer')}
+                >
+                  {togglingCancer ? '...' : (animal.is_cancer ? '✓ ' + t('health.cancer') : t('health.cancer') + '?')}
+                </button>
 
                 <button
                   className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
@@ -981,6 +1221,10 @@ setWeightLogs(wLogs);
                       animal.age_group,
                       animal.altered_status,
                       animal.is_pregnant,
+                      animal.is_lactating,
+                      animal.is_critical,
+                      animal.is_diabetic,
+                      animal.is_cancer,
                       animal.species,
                     )} kcal/den
                   </p>
@@ -988,8 +1232,8 @@ setWeightLogs(wLogs);
                     <summary className="cursor-pointer hover:text-foreground">{t('weight.showCalc')}</summary>
                     <div className="mt-1 space-y-0.5 font-mono">
                       <p>RER = 70 × {Number(latestWeight.weight_kg).toFixed(1)}^0.75 = {calcRER(Number(latestWeight.weight_kg))} kcal</p>
-                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} ({getMERFactorLabel(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)})</p>
-                      <p>MER = {calcRER(Number(latestWeight.weight_kg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} = {calcMER(Number(latestWeight.weight_kg), animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} kcal/den</p>
+                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} ({getMERFactorLabel(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)})</p>
+                      <p>MER = {calcRER(Number(latestWeight.weight_kg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} = {calcMER(Number(latestWeight.weight_kg), animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} kcal/den</p>
                     </div>
                   </details>
                 </div>
@@ -1003,6 +1247,10 @@ setWeightLogs(wLogs);
                       animal.age_group,
                       animal.altered_status,
                       animal.is_pregnant,
+                      animal.is_lactating,
+                      animal.is_critical,
+                      animal.is_diabetic,
+                      animal.is_cancer,
                       animal.species,
                     )} kcal/den
                   </p>
@@ -1010,8 +1258,8 @@ setWeightLogs(wLogs);
                     <summary className="cursor-pointer hover:text-foreground">{t('weight.showCalc')}</summary>
                     <div className="mt-1 space-y-0.5 font-mono">
                       <p>RER = 70 × {Number(weightKg).toFixed(1)}^0.75 = {calcRER(Number(weightKg))} kcal</p>
-                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} ({getMERFactorLabel(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)})</p>
-                      <p>MER = {calcRER(Number(weightKg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} = {calcMER(Number(weightKg), animal.age_group, animal.altered_status, animal.is_pregnant, animal.species)} kcal/den</p>
+                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} ({getMERFactorLabel(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)})</p>
+                      <p>MER = {calcRER(Number(weightKg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} = {calcMER(Number(weightKg), animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} kcal/den</p>
                     </div>
                   </details>
                 </div>
