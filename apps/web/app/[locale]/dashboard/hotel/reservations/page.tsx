@@ -27,7 +27,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { cs, enUS } from 'date-fns/locale';
-import HotelTimeline from '@/components/hotel/HotelTimeline';
+import HotelTimeline from '@/app/components/hotel/HotelTimeline';
 
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
