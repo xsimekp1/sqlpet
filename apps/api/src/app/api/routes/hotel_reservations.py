@@ -212,12 +212,12 @@ async def get_hotel_timeline(
             month=start_date.month % 12 + 1, day=1
         ) - timedelta(days=1)
 
-    # Get all kennels for the organization
+    # Get all kennels for the organization (using SoftDeleteMixin - deleted_at is null)
     kennel_result = await db.execute(
         select(Kennel)
         .where(
             Kennel.organization_id == organization_id,
-            Kennel.is_active == True,  # noqa: E712
+            Kennel.deleted_at.is_(None),
         )
         .order_by(Kennel.name)
     )
