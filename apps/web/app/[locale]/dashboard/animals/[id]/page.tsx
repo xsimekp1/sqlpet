@@ -803,22 +803,23 @@ setWeightLogs(wLogs);
 
         {/* ── Overview ── */}
         <TabsContent value="overview" className="space-y-4">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('overview.basicInfo')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EditableAnimalDetails animal={animal} onAnimalUpdate={handleAnimalUpdate} />
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Basic Information - 2/3 */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>{t('overview.basicInfo')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EditableAnimalDetails animal={animal} onAnimalUpdate={handleAnimalUpdate} />
+              </CardContent>
+            </Card>
 
-          {/* Health & Welfare */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('health.title')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            {/* Health & Welfare - 1/3 */}
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle>{t('health.title')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
               {/* Active flags grid – only shown when true */}
               <div className="grid grid-cols-2 gap-2">
                 {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
@@ -948,6 +949,7 @@ setWeightLogs(wLogs);
               )}
             </CardContent>
           </Card>
+          </div>
 
           {/* Weight */}
           <Card>
