@@ -71,7 +71,7 @@ export default function LoginPage() {
         className={`absolute left-1/2 -translate-x-1/2 z-50 ${
           isLoggingIn
             ? 'top-1/2 -translate-y-1/2 scale-125 transition-all duration-[1200ms] ease-in-out'
-            : 'top-[35%] transition-all duration-[1200ms] ease-in-out'
+            : 'top-[20%] transition-all duration-[1200ms] ease-in-out'
         }`}
       >
         <Image
