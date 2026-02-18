@@ -68,11 +68,6 @@ class AgeGroup(str, enum.Enum):
 
 
 class SizeEstimated(str, enum.Enum):
-    XS = "xs"
-    S = "s"
-    M = "m"
-    L = "l"
-    XL = "xl"
     UNKNOWN = "unknown"
 
 
