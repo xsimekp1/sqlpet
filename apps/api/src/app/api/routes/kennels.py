@@ -230,6 +230,7 @@ async def list_kennels(
                 k.size_category::text AS size_category, k.capacity,
                 k.allowed_species, k.notes,
                 k.map_x, k.map_y, k.map_w, k.map_h, k.last_cleaned_at, k.dimensions,
+                k.maintenance_start_at, k.maintenance_end_at, k.maintenance_reason,
                 COUNT(ks.id) FILTER (WHERE ks.end_at IS NULL) AS occupied_count,
                 COALESCE(
                   json_agg(
@@ -251,7 +252,8 @@ async def list_kennels(
             GROUP BY k.id, k.code, k.name, k.zone_id, z.name,
                      k.status, k.type, k.size_category, k.capacity,
                      k.allowed_species, k.notes,
-                     k.map_x, k.map_y, k.map_w, k.map_h, k.last_cleaned_at, k.dimensions
+                     k.map_x, k.map_y, k.map_w, k.map_h, k.last_cleaned_at, k.dimensions,
+                     k.maintenance_start_at, k.maintenance_end_at, k.maintenance_reason
             ORDER BY k.name
         """)
 
@@ -291,6 +293,13 @@ async def list_kennels(
                 "last_cleaned_at": row.last_cleaned_at.isoformat()
                 if row.last_cleaned_at
                 else None,
+                "maintenance_start_at": row.maintenance_start_at.isoformat()
+                if row.maintenance_start_at
+                else None,
+                "maintenance_end_at": row.maintenance_end_at.isoformat()
+                if row.maintenance_end_at
+                else None,
+                "maintenance_reason": row.maintenance_reason,
                 "dimensions": row.dimensions,
             }
             kennels.append(kennel_dict)
@@ -458,6 +467,7 @@ async def get_kennel(
                 k.notes, k.allowed_species, k.dimensions,
                 k.map_x, k.map_y, k.map_w, k.map_h,
                 k.map_rotation, k.map_meta, k.last_cleaned_at,
+                k.maintenance_start_at, k.maintenance_end_at, k.maintenance_reason,
                 COUNT(ks.id) FILTER (WHERE ks.end_at IS NULL) AS occupied_count,
                 COALESCE(
                   json_agg(
@@ -480,7 +490,8 @@ async def get_kennel(
                      k.status, k.type, k.size_category, k.capacity,
                      k.notes, k.allowed_species, k.dimensions,
                      k.map_x, k.map_y, k.map_w, k.map_h,
-                     k.map_rotation, k.map_meta
+                     k.map_rotation, k.map_meta, k.maintenance_start_at, 
+                     k.maintenance_end_at, k.maintenance_reason
         """)
         result = await session.execute(
             kennel_query, {"kennel_id": kennel_id, "org_id": str(organization_id)}
@@ -522,6 +533,13 @@ async def get_kennel(
             "last_cleaned_at": row.last_cleaned_at.isoformat()
             if row.last_cleaned_at
             else None,
+            "maintenance_start_at": row.maintenance_start_at.isoformat()
+            if row.maintenance_start_at
+            else None,
+            "maintenance_end_at": row.maintenance_end_at.isoformat()
+            if row.maintenance_end_at
+            else None,
+            "maintenance_reason": row.maintenance_reason,
         }
     except HTTPException:
         raise
@@ -651,6 +669,66 @@ async def update_kennel(
             occupied,
             kennel.capacity or 1,
         ),
+    }
+
+
+class SetMaintenanceRequest(BaseModel):
+    start_at: datetime | None = None
+    end_at: datetime | None = None
+    reason: str | None = None
+
+
+@router.patch("/{kennel_id}/maintenance")
+async def set_kennel_maintenance(
+    kennel_id: str,
+    data: SetMaintenanceRequest,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Set or clear planned maintenance period for a kennel."""
+    kennel_q = select(Kennel).where(
+        Kennel.id == uuid.UUID(kennel_id),
+        Kennel.organization_id == organization_id,
+        Kennel.deleted_at.is_(None),
+    )
+    kennel = (await session.execute(kennel_q)).scalar_one_or_none()
+    if not kennel:
+        raise HTTPException(status_code=404, detail="Kennel not found")
+
+    # Validate: end_at must be after start_at if both are set
+    if data.start_at and data.end_at and data.end_at <= data.start_at:
+        raise HTTPException(status_code=400, detail="End time must be after start time")
+
+    # Validate: cannot set maintenance if kennel is occupied
+    if data.start_at or data.end_at:
+        occ_q = text(
+            "SELECT COUNT(*) FROM kennel_stays WHERE kennel_id = :kid AND end_at IS NULL"
+        )
+        occ_result = await session.execute(occ_q, {"kid": str(kennel.id)})
+        occupied = int(occ_result.scalar() or 0)
+        if occupied > 0:
+            raise HTTPException(
+                status_code=400, detail="Cannot schedule maintenance on occupied kennel"
+            )
+
+    # Update maintenance fields
+    kennel.maintenance_start_at = data.start_at
+    kennel.maintenance_end_at = data.end_at
+    kennel.maintenance_reason = data.reason
+
+    await session.commit()
+    await session.refresh(kennel)
+
+    return {
+        "id": str(kennel.id),
+        "maintenance_start_at": kennel.maintenance_start_at.isoformat()
+        if kennel.maintenance_start_at
+        else None,
+        "maintenance_end_at": kennel.maintenance_end_at.isoformat()
+        if kennel.maintenance_end_at
+        else None,
+        "maintenance_reason": kennel.maintenance_reason,
     }
 
 

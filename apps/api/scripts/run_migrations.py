@@ -1,4 +1,5 @@
 """Run migrations on production database."""
+
 from sqlalchemy import create_engine, text
 
 DATABASE_URL = "postgresql://postgres.ieubksumlsvsdsvqbalh:Malinva2026+@aws-1-eu-central-1.pooler.supabase.com:5432/postgres"
@@ -50,6 +51,14 @@ SQL4 = """
 CREATE INDEX IF NOT EXISTS ix_intakes_kennel_id ON intakes(kennel_id);
 """
 
+# Add maintenance date fields to kennels
+SQL5 = """
+ALTER TABLE kennels 
+ADD COLUMN IF NOT EXISTS maintenance_start_at TIMESTAMP WITH TIME ZONE,
+ADD COLUMN IF NOT EXISTS maintenance_end_at TIMESTAMP WITH TIME ZONE,
+ADD COLUMN IF NOT EXISTS maintenance_reason VARCHAR(500);
+"""
+
 with engine.connect() as conn:
     print("Running: Adding kennel_id column to intakes...")
     try:
@@ -58,7 +67,7 @@ with engine.connect() as conn:
         print("OK")
     except Exception as e:
         print(f"Error: {e}")
-    
+
     print("Running: Making animal_id nullable in intakes...")
     try:
         conn.execute(text(SQL2))
@@ -66,7 +75,7 @@ with engine.connect() as conn:
         print("OK")
     except Exception as e:
         print(f"Error: {e}")
-    
+
     print("Running: Creating hotel_reservations table...")
     try:
         conn.execute(text(SQL3))
@@ -74,10 +83,18 @@ with engine.connect() as conn:
         print("OK")
     except Exception as e:
         print(f"Error: {e}")
-    
+
     print("Running: Creating index on intakes.kennel_id...")
     try:
         conn.execute(text(SQL4))
+        conn.commit()
+        print("OK")
+    except Exception as e:
+        print(f"Error: {e}")
+
+    print("Running: Adding maintenance date fields to kennels...")
+    try:
+        conn.execute(text(SQL5))
         conn.commit()
         print("OK")
     except Exception as e:

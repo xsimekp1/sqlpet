@@ -40,6 +40,17 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _is_in_maintenance(kennel: Kennel) -> bool:
+    """
+    Check if kennel is currently in planned maintenance period.
+    Returns True if maintenance_start_at <= now <= maintenance_end_at.
+    """
+    now = _now()
+    if kennel.maintenance_start_at and kennel.maintenance_end_at:
+        return kennel.maintenance_start_at <= now <= kennel.maintenance_end_at
+    return False
+
+
 def _species_capacity(kennel: Kennel, animal_species: str) -> int:
     """
     Return max capacity for specific species if defined in capacity_rules,
@@ -148,6 +159,10 @@ async def move_animal(
     if kennel.status in ("maintenance", "closed"):
         raise InvalidStateError(f"Kennel is not available (status={kennel.status})")
 
+    # Check if kennel is in planned maintenance period
+    if _is_in_maintenance(kennel):
+        raise InvalidStateError("Kennel is in planned maintenance period")
+
     # 6) Check capacity (count active stays)
     occupied = await _get_active_occupancy(session, kennel.id)
     max_for_species = _species_capacity(kennel, animal.species)
@@ -198,8 +213,10 @@ async def create_kennel(
     """Create a new kennel"""
 
     # Generate unique kennel code: count existing kennels for this org → K001, K002, …
-    count_q = select(func.count()).select_from(Kennel).where(
-        Kennel.organization_id == organization_id
+    count_q = (
+        select(func.count())
+        .select_from(Kennel)
+        .where(Kennel.organization_id == organization_id)
     )
     count = int((await session.execute(count_q)).scalar() or 0)
     kennel_code = f"K{count + 1:03d}"

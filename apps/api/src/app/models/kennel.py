@@ -162,6 +162,15 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         DateTime(timezone=True), nullable=True
     )
 
+    # Planned maintenance
+    maintenance_start_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    maintenance_end_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    maintenance_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
     # Relationships
     zone = relationship("Zone", back_populates="kennels")
     stays = relationship(
@@ -216,7 +225,9 @@ class KennelStay(Base, UUIDPrimaryKeyMixin):
         server_default=func.now(),
         nullable=False,
     )
-    end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    end_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
