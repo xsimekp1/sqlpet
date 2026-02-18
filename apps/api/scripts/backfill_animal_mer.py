@@ -28,6 +28,7 @@ async def main():
 
     engine = create_async_engine(DATABASE_URL)
 
+    # Step 1: Check and add column (separate connection)
     async with engine.begin() as conn:
         # Check if column exists
         result = await conn.execute(
@@ -50,6 +51,8 @@ async def main():
         else:
             print("✓ Column already exists")
 
+    # Step 2: Calculate and update MER values (separate connection)
+    async with engine.begin() as conn:
         # Get all animals with weight
         print("\nCalculating MER for all animals...")
 
@@ -108,6 +111,8 @@ async def main():
             print(f"  {row[0]}: {row[1]}kg -> {row[2]} kcal/day")
 
     print("\n=== Done ===")
+
+    await engine.dispose()
 
 
 if __name__ == "__main__":
