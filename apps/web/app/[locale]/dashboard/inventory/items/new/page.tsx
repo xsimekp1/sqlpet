@@ -179,7 +179,7 @@ export default function NewInventoryItemPage() {
                   placeholder="např. 350"
                   {...register('kcal_per_100g')}
                 />
-                <p className="text-xs text-muted-foreground">kcal / 100 g</p>
+                <p className="text-xs text-muted-foreground">{t('fields.kcalPer100g')}</p>
               </div>
 
               {/* Price per unit */}

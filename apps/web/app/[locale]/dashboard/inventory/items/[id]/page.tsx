@@ -410,9 +410,9 @@ export default function InventoryItemDetailPage() {
                 <TableRow>
                   <TableHead>{t('lotNumber')}</TableHead>
                   <TableHead>{t('quantity')}</TableHead>
-                  <TableHead>{t('expires')}</TableHead>
-                  <TableHead>{t('costPerUnit')}</TableHead>
-                  <TableHead>{t('created')}</TableHead>
+                  <TableHead>{t('fields.expiresAt')}</TableHead>
+                  <TableHead>{t('fields.costPerUnit')}</TableHead>
+                  <TableHead>{t('fields.created')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
