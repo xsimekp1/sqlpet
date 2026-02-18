@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Loader2, Calendar, DollarSign, User, Home, Check, X, AlertCircle, LayoutGrid, List } from 'lucide-react';
+import { Plus, Loader2, Calendar, DollarSign, User, Home, Check, X, AlertCircle, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,7 +27,6 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { cs, enUS } from 'date-fns/locale';
-import HotelTimeline from '@/app/components/hotel/HotelTimeline';
 
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -68,10 +67,19 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: 'Čeká na potvrzení',
+  pending: 'Čeká',
   confirmed: 'Potvrzeno',
+  checked_in: 'Nastoupila',
+  checked_out: 'Odjela',
   cancelled: 'Zrušeno',
-  completed: 'Dokončeno',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
+  checked_in: 'bg-green-100 text-green-800 border-green-200',
+  checked_out: 'bg-gray-100 text-gray-800 border-gray-200',
+  cancelled: 'bg-red-100 text-red-800 border-red-200',
 };
 
 export default function HotelReservationsPage() {
@@ -79,7 +87,6 @@ export default function HotelReservationsPage() {
   const [reservations, setReservations] = useState<HotelReservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
 
   useEffect(() => {
     loadReservations();
@@ -128,6 +135,20 @@ export default function HotelReservationsPage() {
     }
   };
 
+  const handleCheckout = async (id: string) => {
+    try {
+      const res = await fetch(`/api/hotel/reservations/${id}/checkout`, { 
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) throw new Error('Unauthorized');
+      toast.success('Check-out proveden');
+      loadReservations();
+    } catch (error: any) {
+      toast.error(error.message || 'Nepodařilo se provést check-out');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -157,36 +178,8 @@ export default function HotelReservationsPage() {
             <SelectItem value="cancelled">Zrušeno</SelectItem>
           </SelectContent>
         </Select>
-        
-        <div className="flex border rounded-md ml-auto">
-          <Button
-            variant={viewMode === 'table' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('table')}
-            className="rounded-r-none"
-          >
-            <List className="h-4 w-4 mr-1" />
-            Tabulka
-          </Button>
-          <Button
-            variant={viewMode === 'timeline' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setViewMode('timeline')}
-            className="rounded-l-none"
-          >
-            <LayoutGrid className="h-4 w-4 mr-1" />
-            Časová osa
-          </Button>
         </div>
-      </div>
 
-      {viewMode === 'timeline' ? (
-        <Card>
-          <CardContent className="p-4">
-            <HotelTimeline />
-          </CardContent>
-        </Card>
-      ) : (
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -251,6 +244,15 @@ export default function HotelReservationsPage() {
                               <X className="h-4 w-4" />
                             </Button>
                           </>
+                        ) : res.status === 'checked_in' ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleCheckout(res.id)}
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Check-out
+                          </Button>
                         ) : null}
                       </div>
                     </TableCell>
@@ -261,7 +263,53 @@ export default function HotelReservationsPage() {
           )}
         </CardContent>
       </Card>
-      )}
+
+      {/* Recent reservations */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Poslední rezervace</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {reservations
+                .filter(r => r.status !== 'cancelled' && r.status !== 'checked_out')
+                .sort((a, b) => new Date(b.reserved_from).getTime() - new Date(a.reserved_from).getTime())
+                .slice(0, 10)
+                .map((res) => (
+                  <div
+                    key={res.id}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-sm font-medium">
+                          {res.animal_name.slice(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{res.animal_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(res.reserved_from), 'd.M.yyyy')} - {format(new Date(res.reserved_to), 'd.M.yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className={STATUS_COLORS[res.status]}>
+                      {STATUS_LABELS[res.status] || res.status}
+                    </Badge>
+                  </div>
+                ))}
+              {reservations.filter(r => r.status !== 'cancelled' && r.status !== 'checked_out').length === 0 && (
+                <p className="text-muted-foreground text-sm text-center py-4">Žádné aktivní rezervace</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

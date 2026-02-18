@@ -380,7 +380,7 @@ async def checkin_reservation(
 
     if reservation.status in [
         HotelReservationStatus.CANCELLED.value,
-        HotelReservationStatus.COMPLETED.value,
+        HotelReservationStatus.CHECKED_OUT.value,
     ]:
         raise HTTPException(status_code=400, detail="Reservation is not active")
 
@@ -397,8 +397,57 @@ async def checkin_reservation(
     )
     db.add(intake)
 
-    # Update reservation status
-    reservation.status = HotelReservationStatus.COMPLETED.value
+    # Update reservation status to checked_in
+    reservation.status = HotelReservationStatus.CHECKED_IN.value
+
+    await db.commit()
+    await db.refresh(reservation)
+    return _to_response(reservation)
+
+
+@router.post("/{reservation_id}/checkout")
+async def checkout_reservation(
+    reservation_id: str,
+    checkout_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Check out from a hotel reservation - marks it as completed."""
+    try:
+        reservation_uuid = uuid.UUID(reservation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid reservation_id")
+
+    # Get reservation
+    result = await db.execute(
+        select(HotelReservation).where(
+            HotelReservation.id == reservation_uuid,
+            HotelReservation.organization_id == organization_id,
+        )
+    )
+    reservation = result.scalar_one_or_none()
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    if reservation.status != HotelReservationStatus.CHECKED_IN.value:
+        raise HTTPException(status_code=400, detail="Reservation is not checked in")
+
+    # Find and close the intake record
+    intake_result = await db.execute(
+        select(Intake).where(
+            Intake.organization_id == organization_id,
+            Intake.animal_id == reservation.animal_id,
+            Intake.reason == IntakeReason.HOTEL,
+            Intake.end_date == None,  # noqa: E711
+        )
+    )
+    intake = intake_result.scalar_one_or_none()
+    if intake:
+        intake.end_date = checkout_date or date.today()
+
+    # Update reservation status to checked_out
+    reservation.status = HotelReservationStatus.CHECKED_OUT.value
 
     await db.commit()
     await db.refresh(reservation)
