@@ -93,8 +93,6 @@ async def main():
             )
             updated += 1
 
-        await conn.commit()
-
         print(f"✓ Updated {updated} animals with MER values")
 
         # Show sample
