@@ -84,8 +84,8 @@ function packStaysIntoLanes(stays: KennelTimelineStay[], capacity: number) {
         if (stay.animal_id !== existing.animal_id) {
           // No overlap = can share lane
           if (endDate === null && existingEnd === null) return false; // both ongoing - can't share
-          if (endDate === null) return startDate < existingEnd; // stay ongoing, check vs existing end
-          if (existingEnd === null) return endDate > existingStart; // existing ongoing, check vs stay end
+          if (endDate === null) return existingEnd !== null && startDate < existingEnd; // stay ongoing, check vs existing end
+          if (existingEnd === null) return endDate !== null && endDate > existingStart; // existing ongoing, check vs stay end
           // Both have ends - check overlap
           return !(startDate < existingEnd && endDate > existingStart);
         }
