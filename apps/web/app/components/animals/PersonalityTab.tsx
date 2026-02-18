@@ -73,7 +73,7 @@ function StepSlider({
   lowLabel: string;
   highLabel: string;
 }) {
-  const t = useTranslations('personality');
+  const t = useTranslations('animals');
 
   return (
     <div className="space-y-2">
@@ -81,21 +81,21 @@ function StepSlider({
         <div className="flex items-center gap-2">
           <Image
             src={lowIcon}
-            alt={t(lowLabel)}
-            width={48}
-            height={48}
-            className="w-12 h-12 object-contain"
+            alt={t(`personality.${lowLabel}`)}
+            width={72}
+            height={72}
+            className="w-16 h-16 object-contain"
           />
-          <span className="text-sm font-medium">{t(lowLabel)}</span>
+          <span className="text-sm font-medium">{t(`personality.${lowLabel}`)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{t(highLabel)}</span>
+          <span className="text-sm font-medium">{t(`personality.${highLabel}`)}</span>
           <Image
             src={highIcon}
-            alt={t(highLabel)}
-            width={48}
-            height={48}
-            className="w-12 h-12 object-contain"
+            alt={t(`personality.${highLabel}`)}
+            width={72}
+            height={72}
+            className="w-16 h-16 object-contain"
           />
         </div>
       </div>
