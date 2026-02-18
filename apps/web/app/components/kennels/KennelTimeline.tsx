@@ -59,7 +59,10 @@ function doStaysOverlap(stay1: KennelTimelineStay, stay2: KennelTimelineStay): b
   if (end1 !== null && end2 === null) return end1 > start2;
   
   // Both have end times - standard overlap check
-  return start1 < end2 && end1 > start2;
+  if (end1 !== null && end2 !== null) {
+    return start1 < end2 && end1 > start2;
+  }
+  return false;
 }
 
 function packStaysIntoLanes(stays: KennelTimelineStay[], capacity: number) {
