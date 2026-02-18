@@ -40,7 +40,6 @@ type FormValues = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const t = useTranslations();
   const { login } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const form = useForm<FormValues>({
@@ -53,7 +52,6 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormValues) => {
     setIsLoggingIn(true);
-    setIsLoading(true);
     try {
       await login(data.email, data.password);
     } catch (error) {
@@ -63,16 +61,14 @@ export default function LoginPage() {
       form.setError('root', {
         message: errorMessage,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
-      {/* Logo - always visible, animates on login */}
+      {/* Logo - always visible, stays on top */}
       <div
-        className={`absolute left-1/2 -translate-x-1/2 transition-all duration-[1500ms] ease-in-out ${
+        className={`absolute left-1/2 -translate-x-1/2 transition-all duration-[1200ms] ease-in-out z-50 ${
           isLoggingIn
             ? 'top-1/2 -translate-y-1/2 scale-125'
             : 'top-12'
@@ -90,10 +86,10 @@ export default function LoginPage() {
 
       {/* Login Form - fades out on submit */}
       <div
-        className={`w-full max-w-md transition-all duration-[800ms] ease-in ${
+        className={`w-full max-w-md transition-all duration-[600ms] ease-out ${
           isLoggingIn
-            ? 'opacity-0 scale-90'
-            : 'translate-y-0 opacity-100 scale-100'
+            ? 'opacity-0 translate-y-4'
+            : 'translate-y-0 opacity-100'
         }`}
       >
         <Card className="border-slate-200 dark:border-slate-700 shadow-xl">
@@ -120,7 +116,6 @@ export default function LoginPage() {
                           {...field}
                           type="email"
                           placeholder="admin@example.com"
-                          disabled={isLoading}
                           autoComplete="email"
                         />
                       </FormControl>
@@ -139,7 +134,6 @@ export default function LoginPage() {
                           {...field}
                           type="password"
                           placeholder="••••••••"
-                          disabled={isLoading}
                           autoComplete="current-password"
                         />
                       </FormControl>
@@ -152,12 +146,8 @@ export default function LoginPage() {
                     {form.formState.errors.root.message}
                   </div>
                 )}
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? t('common.loading') : t('login.submit')}
+                <Button type="submit" className="w-full">
+                  {t('login.submit')}
                 </Button>
               </form>
             </Form>
