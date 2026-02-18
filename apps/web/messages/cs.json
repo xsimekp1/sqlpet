@@ -1226,8 +1226,8 @@
       "vial": "lahvička",
       "ampule": "ampule"
     }
-  },,
-      "lots": "Šarže",
+  },
+  "lots": "Šarže",
       "actions": "Akce",
       "viewDetails": "Detaily",
       "showingItems": "Zobrazeno {count} položek",
