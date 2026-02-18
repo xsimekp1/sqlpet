@@ -302,8 +302,8 @@ export default function AnimalsPage() {
               />
             </div>
           </div>
-          {/* Status filter chips */}
-          <div className="flex gap-1.5 flex-wrap">
+          {/* Status + Species filter chips - single row */}
+          <div className="flex gap-1.5 flex-wrap items-center">
             <Button
               variant={statusFilter === 'active' ? 'default' : 'outline'}
               size="sm"
@@ -328,23 +328,19 @@ export default function AnimalsPage() {
             >
               {t('animals.statusFilter.all')}
             </Button>
+            {availableSpecies.length > 1 && availableSpecies.map((sp) => (
+              <Button
+                key={sp}
+                variant={speciesFilter === sp ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs px-2.5 rounded-full ml-auto"
+                onClick={() => setSpeciesFilter(speciesFilter === sp ? null : sp)}
+              >
+                {SPECIES_EMOJI[sp] || '🐾'} {tSpecies(sp as any)}
+                <span className="ml-1.5 opacity-60">{animals.filter(a => a.species === sp).length}</span>
+              </Button>
+            ))}
           </div>
-          {availableSpecies.length > 1 && (
-            <div className="flex gap-1.5 flex-wrap">
-              {availableSpecies.map((sp) => (
-                <Button
-                  key={sp}
-                  variant={speciesFilter === sp ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-7 text-xs px-2.5 rounded-full"
-                  onClick={() => setSpeciesFilter(speciesFilter === sp ? null : sp)}
-                >
-                  {SPECIES_EMOJI[sp] || '🐾'} {tSpecies(sp as any)}
-                  <span className="ml-1.5 opacity-60">{animals.filter(a => a.species === sp).length}</span>
-                </Button>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
 
