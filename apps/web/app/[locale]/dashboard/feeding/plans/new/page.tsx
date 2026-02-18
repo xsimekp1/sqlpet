@@ -62,12 +62,20 @@ export default function NewFeedingPlanPage() {
     staleTime: 10 * 60 * 1000,
   });
 
+  // DEBUG: Log animals data to see weight
+  console.log('[DEBUG] animalsData:', animalsData);
+  console.log('[DEBUG] animalsData items sample:', animalsData?.items?.[0]);
+
   // Fetch food inventory items (category=food)
   const { data: foodsData } = useQuery({
     queryKey: ['inventory-items', 'food'],
     queryFn: () => ApiClient.get('/inventory/items', { category: 'food' }),
     staleTime: 10 * 60 * 1000,
   });
+
+  // DEBUG: Log foods data to see kcal
+  console.log('[DEBUG] foodsData:', foodsData);
+  console.log('[DEBUG] foodsData sample:', foodsData?.[0]);
 
   const animals = (animalsData?.items || []).filter(
     (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
@@ -128,7 +136,10 @@ export default function NewFeedingPlanPage() {
   };
 
   const calculateRecommendedAmount = (animal: any, food: any) => {
+    console.log('[DEBUG] calculateRecommendedAmount called:', { animal, food });
+    
     const weight = animal.weight_current_kg;
+    console.log('[DEBUG] animal weight:', weight);
     
     if (!weight || weight <= 0) {
       toast({
@@ -141,7 +152,13 @@ export default function NewFeedingPlanPage() {
     }
 
     const kcalPer100g = food.kcal_per_100g;
+    console.log('[DEBUG] food kcal_per_100g:', kcalPer100g);
     if (!kcalPer100g || kcalPer100g <= 0) {
+      toast({
+        title: 'Krmivo nemá kalorickou hodnotu',
+        description: 'Krmivo nemá zadanou hodnotu kcal_per_100g. Nelze vypočítat dávku.',
+        variant: 'destructive',
+      });
       setRecommendedAmount(null);
       return;
     }
