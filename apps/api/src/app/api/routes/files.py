@@ -444,7 +444,15 @@ async def upload_animal_document(
     )
 
     db.add(db_file)
-    await db.flush()
+
+    try:
+        await db.flush()
+    except Exception as e:
+        import traceback
+
+        print(f"FLUSH ERROR in upload_animal_document: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     entity_file = EntityFile(
         organization_id=organization_id,
