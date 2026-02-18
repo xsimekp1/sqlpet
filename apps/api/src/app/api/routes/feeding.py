@@ -95,6 +95,29 @@ async def create_feeding_plan(
     return plan
 
 
+@router.get("/plans/{plan_id}", response_model=FeedingPlanResponse)
+async def get_feeding_plan(
+    plan_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Get a single feeding plan by ID."""
+    from sqlalchemy import select
+    from src.app.models.feeding_plan import FeedingPlan
+
+    result = await db.execute(
+        select(FeedingPlan).where(
+            FeedingPlan.id == plan_id,
+            FeedingPlan.organization_id == organization_id,
+        )
+    )
+    plan = result.scalar_one_or_none()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Feeding plan not found")
+    return plan
+
+
 @router.get("/plans", response_model=FeedingPlanListResponse)
 async def list_feeding_plans(
     animal_id: Optional[uuid.UUID] = Query(None, description="Filter by animal"),
