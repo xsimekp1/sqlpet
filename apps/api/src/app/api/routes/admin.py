@@ -11,6 +11,7 @@ from src.app.api.dependencies.auth import (
     get_current_user,
     get_current_organization_id,
     require_permission,
+    oauth2_scheme,
 )
 from src.app.api.dependencies.db import get_db
 from src.app.models.breed import Breed
@@ -20,7 +21,8 @@ from src.app.models.user import User
 from src.app.models.membership import Membership, MembershipStatus
 from src.app.models.role import Role
 from src.app.models.role_permission import RolePermission
-from src.app.core.security import hash_password
+from src.app.core.security import hash_password, decode_token
+from src.app.api.dependencies.auth import oauth2_scheme, decode_token
 from src.app.services.supabase_storage_service import supabase_storage_service
 
 ALLOWED_IMAGE_TYPES = {
@@ -1073,10 +1075,20 @@ class RegisteredShelterResponse(BaseModel):
 async def get_registered_shelters(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme),
     region: str | None = None,
 ):
     """Get all registered shelters. Only accessible by superadmin."""
-    if not current_user.is_superadmin:
+    # Check superadmin from user OR token
+    is_superadmin = current_user.is_superadmin
+    if not is_superadmin and token:
+        try:
+            payload = decode_token(token)
+            is_superadmin = payload.get("superadmin", False)
+        except Exception:
+            pass
+
+    if not is_superadmin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only superadmin can access this resource",
@@ -1119,9 +1131,18 @@ async def get_registered_shelters(
 async def get_shelter_regions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme),
 ):
     """Get list of unique regions. Only accessible by superadmin."""
-    if not current_user.is_superadmin:
+    is_superadmin = current_user.is_superadmin
+    if not is_superadmin and token:
+        try:
+            payload = decode_token(token)
+            is_superadmin = payload.get("superadmin", False)
+        except Exception:
+            pass
+
+    if not is_superadmin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only superadmin can access this resource",
@@ -1141,9 +1162,18 @@ async def get_shelter_regions(
 async def import_registered_shelters(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme),
 ):
     """Import registered shelters from CSV file. Only accessible by superadmin."""
-    if not current_user.is_superadmin:
+    is_superadmin = current_user.is_superadmin
+    if not is_superadmin and token:
+        try:
+            payload = decode_token(token)
+            is_superadmin = payload.get("superadmin", False)
+        except Exception:
+            pass
+
+    if not is_superadmin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only superadmin can access this resource",
@@ -1275,9 +1305,18 @@ async def create_registered_shelter(
     data: CreateRegisteredShelterRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme),
 ):
     """Create a new registered shelter. Only accessible by superadmin."""
-    if not current_user.is_superadmin:
+    is_superadmin = current_user.is_superadmin
+    if not is_superadmin and token:
+        try:
+            payload = decode_token(token)
+            is_superadmin = payload.get("superadmin", False)
+        except Exception:
+            pass
+
+    if not is_superadmin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only superadmin can access this resource",
@@ -1333,9 +1372,18 @@ async def update_shelter_notes(
     data: UpdateShelterNotesRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme),
 ):
     """Update notes for a shelter. Only accessible by superadmin."""
-    if not current_user.is_superadmin:
+    is_superadmin = current_user.is_superadmin
+    if not is_superadmin and token:
+        try:
+            payload = decode_token(token)
+            is_superadmin = payload.get("superadmin", False)
+        except Exception:
+            pass
+
+    if not is_superadmin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only superadmin can access this resource",
