@@ -14,12 +14,10 @@ interface NavItemProps {
   label: string
   collapsed?: boolean
   permission?: string | null
-  onHover?: () => void
-  onLeave?: () => void
-  isHovered?: boolean
+  isSuperadminOnly?: boolean
 }
 
-export function NavItem({ href, icon: Icon, label, collapsed = false, permission = null, onHover, onLeave, isHovered }: NavItemProps) {
+export function NavItem({ href, icon: Icon, label, collapsed = false, permission = null, isSuperadminOnly = false }: NavItemProps) {
   const pathname = usePathname()
   const t = useTranslations()
   const { user, permissions } = useAuth()
@@ -47,15 +45,20 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative z-10',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
         isActive && 'bg-accent text-accent-foreground font-medium',
         collapsed && 'justify-center px-2'
       )}
-      onMouseEnter={onHover}
-      onMouseLeave={onLeave}
     >
       <Icon className="h-5 w-5 shrink-0" />
-      {!collapsed && <span>{t(label)}</span>}
+      {!collapsed && (
+        <span className="truncate">{t(label)}</span>
+      )}
+      {!collapsed && isSuperadminOnly && (
+        <span className="ml-auto text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full" title="Superadmin">
+          S
+        </span>
+      )}
     </Link>
   )
 }
