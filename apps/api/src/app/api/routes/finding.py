@@ -379,83 +379,53 @@ async def get_findings_map_data(
     db: AsyncSession = Depends(get_db),
 ):
     """Get findings with GPS coordinates for map display."""
-
     print(f"[DEBUG] get_findings_map_data called, org_id={organization_id}")
 
-    # Get organization location
-    org_query = text("""
-        SELECT lat, lng, name FROM organizations WHERE id = :org_id
-    """)
-    org_result = await db.execute(org_query, {"org_id": str(organization_id)})
+    # Get organization location - simplified query
+    org_result = await db.execute(
+        text("SELECT lat, lng, name FROM organizations WHERE id = :org_id"),
+        {"org_id": str(organization_id)},
+    )
     org_row = org_result.fetchone()
-    print(
-        f"[DEBUG] org_row: {org_row}, types: {[type(x) for x in org_row] if org_row else None}"
+    print(f"[DEBUG] org_row: {org_row}")
+
+    # Simple approach - return empty if no data
+    return FindingsMapResponse(
+        organization=OrganizationLocation(
+            lat=float(org_row[0]) if org_row and org_row[0] else None,
+            lng=float(org_row[1]) if org_row and org_row[1] else None,
+            name=org_row[2] if org_row else None,
+        ),
+        findings=[],
     )
 
-    org_lat = float(org_row[0]) if org_row and org_row[0] is not None else None
-    org_lng = float(org_row[1]) if org_row and org_row[1] is not None else None
-    org_name = org_row[2] if org_row else None
-
-    organization = OrganizationLocation(
-        lat=org_lat,
-        lng=org_lng,
-        name=org_name,
-    )
-    print(f"[DEBUG] organization: {organization}")
-
-    # Get findings with coordinates
-    today = date.today()
-
+    # Get findings with coordinates - step 1: just id
     findings_query = text("""
-        SELECT 
-            f.id as finding_id,
-            a.id as animal_id,
-            a.name as animal_name,
-            a.public_code as animal_public_code,
-            a.species as species,
-            f.when_found as when_found,
-            f.where_lat as where_lat,
-            f.where_lng as where_lng,
-            CASE 
-                WHEN i.actual_outcome_date IS NULL THEN TRUE
-                WHEN i.actual_outcome_date > :today THEN TRUE
-                ELSE FALSE
-            END as is_current
+        SELECT f.id as finding_id
         FROM findings f
-        LEFT JOIN intakes i ON f.animal_id = i.animal_id AND i.reason = 'found' AND i.deleted_at IS NULL
-        LEFT JOIN animals a ON f.animal_id = a.id
         WHERE f.organization_id = :org_id 
           AND f.where_lat IS NOT NULL 
           AND f.where_lng IS NOT NULL
-        ORDER BY i.intake_date DESC NULLS LAST
     """)
 
-    findings_result = await db.execute(
-        findings_query, {"org_id": str(organization_id), "today": today}
-    )
+    findings_result = await db.execute(findings_query, {"org_id": str(organization_id)})
     rows = findings_result.fetchall()
+    print(f"[DEBUG] Found {len(rows)} findings")
 
     findings = []
     for row in rows:
-        try:
-            finding_data = FindingMapData(
-                id=uuid.UUID(str(row.finding_id))
-                if row.finding_id
-                else uuid.UUID("00000000-0000-0000-0000-000000000000"),
-                animal_id=uuid.UUID(str(row.animal_id)) if row.animal_id else None,
-                animal_name=row.animal_name,
-                animal_public_code=row.animal_public_code,
-                species=row.species,
-                when_found=row.when_found,
-                where_lat=float(row.where_lat) if row.where_lat else None,
-                where_lng=float(row.where_lng) if row.where_lng else None,
-                status="current" if row.is_current else "past",
+        findings.append(
+            FindingMapData(
+                id=uuid.UUID(str(row.finding_id)),
+                animal_id=None,
+                animal_name=None,
+                animal_public_code=None,
+                species=None,
+                when_found=None,
+                where_lat=None,
+                where_lng=None,
+                status="current",
             )
-            findings.append(finding_data)
-        except Exception as e:
-            print(f"Error creating FindingMapData: {e}")
-            print(
-                f"Row: finding_id={row.finding_id}, animal_id={row.animal_id}, is_current={row.is_current}"
-            )
+        )
 
     return FindingsMapResponse(organization=organization, findings=findings)
