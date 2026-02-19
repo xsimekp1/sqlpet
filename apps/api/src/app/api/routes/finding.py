@@ -28,6 +28,29 @@ from src.app.schemas.finding import (
 router = APIRouter(prefix="/findings", tags=["findings"])
 
 
+class FindingMapData(BaseModel):
+    id: uuid.UUID
+    animal_id: uuid.UUID | None
+    animal_name: str | None
+    animal_public_code: str | None
+    species: str | None
+    when_found: datetime | None
+    where_lat: float | None
+    where_lng: float | None
+    status: str
+
+
+class OrganizationLocation(BaseModel):
+    lat: float | None
+    lng: float | None
+    name: str | None
+
+
+class FindingsMapResponse(BaseModel):
+    organization: OrganizationLocation
+    findings: list[FindingMapData]
+
+
 def _to_response(finding: Finding) -> FindingResponse:
     return FindingResponse.model_validate(finding)
 
@@ -130,6 +153,55 @@ async def list_findings(
         page=page,
         page_size=page_size,
     )
+
+
+@router.get("/map-data", response_model=FindingsMapResponse)
+async def get_findings_map_data(
+    current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get findings with GPS coordinates for map display."""
+    org_result = await db.execute(
+        text("SELECT lat, lng, name FROM organizations WHERE id = :org_id"),
+        {"org_id": str(organization_id)},
+    )
+    org_row = org_result.fetchone()
+
+    organization = OrganizationLocation(
+        lat=float(org_row[0]) if org_row and org_row[0] else None,
+        lng=float(org_row[1]) if org_row and org_row[1] else None,
+        name=org_row[2] if org_row else None,
+    )
+
+    findings_query = text("""
+        SELECT f.id as finding_id
+        FROM findings f
+        WHERE f.organization_id = :org_id 
+          AND f.where_lat IS NOT NULL 
+          AND f.where_lng IS NOT NULL
+    """)
+
+    findings_result = await db.execute(findings_query, {"org_id": str(organization_id)})
+    rows = findings_result.fetchall()
+
+    findings = []
+    for row in rows:
+        findings.append(
+            FindingMapData(
+                id=uuid.UUID(str(row.finding_id)),
+                animal_id=None,
+                animal_name=None,
+                animal_public_code=None,
+                species=None,
+                when_found=None,
+                where_lat=None,
+                where_lng=None,
+                status="current",
+            )
+        )
+
+    return FindingsMapResponse(organization=organization, findings=findings)
 
 
 @router.get("/{finding_id}", response_model=FindingWithAnimalResponse)
@@ -344,99 +416,3 @@ async def get_findings_with_intakes(
             past.append(finding_data)
 
     return FindingsWithIntakesResponse(current=current, past=past)
-
-
-# ─── Map Data ──────────────────────────────────────────────────────────────────
-
-
-class FindingMapData(BaseModel):
-    id: uuid.UUID
-    animal_id: uuid.UUID | None
-    animal_name: str | None
-    animal_public_code: str | None
-    species: str | None
-    when_found: datetime | None
-    where_lat: float | None
-    where_lng: float | None
-    status: str  # "current" or "past"
-
-
-class OrganizationLocation(BaseModel):
-    lat: float | None
-    lng: float | None
-    name: str | None
-
-
-class FindingsMapResponse(BaseModel):
-    organization: OrganizationLocation
-    findings: list[FindingMapData]
-
-
-@router.get("/map-data", response_model=FindingsMapResponse)
-async def get_findings_map_data(
-    current_user: User = Depends(require_permission("animals.read")),
-    organization_id: uuid.UUID = Depends(get_current_organization_id),
-    db: AsyncSession = Depends(get_db),
-):
-    """Get findings with GPS coordinates for map display."""
-    print(f"[DEBUG] get_findings_map_data called, org_id={organization_id}")
-
-    try:
-        # Get organization location
-        org_result = await db.execute(
-            text("SELECT lat, lng, name FROM organizations WHERE id = :org_id"),
-            {"org_id": str(organization_id)},
-        )
-        org_row = org_result.fetchone()
-        print(
-            f"[DEBUG] org_row: {org_row}, types: {[type(x) for x in org_row] if org_row else None}"
-        )
-
-        organization = OrganizationLocation(
-            lat=float(org_row[0]) if org_row and org_row[0] is not None else None,
-            lng=float(org_row[1]) if org_row and org_row[1] is not None else None,
-            name=str(org_row[2]) if org_row and org_row[2] is not None else None,
-        )
-        print(f"[DEBUG] organization created: {organization}")
-
-        # Get findings with coordinates - step 1: just id
-        findings_query = text("""
-            SELECT f.id as finding_id
-            FROM findings f
-            WHERE f.organization_id = :org_id 
-              AND f.where_lat IS NOT NULL 
-              AND f.where_lng IS NOT NULL
-        """)
-
-        findings_result = await db.execute(
-            findings_query, {"org_id": str(organization_id)}
-        )
-        rows = findings_result.fetchall()
-        print(f"[DEBUG] Found {len(rows)} findings")
-
-        findings = []
-        for row in rows:
-            findings.append(
-                FindingMapData(
-                    id=uuid.UUID(str(row.finding_id)),
-                    animal_id=None,
-                    animal_name=None,
-                    animal_public_code=None,
-                    species=None,
-                    when_found=None,
-                    where_lat=None,
-                    where_lng=None,
-                    status="current",
-                )
-            )
-
-        print(f"[DEBUG] Creating response with {len(findings)} findings")
-        response = FindingsMapResponse(organization=organization, findings=findings)
-        print(f"[DEBUG] Response created successfully")
-        return response
-    except Exception as e:
-        print(f"[ERROR] Exception in get_findings_map_data: {type(e).__name__}: {e}")
-        import traceback
-
-        traceback.print_exc()
-        raise
