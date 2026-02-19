@@ -38,7 +38,7 @@ interface RegisteredShelter {
   lat: number | null;
   lng: number | null;
   registration_date: string | null;
-  notes: string | null;
+  notes?: string | null;
 }
 
 export default function RegisteredSheltersPage() {
