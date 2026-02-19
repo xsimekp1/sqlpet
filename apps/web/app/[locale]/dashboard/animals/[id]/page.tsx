@@ -44,6 +44,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Skeleton } from '@/components/ui/skeleton';
 import ApiClient, { Animal, WeightLog, MERCalculation } from '@/app/lib/api';
 import MERCalculator from '@/app/components/feeding/MERCalculator';
 import { getAnimalImageUrl } from '@/app/lib/utils';
@@ -136,6 +137,11 @@ export default function AnimalDetailPage() {
 
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingWeight, setLoadingWeight] = useState(false);
+  const [loadingKennelHistory, setLoadingKennelHistory] = useState(false);
+  const [loadingVaccinations, setLoadingVaccinations] = useState(false);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const [loadingIntakes, setLoadingIntakes] = useState(false);
   const [medicalDialogOpen, setMedicalDialogOpen] = useState(false);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const [togglingDewormed, setTogglingDewormed] = useState(false);
@@ -284,20 +290,29 @@ if (photoInputRef.current) photoInputRef.current.value = '';
         setAnimalIds(idsData);
         setBehaviorNotes(data.behavior_notes ?? '');
         
-        // Load additional data in background (not blocking)
-        Promise.all([
+        // Load additional data in background with loading states
+        setLoadingWeight(true);
+        setLoadingKennelHistory(true);
+        setLoadingIntakes(true);
+        setLoadingVaccinations(true);
+        
+        const [wLogs, kHistory, intakes, vacs] = await Promise.all([
           ApiClient.getWeightHistory(animalId).catch(() => []),
           ApiClient.getAnimalKennelHistory(animalId).catch(() => []),
           ApiClient.get('/intakes', { animal_id: animalId }).catch(() => []),
           ApiClient.get(`/vaccinations/animal/${animalId}`).catch(() => ({ items: [] })),
-        ]).then(([wLogs, kHistory, intakes, vacs]) => {
-          setWeightLogs(wLogs);
-          setKennelHistory(kHistory);
-          const activeIntake = Array.isArray(intakes) ? intakes[0] : null;
-          setActiveIntakeId(activeIntake?.id ?? null);
-          setActiveIntakeReason(activeIntake?.reason ?? null);
-          setVaccinations(vacs.items || []);
-        });
+        ]);
+        setWeightLogs(wLogs);
+        setKennelHistory(kHistory);
+        const activeIntake = Array.isArray(intakes) ? intakes[0] : null;
+        setActiveIntakeId(activeIntake?.id ?? null);
+        setActiveIntakeReason(activeIntake?.reason ?? null);
+        setVaccinations(vacs.items || []);
+        
+        setLoadingWeight(false);
+        setLoadingKennelHistory(false);
+        setLoadingIntakes(false);
+        setLoadingVaccinations(false);
       } catch (error) {
         toast.error(t('loadError'));
         console.error(error);
@@ -766,11 +781,63 @@ if (photoInputRef.current) photoInputRef.current.value = '';
     ? Number(latestWeight.weight_kg)
     : (animal?.weight_current_kg ?? animal?.weight_estimated_kg ?? null);
 
-  // ── Loading ────────────────────────────────────────────────────────────
+  // ── Loading Skeleton ─────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+          <div className="flex-shrink-0 flex flex-col items-center gap-2">
+            <Skeleton className="w-64 h-64 rounded-xl" />
+            <div className="flex items-center gap-3">
+              <Skeleton className="w-10 h-10 rounded-full" />
+              <Skeleton className="w-12 h-4" />
+              <Skeleton className="w-10 h-10 rounded-full" />
+            </div>
+          </div>
+          <div className="flex-1 text-center sm:text-left space-y-3">
+            <Skeleton className="h-8 w-48 mx-auto sm:mx-0" />
+            <Skeleton className="h-4 w-32 mx-auto sm:mx-0" />
+            <Skeleton className="h-4 w-40 mx-auto sm:mx-0" />
+            <div className="flex gap-2 justify-center sm:justify-start">
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-24" />
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs skeleton */}
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full max-w-md" />
+          <div className="space-y-4">
+            <Card>
+              <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+              <CardContent className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <Card className="lg:col-span-2">
+                <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+                <CardContent className="space-y-3">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><Skeleton className="h-6 w-24" /></CardHeader>
+                <CardContent className="space-y-2">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1427,7 +1494,12 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                 )}
 
                 {/* Kennel assignment history */}
-                {kennelHistory.map((entry, i) => (
+                {loadingKennelHistory ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ) : kennelHistory.map((entry, i) => (
                   <div key={i} className="relative mb-6">
                     <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-purple-400 border-2 border-background" />
                     <div className="pl-2">
@@ -1466,7 +1538,16 @@ if (photoInputRef.current) photoInputRef.current.value = '';
 {/* ── Medical ── */}
         <TabsContent value="medical" className="space-y-4">
           {/* Weight history sparkline */}
-          {weightLogs.length >= 2 && (
+          {loadingWeight ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{t('health.weightHistory')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-16 w-full" />
+              </CardContent>
+            </Card>
+          ) : weightLogs.length >= 2 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">{t('health.weightHistory')}</CardTitle>
@@ -1488,7 +1569,12 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               <CardDescription>Historie očkování zvířete</CardDescription>
             </CardHeader>
             <CardContent>
-              {vaccinations.length === 0 ? (
+              {loadingVaccinations ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                </div>
+              ) : vaccinations.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">Žádná očkování</p>
               ) : (
                 <div className="space-y-2">
@@ -1597,8 +1683,9 @@ if (photoInputRef.current) photoInputRef.current.value = '';
             </CardHeader>
             <CardContent>
               {loadingDocuments ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <div className="space-y-3">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
                 </div>
               ) : documents.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">

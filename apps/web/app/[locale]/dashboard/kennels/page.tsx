@@ -348,10 +348,10 @@ export default function KennelsPage() {
 
       const [kennelsData, animalsData] = await Promise.all([
         ApiClient.getKennels(params),
-        ApiClient.getAnimals({ page_size: 100 }),
+        ApiClient.getAnimalsLightweightForKennels(),
       ]);
       setKennels(kennelsData);
-      setAllAnimals(animalsData.items.filter((a: Animal) => !isTerminal(a.status) && a.current_intake_date !== null));
+      setAllAnimals(animalsData.filter((a: Animal) => !isTerminal(a.status) && a.current_intake_date !== null));
     } catch (error) {
       toast.error(t('loadError'));
       console.error(error);

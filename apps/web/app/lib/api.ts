@@ -891,6 +891,22 @@ class ApiClient {
     }
   }
 
+  static async getAnimalsLightweightForKennels(): Promise<Animal[]> {
+    try {
+      const response = await axios.get<Animal[]>(
+        `${API_URL}/animals/lightweight-for-kennels`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data || [];
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch animals for kennels');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
   static async createAnimal(data: CreateAnimalRequest): Promise<Animal> {
     const organizationId = this.getOrganizationId();
     if (!organizationId) {

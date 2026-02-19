@@ -1,7 +1,7 @@
 import uuid
 from typing import Callable
 
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, Request, status, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +16,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
 
 async def get_current_organization_id(
+    request: Request,
     token: str | None = Depends(oauth2_scheme),
     x_organization_id: str | None = Header(None, alias="x-organization-id"),
 ) -> uuid.UUID:
@@ -25,6 +26,10 @@ async def get_current_organization_id(
     M4: Also accept x-organization-id header for compatibility.
     TODO M4: Validate user has active membership in this organization.
     """
+    # Check cache first
+    if hasattr(request.state, "_cached_org_id"):
+        return request.state._cached_org_id
+
     print(
         f"DEBUG get_current_organization_id called, token present: {token is not None}, x_org_id: {x_organization_id}"
     )
@@ -55,7 +60,10 @@ async def get_current_organization_id(
             detail="No organization selected. Please select an organization first.",
         )
     try:
-        return uuid.UUID(org_id_str)
+        org_id = uuid.UUID(org_id_str)
+        # Cache for this request
+        request.state._cached_org_id = org_id
+        return org_id
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -64,9 +72,14 @@ async def get_current_organization_id(
 
 
 async def get_current_user(
+    request: Request,
     token: str | None = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
+    # Check cache first
+    if hasattr(request.state, "_cached_user"):
+        return request.state._cached_user
+
     print(f"DEBUG get_current_user called, token present: {token is not None}")
     if token is None:
         print("DEBUG: No token in get_current_user")
@@ -112,6 +125,8 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
+    # Cache for this request
+    request.state._cached_user = user
     return user
 
 
