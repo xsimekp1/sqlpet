@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Loader2, Check, X, AlertCircle } from 'lucide-react';
+import { Plus, Loader2, Check, X, AlertCircle, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -23,7 +23,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { format, addDays, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
+import { cs, enUS } from 'date-fns/locale';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -90,11 +93,20 @@ export default function HotelReservationsPage() {
   const [loadingTimeline, setLoadingTimeline] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
+  
+  // Floating timeline: starts yesterday, shows 30 days
+  const [timelineStart, setTimelineStart] = useState(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday;
+  });
+  const timelineEnd = useMemo(() => addDays(timelineStart, 30), [timelineStart]);
+  const [hoveredReservation, setHoveredReservation] = useState<string | null>(null);
 
   useEffect(() => {
     loadReservations();
     loadTimeline();
-  }, [statusFilter]);
+  }, [statusFilter, timelineStart]);
 
   const loadReservations = async () => {
     setLoadingTable(true);
@@ -114,9 +126,8 @@ export default function HotelReservationsPage() {
   const loadTimeline = async () => {
     setLoadingTimeline(true);
     try {
-      const today = new Date();
-      const startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-      const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+      const startDate = timelineStart.toISOString().split('T')[0];
+      const endDate = timelineEnd.toISOString().split('T')[0];
       
       const res = await fetch(`/api/hotel/reservations/timeline?start_date=${startDate}&end_date=${endDate}`, { 
         headers: getAuthHeaders() 
@@ -129,6 +140,16 @@ export default function HotelReservationsPage() {
     } finally {
       setLoadingTimeline(false);
     }
+  };
+
+  const shiftTimeline = (days: number) => {
+    setTimelineStart(prev => addDays(prev, days));
+  };
+
+  const resetToToday = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    setTimelineStart(yesterday);
   };
 
   const handleCancel = async (id: string) => {
@@ -278,7 +299,26 @@ export default function HotelReservationsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Timeline - přehled obsazenosti</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Timeline - přehled obsazenosti
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="text-xs text-muted-foreground mr-2">
+                {format(timelineStart, 'd.M.yyyy')} – {format(timelineEnd, 'd.M.yyyy')}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => shiftTimeline(-7)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={resetToToday}>
+                Dnes
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => shiftTimeline(7)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {loadingTimeline ? (
@@ -338,8 +378,10 @@ export default function HotelReservationsPage() {
                       </div>
                       <div className="flex-1 flex">
                         {kennelEntries.map((entry, idx) => {
-                          const dayOfWeek = new Date(entry.date).getDay();
+                          const entryDate = new Date(entry.date);
+                          const dayOfWeek = entryDate.getDay();
                           const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                          const isFirstOfMonth = entryDate.getDate() === 1;
                           
                           // Calculate if this is the middle day of the reservation
                           const span = entry.reservation_id ? reservationSpans[entry.reservation_id] : null;
@@ -353,31 +395,71 @@ export default function HotelReservationsPage() {
                             return currentDayNum === Math.floor(totalDays / 2);
                           })();
 
+                          // Status colors matching KennelTimeline style
+                          const getStatusColor = () => {
+                            if (entry.entry_type !== 'reservation') {
+                              return isWeekend ? 'bg-gray-100' : 'bg-muted/20';
+                            }
+                            switch (entry.status) {
+                              case 'pending':
+                                return 'bg-yellow-400';
+                              case 'confirmed':
+                                return 'bg-blue-500';
+                              case 'checked_in':
+                                return 'bg-green-500';
+                              case 'checked_out':
+                                return 'bg-gray-400';
+                              case 'cancelled':
+                                return 'bg-red-300';
+                              default:
+                                return 'bg-gray-300';
+                            }
+                          };
+
+                          const isHovered = hoveredReservation === entry.reservation_id;
+
                           return (
-                            <div 
-                              key={idx} 
-                              className={`flex-1 min-w-[40px] h-12 border-r flex items-center justify-center text-xs cursor-pointer ${
-                                entry.entry_type === 'reservation' 
-                                  ? entry.status === 'pending' 
-                                    ? 'bg-yellow-100 hover:bg-yellow-200' 
-                                    : entry.status === 'confirmed'
-                                    ? 'bg-blue-100 hover:bg-blue-200'
-                                    : entry.status === 'checked_in'
-                                    ? 'bg-green-100 hover:bg-green-200'
-                                    : 'bg-gray-100 hover:bg-gray-200'
-                                  : isWeekend 
-                                    ? 'bg-gray-100 hover:bg-gray-200' 
-                                    : 'bg-muted/20 hover:bg-muted/40'
-                              }`}
-                              title={entry.animal_name ? `${entry.animal_name} (${entry.status}) - klikněte pro editaci` : 'Volno'}
-                              onClick={() => entry.reservation_id && setSelectedReservationId(entry.reservation_id)}
-                            >
-                              {entry.reservation_id && isActuallyMiddle && entry.animal_name && (
-                                <span className="truncate px-1 font-medium text-[10px]">
-                                  {entry.animal_name.substring(0, 6)}
-                                </span>
-                              )}
-                            </div>
+                            <TooltipProvider key={idx}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div 
+                                    className={cn(
+                                      "flex-1 min-w-[40px] h-12 border-r flex items-center justify-center text-xs cursor-pointer transition-all duration-200",
+                                      getStatusColor(),
+                                      entry.entry_type === 'reservation' && "border-l-4",
+                                      entry.entry_type === 'reservation' && (entry.status === 'pending' ? 'border-yellow-500' : entry.status === 'confirmed' ? 'border-blue-600' : entry.status === 'checked_in' ? 'border-green-600' : 'border-gray-500'),
+                                      isHovered && "scale-[1.02] shadow-lg z-10 rounded-md"
+                                    )}
+                                    style={{
+                                      // Add subtle month separator
+                                      borderLeft: isFirstOfMonth ? '2px solid #94a3b8' : undefined,
+                                      marginLeft: isFirstOfMonth ? '-1px' : undefined,
+                                    }}
+                                    title={entry.animal_name ? `${entry.animal_name} (${entry.status}) - klikněte pro editaci` : 'Volno'}
+                                    onClick={() => entry.reservation_id && setSelectedReservationId(entry.reservation_id)}
+                                    onMouseEnter={() => entry.reservation_id && setHoveredReservation(entry.reservation_id)}
+                                    onMouseLeave={() => setHoveredReservation(null)}
+                                  >
+                                    {entry.reservation_id && isActuallyMiddle && entry.animal_name && (
+                                      <span className="truncate px-1 font-medium text-white text-[10px] drop-shadow-md">
+                                        {entry.animal_name.substring(0, 8)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </TooltipTrigger>
+                                {entry.animal_name && (
+                                  <TooltipContent>
+                                    <div className="text-sm">
+                                      <p className="font-medium">{entry.animal_name}</p>
+                                      <p className="text-muted-foreground capitalize">{STATUS_LABELS[entry.status] || entry.status}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {format(entryDate, 'd.M.yyyy')}
+                                      </p>
+                                    </div>
+                                  </TooltipContent>
+                                )}
+                              </Tooltip>
+                            </TooltipProvider>
                           );
                         })}
                       </div>
