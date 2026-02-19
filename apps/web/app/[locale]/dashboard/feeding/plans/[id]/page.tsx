@@ -169,16 +169,20 @@ export default function EditFeedingPlanPage() {
       return;
     }
 
-    const rer = 70 * Math.pow(weight, 0.75);
-    let activityFactor = 1.4;
-    if (animal.species === 'cat') {
-      activityFactor = 1.2;
-    }
-    if (animal.altered_status === 'intact') {
-      activityFactor = animal.species === 'cat' ? 1.4 : 1.8;
+    // Use stored MER from animal, or calculate if not available
+    let mer = animal.mer_kcal_per_day;
+    if (!mer && weight) {
+      const rer = 70 * Math.pow(weight, 0.75);
+      let activityFactor = 1.4;
+      if (animal.species === 'cat') {
+        activityFactor = 1.2;
+      }
+      if (animal.altered_status === 'intact') {
+        activityFactor = animal.species === 'cat' ? 1.4 : 1.8;
+      }
+      mer = rer * activityFactor;
     }
     
-    const mer = rer * activityFactor;
     const amountGPerDay = (mer / kcalPer100g) * 100;
     
     let roundedAmount: number;
