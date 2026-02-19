@@ -389,14 +389,10 @@ async def get_findings_map_data(
     org_row = org_result.fetchone()
     print(f"[DEBUG] org_row: {org_row}")
 
-    # Simple approach - return empty if no data
-    return FindingsMapResponse(
-        organization=OrganizationLocation(
-            lat=float(org_row[0]) if org_row and org_row[0] else None,
-            lng=float(org_row[1]) if org_row and org_row[1] else None,
-            name=org_row[2] if org_row else None,
-        ),
-        findings=[],
+    organization = OrganizationLocation(
+        lat=float(org_row[0]) if org_row and org_row[0] else None,
+        lng=float(org_row[1]) if org_row and org_row[1] else None,
+        name=org_row[2] if org_row else None,
     )
 
     # Get findings with coordinates - step 1: just id
