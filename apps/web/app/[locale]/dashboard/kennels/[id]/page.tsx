@@ -538,10 +538,11 @@ export default function KennelDetailPage() {
                 <div className="flex items-center justify-between">
                   <DimensionsDisplay dimensions={kennel.dimensions} />
                   <Button variant="ghost" size="icon" onClick={() => {
-                    if (kennel.dimensions) {
-                      setDimLength(String(kennel.dimensions.length / 100));
-                      setDimWidth(String(kennel.dimensions.width / 100));
-                      setDimHeight(kennel.dimensions.height ? String(kennel.dimensions.height / 100) : '');
+                    const dims = kennel.dimensions;
+                    if (dims) {
+                      setDimLength(String(dims.length / 100));
+                      setDimWidth(String(dims.width / 100));
+                      setDimHeight(dims.height ? String(dims.height / 100) : '');
                     }
                     setEditingDimensions(true);
                   }}>
@@ -600,7 +601,7 @@ export default function KennelDetailPage() {
                     ))}
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => {
-                    setSelectedSpecies(kennel?.allowed_species || []);
+                    setSelectedSpecies(kennel.allowed_species || []);
                     setEditingSpecies(true);
                   }}>
                     <Pencil className="h-4 w-4" />
