@@ -265,8 +265,8 @@ export default function HotelReservationsPage() {
                       {res.total_price ? `${res.total_price} Kč` : '-'}
                     </TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[res.status]}>
-                        {STATUS_LABELS[res.status] || res.status}
+                      <Badge className={res.status ? STATUS_COLORS[res.status] : ''}>
+                        {res.status ? STATUS_LABELS[res.status] || res.status : '-'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -451,7 +451,7 @@ export default function HotelReservationsPage() {
                                   <TooltipContent>
                                     <div className="text-sm">
                                       <p className="font-medium">{entry.animal_name}</p>
-                                      <p className="text-muted-foreground capitalize">{STATUS_LABELS[entry.status] || entry.status}</p>
+                                      <p className="text-muted-foreground capitalize">{entry.status ? STATUS_LABELS[entry.status] || entry.status : '-'}</p>
                                       <p className="text-xs text-muted-foreground">
                                         {format(entryDate, 'd.M.yyyy')}
                                       </p>
