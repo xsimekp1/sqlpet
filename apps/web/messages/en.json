@@ -118,6 +118,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "animals": "Animals",
+    "findings": "Findings",
     "kennels": "Kennels",
     "hotel": "Hotel",
     "walks": "Activities",
@@ -1605,5 +1606,17 @@
     "selectType": "Select type",
     "startedAt": "Started at",
     "complete": "Complete"
+  },
+  "findings": {
+    "title": "Findings",
+    "description": "Animal findings management - GPS coordinates and history tracking",
+    "comingSoon": "Coming Soon!",
+    "viewAnimals": "View Animals",
+    "featureLocation": "Location",
+    "featureLocationDesc": "Record finding location using GPS coordinates or map selection",
+    "featureAnimal": "Animal",
+    "featureAnimalDesc": "Link findings to animals in the system",
+    "featureHistory": "History",
+    "featureHistoryDesc": "Overview of all findings with filtering and search"
   }
 }

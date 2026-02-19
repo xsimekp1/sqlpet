@@ -113,6 +113,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "animals": "Zvířata",
+    "findings": "Nálezy",
     "kennels": "Kotce",
     "hotel": "Hotel",
     "walks": "Aktivity",
@@ -1630,5 +1631,17 @@
     "selectType": "Vyberte typ",
     "startedAt": "Začátek",
     "complete": "Dokončit"
+  },
+  "findings": {
+    "title": "Nálezy",
+    "description": "Správa nálezů zvířat - evidence nálezů, GPS souřadnice a historie",
+    "comingSoon": "Připravujeme!",
+    "viewAnimals": "Zobrazit zvířata",
+    "featureLocation": "Poloha",
+    "featureLocationDesc": "Zadávejte místo nálezu pomocí GPS souřadnic nebo výběrem na mapě",
+    "featureAnimal": "Zvíře",
+    "featureAnimalDesc": "Propojení nálezu se zvířetem v systému",
+    "featureHistory": "Historie",
+    "featureHistoryDesc": "Přehled všech nálezů s možností filtrování a vyhledávání"
   }
 }

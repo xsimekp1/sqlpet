@@ -25,6 +25,7 @@ import { useRef, useState } from 'react'
     Footprints,
     PlusCircle,
     Building2,
+    Search,
   } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
@@ -89,6 +90,7 @@ export function Sidebar() {
       items: [
         { label: 'nav.dashboard', href: '/dashboard', icon: Home, permission: null },
         { label: 'nav.animals', href: '/dashboard/animals', icon: PawPrint, permission: 'animals.read' },
+        { label: 'nav.findings', href: '/dashboard/findings', icon: Search, permission: 'animals.read' },
       ]
     },
     {
