@@ -380,18 +380,28 @@ async def get_findings_map_data(
 ):
     """Get findings with GPS coordinates for map display."""
 
+    print(f"[DEBUG] get_findings_map_data called, org_id={organization_id}")
+
     # Get organization location
     org_query = text("""
         SELECT lat, lng, name FROM organizations WHERE id = :org_id
     """)
     org_result = await db.execute(org_query, {"org_id": str(organization_id)})
     org_row = org_result.fetchone()
+    print(
+        f"[DEBUG] org_row: {org_row}, types: {[type(x) for x in org_row] if org_row else None}"
+    )
+
+    org_lat = float(org_row[0]) if org_row and org_row[0] is not None else None
+    org_lng = float(org_row[1]) if org_row and org_row[1] is not None else None
+    org_name = org_row[2] if org_row else None
 
     organization = OrganizationLocation(
-        lat=float(org_row[0]) if org_row and org_row[0] is not None else None,
-        lng=float(org_row[1]) if org_row and org_row[1] is not None else None,
-        name=org_row[2] if org_row else None,
+        lat=org_lat,
+        lng=org_lng,
+        name=org_name,
     )
+    print(f"[DEBUG] organization: {organization}")
 
     # Get findings with coordinates
     today = date.today()
