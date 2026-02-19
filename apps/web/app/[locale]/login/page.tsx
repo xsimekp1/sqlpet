@@ -153,6 +153,17 @@ export default function LoginPage() {
             </Form>
           </CardContent>
         </Card>
+
+        {/* Logo video below login */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-24 w-auto mt-8 rounded-lg"
+        >
+          <source src="/vidu-video-3172321556102224.webm" type="video/webm" />
+        </video>
       </div>
     </div>
   );
