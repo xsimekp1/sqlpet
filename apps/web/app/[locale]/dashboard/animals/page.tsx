@@ -162,6 +162,8 @@ export default function AnimalsPage() {
       try {
         setLoading(true);
         const data = await ApiClient.getAnimals();
+        console.log('[ANIMALS_LIST] Raw API response:', data);
+        console.log('[ANIMALS_LIST] First item:', data.items[0]);
         setAnimals(data.items);
       } catch (error) {
         toast.error('Failed to load animals');
@@ -378,7 +380,7 @@ export default function AnimalsPage() {
                 </Card>
               </div>
             ) : (
-            <Link key={animal.id} href={`/dashboard/animals/${animal.id}`} onClick={() => console.log('[ANIMALS_LIST] Link clicked, animal.id:', animal.id)}>
+            <Link key={animal.id} href={`/dashboard/animals/${animal.id}`} onClick={(e) => { console.log('[ANIMALS_LIST] Link clicked, animal:', animal); e.preventDefault(); router.push(`/dashboard/animals/${animal.id}`) }}>
               <Card className="hover:bg-accent transition-colors cursor-pointer overflow-hidden">
                 {/* Square thumbnail — equal padding on all sides */}
                 <div className="relative w-full aspect-square bg-muted overflow-hidden">
