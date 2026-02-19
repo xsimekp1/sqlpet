@@ -1072,7 +1072,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           <TabsTrigger value="timeline">{t('tabs.timeline')}</TabsTrigger>
           <TabsTrigger value="feeding">{t('tabs.feeding')}</TabsTrigger>
           <TabsTrigger value="medical">{t('tabs.medical')}</TabsTrigger>
-          <TabsTrigger value="behavior">{t('tabs.behavior')}</TabsTrigger>
           {(animal.species === 'dog' || animal.species === 'cat') && (
             <TabsTrigger value="personality">{t('tabs.personality')}</TabsTrigger>
           )}
@@ -1613,38 +1612,39 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           </Card>
         </TabsContent>
 
-        {/* ── Behavior ── */}
-        <TabsContent value="behavior">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('behavior.title')}</CardTitle>
-              <CardDescription>{t('behavior.description')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <textarea
-                className="w-full min-h-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
-                placeholder={t('behavior.placeholder')}
-                value={behaviorNotes}
-                onChange={e => setBehaviorNotes(e.target.value)}
-              />
-              <div className="flex justify-end">
-                <Button
-                  size="sm"
-                  onClick={handleSaveBehaviorNotes}
-                  disabled={savingBehaviorNotes}
-                >
-                  {savingBehaviorNotes ? t('behavior.saving') : t('behavior.save')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ── Personality ── */}
+{/* ── Personality + Behavior ── */}
         <TabsContent value="personality">
-          {(animal.species === 'dog' || animal.species === 'cat') && (
-            <PersonalityTab species={animal.species} />
-          )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left: Behavior notes */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('behavior.title')}</CardTitle>
+                <CardDescription>{t('behavior.description')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <textarea
+                  className="w-full min-h-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+                  placeholder={t('behavior.placeholder')}
+                  value={behaviorNotes}
+                  onChange={e => setBehaviorNotes(e.target.value)}
+                />
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={handleSaveBehaviorNotes}
+                    disabled={savingBehaviorNotes}
+                  >
+                    {savingBehaviorNotes ? t('behavior.saving') : t('behavior.save')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Right: Personality axes */}
+            {(animal.species === 'dog' || animal.species === 'cat') && (
+              <PersonalityTab species={animal.species} />
+            )}
+          </div>
         </TabsContent>
 
 {/* ── Documents ── */}

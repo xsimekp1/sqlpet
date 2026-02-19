@@ -82,9 +82,9 @@ function StepSlider({
           <Image
             src={lowIcon}
             alt={t(`personality.${lowLabel}`)}
-            width={72}
-            height={72}
-            className="w-16 h-16 object-contain"
+            width={48}
+            height={48}
+            className="w-12 h-12 object-contain"
           />
           <span className="text-sm font-medium">{t(`personality.${lowLabel}`)}</span>
         </div>
@@ -93,9 +93,9 @@ function StepSlider({
           <Image
             src={highIcon}
             alt={t(`personality.${highLabel}`)}
-            width={72}
-            height={72}
-            className="w-16 h-16 object-contain"
+            width={48}
+            height={48}
+            className="w-12 h-12 object-contain"
           />
         </div>
       </div>
@@ -107,7 +107,7 @@ function StepSlider({
             type="button"
             onClick={() => onChange(step)}
             className={cn(
-              'flex-1 h-8 rounded border-2 transition-all text-sm font-semibold',
+              'flex-1 h-6 rounded border-2 transition-all text-xs font-semibold',
               value === step
                 ? 'border-primary bg-primary/10'
                 : 'border-muted hover:border-muted-foreground'
@@ -122,10 +122,12 @@ function StepSlider({
 }
 
 export default function PersonalityTab({ species }: PersonalityTabProps) {
-  const [values, setValues] = useState({
-    social: 2,
-    activity: 2,
-    kids: 2,
+  const [values, setValues] = useState(() => {
+    const defaults = { social: 2, activity: 2 };
+    if (species === 'dog') {
+      return { ...defaults, kids: 2 };
+    }
+    return { ...defaults, cudliness: 2 };
   });
 
   const axes = species === 'dog' ? DOG_AXES : CAT_AXES;
@@ -137,9 +139,9 @@ export default function PersonalityTab({ species }: PersonalityTabProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{species === 'dog' ? '🐕' : '🐱'} Personality</CardTitle>
+        <CardTitle>{species === 'dog' ? '🐕' : '🐱'}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {axes.map((axis) => (
           <StepSlider
             key={axis.key}
