@@ -15,6 +15,7 @@ interface NavItemProps {
   collapsed?: boolean
   permission?: string | null
   isSuperadminOnly?: boolean
+  sectionTitle?: string
 }
 
 export function NavItem({ href, icon: Icon, label, collapsed = false, permission = null, isSuperadminOnly = false }: NavItemProps) {
