@@ -78,10 +78,7 @@ def parse_date(date_str: str) -> str | None:
 
 async def import_registered_shelters(db: AsyncSession):
     """Import registered shelters from CSV file."""
-    csv_path = (
-        Path(__file__).parent.parent.parent.parent
-        / "Registrované útulky pro zvířata  –  Státní veterinární správaclose.csv"
-    )
+    csv_path = Path(__file__).parent.parent.parent.parent / "utulky.csv"
 
     if not csv_path.exists():
         print(f"CSV file not found: {csv_path}")
@@ -89,13 +86,14 @@ async def import_registered_shelters(db: AsyncSession):
 
     print(f"Importing from: {csv_path}")
 
-    count = 0
+    imported = 0
+    updated = 0
     errors = 0
 
     with open(csv_path, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
 
-        for row in reader:
+        for idx, row in enumerate(reader, start=2):
             try:
                 reg_number = row.get("registrační číslo", "").strip().strip('"')
                 name = row.get("název", "").strip().strip('"')
@@ -106,20 +104,35 @@ async def import_registered_shelters(db: AsyncSession):
                 gps = row.get("GPS", "").strip().strip('"')
                 reg_date = row.get("datum registrace", "").strip().strip('"')
 
+                if not all([reg_number, name, address, region]):
+                    print(f"Row {idx}: Missing required fields")
+                    errors += 1
+                    continue
+
                 # Parse GPS
                 lat, lng = parse_dms_to_decimal(gps)
 
                 # Parse date
                 parsed_date = parse_date(reg_date)
 
-                # Insert into database
-                await db.execute(
+                # UPSERT into database
+                result = await db.execute(
                     text("""
-                        INSERT INTO registered_shelters 
+                        INSERT INTO registered_shelters
                         (id, registration_number, name, address, region, activity_type, capacity, lat, lng, registration_date, imported_at, created_at, updated_at)
-                        VALUES 
+                        VALUES
                         (gen_random_uuid(), :reg_number, :name, :address, :region, :activity_type, :capacity, :lat, :lng, :reg_date, NOW(), NOW(), NOW())
-                        ON CONFLICT (registration_number) DO NOTHING
+                        ON CONFLICT (registration_number) DO UPDATE SET
+                            name = EXCLUDED.name,
+                            address = EXCLUDED.address,
+                            region = EXCLUDED.region,
+                            activity_type = EXCLUDED.activity_type,
+                            capacity = EXCLUDED.capacity,
+                            lat = EXCLUDED.lat,
+                            lng = EXCLUDED.lng,
+                            registration_date = EXCLUDED.registration_date,
+                            updated_at = NOW()
+                        RETURNING (xmax = 0) as inserted
                     """),
                     {
                         "reg_number": reg_number,
@@ -133,23 +146,44 @@ async def import_registered_shelters(db: AsyncSession):
                         "reg_date": parsed_date,
                     },
                 )
-                count += 1
+                was_inserted = result.scalar()
+                if was_inserted:
+                    imported += 1
+                else:
+                    updated += 1
+
+                if (imported + updated) % 50 == 0:
+                    print(f"Progress: {imported + updated} rows processed...")
 
             except Exception as e:
-                print(f"Error importing row: {e}")
+                print(f"Error importing row {idx}: {e}")
                 errors += 1
 
     await db.commit()
-    print(f"Import complete: {count} records imported, {errors} errors")
+    print("\n" + "="*60)
+    print("Import complete!")
+    print("="*60)
+    print(f"  New records imported: {imported}")
+    print(f"  Existing records updated: {updated}")
+    print(f"  Total processed: {imported + updated}")
+    print(f"  Errors: {errors}")
 
 
 if __name__ == "__main__":
     import asyncio
-    from src.app.db.session import async_session_maker
-    from src.app.core.config import settings
+    import sys
+
+    # Add src to path for local development
+    sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+    from app.db.session import AsyncSessionLocal
+    from app.core.config import settings
 
     async def main():
-        async with async_session_maker() as db:
+        print(f"Connecting to database...")
+        print(f"Using DATABASE_URL_ASYNC from settings")
+
+        async with AsyncSessionLocal() as db:
             await import_registered_shelters(db)
 
     asyncio.run(main())
