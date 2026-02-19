@@ -1595,7 +1595,7 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${ApiClient.getBaseUrl()}/admin/registered-shelters/import`, {
+    const response = await fetch(`${API_URL}/admin/registered-shelters/import`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
