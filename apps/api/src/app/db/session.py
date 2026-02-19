@@ -19,8 +19,8 @@ async_engine = create_async_engine(
     settings.DATABASE_URL_ASYNC,
     echo=(settings.ENV == "dev"),
     pool_pre_ping=True,
-    pool_size=20,
-    max_overflow=30,
+    pool_size=5,  # Reduced for Railway PostgreSQL connection limits
+    max_overflow=10,
     pool_timeout=30,
     connect_args={
         "statement_cache_size": 0,
