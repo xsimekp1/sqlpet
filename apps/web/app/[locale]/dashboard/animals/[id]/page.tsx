@@ -273,27 +273,31 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           setLoading(true);
         }
 
-const [data, idsData, wLogs, kHistory, intakes, vacs] = await Promise.all([
+        const [data, idsData] = await Promise.all([
           ApiClient.getAnimal(animalId),
           ApiClient.getAnimalIds(),
-          ApiClient.getWeightHistory(animalId),
-          ApiClient.getAnimalKennelHistory(animalId).catch(() => []),
-          ApiClient.get('/intakes', { animal_id: animalId }).catch(() => []),
-          ApiClient.get(`/vaccinations/animal/${animalId}`).catch(() => ({ items: [] })),
         ]);
         // Store fresh data back in cache
         queryClient.setQueryData(['animal', data.id], data);
         queryClient.setQueryData(['animalIds'], idsData);
         setAnimal(data);
         setAnimalIds(idsData);
-setWeightLogs(wLogs);
-        setKennelHistory(kHistory);
         setBehaviorNotes(data.behavior_notes ?? '');
-        setVaccinations(vacs.items || []);
-        // Set active intake id (first non-deleted intake)
-        const activeIntake = Array.isArray(intakes) ? intakes[0] : null;
-        setActiveIntakeId(activeIntake?.id ?? null);
-        setActiveIntakeReason(activeIntake?.reason ?? null);
+        
+        // Load additional data in background (not blocking)
+        Promise.all([
+          ApiClient.getWeightHistory(animalId).catch(() => []),
+          ApiClient.getAnimalKennelHistory(animalId).catch(() => []),
+          ApiClient.get('/intakes', { animal_id: animalId }).catch(() => []),
+          ApiClient.get(`/vaccinations/animal/${animalId}`).catch(() => ({ items: [] })),
+        ]).then(([wLogs, kHistory, intakes, vacs]) => {
+          setWeightLogs(wLogs);
+          setKennelHistory(kHistory);
+          const activeIntake = Array.isArray(intakes) ? intakes[0] : null;
+          setActiveIntakeId(activeIntake?.id ?? null);
+          setActiveIntakeReason(activeIntake?.reason ?? null);
+          setVaccinations(vacs.items || []);
+        });
       } catch (error) {
         toast.error(t('loadError'));
         console.error(error);
