@@ -442,6 +442,26 @@ class AnimalService:
         for field, value in update_data.items():
             setattr(animal, field, value)
 
+        # Recalculate MER when health flags or related fields change
+        health_flag_fields = {
+            "is_critical",
+            "is_diabetic",
+            "is_cancer",
+            "is_pregnant",
+            "is_lactating",
+            "altered_status",
+            "weight_current_kg",
+        }
+        if update_data.keys() & health_flag_fields and animal.weight_current_kg:
+            rer = 70 * (float(animal.weight_current_kg) ** 0.75)
+            if animal.species.value == "cat":
+                activity_factor = 1.2
+            elif animal.altered_status.value in ("intact",):
+                activity_factor = 1.8
+            else:
+                activity_factor = 1.4
+            animal.mer_kcal_per_day = int(rer * activity_factor)
+
         await self.db.flush()
 
         # Recompute default_image_url if species, breed, or color changed

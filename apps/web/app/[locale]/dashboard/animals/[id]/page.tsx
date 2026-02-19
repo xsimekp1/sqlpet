@@ -1085,7 +1085,7 @@ setWeightLogs(wLogs);
                 </TooltipProvider>
 
                 <button
-                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_dewormed ? 'bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-200' : 'border-input hover:bg-accent'}`}
                   onClick={toggleDewormed}
                   disabled={togglingDewormed}
                   title={t('health.toggleDewormed')}
@@ -1094,7 +1094,7 @@ setWeightLogs(wLogs);
                 </button>
 
                 <button
-                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_aggressive ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' : 'border-input hover:bg-accent'}`}
                   onClick={toggleAggressive}
                   disabled={togglingAggressive}
                   title={t('health.toggleAggressive')}
@@ -1105,7 +1105,7 @@ setWeightLogs(wLogs);
                 {animal.sex !== 'male' && (
                   <>
                     <button
-                      className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                      className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_pregnant ? 'bg-pink-100 border-pink-300 text-pink-800 dark:bg-pink-900 dark:border-pink-700 dark:text-pink-200' : 'border-input hover:bg-accent'}`}
                       onClick={togglePregnant}
                       disabled={togglingPregnant}
                       title={t('health.togglePregnant')}
@@ -1113,7 +1113,7 @@ setWeightLogs(wLogs);
                       {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('health.pregnant') : t('health.pregnant') + '?')}
                     </button>
                     <button
-                      className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                      className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_lactating ? 'bg-pink-100 border-pink-300 text-pink-800 dark:bg-pink-900 dark:border-pink-700 dark:text-pink-200' : 'border-input hover:bg-accent'}`}
                       onClick={toggleLactating}
                       disabled={togglingLactating}
                       title={t('health.toggleLactating')}
@@ -1124,7 +1124,7 @@ setWeightLogs(wLogs);
                 )}
 
                 <button
-                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_critical ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' : 'border-input hover:bg-accent'}`}
                   onClick={toggleCritical}
                   disabled={togglingCritical}
                   title={t('health.toggleCritical')}
@@ -1133,7 +1133,7 @@ setWeightLogs(wLogs);
                 </button>
 
                 <button
-                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_diabetic ? 'bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-200' : 'border-input hover:bg-accent'}`}
                   onClick={toggleDiabetic}
                   disabled={togglingDiabetic}
                   title={t('health.toggleDiabetic')}
@@ -1142,7 +1142,7 @@ setWeightLogs(wLogs);
                 </button>
 
                 <button
-                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_cancer ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' : 'border-input hover:bg-accent'}`}
                   onClick={toggleCancer}
                   disabled={togglingCancer}
                   title={t('health.toggleCancer')}
@@ -1151,7 +1151,7 @@ setWeightLogs(wLogs);
                 </button>
 
                 <button
-                  className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50"
+                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_special_needs ? 'bg-violet-100 border-violet-300 text-violet-800 dark:bg-violet-900 dark:border-violet-700 dark:text-violet-200' : 'border-input hover:bg-accent'}`}
                   onClick={toggleSpecialNeeds}
                   disabled={togglingSpecialNeeds}
                   title={t('overview.toggleSpecialNeeds')}
@@ -1389,7 +1389,7 @@ setWeightLogs(wLogs);
                     <div className="pl-2">
                       <p className="text-sm font-semibold">{ev.text}</p>
                       <p className="text-xs text-muted-foreground">
-                        {ev.date.toLocaleTimeString()} · {ev.date.toLocaleDateString()}
+                        {ev.date.toLocaleDateString()}
                       </p>
                     </div>
                   </div>
