@@ -37,6 +37,10 @@ def run_migrations_online() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args={
+            "statement_cache_size": 0,
+            "ssl": "require",
+        },
     )
     with connectable.connect() as connection:
         context.configure(

@@ -4,7 +4,7 @@ from contextvars import ContextVar
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, pool
 
 from src.app.core.config import settings
 
@@ -14,13 +14,12 @@ _request_query_data: ContextVar[dict[str, Any]] = ContextVar(
 )
 
 # Async engine (for FastAPI runtime)
-# statement_cache_size=0 is required for Supabase PgBouncer in transaction mode
+# Use NullPool for Supabase PgBouncer which has connection limits
 async_engine = create_async_engine(
     settings.DATABASE_URL_ASYNC,
     echo=(settings.ENV == "dev"),
     pool_pre_ping=True,
-    pool_size=5,  # Reduced for Railway PostgreSQL connection limits
-    max_overflow=10,
+    poolclass=pool.NullPool,  # NullPool for Supabase PgBouncer compatibility
     pool_timeout=30,
     connect_args={
         "statement_cache_size": 0,
