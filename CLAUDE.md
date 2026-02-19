@@ -494,3 +494,68 @@ Steps:
 - **Virtualization** of large lists (animals, medical today) if needed
 - **Accessibility:** Focus states, keyboard nav, dialog focus trap
 - **Playwright smoke e2e:** Login → create animal → intake → walk mode → volunteer submit
+
+---
+
+## UI Design System
+
+### Color Palette
+
+| Purpose | Color | Variable |
+|---------|-------|----------|
+| **Background (page)** | Warm gray | `--background` |
+| **Cards/Panels** | White | `--card` |
+| **Primary actions** | Purple-blue | `--primary` |
+| **Filters** | Teal | `--color-filter` |
+| **Navigation (prev/next)** | Blue | `--color-nav` |
+| **Automated actions** | Orange | `--color-action` |
+| **Destructive** | Red | `--destructive` |
+| **Badges** | Various | Keep existing |
+
+### Component Styling Rules
+
+1. **Input fields** - White background (`bg-white`) to distinguish editable areas
+2. **Select/Dropdown triggers** - White background
+3. **Text info (labels, hints)** - No fill, gray text
+4. **Badges** - Keep existing colors (status-based)
+5. **Filters** - Use teal accent (`--color-filter`)
+6. **Pagination/Navigation** - Use blue accent (`--color-nav`)
+7. **Automated actions** - Use orange accent (`--color-action`)
+8. **Delete actions** - Red (`--destructive`)
+
+### CSS Variables (in `apps/web/app/globals.css`)
+
+```css
+:root {
+  /* Input fields - white background */
+  --input: oklch(1 0 0);
+  
+  /* Custom accent colors */
+  --color-filter: oklch(0.52 0.18 172);    /* Teal - for filters */
+  --color-nav: oklch(0.55 0.2 220);        /* Blue - for navigation */
+  --color-action: oklch(0.58 0.18 30);    /* Orange - for automated actions */
+}
+```
+
+### Keyboard Shortcuts
+
+Default shortcuts (customizable per user):
+- `Ctrl+K` - Global search
+- `Ctrl+Shift+A` - Animals
+- `Ctrl+Shift+K` - Kennels
+- `Ctrl+Shift+T` - Tasks
+- `Ctrl+Shift+I` - Inventory
+- `Ctrl+Shift+F` - Feeding
+
+Shortcuts are displayed:
+- In sidebar as right-aligned text (when expanded)
+- As tooltip on hover (when collapsed)
+
+### Weather Widget
+
+- **Provider**: Open-Meteo API (free, no API key)
+- **Location**: Uses organization's lat/lng (falls back to Prague)
+- **Display logic**:
+  - Before 14:00 → Shows today's day weather
+  - After 14:00 → Shows tonight's weather
+- **Caching**: 30 minutes in localStorage (per organization)
