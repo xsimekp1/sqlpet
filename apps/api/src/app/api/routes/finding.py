@@ -388,8 +388,8 @@ async def get_findings_map_data(
     org_row = org_result.fetchone()
 
     organization = OrganizationLocation(
-        lat=org_row[0] if org_row else None,
-        lng=org_row[1] if org_row else None,
+        lat=float(org_row[0]) if org_row and org_row[0] is not None else None,
+        lng=float(org_row[1]) if org_row and org_row[1] is not None else None,
         name=org_row[2] if org_row else None,
     )
 
@@ -429,14 +429,16 @@ async def get_findings_map_data(
     for row in rows:
         findings.append(
             FindingMapData(
-                id=row.finding_id,
-                animal_id=row.animal_id,
+                id=uuid.UUID(str(row.finding_id))
+                if row.finding_id
+                else uuid.UUID("00000000-0000-0000-0000-000000000000"),
+                animal_id=uuid.UUID(str(row.animal_id)) if row.animal_id else None,
                 animal_name=row.animal_name,
                 animal_public_code=row.animal_public_code,
                 species=row.species,
                 when_found=row.when_found,
-                where_lat=row.where_lat,
-                where_lng=row.where_lng,
+                where_lat=float(row.where_lat) if row.where_lat else None,
+                where_lng=float(row.where_lng) if row.where_lng else None,
                 status="current" if row.is_current else "past",
             )
         )
