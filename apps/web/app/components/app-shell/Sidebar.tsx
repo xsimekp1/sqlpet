@@ -49,6 +49,7 @@ interface NavItemConfig {
   icon: LucideIcon
   permission?: string | null
   isSuperadminOnly?: boolean
+  shortcut?: string
 }
 
 interface NavSection {
@@ -108,20 +109,20 @@ export function Sidebar() {
       title: 'nav.main',
       items: [
         { label: 'nav.dashboard', href: '/dashboard', icon: Home, permission: null },
-        { label: 'nav.animals', href: '/dashboard/animals', icon: PawPrint, permission: 'animals.read' },
+        { label: 'nav.animals', href: '/dashboard/animals', icon: PawPrint, permission: 'animals.read', shortcut: 'ctrl+shift+a' },
         { label: 'nav.findings', href: '/dashboard/findings', icon: Search, permission: 'animals.read' },
       ]
     },
     {
       title: 'nav.operations',
       items: [
-        { label: 'nav.kennels', href: '/dashboard/kennels', icon: Grid3x3, permission: 'kennels.read' },
+        { label: 'nav.kennels', href: '/dashboard/kennels', icon: Grid3x3, permission: 'kennels.read', shortcut: 'ctrl+shift+k' },
         { label: 'nav.hotel', href: '/dashboard/hotel/reservations', icon: Hotel, permission: 'kennels.read' },
         { label: 'nav.walks', href: '/dashboard/walks', icon: Footprints, permission: 'walks.read' },
         { label: 'nav.medical', href: '/dashboard/medical', icon: HeartPulse, permission: 'medical.read' },
-        { label: 'nav.feeding', href: '/dashboard/feeding', icon: Bone, permission: 'feeding.read' },
-        { label: 'nav.inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory.read' },
-        { label: 'nav.tasks', href: '/dashboard/tasks', icon: CheckSquare, permission: 'tasks.read' },
+        { label: 'nav.feeding', href: '/dashboard/feeding', icon: Bone, permission: 'feeding.read', shortcut: 'ctrl+shift+f' },
+        { label: 'nav.inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory.read', shortcut: 'ctrl+shift+i' },
+        { label: 'nav.tasks', href: '/dashboard/tasks', icon: CheckSquare, permission: 'tasks.read', shortcut: 'ctrl+shift+t' },
         { label: 'nav.calendar', href: '/dashboard/calendar', icon: CalendarDays, permission: null },
       ]
     },
@@ -253,6 +254,7 @@ export function Sidebar() {
                     collapsed={sidebarCollapsed}
                     permission={item.permission}
                     isSuperadminOnly={item.isSuperadminOnly}
+                    shortcut={item.shortcut}
                     isActive={isActive}
                     onHoverStart={(bounds) => {
                       if (navRef.current) {
