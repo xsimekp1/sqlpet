@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "add_default_image_url"
-down_revision = "add_hotel_price_per_day"
+down_revision = "add_medical_status_columns"
 branch_labels = None
 depends_on = None
 

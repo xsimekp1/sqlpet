@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "add_medical_status_columns"
-down_revision = "create_all_missing_tables"
+down_revision = None
 branch_labels = None
 depends_on = None
 

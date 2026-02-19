@@ -1,7 +1,7 @@
 """add maintenance columns to kennels
 
 Revision ID: 8de05c56c4ed
-Revises: add_default_image_url
+Revises: add_medical_status_columns
 Create Date: 2026-02-18 15:11:15.797285
 
 """
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "8de05c56c4ed"
-down_revision: Union[str, Sequence[str], None] = "add_default_image_url"
+down_revision: Union[str, Sequence[str], None] = "add_medical_status_columns"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

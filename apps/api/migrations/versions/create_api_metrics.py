@@ -1,7 +1,7 @@
 """Create api_metrics table
 
 Revision ID: create_api_metrics
-Revises:
+Revises: add_medical_status_columns
 Create Date: 2026-02-18
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = "create_api_metrics"
-down_revision = None
+down_revision = "add_medical_status_columns"
 branch_labels = None
 depends_on = None
 

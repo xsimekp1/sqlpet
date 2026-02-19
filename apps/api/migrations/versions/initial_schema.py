@@ -5,9 +5,10 @@ Revises: None
 Create Date: 2026-02-17
 
 """
+
 from alembic import op
 
-revision = 'initial_schema'
+revision = "initial_schema"
 down_revision = None
 branch_labels = None
 depends_on = None

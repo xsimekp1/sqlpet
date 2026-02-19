@@ -1,7 +1,7 @@
 """Add enrichment fields to walk_logs
 
 Revision ID: add_enrichment_fields
-Revises:
+Revises: add_medical_status_columns
 Create Date: 2026-02-18
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = "add_enrichment_fields"
-down_revision = None
+down_revision = "add_medical_status_columns"
 branch_labels = None
 depends_on = None
 
