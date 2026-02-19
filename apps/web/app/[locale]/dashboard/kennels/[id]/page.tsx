@@ -741,9 +741,9 @@ export default function KennelDetailPage() {
                       href={`/dashboard/animals/${animal.id}`}
                       className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                     >
-                      {animal.image_url ? (
+                      {animal.photo_url ? (
                         <Image
-                          src={animal.image_url}
+                          src={animal.photo_url}
                           alt={animal.name}
                           width={48}
                           height={48}
