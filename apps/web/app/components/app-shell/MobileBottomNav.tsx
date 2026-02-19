@@ -13,7 +13,7 @@ export function MobileBottomNav() {
   const navItems = [
     { href: '/dashboard', icon: Home, label: t('dashboard') },
     { href: '/dashboard/animals', icon: PawPrint, label: t('animals') },
-    { href: '/dashboard/walk-mode', icon: Footprints, label: t('walkMode') },
+    { href: '/dashboard/walk-mode', icon: Footprints, label: t('walkMode'), disabled: true },
     { href: '/dashboard/alerts', icon: Bell, label: t('alerts') },
     { href: '/dashboard/menu', icon: Menu, label: t('menu') },
   ]
@@ -28,14 +28,15 @@ export function MobileBottomNav() {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={item.disabled ? '#' : item.href}
+              onClick={(e) => item.disabled && e.preventDefault()}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors',
-                'hover:text-primary',
-                isActive ? 'text-primary' : 'text-muted-foreground'
+                item.disabled ? 'opacity-40 cursor-not-allowed' : 'hover:text-primary',
+                isActive && !item.disabled ? 'text-primary' : 'text-muted-foreground'
               )}
             >
-              <Icon className={cn('h-5 w-5', isActive && 'fill-current')} />
+              <Icon className={cn('h-5 w-5', isActive && !item.disabled && 'fill-current')} />
               <span className="text-xs font-medium">{item.label}</span>
             </Link>
           )
