@@ -955,6 +955,7 @@
     "since": "since {date}",
     "cancel": "Cancel",
     "saving": "Saving…",
+    "merUpdated": "Energy requirement updated: {value} kcal/day",
     "status": {
       "label": "Status",
       "registered": "Registered",

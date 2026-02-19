@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlalchemy import func, join, literal_column, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +15,7 @@ from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Animal
 from src.app.models.contact import Contact
 from src.app.models.finding import Finding
+from src.app.models.intake import Intake, IntakeReason
 from src.app.models.user import User
 from src.app.schemas.finding import (
     FindingCreate,

@@ -891,6 +891,7 @@
     "since": "od {date}",
     "cancel": "Zrušit",
     "saving": "Ukládám…",
+    "merUpdated": "Kalorická potřeba aktualizována: {value} kcal/den",
     "status": {
       "label": "Status",
       "registered": "Registrováno",
