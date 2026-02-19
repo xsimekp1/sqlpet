@@ -27,8 +27,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  in_progress: 'Probíhá',
-  completed: 'Dokončeno',
+  in_progress: 'inProgress',
+  completed: 'completed',
 };
 
 const WALK_TYPE_LABELS: Record<string, string> = {
@@ -141,7 +141,7 @@ export default function WalksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Aktivity</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">{t('management')}</p>
         </div>
         <div className="flex gap-2">
@@ -273,7 +273,7 @@ export default function WalksPage() {
                   </div>
                   <Button size="sm" onClick={() => completeWalk(walk.id)} disabled={!userHasPermission(user, 'tasks.write', permissions)} title={!userHasPermission(user, 'tasks.write', permissions) ? tRoot('errors.noPermission') : undefined}>
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Dokončit
+                    {t('complete')}
                   </Button>
                 </div>
               ))}
