@@ -875,6 +875,22 @@ class ApiClient {
     }
   }
 
+  static async getAnimalIds(): Promise<string[]> {
+    try {
+      const response = await axios.get<{ ids: string[] }>(
+        `${API_URL}/animals/ids`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data.ids || [];
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch animal IDs');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
   static async createAnimal(data: CreateAnimalRequest): Promise<Animal> {
     const organizationId = this.getOrganizationId();
     if (!organizationId) {

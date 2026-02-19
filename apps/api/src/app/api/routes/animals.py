@@ -168,6 +168,25 @@ async def create_animal(
         )
 
 
+@router.get("/ids", response_model=dict)
+async def list_animal_ids(
+    current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Lightweight endpoint - returns just animal IDs for navigation."""
+    from sqlalchemy import select
+    from src.app.models.animal import Animal
+
+    result = await db.execute(
+        select(Animal.id)
+        .where(Animal.organization_id == organization_id)
+        .order_by(Animal.name)
+    )
+    ids = [str(row[0]) for row in result.fetchall()]
+    return {"ids": ids}
+
+
 @router.get(
     "",
     response_model=AnimalListResponse,

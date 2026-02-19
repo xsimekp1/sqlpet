@@ -273,9 +273,9 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           setLoading(true);
         }
 
-const [data, listData, wLogs, kHistory, intakes, vacs] = await Promise.all([
+const [data, idsData, wLogs, kHistory, intakes, vacs] = await Promise.all([
           ApiClient.getAnimal(animalId),
-          ApiClient.getAnimals({ page_size: 200 }),
+          ApiClient.getAnimalIds(),
           ApiClient.getWeightHistory(animalId),
           ApiClient.getAnimalKennelHistory(animalId).catch(() => []),
           ApiClient.get('/intakes', { animal_id: animalId }).catch(() => []),
@@ -283,10 +283,9 @@ const [data, listData, wLogs, kHistory, intakes, vacs] = await Promise.all([
         ]);
         // Store fresh data back in cache
         queryClient.setQueryData(['animal', data.id], data);
-        const ids = listData.items.map(a => a.id);
-        queryClient.setQueryData(['animalIds'], ids);
+        queryClient.setQueryData(['animalIds'], idsData);
         setAnimal(data);
-        setAnimalIds(ids);
+        setAnimalIds(idsData);
 setWeightLogs(wLogs);
         setKennelHistory(kHistory);
         setBehaviorNotes(data.behavior_notes ?? '');
