@@ -63,7 +63,6 @@ export function Sidebar() {
   const t = useTranslations()
   const queryClient = useQueryClient()
   const [uploadingLogo, setUploadingLogo] = useState(false)
-  const [hoveredHref, setHoveredHref] = useState<string | null>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   const { data: orgInfo } = useQuery({
@@ -205,7 +204,6 @@ export function Sidebar() {
             <div className="space-y-1">
               {section.items.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-                const isHovered = hoveredHref === item.href
                 return (
                   <NavItem
                     key={item.href}
@@ -215,10 +213,7 @@ export function Sidebar() {
                     collapsed={sidebarCollapsed}
                     permission={item.permission}
                     isSuperadminOnly={item.isSuperadminOnly}
-                    onMouseEnter={() => setHoveredHref(item.href)}
-                    onMouseLeave={() => setHoveredHref(null)}
                     isActive={isActive}
-                    isHovered={isHovered}
                   />
                 )
               })}
