@@ -93,6 +93,7 @@ export default function NewHotelReservationPage() {
     contact_id: '',
     price_per_day: '',
     requires_single_cage: false,
+    own_food: false,
     notes: '',
     checkin_time: '14:00',
     checkout_time: '10:00',
@@ -262,6 +263,7 @@ export default function NewHotelReservationPage() {
         reserved_to: formData.reserved_to,
         price_per_day: formData.price_per_day ? parseFloat(formData.price_per_day) : null,
         requires_single_cage: formData.requires_single_cage,
+        own_food: formData.own_food,
         notes: formData.notes || null,
       };
 

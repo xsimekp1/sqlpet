@@ -60,6 +60,7 @@ class HotelReservation(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     requires_single_cage: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
+    own_food: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     status: Mapped[str] = mapped_column(
         String(50),

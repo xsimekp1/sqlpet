@@ -46,6 +46,7 @@ interface NavItemConfig {
   href: string
   icon: LucideIcon
   permission?: string | null
+  isSuperadminOnly?: boolean
 }
 
 interface NavSection {

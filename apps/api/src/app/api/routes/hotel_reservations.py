@@ -35,6 +35,7 @@ class HotelReservationCreate(BaseModel):
     reserved_to: date
     price_per_day: Optional[float] = None
     requires_single_cage: bool = False
+    own_food: bool = False
     notes: Optional[str] = None
 
     @field_validator("reserved_to")
@@ -58,6 +59,7 @@ class HotelReservationUpdate(BaseModel):
     total_price: Optional[float] = None
     is_paid: Optional[bool] = None
     requires_single_cage: Optional[bool] = None
+    own_food: Optional[bool] = None
     status: Optional[str] = None
     notes: Optional[str] = None
 
@@ -78,6 +80,7 @@ class HotelReservationResponse(BaseModel):
     total_price: Optional[float]
     is_paid: bool
     requires_single_cage: bool
+    own_food: bool
     status: str
     notes: Optional[str]
     created_at: datetime
@@ -115,6 +118,7 @@ def _to_response(r: HotelReservation, kennel_name: str = None) -> dict:
         "total_price": float(r.total_price) if r.total_price else None,
         "is_paid": r.is_paid,
         "requires_single_cage": r.requires_single_cage,
+        "own_food": r.own_food,
         "status": r.status,
         "notes": r.notes,
         "created_at": r.created_at,

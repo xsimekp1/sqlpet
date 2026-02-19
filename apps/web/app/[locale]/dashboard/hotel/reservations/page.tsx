@@ -254,6 +254,7 @@ export default function HotelReservationsPage() {
                   <TableHead>Kotec</TableHead>
                   <TableHead>Cena</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Vlastní krmivo</TableHead>
                   <TableHead className="text-right">Akce</TableHead>
                 </TableRow>
               </TableHeader>
@@ -274,6 +275,13 @@ export default function HotelReservationsPage() {
                       <Badge className={res.status ? STATUS_COLORS[res.status] : ''}>
                         {res.status ? STATUS_LABELS[res.status] || res.status : '-'}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {res.own_food ? (
+                        <Badge variant="secondary">Ano</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -366,11 +374,24 @@ export default function HotelReservationsPage() {
                 </div>
                 
                 {timelineData.kennels.map(kennel => {
-                  const kennelEntries = timelineData.timeline.filter(t => t.kennel_id === kennel.id);
+                  // Get all dates in range (same as header)
+                  const allDates: string[] = [];
+                  const current = new Date(timelineData.start_date);
+                  const end = new Date(timelineData.end_date);
+                  while (current <= end) {
+                    allDates.push(current.toISOString().split('T')[0]);
+                    current.setDate(current.getDate() + 1);
+                  }
                   
+                  // Create map of date -> entry for quick lookup
+                  const entriesMap = new Map<string, typeof timelineData.timeline[0]>();
+                  timelineData.timeline.filter(t => t.kennel_id === kennel.id).forEach(entry => {
+                    entriesMap.set(entry.date, entry);
+                  });
+
                   // Find reservation spans for calculating middle day
                   const reservationSpans: Record<string, {from: string, to: string}> = {};
-                  kennelEntries.forEach(entry => {
+                  timelineData.timeline.filter(t => t.kennel_id === kennel.id).forEach(entry => {
                     if (entry.reservation_id && entry.entry_type === 'reservation') {
                       if (!reservationSpans[entry.reservation_id]) {
                         reservationSpans[entry.reservation_id] = { from: entry.date, to: entry.date };
@@ -386,19 +407,20 @@ export default function HotelReservationsPage() {
                         {kennel.name}
                       </div>
                       <div className="flex-1 flex">
-                        {kennelEntries.map((entry, idx) => {
-                          const entryDate = new Date(entry.date);
+                        {allDates.map((dateStr, idx) => {
+                          const entry = entriesMap.get(dateStr);
+                          const entryDate = new Date(dateStr);
                           const dayOfWeek = entryDate.getDay();
                           const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
                           const isFirstOfMonth = entryDate.getDate() === 1;
                           
                           // Calculate if this is the middle day of the reservation
-                          const span = entry.reservation_id ? reservationSpans[entry.reservation_id] : null;
+                          const span = entry?.reservation_id ? reservationSpans[entry.reservation_id] : null;
                           const isActuallyMiddle = (() => {
-                            if (!span || !entry.reservation_id) return false;
+                            if (!span || !entry?.reservation_id) return false;
                             const fromDate = new Date(span.from);
                             const toDate = new Date(span.to);
-                            const currentDate = new Date(entry.date);
+                            const currentDate = new Date(dateStr);
                             const totalDays = Math.round((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24));
                             const currentDayNum = Math.round((currentDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24));
                             return currentDayNum === Math.floor(totalDays / 2);
@@ -406,7 +428,7 @@ export default function HotelReservationsPage() {
 
                           // Status colors matching KennelTimeline style
                           const getStatusColor = () => {
-                            if (entry.entry_type !== 'reservation') {
+                            if (!entry || entry.entry_type !== 'reservation') {
                               return isWeekend ? 'bg-gray-100' : 'bg-muted/20';
                             }
                             switch (entry.status) {
@@ -425,7 +447,7 @@ export default function HotelReservationsPage() {
                             }
                           };
 
-                          const isHovered = hoveredReservation === entry.reservation_id;
+                          const isHovered = entry?.reservation_id === hoveredReservation;
 
                           return (
                             <TooltipProvider key={idx}>
@@ -433,30 +455,29 @@ export default function HotelReservationsPage() {
                                 <TooltipTrigger asChild>
                                   <div 
                                     className={cn(
-                                      "flex-1 min-w-[40px] h-12 border-r flex items-center justify-center text-xs cursor-pointer transition-all duration-200",
+                                      "min-w-[40px] w-[40px] h-12 border-r flex items-center justify-center text-xs cursor-pointer transition-all duration-200",
                                       getStatusColor(),
-                                      entry.entry_type === 'reservation' && "border-l-4",
-                                      entry.entry_type === 'reservation' && (entry.status === 'pending' ? 'border-yellow-500' : entry.status === 'confirmed' ? 'border-blue-600' : entry.status === 'checked_in' ? 'border-green-600' : 'border-gray-500'),
+                                      entry?.entry_type === 'reservation' && "border-l-4",
+                                      entry?.entry_type === 'reservation' && (entry.status === 'pending' ? 'border-yellow-500' : entry.status === 'confirmed' ? 'border-blue-600' : entry.status === 'checked_in' ? 'border-green-600' : 'border-gray-500'),
                                       isHovered && "scale-[1.02] shadow-lg z-10 rounded-md"
                                     )}
                                     style={{
-                                      // Add subtle month separator
                                       borderLeft: isFirstOfMonth ? '2px solid #94a3b8' : undefined,
                                       marginLeft: isFirstOfMonth ? '-1px' : undefined,
                                     }}
-                                    title={entry.animal_name ? `${entry.animal_name} (${entry.status}) - klikněte pro editaci` : 'Volno'}
-                                    onClick={() => entry.reservation_id && setSelectedReservationId(entry.reservation_id)}
-                                    onMouseEnter={() => entry.reservation_id && setHoveredReservation(entry.reservation_id)}
+                                    title={entry?.animal_name ? `${entry.animal_name} (${entry.status}) - klikněte pro editaci` : 'Volno'}
+                                    onClick={() => entry?.reservation_id && setSelectedReservationId(entry.reservation_id)}
+                                    onMouseEnter={() => entry?.reservation_id && setHoveredReservation(entry.reservation_id)}
                                     onMouseLeave={() => setHoveredReservation(null)}
                                   >
-                                    {entry.reservation_id && isActuallyMiddle && entry.animal_name && (
+                                    {entry?.reservation_id && isActuallyMiddle && entry.animal_name && (
                                       <span className="truncate px-1 font-medium text-white text-[10px] drop-shadow-md">
                                         {entry.animal_name.substring(0, 8)}
                                       </span>
                                     )}
                                   </div>
                                 </TooltipTrigger>
-                                {entry.animal_name && (
+                                {entry?.animal_name && (
                                   <TooltipContent>
                                     <div className="text-sm">
                                       <p className="font-medium">{entry.animal_name}</p>
