@@ -251,6 +251,7 @@ async def update_animal(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
+    print(f"[UPDATE_ANIMAL] animal_id={animal_id}, data={data}")
     svc = AnimalService(db)
     animal = await svc.update_animal(
         organization_id=organization_id,
