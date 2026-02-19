@@ -1186,60 +1186,55 @@ async def import_registered_shelters(
         )
 
     import csv
-    import re
     from datetime import datetime
-    import os
+    from pathlib import Path
 
     # CSV is in project root (same level as apps/)
-    csv_filename = (
-        "Registrované útulky pro zvířata  –  Státní veterinární správaclose.csv"
-    )
+    csv_filename = "utulky.csv"
 
-    # Try multiple possible base directories
-    base_dirs = [
-        os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", ""),  # Railway volume mount
-        os.getcwd(),  # Current working directory
-        os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(
-                        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                    )
-                )
-            )
-        ),  # Project root from this file
-    ]
+    # Resolve path from this file: apps/api/src/app/api/routes/admin.py
+    # Go up 6 levels to project root
+    project_root = Path(__file__).parent.parent.parent.parent.parent.parent
+    csv_path = project_root / csv_filename
 
-    csv_path = None
-    for base in base_dirs:
-        if base:
-            test_path = os.path.join(base, csv_filename)
-            if os.path.exists(test_path):
-                csv_path = test_path
-                break
-
-    if not csv_path:
-        # Try direct path from environment
-        for env_key in ["APP_DIR", "WORKING_DIR", ""]:
-            if env_key:
-                test_path = os.path.join(os.environ.get(env_key, ""), csv_filename)
-                if test_path and os.path.exists(test_path):
-                    csv_path = test_path
-                    break
-
-    if not csv_path:
-        # Debug: log where we looked
-        print(f"CSV not found. Searched in: {base_dirs}")
+    if not csv_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"CSV file not found: {csv_filename}",
-        )
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CSV file not found",
+            detail={
+                "error": "CSV file not found",
+                "searched_path": str(csv_path),
+                "csv_filename": csv_filename,
+                "help": "Ensure the CSV file exists in the project root directory"
+            }
         )
 
-    def parse_dms_to_decimal(dms_str):
+    def parse_single_dms(dms: str) -> float | None:
+        """Parse single DMS coordinate like 49°8'42.980"N"""
+        try:
+            dms = dms.replace("°", " ").replace("'", " ").replace('"', " ").strip()
+            direction = None
+            if "N" in dms or "S" in dms:
+                direction = -1 if "S" in dms else 1
+                dms = dms.replace("N", "").replace("S", "").strip()
+            elif "E" in dms or "W" in dms:
+                direction = -1 if "W" in dms else 1
+                dms = dms.replace("E", "").replace("W", "").strip()
+            parts = dms.split()
+            if len(parts) < 3:
+                return None
+            degrees = float(parts[0])
+            minutes = float(parts[1]) if len(parts) > 1 else 0
+            seconds = float(parts[2]) if len(parts) > 2 else 0
+            decimal = degrees + (minutes / 60) + (seconds / 3600)
+            if direction:
+                decimal *= direction
+            return decimal
+        except (ValueError, IndexError) as e:
+            print(f"Error parsing DMS '{dms}': {e}")
+            return None
+
+    def parse_dms_to_decimal(dms_str: str) -> tuple[float | None, float | None]:
+        """Parse GPS from DMS format like: 49°8'42.980"N,15°0'6.507"E"""
         if not dms_str:
             return None, None
         try:
@@ -1251,84 +1246,146 @@ async def import_registered_shelters(
             lat = parse_single_dms(lat_str)
             lng = parse_single_dms(lng_str)
             return lat, lng
-        except:
+        except Exception as e:
+            print(f"Error parsing GPS '{dms_str}': {e}")
             return None, None
 
-    def parse_single_dms(dms):
-        dms = dms.replace("°", " ").replace("'", " ").replace('"', " ").strip()
-        direction = None
-        if "N" in dms or "S" in dms:
-            direction = -1 if "S" in dms else 1
-            dms = dms.replace("N", "").replace("S", "").strip()
-        elif "E" in dms or "W" in dms:
-            direction = -1 if "W" in dms else 1
-            dms = dms.replace("E", "").replace("W", "").strip()
-        parts = dms.split()
-        if len(parts) < 3:
-            return None
-        try:
-            degrees = float(parts[0])
-            minutes = float(parts[1]) if len(parts) > 1 else 0
-            seconds = float(parts[2]) if len(parts) > 2 else 0
-            decimal = degrees + (minutes / 60) + (seconds / 3600)
-            if direction:
-                decimal *= direction
-            return decimal
-        except:
-            return None
-
-    def parse_date(date_str):
+    def parse_date(date_str: str) -> str | None:
+        """Parse date from Czech format like 29.12.2017"""
         if not date_str:
             return None
         try:
             dt = datetime.strptime(date_str.strip(), "%d.%m.%Y")
             return dt.date().isoformat()
-        except:
+        except ValueError as e:
+            print(f"Error parsing date '{date_str}': {e}")
             return None
 
-    count = 0
-    with open(csv_path, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            try:
-                reg_number = row.get("registrační číslo", "").strip().strip('"')
-                name = row.get("název", "").strip().strip('"')
-                address = row.get("adresa", "").strip().strip('"')
-                region = row.get("kraj", "").strip().strip('"')
-                activity_type = row.get("druh činnosti", "").strip().strip('"')
-                capacity = row.get("kapacita", "").strip().strip('"')
-                gps = row.get("GPS", "").strip().strip('"')
-                reg_date = row.get("datum registrace", "").strip().strip('"')
+    # Validate CSV structure first
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            headers = reader.fieldnames
 
-                lat, lng = parse_dms_to_decimal(gps)
-                parsed_date = parse_date(reg_date)
+            required_headers = ["registrační číslo", "název", "adresa", "kraj"]
+            missing_headers = [h for h in required_headers if h not in (headers or [])]
 
-                await db.execute(
-                    text("""
-                        INSERT INTO registered_shelters 
-                        (id, registration_number, name, address, region, activity_type, capacity, lat, lng, registration_date, imported_at, created_at, updated_at)
-                        VALUES 
-                        (gen_random_uuid(), :reg_number, :name, :address, :region, :activity_type, :capacity, :lat, :lng, :reg_date, NOW(), NOW(), NOW())
-                        ON CONFLICT (registration_number) DO NOTHING
-                    """),
-                    {
-                        "reg_number": reg_number,
-                        "name": name,
-                        "address": address,
-                        "region": region,
-                        "activity_type": activity_type,
-                        "capacity": capacity,
-                        "lat": lat,
-                        "lng": lng,
-                        "reg_date": parsed_date,
-                    },
+            if missing_headers:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "error": "Invalid CSV format",
+                        "missing_columns": missing_headers,
+                        "found_columns": list(headers or [])
+                    }
                 )
-                count += 1
-            except Exception as e:
-                print(f"Error: {e}")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": "CSV encoding error",
+                "help": "File must be UTF-8 encoded"
+            }
+        )
 
-    await db.commit()
-    return {"imported": count}
+    # Import data
+    count = 0
+    errors = []
+    skipped = 0
+
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+
+            for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is row 1)
+                try:
+                    # Extract and clean fields
+                    reg_number = row.get("registrační číslo", "").strip().strip('"')
+                    name = row.get("název", "").strip().strip('"')
+                    address = row.get("adresa", "").strip().strip('"')
+                    region = row.get("kraj", "").strip().strip('"')
+                    activity_type = row.get("druh činnosti", "").strip().strip('"')
+                    capacity = row.get("kapacita", "").strip().strip('"')
+                    gps = row.get("GPS", "").strip().strip('"')
+                    reg_date = row.get("datum registrace", "").strip().strip('"')
+
+                    # Validate required fields
+                    if not reg_number or not name:
+                        errors.append({
+                            "row": row_num,
+                            "error": "Missing required fields (registration_number or name)"
+                        })
+                        skipped += 1
+                        continue
+
+                    # Parse GPS
+                    lat, lng = parse_dms_to_decimal(gps)
+
+                    # Parse date
+                    parsed_date = parse_date(reg_date)
+
+                    # Insert into database (upsert - update on conflict)
+                    await db.execute(
+                        text("""
+                            INSERT INTO registered_shelters
+                            (id, registration_number, name, address, region, activity_type, capacity, lat, lng, registration_date, imported_at, created_at, updated_at)
+                            VALUES
+                            (gen_random_uuid(), :reg_number, :name, :address, :region, :activity_type, :capacity, :lat, :lng, :reg_date, NOW(), NOW(), NOW())
+                            ON CONFLICT (registration_number) DO UPDATE SET
+                                name = EXCLUDED.name,
+                                address = EXCLUDED.address,
+                                region = EXCLUDED.region,
+                                activity_type = EXCLUDED.activity_type,
+                                capacity = EXCLUDED.capacity,
+                                lat = EXCLUDED.lat,
+                                lng = EXCLUDED.lng,
+                                registration_date = EXCLUDED.registration_date,
+                                imported_at = NOW(),
+                                updated_at = NOW()
+                        """),
+                        {
+                            "reg_number": reg_number,
+                            "name": name,
+                            "address": address,
+                            "region": region,
+                            "activity_type": activity_type or None,
+                            "capacity": capacity or None,
+                            "lat": lat,
+                            "lng": lng,
+                            "reg_date": parsed_date,
+                        },
+                    )
+                    count += 1
+
+                except Exception as e:
+                    errors.append({
+                        "row": row_num,
+                        "error": str(e)
+                    })
+                    if len(errors) > 50:  # Limit error collection
+                        errors.append({"error": "Too many errors, stopping error collection"})
+                        break
+
+        await db.commit()
+
+        # Return detailed response
+        return {
+            "imported": count,
+            "skipped": skipped,
+            "errors": errors[:10] if errors else [],  # Return first 10 errors
+            "total_errors": len(errors)
+        }
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "Import failed",
+                "message": str(e),
+                "imported_before_failure": count
+            }
+        )
 
 
 class CreateRegisteredShelterRequest(BaseModel):

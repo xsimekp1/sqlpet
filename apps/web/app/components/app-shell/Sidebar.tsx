@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import {
   Home,
   PawPrint,
@@ -66,6 +66,19 @@ export function Sidebar() {
   const logoInputRef = useRef<HTMLInputElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const [hoverBounds, setHoverBounds] = useState<{ top: number; height: number } | null>(null)
+
+  // Clear hover indicator when scrolling for better UX
+  useEffect(() => {
+    const navElement = navRef.current
+    if (!navElement) return
+
+    const handleScroll = () => {
+      setHoverBounds(null)
+    }
+
+    navElement.addEventListener('scroll', handleScroll)
+    return () => navElement.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const { data: orgInfo } = useQuery({
     queryKey: ['org-info'],
@@ -245,7 +258,7 @@ export function Sidebar() {
                       if (navRef.current) {
                         const navRect = navRef.current.getBoundingClientRect()
                         setHoverBounds({
-                          top: bounds.top - navRect.top,
+                          top: bounds.top - navRect.top + navRef.current.scrollTop,
                           height: bounds.height
                         })
                       }

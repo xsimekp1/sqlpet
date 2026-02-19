@@ -45,10 +45,12 @@ if async_engine.sync_engine:
     _setup_engine_events(async_engine.sync_engine)
 
 # Sync engine (for Alembic migrations)
+# Use NullPool to avoid connection pool exhaustion with Supabase PgBouncer
 sync_engine = create_engine(
     settings.DATABASE_URL_SYNC,
     echo=(settings.ENV == "dev"),
     pool_pre_ping=True,
+    poolclass=pool.NullPool,  # Critical for Supabase - no connection pooling
 )
 
 AsyncSessionLocal = async_sessionmaker(
