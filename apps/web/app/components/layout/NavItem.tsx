@@ -50,17 +50,17 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
       {!collapsed && (
         <div
           className={cn(
-            "absolute inset-0 rounded-lg",
-            isActive ? "bg-blue-200" : "bg-muted group-hover:bg-muted-foreground/20"
+            "absolute inset-0 rounded-lg -z-10",
+            isActive ? "bg-accent" : "bg-muted group-hover:bg-muted-foreground/20"
           )}
         />
       )}
-      <Icon className="h-5 w-5 shrink-0" />
+      <Icon className="h-5 w-5 shrink-0 z-10" />
       {!collapsed && (
-        <span className={cn("truncate", isActive && "font-medium")}>{t(label)}</span>
+        <span className={cn("truncate z-10", isActive && "font-medium")}>{t(label)}</span>
       )}
       {!collapsed && isSuperadminOnly && (
-        <span className="ml-auto text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full" title="Superadmin">
+        <span className="ml-auto text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full z-10" title="Superadmin">
           S
         </span>
       )}
