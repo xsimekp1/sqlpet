@@ -182,7 +182,6 @@ export default function AnimalDetailPage() {
 
   // Documents
   const [documents, setDocuments] = useState<any[]>([]);
-  const [loadingDocuments, setLoadingDocuments] = useState(false);
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const documentInputRef = useRef<HTMLInputElement>(null);
   const [escapeDate, setEscapeDate] = useState(() => new Date().toISOString().split('T')[0]);

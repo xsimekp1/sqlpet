@@ -174,8 +174,8 @@ export default function InventoryPage() {
                 <TableCell colSpan={8} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <AlertCircle className="h-8 w-8 text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      No inventory items found. Create your first item to get started.
+<p className="text-muted-foreground">
+                      {t('noItemsFound')}
                     </p>
                   </div>
                 </TableCell>
