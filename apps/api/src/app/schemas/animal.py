@@ -134,6 +134,47 @@ class AnimalCreate(BaseModel):
 AnimalResponse = AnimalCreate
 
 
+class AnimalUpdate(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=255)
+    species: Species | None = None
+    sex: Sex | None = None
+    status: AnimalStatus | None = None
+    altered_status: AlteredStatus | None = None
+    birth_date_estimated: date | None = None
+    age_group: AgeGroup | None = None
+    color: str | None = None
+    coat: str | None = None
+    size_estimated: SizeEstimated | None = None
+    weight_current_kg: Decimal | None = None
+    mer_kcal_per_day: int | None = None
+    weight_estimated_kg: Decimal | None = None
+    status_reason: str | None = None
+    outcome_date: date | None = None
+    description: str | None = None
+    public_visibility: bool | None = None
+    featured: bool | None = None
+    is_dewormed: bool | None = None
+    is_aggressive: bool | None = None
+    is_pregnant: bool | None = None
+    is_lactating: bool | None = None
+    is_critical: bool | None = None
+    is_diabetic: bool | None = None
+    is_cancer: bool | None = None
+    intake_date: date | None = None
+    bcs: int | None = None
+    expected_litter_date: date | None = None
+    behavior_notes: str | None = None
+    is_special_needs: bool | None = None
+    primary_photo_url: str | None = None
+    thumbnail_url: str | None = None
+    default_image_url: str | None = None
+    current_kennel_id: str | None = None
+    current_kennel_name: str | None = None
+    current_kennel_code: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
 class AnimalListResponse(BaseModel):
     items: list[AnimalCreate]
     total: int
