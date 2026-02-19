@@ -64,6 +64,8 @@ export function Sidebar() {
   const queryClient = useQueryClient()
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
+  const navRef = useRef<HTMLElement>(null)
+  const [hoverBounds, setHoverBounds] = useState<{ top: number; height: number } | null>(null)
 
   const { data: orgInfo } = useQuery({
     queryKey: ['org-info'],
@@ -190,7 +192,23 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+      <nav ref={navRef} className="flex-1 overflow-y-auto p-4 space-y-6 relative">
+        {/* Global animated hover indicator */}
+        <motion.div
+          className="absolute left-4 right-4 bg-accent/50 rounded-lg pointer-events-none"
+          animate={{
+            top: hoverBounds?.top ?? 0,
+            height: hoverBounds?.height ?? 0,
+            opacity: hoverBounds ? 1 : 0
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 30,
+            mass: 0.8
+          }}
+        />
+
         {filteredSections.map((section, idx) => (
           <div key={section.title}>
             {idx > 0 && <Separator className="my-4" />}
@@ -214,6 +232,16 @@ export function Sidebar() {
                     permission={item.permission}
                     isSuperadminOnly={item.isSuperadminOnly}
                     isActive={isActive}
+                    onHoverStart={(bounds) => {
+                      if (navRef.current) {
+                        const navRect = navRef.current.getBoundingClientRect()
+                        setHoverBounds({
+                          top: bounds.top - navRect.top,
+                          height: bounds.height
+                        })
+                      }
+                    }}
+                    onHoverEnd={() => setHoverBounds(null)}
                   />
                 )
               })}
