@@ -40,7 +40,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiClient } from '@/app/lib/api'
 import { toast } from 'sonner'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 
 interface NavItemConfig {
@@ -194,20 +194,29 @@ export function Sidebar() {
       {/* Navigation */}
       <nav ref={navRef} className="flex-1 overflow-y-auto p-4 space-y-6 relative">
         {/* Global animated hover indicator */}
-        <motion.div
-          className="absolute left-4 right-4 bg-accent/50 rounded-lg pointer-events-none"
-          animate={{
-            top: hoverBounds?.top ?? 0,
-            height: hoverBounds?.height ?? 0,
-            opacity: hoverBounds ? 1 : 0
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 30,
-            mass: 0.8
-          }}
-        />
+        <AnimatePresence>
+          {hoverBounds && (
+            <motion.div
+              layoutId="nav-hover-indicator"
+              className="absolute left-4 right-4 bg-accent/50 rounded-lg pointer-events-none"
+              style={{
+                top: hoverBounds.top,
+                height: hoverBounds.height
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                opacity: { duration: 0.15 },
+                layout: {
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30
+                }
+              }}
+            />
+          )}
+        </AnimatePresence>
 
         {filteredSections.map((section, idx) => (
           <div key={section.title}>
