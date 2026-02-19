@@ -1188,23 +1188,52 @@ async def import_registered_shelters(
     import csv
     import re
     from datetime import datetime
-    from pathlib import Path
+    import os
 
-    # Try multiple possible locations for CSV file
-    possible_paths = [
-        Path(__file__).parent.parent.parent.parent.parent
-        / "Registrované útulky pro zvířata  –  Státní veterinární správaclose.csv",
-        Path(__file__).parent.parent.parent.parent
-        / "Registrované útulky pro zvířata  –  Státní veterinární správaclose.csv",
+    # CSV is in project root (same level as apps/)
+    csv_filename = (
+        "Registrované útulky pro zvířata  –  Státní veterinární správaclose.csv"
+    )
+
+    # Try multiple possible base directories
+    base_dirs = [
+        os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", ""),  # Railway volume mount
+        os.getcwd(),  # Current working directory
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(
+                    os.path.dirname(
+                        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    )
+                )
+            )
+        ),  # Project root from this file
     ]
 
     csv_path = None
-    for p in possible_paths:
-        if p.exists():
-            csv_path = p
-            break
+    for base in base_dirs:
+        if base:
+            test_path = os.path.join(base, csv_filename)
+            if os.path.exists(test_path):
+                csv_path = test_path
+                break
 
     if not csv_path:
+        # Try direct path from environment
+        for env_key in ["APP_DIR", "WORKING_DIR", ""]:
+            if env_key:
+                test_path = os.path.join(os.environ.get(env_key, ""), csv_filename)
+                if test_path and os.path.exists(test_path):
+                    csv_path = test_path
+                    break
+
+    if not csv_path:
+        # Debug: log where we looked
+        print(f"CSV not found. Searched in: {base_dirs}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"CSV file not found: {csv_filename}",
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="CSV file not found",
