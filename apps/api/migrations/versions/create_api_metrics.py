@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = "create_api_metrics"
-down_revision = "add_medical_status_columns"
+down_revision = "add_mer_kcal_per_day"
 branch_labels = None
 depends_on = None
 

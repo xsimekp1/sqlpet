@@ -98,7 +98,6 @@ class AnimalCreate(BaseModel):
     is_critical: bool = False
     is_diabetic: bool = False
     is_cancer: bool = False
-    intake_date: date | None = None
     bcs: int | None = None
     expected_litter_date: date | None = None
     behavior_notes: str | None = None
@@ -160,7 +159,6 @@ class AnimalUpdate(BaseModel):
     is_critical: bool | None = None
     is_diabetic: bool | None = None
     is_cancer: bool | None = None
-    intake_date: date | None = None
     bcs: int | None = None
     expected_litter_date: date | None = None
     behavior_notes: str | None = None

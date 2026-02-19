@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = "add_enrichment_fields"
-down_revision = "add_medical_status_columns"
+down_revision = "add_default_image_url"
 branch_labels = None
 depends_on = None
 

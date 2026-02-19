@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = "add_mer_kcal_per_day"
-down_revision: Union[str, None] = "add_medical_status_columns"
+down_revision: Union[str, None] = "8de05c56c4ed"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

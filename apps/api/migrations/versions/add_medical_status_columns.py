@@ -10,16 +10,10 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "add_medical_status_columns"
-down_revision = None
-branch_labels = None
-depends_on = None
+down_revision = "create_all_missing_tables"
 
 
 def upgrade():
-    op.add_column(
-        "animals",
-        sa.Column("intake_date", sa.Date(), nullable=True),
-    )
     op.add_column(
         "animals",
         sa.Column("is_lactating", sa.Boolean(), nullable=False, server_default="false"),
@@ -43,4 +37,3 @@ def downgrade():
     op.drop_column("animals", "is_diabetic")
     op.drop_column("animals", "is_critical")
     op.drop_column("animals", "is_lactating")
-    op.drop_column("animals", "intake_date")

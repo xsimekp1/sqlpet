@@ -178,7 +178,6 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     is_critical: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_diabetic: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_cancer: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    intake_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     bcs: Mapped[int | None] = mapped_column(Integer, nullable=True)
     expected_litter_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     behavior_notes: Mapped[str | None] = mapped_column(Text, nullable=True)

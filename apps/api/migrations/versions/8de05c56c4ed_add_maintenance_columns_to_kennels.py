@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "8de05c56c4ed"
-down_revision: Union[str, Sequence[str], None] = "add_medical_status_columns"
+down_revision: Union[str, Sequence[str], None] = "add_enrichment_fields"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

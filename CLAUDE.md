@@ -80,6 +80,19 @@ cd apps/api
 railway run alembic upgrade head
 ```
 
+### Railway Pre-deploy
+
+Railway má predeploy hook kde lze spouštět příkazy před deployem. Aktuálně nastaveno na:
+```
+alembic upgrade head
+```
+
+**Tipy pro migrace:**
+- Před commitem vždy ověř chain: `python -c "from alembic.config import Config; from alembic.script import ScriptDirectory; cfg = Config('alembic.ini'); script = ScriptDirectory.from_config(cfg); print('Heads:', script.get_heads())"`
+- Jeden head = vpořádku, více headů = oprav chain
+- Problémy s migracemi řeš lokálně: spusť `alembic upgrade head` a otestuj
+- Po opravě chainu pushni a nech predeploy spustit
+
 Check current DB version:
 ```
 cd apps/api
