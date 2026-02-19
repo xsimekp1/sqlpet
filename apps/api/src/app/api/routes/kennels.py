@@ -237,6 +237,7 @@ async def list_kennels(
                     json_build_object(
                       'id', a.id::text,
                       'name', a.name,
+                      'public_code', a.public_code,
                       'species', a.species::text,
                       'photo_url', a.primary_photo_url,
                       'start_at', ks.start_at
@@ -474,6 +475,7 @@ async def get_kennel(
                     json_build_object(
                       'id', a.id::text,
                       'name', a.name,
+                      'public_code', a.public_code,
                       'species', a.species::text,
                       'photo_url', a.primary_photo_url,
                       'start_at', ks.start_at

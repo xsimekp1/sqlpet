@@ -275,6 +275,7 @@ export interface Kennel {
 export interface KennelAnimal {
   id: string;
   name: string;
+  public_code?: string | null;
   photo_url?: string | null;
   species: string;
   is_aggressive?: boolean;
