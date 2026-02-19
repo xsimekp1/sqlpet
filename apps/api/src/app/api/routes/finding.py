@@ -344,3 +344,101 @@ async def get_findings_with_intakes(
             past.append(finding_data)
 
     return FindingsWithIntakesResponse(current=current, past=past)
+
+
+# ─── Map Data ──────────────────────────────────────────────────────────────────
+
+
+class FindingMapData(BaseModel):
+    id: uuid.UUID
+    animal_id: uuid.UUID | None
+    animal_name: str | None
+    animal_public_code: str | None
+    species: str | None
+    when_found: datetime | None
+    where_lat: float | None
+    where_lng: float | None
+    status: str  # "current" or "past"
+
+
+class OrganizationLocation(BaseModel):
+    lat: float | None
+    lng: float | None
+    name: str | None
+
+
+class FindingsMapResponse(BaseModel):
+    organization: OrganizationLocation
+    findings: list[FindingMapData]
+
+
+@router.get("/map-data", response_model=FindingsMapResponse)
+async def get_findings_map_data(
+    current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get findings with GPS coordinates for map display."""
+
+    # Get organization location
+    org_query = text("""
+        SELECT lat, lng, name FROM organizations WHERE id = :org_id
+    """)
+    org_result = await db.execute(org_query, {"org_id": str(organization_id)})
+    org_row = org_result.fetchone()
+
+    organization = OrganizationLocation(
+        lat=org_row[0] if org_row else None,
+        lng=org_row[1] if org_row else None,
+        name=org_row[2] if org_row else None,
+    )
+
+    # Get findings with coordinates
+    today = date.today()
+
+    findings_query = text("""
+        SELECT 
+            f.id as finding_id,
+            a.id as animal_id,
+            a.name as animal_name,
+            a.public_code as animal_public_code,
+            a.species as species,
+            f.when_found as when_found,
+            f.where_lat as where_lat,
+            f.where_lng as where_lng,
+            CASE 
+                WHEN i.actual_outcome_date IS NULL THEN TRUE
+                WHEN i.actual_outcome_date > :today THEN TRUE
+                ELSE FALSE
+            END as is_current
+        FROM findings f
+        LEFT JOIN intakes i ON f.animal_id = i.animal_id AND i.reason = 'found' AND i.deleted_at IS NULL
+        LEFT JOIN animals a ON f.animal_id = a.id
+        WHERE f.organization_id = :org_id 
+          AND f.where_lat IS NOT NULL 
+          AND f.where_lng IS NOT NULL
+        ORDER BY i.intake_date DESC NULLS LAST
+    """)
+
+    findings_result = await db.execute(
+        findings_query, {"org_id": str(organization_id), "today": today}
+    )
+    rows = findings_result.fetchall()
+
+    findings = []
+    for row in rows:
+        findings.append(
+            FindingMapData(
+                id=row.finding_id,
+                animal_id=row.animal_id,
+                animal_name=row.animal_name,
+                animal_public_code=row.animal_public_code,
+                species=row.species,
+                when_found=row.when_found,
+                where_lat=row.where_lat,
+                where_lng=row.where_lng,
+                status="current" if row.is_current else "past",
+            )
+        )
+
+    return FindingsMapResponse(organization=organization, findings=findings)

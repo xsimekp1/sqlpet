@@ -1548,6 +1548,23 @@ class ApiClient {
     return ApiClient.get('/findings', params);
   }
 
+  static async getFindingsMapData(): Promise<{
+    organization: { lat: number | null; lng: number | null; name: string | null };
+    findings: {
+      id: string;
+      animal_id: string | null;
+      animal_name: string | null;
+      animal_public_code: string | null;
+      species: string | null;
+      when_found: string | null;
+      where_lat: number | null;
+      where_lng: number | null;
+      status: 'current' | 'past';
+    }[];
+  }> {
+    return ApiClient.get('/findings/map-data');
+  }
+
   static async searchContacts(q: string): Promise<{ id: string; name: string; email: string | null }[]> {
     const result = await ApiClient.get<SearchResults>('/search', { q, limit: 10 });
     return result.contacts;
