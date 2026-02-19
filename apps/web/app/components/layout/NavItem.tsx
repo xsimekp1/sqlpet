@@ -50,8 +50,8 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
       {!collapsed && (
         <div
           className={cn(
-            "absolute inset-0 bg-accent rounded-lg -z-10 transition-opacity duration-200",
-            isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            "absolute inset-0 rounded-lg",
+            isActive ? "bg-blue-200" : "bg-muted group-hover:bg-muted-foreground/20"
           )}
         />
       )}
