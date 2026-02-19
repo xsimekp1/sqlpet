@@ -1256,13 +1256,13 @@ async def import_registered_shelters(
             print(f"Error parsing GPS '{dms_str}': {e}")
             return None, None
 
-    def parse_date(date_str: str) -> str | None:
+    def parse_date(date_str: str):
         """Parse date from Czech format like 29.12.2017"""
         if not date_str:
             return None
         try:
             dt = datetime.strptime(date_str.strip(), "%d.%m.%Y")
-            return dt.date().isoformat()
+            return dt.date()  # Return date object, not isoformat string
         except ValueError as e:
             print(f"Error parsing date '{date_str}': {e}")
             return None
