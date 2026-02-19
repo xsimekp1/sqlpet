@@ -471,6 +471,8 @@
     "loadError": "Nepodařilo se načíst kotce",
     "detail": {
       "backToKennels": "Zpět na kotce",
+      "copy": "Kopírovat",
+      "delete": "Smazat",
       "copyKennel": "Kopírovat kotec",
       "deleteKennel": "Smazat kotec",
       "deleteHasAnimals": "Kotec nelze smazat — jsou v něm zvířata",

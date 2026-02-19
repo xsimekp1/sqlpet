@@ -474,6 +474,8 @@
     "loadError": "Failed to load kennels",
     "detail": {
       "backToKennels": "Back to kennels",
+      "copy": "Copy",
+      "delete": "Delete",
       "copyKennel": "Copy kennel",
       "deleteKennel": "Delete kennel",
       "deleteHasAnimals": "Cannot delete kennel — it has active animals",
