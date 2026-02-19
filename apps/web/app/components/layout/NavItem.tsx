@@ -26,6 +26,7 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
   
   const hasPermission = userHasPermission(user, permission, permissions)
   const isDisabled = permission !== null && !hasPermission
+  const showBg = isActive || isHovered
 
   if (isDisabled) {
     return (
@@ -43,20 +44,21 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
   }
 
   return (
-    <motion.div
+    <div
+      className="relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="relative"
-      layout
-      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      style={{
-        backgroundColor: (isActive || isHovered) ? 'hsl(var(--accent))' : 'transparent',
-        borderRadius: '0.5rem',
-      }}
-      animate={{
-        backgroundColor: (isActive || isHovered) ? 'hsl(var(--accent))' : 'transparent',
-      }}
     >
+      {showBg && (
+        <motion.div
+          className="absolute inset-0 rounded-lg -z-10"
+          style={{ backgroundColor: 'hsl(var(--accent))' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+        />
+      )}
       <Link
         href={href}
         className={cn(
@@ -74,6 +76,6 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
           </span>
         )}
       </Link>
-    </motion.div>
+    </div>
   )
 }
