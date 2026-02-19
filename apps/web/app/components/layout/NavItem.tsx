@@ -46,8 +46,9 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
       onMouseEnter={() => { console.log('hover:', label); setIsHovered(true); }}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        backgroundColor: (isActive || isHovered) ? 'hsl(var(--accent))' : 'transparent',
+        backgroundColor: (isActive || isHovered) ? 'red' : 'transparent',
         borderRadius: '0.5rem',
+        padding: '2px',
       }}
     >
       <Link
