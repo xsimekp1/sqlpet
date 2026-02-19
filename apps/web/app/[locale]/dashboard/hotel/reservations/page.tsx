@@ -52,6 +52,7 @@ interface HotelReservation {
   reserved_to: string;
   total_price: number | null;
   status: string;
+  own_food: boolean | null;
 }
 
 interface TimelineEntry {
