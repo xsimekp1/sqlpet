@@ -250,3 +250,97 @@ async def get_contact_findings(
         page=page,
         page_size=page_size,
     )
+
+
+class FindingWithIntakeResponse(BaseModel):
+    finding_id: uuid.UUID
+    animal_id: uuid.UUID
+    animal_name: str
+    animal_public_code: str
+    species: str
+    when_found: datetime
+    where_lat: float | None
+    where_lng: float | None
+    who_found_name: str | None
+    intake_date: date
+    planned_end_date: date | None
+    actual_outcome_date: date | None
+    kennel_name: str | None
+    kennel_code: str | None
+    is_current: bool
+
+
+class FindingsWithIntakesResponse(BaseModel):
+    current: list[FindingWithIntakeResponse]
+    past: list[FindingWithIntakeResponse]
+
+
+@router.get("/with-intakes", response_model=FindingsWithIntakesResponse)
+async def get_findings_with_intakes(
+    current_user: User = Depends(require_permission("animals.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get findings with intake info, split into current and past."""
+    today = date.today()
+
+    query = text("""
+        SELECT 
+            f.id as finding_id,
+            a.id as animal_id,
+            a.name as animal_name,
+            a.public_code as animal_public_code,
+            a.species as species,
+            f.when_found as when_found,
+            f.where_lat as where_lat,
+            f.where_lng as where_lng,
+            c.name as who_found_name,
+            i.intake_date as intake_date,
+            i.planned_end_date as planned_end_date,
+            i.actual_outcome_date as actual_outcome_date,
+            k.name as kennel_name,
+            k.code as kennel_code,
+            CASE 
+                WHEN i.actual_outcome_date IS NULL THEN TRUE
+                WHEN i.actual_outcome_date > :today THEN TRUE
+                ELSE FALSE
+            END as is_current
+        FROM findings f
+        JOIN intakes i ON f.animal_id = i.animal_id AND i.reason = 'found' AND i.deleted_at IS NULL
+        JOIN animals a ON f.animal_id = a.id
+        LEFT JOIN contacts c ON f.who_found_id = c.id
+        LEFT JOIN kennels k ON i.kennel_id = k.id
+        WHERE f.organization_id = :org_id AND f.animal_id IS NOT NULL
+        ORDER BY i.intake_date DESC
+    """)
+
+    result = await db.execute(query, {"org_id": str(organization_id), "today": today})
+    rows = result.fetchall()
+
+    current = []
+    past = []
+
+    for row in rows:
+        finding_data = FindingWithIntakeResponse(
+            finding_id=row.finding_id,
+            animal_id=row.animal_id,
+            animal_name=row.animal_name,
+            animal_public_code=row.animal_public_code,
+            species=row.species,
+            when_found=row.when_found,
+            where_lat=row.where_lat,
+            where_lng=row.where_lng,
+            who_found_name=row.who_found_name,
+            intake_date=row.intake_date,
+            planned_end_date=row.planned_end_date,
+            actual_outcome_date=row.actual_outcome_date,
+            kennel_name=row.kennel_name,
+            kennel_code=row.kennel_code,
+            is_current=bool(row.is_current),
+        )
+        if finding_data.is_current:
+            current.append(finding_data)
+        else:
+            past.append(finding_data)
+
+    return FindingsWithIntakesResponse(current=current, past=past)
