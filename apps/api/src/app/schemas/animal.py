@@ -17,6 +17,9 @@ from src.app.models.animal_identifier import IdentifierType
 from src.app.schemas.tag import TagResponse
 
 
+AnimalResponse = AnimalCreate
+
+
 # --- Breed schemas ---
 
 
