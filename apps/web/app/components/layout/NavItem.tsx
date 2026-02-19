@@ -43,7 +43,7 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
         collapsed && 'justify-center px-2',
         isActive ? 'bg-accent' : 'hover:bg-accent'
       )}
