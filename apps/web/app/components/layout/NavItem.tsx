@@ -51,7 +51,7 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative',
         collapsed && 'justify-center px-2'
       )}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => { console.log('hover:', label); setIsHovered(true); }}
       onMouseLeave={() => setIsHovered(false)}
     >
       <Icon className="h-5 w-5 shrink-0" style={{ position: 'relative', zIndex: 10 }} />
