@@ -586,6 +586,8 @@ async def get_animal_kennel_history(
             status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
         )
 
+    from datetime import datetime, timedelta, timezone
+
     result = await db.execute(
         select(KennelStay, Kennel.code)
         .join(Kennel, KennelStay.kennel_id == Kennel.id)
@@ -593,6 +595,11 @@ async def get_animal_kennel_history(
             KennelStay.animal_id == animal_id,
             KennelStay.organization_id == organization_id,
             Kennel.deleted_at.is_(None),  # Only show stays for non-deleted kennels
+        )
+        .where(
+            # Show active stays (no end_at) OR stays that ended in the last 30 days
+            (KennelStay.end_at.is_(None))
+            | (KennelStay.end_at >= datetime.now(timezone.utc) - timedelta(days=30))
         )
         .order_by(KennelStay.start_at.asc())
     )
