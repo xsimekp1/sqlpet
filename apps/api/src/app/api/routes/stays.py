@@ -160,7 +160,7 @@ async def get_stays_timeline(
     start_date = from_date or (today - timedelta(days=7))
     end_date = to_date or (today + timedelta(days=30))
 
-    # Get all kennels with zones
+    # Get all kennels with zones (only non-deleted)
     kennels_query = text("""
         SELECT 
             k.id::text as kennel_id,
@@ -176,7 +176,7 @@ async def get_stays_timeline(
             k.maintenance_reason as maintenance_reason
         FROM kennels k
         LEFT JOIN zones z ON k.zone_id = z.id
-        WHERE k.organization_id = :org_id
+        WHERE k.organization_id = :org_id AND k.deleted_at IS NULL
         ORDER BY z.name NULLS LAST, k.name
     """)
 

@@ -176,10 +176,13 @@ export default function KennelTimeline() {
   const processedKennels = useMemo(() => {
     if (!data) return [];
     
-    return data.kennels.map(kennel => ({
-      ...kennel,
-      laneData: packStaysIntoLanes(kennel.stays, kennel.capacity || 1),
-    }));
+    // Only show kennels that have at least one stay in the timeline
+    return data.kennels
+      .filter(kennel => kennel.stays && kennel.stays.length > 0)
+      .map(kennel => ({
+        ...kennel,
+        laneData: packStaysIntoLanes(kennel.stays, kennel.capacity || 1),
+      }));
   }, [data]);
   
   const getStayPosition = (stay: KennelTimelineStay) => {
