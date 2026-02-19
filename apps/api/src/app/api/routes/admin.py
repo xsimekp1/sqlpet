@@ -1190,12 +1190,21 @@ async def import_registered_shelters(
     from datetime import datetime
     from pathlib import Path
 
-    csv_path = (
+    # Try multiple possible locations for CSV file
+    possible_paths = [
+        Path(__file__).parent.parent.parent.parent.parent
+        / "Registrované útulky pro zvířata  –  Státní veterinární správaclose.csv",
         Path(__file__).parent.parent.parent.parent
-        / "Registrované útulky pro zvířata  –  Státní veterinární správaclose.csv"
-    )
+        / "Registrované útulky pro zvířata  –  Státní veterinární správaclose.csv",
+    ]
 
-    if not csv_path.exists():
+    csv_path = None
+    for p in possible_paths:
+        if p.exists():
+            csv_path = p
+            break
+
+    if not csv_path:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="CSV file not found",
