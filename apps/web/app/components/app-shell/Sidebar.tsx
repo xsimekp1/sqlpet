@@ -24,6 +24,7 @@ import { useRef, useState } from 'react'
     Hotel,
     Footprints,
     PlusCircle,
+    Building2,
   } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
@@ -118,6 +119,7 @@ export function Sidebar() {
         { label: 'nav.reports', href: '/dashboard/reports', icon: BarChart3, permission: 'reports.run' },
         { label: 'nav.settings', href: '/dashboard/settings', icon: Settings, permission: 'settings.read' },
         ...(user?.is_superadmin ? [{ label: 'nav.newOrg', href: '/dashboard/new-org', icon: PlusCircle, permission: null }] : []),
+        ...(user?.is_superadmin ? [{ label: 'nav.organizationSettings', href: '/dashboard/settings/organization', icon: Building2, permission: null }] : []),
         ...(user?.is_superadmin ? [{ label: 'nav.performance', href: '/dashboard/settings/performance', icon: Zap, permission: null }] : []),
         { label: 'nav.help', href: '/dashboard/help', icon: HelpCircle, permission: null },
       ]

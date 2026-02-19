@@ -1437,6 +1437,41 @@ class ApiClient {
     return this.get('/organization/current');
   }
 
+  static async getCurrentOrganization(): Promise<{
+    id: string;
+    name: string;
+    slug: string;
+    timezone: string;
+    logo_url: string | null;
+    hotel_price_per_day: number | null;
+    registration_number: string | null;
+    address: string | null;
+    lat: number | null;
+    lng: number | null;
+    capacity_dogs: number | null;
+    capacity_cats: number | null;
+    capacity_rabbits: number | null;
+    capacity_small: number | null;
+    capacity_birds: number | null;
+  }> {
+    return this.get('/organization/current');
+  }
+
+  static async updateOrganization(data: {
+    name?: string;
+    registration_number?: string;
+    address?: string;
+    lat?: number;
+    lng?: number;
+    capacity_dogs?: number;
+    capacity_cats?: number;
+    capacity_rabbits?: number;
+    capacity_small?: number;
+    capacity_birds?: number;
+  }): Promise<any> {
+    return this.patch('/organization/current', data);
+  }
+
   static async deleteInventoryItem(itemId: string): Promise<void> {
     await ApiClient.delete(`/inventory/items/${itemId}`);
   }

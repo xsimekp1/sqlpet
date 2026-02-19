@@ -22,6 +22,15 @@ class OrganizationResponse(BaseModel):
     timezone: str
     logo_url: Optional[str] = None
     hotel_price_per_day: Optional[float] = None
+    registration_number: Optional[str] = None
+    address: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    capacity_dogs: Optional[int] = None
+    capacity_cats: Optional[int] = None
+    capacity_rabbits: Optional[int] = None
+    capacity_small: Optional[int] = None
+    capacity_birds: Optional[int] = None
 
     model_config = {"from_attributes": True}
 
@@ -31,6 +40,15 @@ class OrganizationUpdate(BaseModel):
     timezone: Optional[str] = None
     logo_url: Optional[str] = None
     hotel_price_per_day: Optional[float] = None
+    registration_number: Optional[str] = None
+    address: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    capacity_dogs: Optional[int] = None
+    capacity_cats: Optional[int] = None
+    capacity_rabbits: Optional[int] = None
+    capacity_small: Optional[int] = None
+    capacity_birds: Optional[int] = None
 
 
 @router.get("/current", response_model=OrganizationResponse)
