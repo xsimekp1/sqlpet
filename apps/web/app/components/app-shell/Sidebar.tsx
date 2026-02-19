@@ -202,8 +202,8 @@ export function Sidebar() {
               </p>
             )}
 
-            <div className="space-y-1 relative min-h-[40px]">
-              {section.items.map((item, itemIdx) => {
+            <div className="space-y-1">
+              {section.items.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                 const isHovered = hoveredHref === item.href
                 return (
@@ -218,32 +218,10 @@ export function Sidebar() {
                     onMouseEnter={() => setHoveredHref(item.href)}
                     onMouseLeave={() => setHoveredHref(null)}
                     isActive={isActive}
+                    isHovered={isHovered}
                   />
                 )
               })}
-              {!sidebarCollapsed && (
-                <motion.div
-                  className="absolute left-0 right-0 h-10 bg-accent rounded-lg -z-10 pointer-events-none"
-                  initial={false}
-                  animate={{
-                    y: (() => {
-                      const activeIdx = section.items.findIndex(item => 
-                        pathname === item.href || pathname.startsWith(item.href + '/')
-                      )
-                      const targetIdx = activeIdx >= 0 ? activeIdx : section.items.findIndex(item => hoveredHref === item.href)
-                      return targetIdx >= 0 ? targetIdx * 44 : 0
-                    })(),
-                    opacity: (() => {
-                      const hasActive = section.items.some(item => 
-                        pathname === item.href || pathname.startsWith(item.href + '/')
-                      )
-                      const hasHover = hoveredHref !== null
-                      return hasActive || hasHover ? 1 : 0
-                    })()
-                  }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-              )}
             </div>
           </div>
         ))}
