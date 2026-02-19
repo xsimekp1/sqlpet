@@ -88,12 +88,32 @@ export default function RegisteredSheltersPage() {
     setImporting(true);
     try {
       const result = await ApiClient.importRegisteredShelters();
-      toast.success(`Importováno ${result.imported} záznamů`);
+
+      let message = `Importováno ${result.imported} záznamů`;
+      if (result.skipped && result.skipped > 0) {
+        message += `, přeskočeno ${result.skipped}`;
+      }
+      if (result.total_errors && result.total_errors > 0) {
+        message += `, chyb ${result.total_errors}`;
+        toast.warning(message);
+        console.error('Import errors:', result.errors);
+      } else {
+        toast.success(message);
+      }
+
       loadShelters();
       loadRegions();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to import:', error);
-      toast.error('Nepodařilo se importovat data');
+
+      const errorDetail = error.response?.data?.detail;
+      if (errorDetail && typeof errorDetail === 'object') {
+        toast.error(`Import selhal: ${errorDetail.error || 'Neznámá chyba'}`, {
+          description: errorDetail.message || errorDetail.help
+        });
+      } else {
+        toast.error('Nepodařilo se importovat data');
+      }
     } finally {
       setImporting(false);
     }

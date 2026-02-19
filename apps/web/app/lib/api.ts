@@ -1586,7 +1586,12 @@ class ApiClient {
     return ApiClient.get('/admin/registered-shelters/regions');
   }
 
-  static async importRegisteredShelters(): Promise<{ imported: number }> {
+  static async importRegisteredShelters(): Promise<{
+    imported: number;
+    skipped?: number;
+    errors?: Array<{ row: number; error: string }>;
+    total_errors?: number;
+  }> {
     return ApiClient.post('/admin/registered-shelters/import', {});
   }
 
