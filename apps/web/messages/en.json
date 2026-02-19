@@ -478,6 +478,7 @@
       "deleteKennel": "Delete kennel",
       "deleteHasAnimals": "Cannot delete kennel — it has active animals",
       "capacityWarning": "There are currently {count} animals in this kennel. Reduce capacity anyway?",
+      "tab": "Detail",
       "overviewTab": "Overview",
       "historyTab": "Animal history",
       "tasksTab": "Tasks",
@@ -498,7 +499,13 @@
       "dimensions": "Dimensions",
       "editCapacity": "Edit capacity",
       "saveCapacity": "Save",
-      "cancelEdit": "Cancel"
+      "cancelEdit": "Cancel",
+      "status": "Status",
+      "allowedSpecies": "Allowed species",
+      "setSpecies": "Set species",
+      "addDimensions": "Add dimensions",
+      "animalsInKennel": "Animals in kennel",
+      "noAnimals": "No animals in this kennel"
     },
     "task": {
       "dialogTitle": "Create task for kennel",
@@ -511,6 +518,14 @@
       "submit": "Create task",
       "success": "Task created",
       "error": "Failed to create task"
+    },
+    "maintenance": {
+      "title": "Planned maintenance",
+      "save": "Save",
+      "from": "From",
+      "to": "To",
+      "reason": "Reason",
+      "active": "Currently under renovation"
     }
   },
   "birth": {

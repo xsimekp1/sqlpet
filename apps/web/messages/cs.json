@@ -475,6 +475,7 @@
       "deleteKennel": "Smazat kotec",
       "deleteHasAnimals": "Kotec nelze smazat — jsou v něm zvířata",
       "capacityWarning": "V kotci je momentálně {count} zvířat. Přesto snížit kapacitu?",
+      "tab": "Detail",
       "overviewTab": "Přehled",
       "historyTab": "Historie zvířat",
       "tasksTab": "Úkoly",
@@ -495,7 +496,13 @@
       "dimensions": "Rozměry",
       "editCapacity": "Upravit kapacitu",
       "saveCapacity": "Uložit",
-      "cancelEdit": "Zrušit"
+      "cancelEdit": "Zrušit",
+      "status": "Stav",
+      "allowedSpecies": "Povolené druhy",
+      "setSpecies": "Nastavit druhy",
+      "addDimensions": "Přidat rozměry",
+      "animalsInKennel": "Zvířata v kotci",
+      "noAnimals": "Žádná zvířata v tomto kotci"
     },
     "task": {
       "dialogTitle": "Vytvořit úkol pro kotec",
@@ -508,6 +515,14 @@
       "submit": "Vytvořit úkol",
       "success": "Úkol vytvořen",
       "error": "Nepodařilo se vytvořit úkol"
+    },
+    "maintenance": {
+      "title": "Plánovaná odstávka",
+      "save": "Uložit",
+      "from": "Od",
+      "to": "Do",
+      "reason": "Důvod",
+      "active": "Nyní v rekonstrukci"
     }
   },
   "settings": {

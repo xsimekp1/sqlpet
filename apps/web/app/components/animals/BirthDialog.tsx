@@ -6,7 +6,6 @@ import ApiClient from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -112,10 +111,12 @@ export default function BirthDialog({
             />
           </div>
           <div className="flex items-center gap-2">
-            <Checkbox
+            <input
+              type="checkbox"
               id="mother-lactating"
               checked={motherLactating}
-              onCheckedChange={(checked) => setMotherLactating(checked === true)}
+              onChange={(e) => setMotherLactating(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
             />
             <Label htmlFor="mother-lactating" className="text-sm font-normal">
               {t('motherLactating') || 'Matka kojí'}
