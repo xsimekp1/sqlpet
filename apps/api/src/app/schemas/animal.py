@@ -128,7 +128,7 @@ class AnimalCreate(BaseModel):
             years -= 1
         return years
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "use_enum_values": True}
 
 
 class AnimalResponse(AnimalCreate):
