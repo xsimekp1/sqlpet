@@ -546,6 +546,18 @@ export default function NewHotelReservationPage() {
                 Požadavek na samostatný kotec (kočky)
               </Label>
             </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="own_food"
+                checked={formData.own_food}
+                onChange={(e) => setFormData(p => ({ ...p, own_food: e.target.checked }))}
+              />
+              <Label htmlFor="own_food" className="text-sm font-normal">
+                Vlastní krmivo (majitel přiveze)
+              </Label>
+            </div>
           </CardContent>
         </Card>
       )}
