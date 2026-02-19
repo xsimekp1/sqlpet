@@ -10,6 +10,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -21,27 +22,50 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.add_column(
-        "organizations", sa.Column("registration_number", sa.String(20), nullable=True)
+    conn = op.get_bind()
+
+    # Check which columns already exist
+    result = conn.execute(
+        text("""
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'organizations'
+    """)
     )
-    op.add_column("organizations", sa.Column("address", sa.Text(), nullable=True))
-    op.add_column("organizations", sa.Column("lat", sa.Float(), nullable=True))
-    op.add_column("organizations", sa.Column("lng", sa.Float(), nullable=True))
-    op.add_column(
-        "organizations", sa.Column("capacity_dogs", sa.Integer(), nullable=True)
-    )
-    op.add_column(
-        "organizations", sa.Column("capacity_cats", sa.Integer(), nullable=True)
-    )
-    op.add_column(
-        "organizations", sa.Column("capacity_rabbits", sa.Integer(), nullable=True)
-    )
-    op.add_column(
-        "organizations", sa.Column("capacity_small", sa.Integer(), nullable=True)
-    )
-    op.add_column(
-        "organizations", sa.Column("capacity_birds", sa.Integer(), nullable=True)
-    )
+    existing_columns = {row[0] for row in result}
+
+    # Add only columns that don't exist
+    if "registration_number" not in existing_columns:
+        op.add_column(
+            "organizations",
+            sa.Column("registration_number", sa.String(20), nullable=True),
+        )
+    if "address" not in existing_columns:
+        op.add_column("organizations", sa.Column("address", sa.Text(), nullable=True))
+    if "lat" not in existing_columns:
+        op.add_column("organizations", sa.Column("lat", sa.Float(), nullable=True))
+    if "lng" not in existing_columns:
+        op.add_column("organizations", sa.Column("lng", sa.Float(), nullable=True))
+    if "capacity_dogs" not in existing_columns:
+        op.add_column(
+            "organizations", sa.Column("capacity_dogs", sa.Integer(), nullable=True)
+        )
+    if "capacity_cats" not in existing_columns:
+        op.add_column(
+            "organizations", sa.Column("capacity_cats", sa.Integer(), nullable=True)
+        )
+    if "capacity_rabbits" not in existing_columns:
+        op.add_column(
+            "organizations", sa.Column("capacity_rabbits", sa.Integer(), nullable=True)
+        )
+    if "capacity_small" not in existing_columns:
+        op.add_column(
+            "organizations", sa.Column("capacity_small", sa.Integer(), nullable=True)
+        )
+    if "capacity_birds" not in existing_columns:
+        op.add_column(
+            "organizations", sa.Column("capacity_birds", sa.Integer(), nullable=True)
+        )
 
 
 def downgrade() -> None:
