@@ -378,7 +378,7 @@ export default function AnimalsPage() {
                 </Card>
               </div>
             ) : (
-            <Link key={animal.id} href={`/dashboard/animals/${animal.id}`}>
+            <Link key={animal.id} href={`/dashboard/animals/${animal.id}`} onClick={() => console.log('[ANIMALS_LIST] Link clicked, animal.id:', animal.id)}>
               <Card className="hover:bg-accent transition-colors cursor-pointer overflow-hidden">
                 {/* Square thumbnail — equal padding on all sides */}
                 <div className="relative w-full aspect-square bg-muted overflow-hidden">
@@ -481,7 +481,7 @@ export default function AnimalsPage() {
                   <tr
                     key={animal.id}
                     className={`border-b hover:bg-muted/50 transition-colors cursor-pointer ${selectMode && selectedIds.has(animal.id) ? 'bg-primary/5' : ''}`}
-                    onClick={() => selectMode ? toggleSelect(animal.id) : router.push(`/dashboard/animals/${animal.id}`)}
+                    onClick={() => { console.log('[ANIMALS_LIST] Clicked animal:', animal.id, animal); selectMode ? toggleSelect(animal.id) : router.push(`/dashboard/animals/${animal.id}`) }}
                   >
                     {selectMode && (
                       <td className="px-3 py-3" onClick={e => { e.stopPropagation(); toggleSelect(animal.id); }}>

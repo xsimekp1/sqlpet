@@ -259,8 +259,10 @@ if (photoInputRef.current) photoInputRef.current.value = '';
 
   // Load animal + sibling IDs + weight history
   useEffect(() => {
+    console.log('[ANIMAL_DETAIL] Page loaded, animalId:', animalId, 'params:', params);
     const fetchAll = async () => {
       try {
+        console.log('[ANIMAL_DETAIL] Fetching data for animalId:', animalId);
         // Check cache first — show immediately if available
         const cached = queryClient.getQueryData<Animal>(['animal', animalId]);
         if (cached) {
