@@ -73,6 +73,7 @@ class AnimalIdentifierResponse(BaseModel):
 
 
 class AnimalCreate(BaseModel):
+    id: uuid.UUID | None = None
     name: str = Field(..., min_length=1, max_length=255)
     species: Species
     sex: Sex = "unknown"
