@@ -363,7 +363,7 @@ export default function KennelTimeline() {
                       
                       const startOffset = Math.max(0, Math.floor((maintStart.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24)));
                       const endDate = maintEnd || viewEnd;
-                      const duration = Math.max(1, Math.floor((endDate.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24)) - startOffset);
+                      const duration = Math.max(1, Math.ceil((endDate.getTime() - maintStart.getTime()) / (1000 * 60 * 60 * 24)) + 1);
                       
                       const isActive = maintStart <= today && (!maintEnd || maintEnd >= today);
                       

@@ -628,6 +628,7 @@
       "all": "Všechna"
     },
     "species": {
+      "label": "Druh",
       "dog": "Pes",
       "cat": "Kočka",
       "rabbit": "Králík",
@@ -666,7 +667,12 @@
       "creating": "Vytváření...",
       "cancel": "Zrušit",
       "success": "Zvíře bylo úspěšně vytvořeno!",
-      "error": "Nepodařilo se vytvořit zvíře"
+      "error": "Nepodařilo se vytvořit zvíře",
+      "name": "Jméno",
+      "breed": "Plemeno",
+      "age": "Věk",
+      "kennel": "Kotce",
+      "intakeDate": "Příjem"
     },
     "alteredStatus": {
       "label": "Kastrace",
@@ -678,6 +684,10 @@
     "health": {
       "title": "Zdraví a pohoda",
       "neutered": "Kastrace / sterilizace",
+      "neuteredCatMale": "Kocour - kastrovaný",
+      "neuteredCatFemale": "Kočka - sterilizovaná",
+      "neuteredDogMale": "Pes - kastrovaný",
+      "neuteredDogFemale": "Pes - sterilizovaná",
       "dewormed": "Odčervení",
       "aggressive": "Agresivita",
       "yes": "Ano",
@@ -853,6 +863,7 @@
     "cancel": "Zrušit",
     "saving": "Ukládám…",
     "status": {
+      "label": "Status",
       "registered": "Registrováno",
       "intake": "Příjem",
       "available": "K adopci",

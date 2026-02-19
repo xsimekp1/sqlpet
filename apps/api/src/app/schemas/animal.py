@@ -75,6 +75,7 @@ class AnimalIdentifierResponse(BaseModel):
 class AnimalCreate(BaseModel):
     id: uuid.UUID | None = None
     name: str = Field(..., min_length=1, max_length=255)
+    public_code: str | None = None
     species: Species
     sex: Sex = "unknown"
     status: AnimalStatus = "intake"
@@ -110,10 +111,10 @@ class AnimalCreate(BaseModel):
     current_kennel_name: str | None = None
     current_kennel_code: str | None = None
     last_walked_at: datetime | None = None
-    created_at: datetime
-    updated_at: datetime
-    breeds: list[AnimalBreedResponse] = []
-    identifiers: list[AnimalIdentifierResponse] = []
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    breeds: list[AnimalBreedEntry] = []
+    identifiers: list[AnimalIdentifierCreate] = []
     tags: list[TagResponse] = []
 
     @computed_field
@@ -132,7 +133,10 @@ class AnimalCreate(BaseModel):
 
 
 class AnimalResponse(AnimalCreate):
+    organization_id: uuid.UUID
     current_intake_date: date | None = None
+    breeds: list[AnimalBreedResponse] = []
+    identifiers: list[AnimalIdentifierResponse] = []
 
 
 class AnimalUpdate(BaseModel):

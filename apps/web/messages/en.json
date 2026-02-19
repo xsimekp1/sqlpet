@@ -696,6 +696,7 @@
       "all": "All"
     },
     "species": {
+      "label": "Species",
       "dog": "Dog",
       "cat": "Cat",
       "rabbit": "Rabbit",
@@ -734,7 +735,12 @@
       "creating": "Creating...",
       "cancel": "Cancel",
       "success": "Animal created successfully!",
-      "error": "Failed to create animal"
+      "error": "Failed to create animal",
+      "name": "Name",
+      "breed": "Breed",
+      "age": "Age",
+      "kennel": "Kennel",
+      "intakeDate": "Intake"
     },
     "alteredStatus": {
       "label": "Neutered",
@@ -746,6 +752,10 @@
     "health": {
       "title": "Health & Welfare",
       "neutered": "Neutered / Spayed",
+      "neuteredCatMale": "Tom - neutered",
+      "neuteredCatFemale": "Queen - spayed",
+      "neuteredDogMale": "Dog - neutered",
+      "neuteredDogFemale": "Dog - spayed",
       "dewormed": "Dewormed",
       "aggressive": "Aggression",
       "yes": "Yes",
@@ -917,6 +927,7 @@
     "cancel": "Cancel",
     "saving": "Saving…",
     "status": {
+      "label": "Status",
       "registered": "Registered",
       "intake": "Intake",
       "available": "Available",

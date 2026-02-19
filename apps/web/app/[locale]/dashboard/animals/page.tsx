@@ -467,14 +467,14 @@ export default function AnimalsPage() {
                 <tr className="border-b">
                   {selectMode && <th className="w-10 px-3 py-3"></th>}
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground w-12"></th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Species</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Breed</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Věk</th>
-                  <th className="px-4 py-3 font-medium text-muted-foreground w-28" title="Zdraví">Zdraví</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Kotec</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Intake</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.name')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.species.label')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.breed')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.age')}</th>
+                  <th className="px-4 py-3 font-medium text-muted-foreground w-28" title={t('animals.health.title')}>{t('animals.health.title')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.status.label')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.kennel')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.intakeDate')}</th>
                   <th className="w-10"></th>
                 </tr>
               </thead>
@@ -530,14 +530,19 @@ export default function AnimalsPage() {
                         : (animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '—' : '—')}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-1 flex-wrap">
-                        {/* Neutered / Spayed */}
-                        <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center ${animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? 'bg-green-100' : 'bg-gray-100'}`}
-                          title={t('animals.health.neutered')}
-                        >
-                          <Scissors className={`h-3.5 w-3.5 ${animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? 'text-green-600' : 'text-gray-300'}`} />
-                        </div>
+                      <div className="grid grid-cols-3 gap-1">
+                        {/* Neutered / Spayed - only show when altered */}
+                        {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-green-100"
+                            title={animal.species === 'cat'
+                              ? (animal.sex === 'male' ? t('animals.health.neuteredCatMale') : t('animals.health.neuteredCatFemale'))
+                              : (animal.sex === 'male' ? t('animals.health.neuteredDogMale') : t('animals.health.neuteredDogFemale'))
+                            }
+                          >
+                            <Scissors className="h-3.5 w-3.5 text-green-600" />
+                          </div>
+                        )}
                         {/* Dewormed — only shown when true */}
                         {animal.is_dewormed && (
                           <div
