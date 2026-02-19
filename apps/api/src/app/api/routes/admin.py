@@ -1050,3 +1050,86 @@ async def update_role_permissions(
             )
 
     await db.commit()
+
+
+# ─── Registered Shelters ───────────────────────────────────────────────────
+
+
+class RegisteredShelterResponse(BaseModel):
+    id: str
+    registration_number: str
+    name: str
+    address: str
+    region: str
+    activity_type: str | None
+    capacity: str | None
+    lat: float | None
+    lng: float | None
+    registration_date: str | None
+
+
+@router.get("/registered-shelters", response_model=list[RegisteredShelterResponse])
+async def get_registered_shelters(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    region: str | None = None,
+):
+    """Get all registered shelters. Only accessible by superadmin."""
+    if not current_user.is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access this resource",
+        )
+
+    query = text("""
+        SELECT id, registration_number, name, address, region, activity_type, 
+               capacity, lat, lng, registration_date
+        FROM registered_shelters
+        ORDER BY region, name
+    """)
+
+    result = await db.execute(query)
+    rows = result.fetchall()
+
+    shelters = []
+    for row in rows:
+        shelter = {
+            "id": str(row[0]),
+            "registration_number": row[1],
+            "name": row[2],
+            "address": row[3],
+            "region": row[4],
+            "activity_type": row[5],
+            "capacity": row[6],
+            "lat": row[7],
+            "lng": row[8],
+            "registration_date": row[9].isoformat() if row[9] else None,
+        }
+
+        # Filter by region if provided
+        if region is None or shelter["region"] == region:
+            shelters.append(shelter)
+
+    return shelters
+
+
+@router.get("/registered-shelters/regions")
+async def get_shelter_regions(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get list of unique regions. Only accessible by superadmin."""
+    if not current_user.is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access this resource",
+        )
+
+    query = text("""
+        SELECT DISTINCT region FROM registered_shelters ORDER BY region
+    """)
+
+    result = await db.execute(query)
+    rows = result.fetchall()
+
+    return [{"region": row[0]} for row in rows]

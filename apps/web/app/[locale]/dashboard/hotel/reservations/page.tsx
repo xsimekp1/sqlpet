@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Loader2, Check, X, AlertCircle, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Loader2, Check, X, AlertCircle, ChevronLeft, ChevronRight, Calendar, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -87,6 +88,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function HotelReservationsPage() {
+  const router = useRouter();
   const [reservations, setReservations] = useState<HotelReservation[]>([]);
   const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
   const [loadingTable, setLoadingTable] = useState(true);
@@ -194,6 +196,10 @@ export default function HotelReservationsPage() {
     }
   };
 
+  const handleEdit = (id: string) => {
+    router.push(`/dashboard/hotel/reservations/${id}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -271,6 +277,9 @@ export default function HotelReservationsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(res.id)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         {res.status === 'pending' || res.status === 'confirmed' ? (
                           <>
                             <Button size="sm" variant="outline" onClick={() => handleCheckin(res.id)}>

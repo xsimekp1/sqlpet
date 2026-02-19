@@ -1565,6 +1565,27 @@ class ApiClient {
     return ApiClient.get('/findings/map-data');
   }
 
+  // Registered Shelters (superadmin only)
+  static async getRegisteredShelters(region?: string): Promise<{
+    id: string;
+    registration_number: string;
+    name: string;
+    address: string;
+    region: string;
+    activity_type: string | null;
+    capacity: string | null;
+    lat: number | null;
+    lng: number | null;
+    registration_date: string | null;
+  }[]> {
+    const params = region ? `?region=${encodeURIComponent(region)}` : '';
+    return ApiClient.get(`/admin/registered-shelters${params}`);
+  }
+
+  static async getShelterRegions(): Promise<{ region: string }[]> {
+    return ApiClient.get('/admin/registered-shelters/regions');
+  }
+
   static async searchContacts(q: string): Promise<{ id: string; name: string; email: string | null }[]> {
     const result = await ApiClient.get<SearchResults>('/search', { q, limit: 10 });
     return result.contacts;

@@ -138,7 +138,8 @@
     "menu": "Menu",
     "help": "Nápověda",
     "calendar": "Kalendář",
-    "newOrg": "Nová organizace"
+    "newOrg": "Nová organizace",
+    "registeredShelters": "Registr útulků"
   },
   "topbar": {
     "search": "Hledat zvířata, lidi, úkoly...",

@@ -54,6 +54,7 @@ from src.app.models.walk_log import WalkLog
 from src.app.models.hotel_reservation import HotelReservation, HotelReservationStatus
 from src.app.models.chat import ChatMessage
 from src.app.models.finding import Finding
+from src.app.models.registered_shelter import RegisteredShelter
 from src.app.models.user_shortcut import UserKeyboardShortcut
 from src.app.models.incident import AnimalIncident
 
@@ -117,6 +118,7 @@ __all__ = [
     "HotelReservationStatus",
     "ChatMessage",
     "Finding",
+    "RegisteredShelter",
     "UserKeyboardShortcut",
     "AnimalIncident",
 ]

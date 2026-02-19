@@ -123,6 +123,7 @@ export function Sidebar() {
         ...(user?.is_superadmin ? [{ label: 'nav.newOrg', href: '/dashboard/new-org', icon: PlusCircle, permission: null, isSuperadminOnly: true }] : []),
         ...(user?.is_superadmin ? [{ label: 'nav.organizationSettings', href: '/dashboard/settings/organization', icon: Building2, permission: null, isSuperadminOnly: true }] : []),
         ...(user?.is_superadmin ? [{ label: 'nav.performance', href: '/dashboard/settings/performance', icon: Zap, permission: null, isSuperadminOnly: true }] : []),
+        ...(user?.is_superadmin ? [{ label: 'nav.registeredShelters', href: '/dashboard/admin/registered-shelters', icon: Building2, permission: null, isSuperadminOnly: true }] : []),
         { label: 'nav.help', href: '/dashboard/help', icon: HelpCircle, permission: null },
       ]
     }
