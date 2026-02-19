@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { LucideIcon, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -21,7 +20,6 @@ interface NavItemProps {
 export function NavItem({ href, icon: Icon, label, collapsed = false, permission = null, isSuperadminOnly = false, isActive = false }: NavItemProps) {
   const t = useTranslations()
   const { user, permissions } = useAuth()
-  const [isHovered, setIsHovered] = useState(false)
   
   const hasPermission = userHasPermission(user, permission, permissions)
   const isDisabled = permission !== null && !hasPermission
@@ -41,37 +39,24 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
     )
   }
 
-  const showBg = isActive || isHovered
-
   return (
-    <div 
-      className="relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {showBg && (
-        <div 
-          className="absolute inset-0 rounded-lg -z-10 transition-opacity duration-200"
-          style={{ backgroundColor: 'hsl(var(--accent))' }}
-        />
+    <Link
+      href={href}
+      className={cn(
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+        collapsed && 'justify-center px-2',
+        isActive ? 'bg-accent' : 'hover:bg-accent'
       )}
-      <Link
-        href={href}
-        className={cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-          collapsed && 'justify-center px-2'
-        )}
-      >
-        <Icon className="h-5 w-5 shrink-0" />
-        {!collapsed && (
-          <span className={cn("truncate", isActive && "font-medium")}>{t(label)}</span>
-        )}
-        {!collapsed && isSuperadminOnly && (
-          <span className="ml-auto text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full" title="Superadmin">
-            S
-          </span>
-        )}
-      </Link>
-    </div>
+    >
+      <Icon className="h-5 w-5 shrink-0" />
+      {!collapsed && (
+        <span className={cn("truncate", isActive && "font-medium")}>{t(label)}</span>
+      )}
+      {!collapsed && isSuperadminOnly && (
+        <span className="ml-auto text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full" title="Superadmin">
+          S
+        </span>
+      )}
+    </Link>
   )
 }
