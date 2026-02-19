@@ -41,11 +41,12 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
     )
   }
 
-  const showBackground = isActive || isHovered
-
   return (
     <Link
       href={href}
+      style={{
+        backgroundColor: (isActive || isHovered) ? 'hsl(var(--accent))' : 'transparent',
+      }}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative',
         collapsed && 'justify-center px-2'
@@ -53,17 +54,12 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {!collapsed && showBackground && (
-        <div
-          className="absolute inset-0 rounded-lg bg-accent -z-10"
-        />
-      )}
-      <Icon className="h-5 w-5 shrink-0 z-10" />
+      <Icon className="h-5 w-5 shrink-0" style={{ position: 'relative', zIndex: 10 }} />
       {!collapsed && (
-        <span className={cn("truncate z-10", isActive && "font-medium")}>{t(label)}</span>
+        <span className={cn("truncate", isActive && "font-medium")} style={{ position: 'relative', zIndex: 10 }}>{t(label)}</span>
       )}
       {!collapsed && isSuperadminOnly && (
-        <span className="ml-auto text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full z-10" title="Superadmin">
+        <span className="ml-auto text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full" style={{ position: 'relative', zIndex: 10 }} title="Superadmin">
           S
         </span>
       )}
