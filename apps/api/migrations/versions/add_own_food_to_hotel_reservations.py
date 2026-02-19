@@ -9,7 +9,7 @@ Create Date: 2026-02-19
 from alembic import op
 import sqlalchemy as sa
 
-revision = "add_own_food_to_hotel_reservations"
+revision = "20260219_own_food_hotel"
 down_revision = "registered_shelters"
 branch_labels = None
 depends_on = None
