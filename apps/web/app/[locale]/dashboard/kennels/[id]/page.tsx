@@ -538,12 +538,10 @@ export default function KennelDetailPage() {
                 <div className="flex items-center justify-between">
                   <DimensionsDisplay dimensions={kennel.dimensions} />
                   <Button variant="ghost" size="icon" onClick={() => {
-                    const dims = kennel.dimensions;
-                    if (dims) {
-                      setDimLength(String(dims.length / 100));
-                      setDimWidth(String(dims.width / 100));
-                      setDimHeight(dims.height ? String(dims.height / 100) : '');
-                    }
+                    const dims = kennel.dimensions!;
+                    setDimLength(String(dims.length / 100));
+                    setDimWidth(String(dims.width / 100));
+                    setDimHeight(dims.height ? String(dims.height / 100) : '');
                     setEditingDimensions(true);
                   }}>
                     <Pencil className="h-4 w-4" />
