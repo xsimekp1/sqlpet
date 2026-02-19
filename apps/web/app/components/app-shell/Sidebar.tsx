@@ -1,32 +1,32 @@
 'use client'
 
 import { useRef, useState } from 'react'
-  import {
-    Home,
-    PawPrint,
-    Grid3x3,
-    HeartPulse,
-    Bone,
-    CheckSquare,
-    Users,
-    BarChart3,
-    Settings,
-    Inbox,
-    Heart,
-    ChevronLeft,
-    Package,
-    HelpCircle,
-    CalendarDays,
-    Camera,
-    Zap,
-    Loader2,
-    MessageSquare,
-    Hotel,
-    Footprints,
-    PlusCircle,
-    Building2,
-    Search,
-  } from 'lucide-react'
+import {
+  Home,
+  PawPrint,
+  Grid3x3,
+  HeartPulse,
+  Bone,
+  CheckSquare,
+  Users,
+  BarChart3,
+  Settings,
+  Inbox,
+  Heart,
+  ChevronLeft,
+  Package,
+  HelpCircle,
+  CalendarDays,
+  Camera,
+  Zap,
+  Loader2,
+  MessageSquare,
+  Hotel,
+  Footprints,
+  PlusCircle,
+  Building2,
+  Search,
+} from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
 import { filterNavByPermissions } from '@/app/lib/permissions'
@@ -40,6 +40,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiClient } from '@/app/lib/api'
 import { toast } from 'sonner'
 import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface NavItemConfig {
   label: string
@@ -59,6 +60,7 @@ export function Sidebar() {
   const t = useTranslations()
   const queryClient = useQueryClient()
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   const { data: orgInfo } = useQuery({
@@ -196,8 +198,8 @@ export function Sidebar() {
               </p>
             )}
 
-            <div className="space-y-1">
-              {section.items.map((item) => (
+            <div className="space-y-1 relative">
+              {section.items.map((item, itemIdx) => (
                 <NavItem
                   key={item.href}
                   href={item.href}
@@ -205,8 +207,26 @@ export function Sidebar() {
                   label={item.label}
                   collapsed={sidebarCollapsed}
                   permission={item.permission}
+                  onHover={() => setHoveredIndex(itemIdx)}
+                  onLeave={() => setHoveredIndex(null)}
+                  isHovered={hoveredIndex === itemIdx}
                 />
               ))}
+              <AnimatePresence>
+                {!sidebarCollapsed && hoveredIndex !== null && hoveredIndex < section.items.length && (
+                  <motion.div
+                    className="absolute left-0 right-0 h-10 bg-accent rounded-lg -z-10"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    layout
+                    style={{
+                      top: hoveredIndex * 44,
+                    }}
+                  />
+                )}
+              </AnimatePresence>
             </div>
           </div>
         ))}

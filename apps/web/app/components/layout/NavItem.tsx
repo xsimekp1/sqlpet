@@ -14,9 +14,12 @@ interface NavItemProps {
   label: string
   collapsed?: boolean
   permission?: string | null
+  onHover?: () => void
+  onLeave?: () => void
+  isHovered?: boolean
 }
 
-export function NavItem({ href, icon: Icon, label, collapsed = false, permission = null }: NavItemProps) {
+export function NavItem({ href, icon: Icon, label, collapsed = false, permission = null, onHover, onLeave, isHovered }: NavItemProps) {
   const pathname = usePathname()
   const t = useTranslations()
   const { user, permissions } = useAuth()
@@ -44,11 +47,12 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-        'hover:bg-accent hover:text-accent-foreground',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative z-10',
         isActive && 'bg-accent text-accent-foreground font-medium',
         collapsed && 'justify-center px-2'
       )}
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
     >
       <Icon className="h-5 w-5 shrink-0" />
       {!collapsed && <span>{t(label)}</span>}
