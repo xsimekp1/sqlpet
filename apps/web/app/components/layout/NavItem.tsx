@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { LucideIcon, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -20,6 +21,7 @@ interface NavItemProps {
 export function NavItem({ href, icon: Icon, label, collapsed = false, permission = null, isSuperadminOnly = false, isActive = false }: NavItemProps) {
   const t = useTranslations()
   const { user, permissions } = useAuth()
+  const [isHovered, setIsHovered] = useState(false)
   
   const hasPermission = userHasPermission(user, permission, permissions)
   const isDisabled = permission !== null && !hasPermission
@@ -39,20 +41,21 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
     )
   }
 
+  const showBackground = isActive || isHovered
+
   return (
     <Link
       href={href}
       className={cn(
-        'group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative',
         collapsed && 'justify-center px-2'
       )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {!collapsed && (
+      {!collapsed && showBackground && (
         <div
-          className={cn(
-            "absolute inset-0 rounded-lg -z-10",
-            isActive ? "bg-accent" : "bg-muted group-hover:bg-muted-foreground/20"
-          )}
+          className="absolute inset-0 rounded-lg bg-accent -z-10"
         />
       )}
       <Icon className="h-5 w-5 shrink-0 z-10" />
