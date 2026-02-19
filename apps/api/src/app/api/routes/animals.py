@@ -175,16 +175,17 @@ async def list_animal_ids(
     db: AsyncSession = Depends(get_db),
 ):
     """Lightweight endpoint - returns just animal IDs for navigation."""
-    from sqlalchemy import select
+    from sqlalchemy import select, func
     from src.app.models.animal import Animal
 
+    # Just count - no relationships needed
     result = await db.execute(
-        select(Animal.id)
+        select(Animal.id, Animal.name)
         .where(Animal.organization_id == organization_id)
         .order_by(Animal.name)
     )
-    ids = [str(row[0]) for row in result.fetchall()]
-    return {"ids": ids}
+    items = result.fetchall()
+    return {"ids": [str(r[0]) for r in items], "count": len(items)}
 
 
 @router.get(
