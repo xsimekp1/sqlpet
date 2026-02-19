@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { MapPin, Building2, Search, Filter, Loader2, Upload, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -84,10 +84,25 @@ export default function RegisteredSheltersPage() {
     }
   };
 
-  const handleImport = async () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Pouze CSV soubory jsou povoleny');
+      return;
+    }
+
     setImporting(true);
     try {
-      const result = await ApiClient.importRegisteredShelters();
+      const result = await ApiClient.importRegisteredShelters(file);
 
       let message = `Importováno ${result.imported} záznamů`;
       if (result.skipped && result.skipped > 0) {
@@ -116,6 +131,10 @@ export default function RegisteredSheltersPage() {
       }
     } finally {
       setImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -176,7 +195,14 @@ export default function RegisteredSheltersPage() {
             Veterinární registrace útulků pro zvířata ({shelters.length} záznamů)
           </p>
         </div>
-        <Button onClick={handleImport} disabled={importing} className="gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          onChange={handleFileSelected}
+          className="hidden"
+        />
+        <Button onClick={handleImportClick} disabled={importing} className="gap-2">
           {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
           Importovat z CSV
         </Button>

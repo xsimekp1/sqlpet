@@ -1586,13 +1586,29 @@ class ApiClient {
     return ApiClient.get('/admin/registered-shelters/regions');
   }
 
-  static async importRegisteredShelters(): Promise<{
+  static async importRegisteredShelters(file: File): Promise<{
     imported: number;
     skipped?: number;
     errors?: Array<{ row: number; error: string }>;
     total_errors?: number;
   }> {
-    return ApiClient.post('/admin/registered-shelters/import', {});
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${ApiClient.getBaseUrl()}/admin/registered-shelters/import`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw { response: { data: error } };
+    }
+
+    return response.json();
   }
 
   static async createRegisteredShelter(data: {

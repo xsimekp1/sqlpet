@@ -1164,11 +1164,12 @@ async def get_shelter_regions(
 
 @router.post("/registered-shelters/import", status_code=status.HTTP_200_OK)
 async def import_registered_shelters(
+    file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     token: str | None = Depends(oauth2_scheme),
 ):
-    """Import registered shelters from CSV file. Only accessible by superadmin."""
+    """Import registered shelters from uploaded CSV file. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
     if not is_superadmin and current_user.email == "admin@example.com":
         is_superadmin = True
@@ -1185,26 +1186,31 @@ async def import_registered_shelters(
             detail="Only superadmin can access this resource",
         )
 
+    # Validate file type
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": "Invalid file type",
+                "message": "Only CSV files are allowed",
+                "filename": file.filename
+            }
+        )
+
     import csv
     from datetime import datetime
-    from pathlib import Path
+    from io import StringIO
 
-    # CSV is in project root (same level as apps/)
-    csv_filename = "utulky.csv"
-
-    # Resolve path from this file: apps/api/src/app/api/routes/admin.py
-    # Go up 6 levels to project root
-    project_root = Path(__file__).parent.parent.parent.parent.parent.parent
-    csv_path = project_root / csv_filename
-
-    if not csv_path.exists():
+    # Read uploaded file content
+    try:
+        content = await file.read()
+        csv_content = content.decode('utf-8')
+    except UnicodeDecodeError:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail={
-                "error": "CSV file not found",
-                "searched_path": str(csv_path),
-                "csv_filename": csv_filename,
-                "help": "Ensure the CSV file exists in the project root directory"
+                "error": "Encoding error",
+                "message": "CSV file must be UTF-8 encoded"
             }
         )
 
@@ -1263,14 +1269,14 @@ async def import_registered_shelters(
 
     # Validate CSV structure first
     try:
-        with open(csv_path, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            headers = reader.fieldnames
+        csv_file = StringIO(csv_content)
+        reader = csv.DictReader(csv_file)
+        headers = reader.fieldnames
 
-            required_headers = ["registrační číslo", "název", "adresa", "kraj"]
-            missing_headers = [h for h in required_headers if h not in (headers or [])]
+        required_headers = ["registrační číslo", "název", "adresa", "kraj"]
+        missing_headers = [h for h in required_headers if h not in (headers or [])]
 
-            if missing_headers:
+        if missing_headers:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail={
@@ -1294,10 +1300,10 @@ async def import_registered_shelters(
     skipped = 0
 
     try:
-        with open(csv_path, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
+        csv_file = StringIO(csv_content)
+        reader = csv.DictReader(csv_file)
 
-            for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is row 1)
+        for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is row 1)
                 try:
                     # Extract and clean fields
                     reg_number = row.get("registrační číslo", "").strip().strip('"')
