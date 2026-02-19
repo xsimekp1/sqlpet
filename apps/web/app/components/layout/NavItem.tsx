@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/app/context/AuthContext'
 import { userHasPermission } from '@/app/lib/permissions'
-import { motion } from 'framer-motion'
 
 interface NavItemProps {
   href: string
@@ -26,7 +25,6 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
   
   const hasPermission = userHasPermission(user, permission, permissions)
   const isDisabled = permission !== null && !hasPermission
-  const showBg = isActive || isHovered
 
   if (isDisabled) {
     return (
@@ -43,26 +41,24 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
     )
   }
 
+  const showBg = isActive || isHovered
+
   return (
-    <div
+    <div 
       className="relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {showBg && (
-        <motion.div
-          className="absolute inset-0 rounded-lg -z-10"
+        <div 
+          className="absolute inset-0 rounded-lg -z-10 transition-opacity duration-200"
           style={{ backgroundColor: 'hsl(var(--accent))' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
         />
       )}
       <Link
         href={href}
         className={cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative',
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
           collapsed && 'justify-center px-2'
         )}
       >
