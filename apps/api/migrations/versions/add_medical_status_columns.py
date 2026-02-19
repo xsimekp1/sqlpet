@@ -18,6 +18,10 @@ depends_on = None
 def upgrade():
     op.add_column(
         "animals",
+        sa.Column("intake_date", sa.Date(), nullable=True),
+    )
+    op.add_column(
+        "animals",
         sa.Column("is_lactating", sa.Boolean(), nullable=False, server_default="false"),
     )
     op.add_column(
@@ -39,3 +43,4 @@ def downgrade():
     op.drop_column("animals", "is_diabetic")
     op.drop_column("animals", "is_critical")
     op.drop_column("animals", "is_lactating")
+    op.drop_column("animals", "intake_date")
