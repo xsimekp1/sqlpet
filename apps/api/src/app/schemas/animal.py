@@ -132,7 +132,7 @@ class AnimalCreate(BaseModel):
 
 
 class AnimalListResponse(BaseModel):
-    items: list[AnimalResponse]
+    items: list[AnimalCreate]
     total: int
     page: int
     page_size: int
