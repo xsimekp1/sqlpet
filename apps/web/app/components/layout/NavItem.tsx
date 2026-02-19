@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/app/context/AuthContext'
 import { userHasPermission } from '@/app/lib/permissions'
+import { motion } from 'framer-motion'
 
 interface NavItemProps {
   href: string
@@ -42,13 +43,18 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
   }
 
   return (
-    <div
-      onMouseEnter={() => { console.log('hover:', label); setIsHovered(true); }}
+    <motion.div
+      onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      className="relative"
+      layout
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
       style={{
-        backgroundColor: (isActive || isHovered) ? 'red' : 'transparent',
+        backgroundColor: (isActive || isHovered) ? 'hsl(var(--accent))' : 'transparent',
         borderRadius: '0.5rem',
-        padding: '2px',
+      }}
+      animate={{
+        backgroundColor: (isActive || isHovered) ? 'hsl(var(--accent))' : 'transparent',
       }}
     >
       <Link
@@ -68,6 +74,6 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
           </span>
         )}
       </Link>
-    </div>
+    </motion.div>
   )
 }
