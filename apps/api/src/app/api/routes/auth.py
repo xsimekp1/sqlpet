@@ -228,27 +228,20 @@ async def get_my_permissions(
 
     permissions: list[str] = []
     if membership and membership.role_id:
-        # Get permissions for the role
+        # Get permissions for the role with a single JOIN query (fixes N+1)
         perm_result = await db.execute(
-            select(RolePermission).where(
+            select(Permission.key)
+            .join(RolePermission, RolePermission.permission_id == Permission.id)
+            .where(
                 RolePermission.role_id == membership.role_id,
                 RolePermission.allowed == True,
             )
         )
-        role_perms = perm_result.scalars().all()
-
-        # Get permission keys
-        for rp in role_perms:
-            key_result = await db.execute(
-                select(Permission.key).where(Permission.id == rp.permission_id)
-            )
-            key = key_result.scalar_one_or_none()
-            if key:
-                permissions.append(key)
+        permissions = [key for key in perm_result.scalars().all()]
 
     # Superadmins get all permissions
     if current_user.is_superadmin:
         all_perms_result = await db.execute(select(Permission.key))
-        permissions = [p.key for p in all_perms_result.scalars().all()]
+        permissions = list(all_perms_result.scalars().all())
 
     return {"permissions": permissions}
