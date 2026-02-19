@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import engine_from_config, pool
 from alembic import context
@@ -11,10 +12,19 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Use MIGRATION_DATABASE_URL if set (for direct connections bypassing pooler)
+# Otherwise fall back to DATABASE_URL_SYNC
+migration_url = os.getenv("MIGRATION_DATABASE_URL")
+if migration_url:
+    print("Using MIGRATION_DATABASE_URL for direct database connection (bypassing pooler)")
+    database_url = migration_url
+else:
+    database_url = settings.DATABASE_URL_SYNC
+
 # Escape % for configparser interpolation
 config.set_main_option(
     "sqlalchemy.url",
-    settings.DATABASE_URL_SYNC.replace("%", "%%"),
+    database_url.replace("%", "%%"),
 )
 
 target_metadata = Base.metadata
