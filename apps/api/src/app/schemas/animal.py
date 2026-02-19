@@ -17,9 +17,6 @@ from src.app.models.animal_identifier import IdentifierType
 from src.app.schemas.tag import TagResponse
 
 
-AnimalResponse = AnimalCreate
-
-
 # --- Breed schemas ---
 
 
@@ -132,6 +129,9 @@ class AnimalCreate(BaseModel):
         return years
 
     model_config = {"from_attributes": True}
+
+
+AnimalResponse = AnimalCreate
 
 
 class AnimalListResponse(BaseModel):
