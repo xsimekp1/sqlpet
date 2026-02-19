@@ -1586,6 +1586,28 @@ class ApiClient {
     return ApiClient.get('/admin/registered-shelters/regions');
   }
 
+  static async importRegisteredShelters(): Promise<{ imported: number }> {
+    return ApiClient.post('/admin/registered-shelters/import', {});
+  }
+
+  static async createRegisteredShelter(data: {
+    registration_number: string;
+    name: string;
+    address: string;
+    region: string;
+    activity_type?: string;
+    capacity?: string;
+    lat?: number | null;
+    lng?: number | null;
+    notes?: string;
+  }): Promise<any> {
+    return ApiClient.post('/admin/registered-shelters', data);
+  }
+
+  static async updateShelterNotes(shelterId: string, notes: string): Promise<void> {
+    return ApiClient.patch(`/admin/registered-shelters/${shelterId}/notes`, { notes });
+  }
+
   static async searchContacts(q: string): Promise<{ id: string; name: string; email: string | null }[]> {
     const result = await ApiClient.get<SearchResults>('/search', { q, limit: 10 });
     return result.contacts;

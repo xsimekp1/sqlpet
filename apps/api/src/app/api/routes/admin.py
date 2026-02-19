@@ -1066,6 +1066,7 @@ class RegisteredShelterResponse(BaseModel):
     lat: float | None
     lng: float | None
     registration_date: str | None
+    notes: str | None
 
 
 @router.get("/registered-shelters", response_model=list[RegisteredShelterResponse])
@@ -1083,7 +1084,7 @@ async def get_registered_shelters(
 
     query = text("""
         SELECT id, registration_number, name, address, region, activity_type, 
-               capacity, lat, lng, registration_date
+               capacity, lat, lng, registration_date, notes
         FROM registered_shelters
         ORDER BY region, name
     """)
@@ -1104,6 +1105,7 @@ async def get_registered_shelters(
             "lat": row[7],
             "lng": row[8],
             "registration_date": row[9].isoformat() if row[9] else None,
+            "notes": row[10] if len(row) > 10 else None,
         }
 
         # Filter by region if provided
@@ -1133,3 +1135,228 @@ async def get_shelter_regions(
     rows = result.fetchall()
 
     return [{"region": row[0]} for row in rows]
+
+
+@router.post("/registered-shelters/import", status_code=status.HTTP_200_OK)
+async def import_registered_shelters(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Import registered shelters from CSV file. Only accessible by superadmin."""
+    if not current_user.is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access this resource",
+        )
+
+    import csv
+    import re
+    from datetime import datetime
+    from pathlib import Path
+
+    csv_path = (
+        Path(__file__).parent.parent.parent.parent
+        / "Registrované útulky pro zvířata  –  Státní veterinární správaclose.csv"
+    )
+
+    if not csv_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="CSV file not found",
+        )
+
+    def parse_dms_to_decimal(dms_str):
+        if not dms_str:
+            return None, None
+        try:
+            parts = dms_str.split(",")
+            if len(parts) != 2:
+                return None, None
+            lat_str = parts[0].strip()
+            lng_str = parts[1].strip()
+            lat = parse_single_dms(lat_str)
+            lng = parse_single_dms(lng_str)
+            return lat, lng
+        except:
+            return None, None
+
+    def parse_single_dms(dms):
+        dms = dms.replace("°", " ").replace("'", " ").replace('"', " ").strip()
+        direction = None
+        if "N" in dms or "S" in dms:
+            direction = -1 if "S" in dms else 1
+            dms = dms.replace("N", "").replace("S", "").strip()
+        elif "E" in dms or "W" in dms:
+            direction = -1 if "W" in dms else 1
+            dms = dms.replace("E", "").replace("W", "").strip()
+        parts = dms.split()
+        if len(parts) < 3:
+            return None
+        try:
+            degrees = float(parts[0])
+            minutes = float(parts[1]) if len(parts) > 1 else 0
+            seconds = float(parts[2]) if len(parts) > 2 else 0
+            decimal = degrees + (minutes / 60) + (seconds / 3600)
+            if direction:
+                decimal *= direction
+            return decimal
+        except:
+            return None
+
+    def parse_date(date_str):
+        if not date_str:
+            return None
+        try:
+            dt = datetime.strptime(date_str.strip(), "%d.%m.%Y")
+            return dt.date().isoformat()
+        except:
+            return None
+
+    count = 0
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            try:
+                reg_number = row.get("registrační číslo", "").strip().strip('"')
+                name = row.get("název", "").strip().strip('"')
+                address = row.get("adresa", "").strip().strip('"')
+                region = row.get("kraj", "").strip().strip('"')
+                activity_type = row.get("druh činnosti", "").strip().strip('"')
+                capacity = row.get("kapacita", "").strip().strip('"')
+                gps = row.get("GPS", "").strip().strip('"')
+                reg_date = row.get("datum registrace", "").strip().strip('"')
+
+                lat, lng = parse_dms_to_decimal(gps)
+                parsed_date = parse_date(reg_date)
+
+                await db.execute(
+                    text("""
+                        INSERT INTO registered_shelters 
+                        (id, registration_number, name, address, region, activity_type, capacity, lat, lng, registration_date, imported_at, created_at, updated_at)
+                        VALUES 
+                        (gen_random_uuid(), :reg_number, :name, :address, :region, :activity_type, :capacity, :lat, :lng, :reg_date, NOW(), NOW(), NOW())
+                        ON CONFLICT (registration_number) DO NOTHING
+                    """),
+                    {
+                        "reg_number": reg_number,
+                        "name": name,
+                        "address": address,
+                        "region": region,
+                        "activity_type": activity_type,
+                        "capacity": capacity,
+                        "lat": lat,
+                        "lng": lng,
+                        "reg_date": parsed_date,
+                    },
+                )
+                count += 1
+            except Exception as e:
+                print(f"Error: {e}")
+
+    await db.commit()
+    return {"imported": count}
+
+
+class CreateRegisteredShelterRequest(BaseModel):
+    registration_number: str
+    name: str
+    address: str
+    region: str
+    activity_type: str | None = None
+    capacity: str | None = None
+    lat: float | None = None
+    lng: float | None = None
+    registration_date: str | None = None
+    notes: str | None = None
+
+
+@router.post("/registered-shelters", response_model=RegisteredShelterResponse)
+async def create_registered_shelter(
+    data: CreateRegisteredShelterRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new registered shelter. Only accessible by superadmin."""
+    if not current_user.is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access this resource",
+        )
+
+    shelter_id = uuid.uuid4()
+
+    await db.execute(
+        text("""
+            INSERT INTO registered_shelters 
+            (id, registration_number, name, address, region, activity_type, capacity, lat, lng, registration_date, notes, imported_at, created_at, updated_at)
+            VALUES 
+            (:id, :reg_number, :name, :address, :region, :activity_type, :capacity, :lat, :lng, :reg_date, :notes, NOW(), NOW(), NOW())
+        """),
+        {
+            "id": str(shelter_id),
+            "reg_number": data.registration_number,
+            "name": data.name,
+            "address": data.address,
+            "region": data.region,
+            "activity_type": data.activity_type,
+            "capacity": data.capacity,
+            "lat": data.lat,
+            "lng": data.lng,
+            "reg_date": data.registration_date,
+            "notes": data.notes,
+        },
+    )
+    await db.commit()
+
+    return RegisteredShelterResponse(
+        id=str(shelter_id),
+        registration_number=data.registration_number,
+        name=data.name,
+        address=data.address,
+        region=data.region,
+        activity_type=data.activity_type,
+        capacity=data.capacity,
+        lat=data.lat,
+        lng=data.lng,
+        registration_date=data.registration_date,
+        notes=data.notes,
+    )
+
+
+class UpdateShelterNotesRequest(BaseModel):
+    notes: str
+
+
+@router.patch("/registered-shelters/{shelter_id}/notes", status_code=status.HTTP_200_OK)
+async def update_shelter_notes(
+    shelter_id: str,
+    data: UpdateShelterNotesRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update notes for a shelter. Only accessible by superadmin."""
+    if not current_user.is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access this resource",
+        )
+
+    try:
+        shelter_uuid = uuid.UUID(shelter_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid shelter ID",
+        )
+
+    await db.execute(
+        text("""
+            UPDATE registered_shelters 
+            SET notes = :notes, updated_at = NOW()
+            WHERE id = :id
+        """),
+        {"notes": data.notes, "id": str(shelter_uuid)},
+    )
+    await db.commit()
+
+    return {"success": True}

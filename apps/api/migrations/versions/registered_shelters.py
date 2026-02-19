@@ -41,6 +41,7 @@ def upgrade() -> None:
         sa.Column("lat", sa.Float(), nullable=True),
         sa.Column("lng", sa.Float(), nullable=True),
         sa.Column("registration_date", sa.Date(), nullable=True),
+        sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("imported_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("registration_number"),

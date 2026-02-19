@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { MapPin, Building2, Search, Filter, Loader2 } from 'lucide-react';
+import { MapPin, Building2, Search, Filter, Loader2, Upload, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -15,6 +17,14 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import ApiClient from '@/app/lib/api';
 
 interface RegisteredShelter {
@@ -28,6 +38,7 @@ interface RegisteredShelter {
   lat: number | null;
   lng: number | null;
   registration_date: string | null;
+  notes: string | null;
 }
 
 export default function RegisteredSheltersPage() {
@@ -35,8 +46,22 @@ export default function RegisteredSheltersPage() {
   const [shelters, setShelters] = useState<RegisteredShelter[]>([]);
   const [regions, setRegions] = useState<{ region: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [newShelter, setNewShelter] = useState({
+    registration_number: '',
+    name: '',
+    address: '',
+    region: '',
+    activity_type: '',
+    capacity: '',
+    lat: '',
+    lng: '',
+    notes: '',
+  });
 
   useEffect(() => {
     loadRegions();
@@ -56,6 +81,46 @@ export default function RegisteredSheltersPage() {
       setRegions(data);
     } catch (error) {
       console.error('Failed to load regions:', error);
+    }
+  };
+
+  const handleImport = async () => {
+    setImporting(true);
+    try {
+      const result = await ApiClient.importRegisteredShelters();
+      toast.success(`Importováno ${result.imported} záznamů`);
+      loadShelters();
+      loadRegions();
+    } catch (error) {
+      console.error('Failed to import:', error);
+      toast.error('Nepodařilo se importovat data');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!newShelter.registration_number || !newShelter.name || !newShelter.address || !newShelter.region) {
+      toast.error('Vyplňte povinné údaje');
+      return;
+    }
+    setSaving(true);
+    try {
+      await ApiClient.createRegisteredShelter({
+        ...newShelter,
+        lat: newShelter.lat ? parseFloat(newShelter.lat) : null,
+        lng: newShelter.lng ? parseFloat(newShelter.lng) : null,
+      });
+      toast.success('Útulek přidán');
+      setDialogOpen(false);
+      setNewShelter({ registration_number: '', name: '', address: '', region: '', activity_type: '', capacity: '', lat: '', lng: '', notes: '' });
+      loadShelters();
+      loadRegions();
+    } catch (error) {
+      console.error('Failed to save:', error);
+      toast.error('Nepodařilo se uložit');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -91,6 +156,10 @@ export default function RegisteredSheltersPage() {
             Veterinární registrace útulků pro zvířata ({shelters.length} záznamů)
           </p>
         </div>
+        <Button onClick={handleImport} disabled={importing} className="gap-2">
+          {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          Importovat z CSV
+        </Button>
       </div>
 
       {/* Filters */}
@@ -205,11 +274,121 @@ export default function RegisteredSheltersPage() {
                     )}
                   </div>
                 </div>
+                {shelter.notes && (
+                  <div className="mt-2 p-2 bg-muted rounded-md text-sm">
+                    <span className="font-medium">Poznámky:</span> {shelter.notes}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Přidat nový útulek</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="regNumber">Registrační číslo *</Label>
+              <Input
+                id="regNumber"
+                value={newShelter.registration_number}
+                onChange={(e) => setNewShelter({ ...newShelter, registration_number: e.target.value })}
+                placeholder="CZ 31C03695"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="name">Název *</Label>
+              <Input
+                id="name"
+                value={newShelter.name}
+                onChange={(e) => setNewShelter({ ...newShelter, name: e.target.value })}
+                placeholder="Název útulku"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="address">Adresa *</Label>
+              <Input
+                id="address"
+                value={newShelter.address}
+                onChange={(e) => setNewShelter({ ...newShelter, address: e.target.value })}
+                placeholder="Ulice 123, Město"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="region">Kraj *</Label>
+              <Input
+                id="region"
+                value={newShelter.region}
+                onChange={(e) => setNewShelter({ ...newShelter, region: e.target.value })}
+                placeholder="Jihočeský kraj"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="activity">Druh činnosti</Label>
+              <Input
+                id="activity"
+                value={newShelter.activity_type}
+                onChange={(e) => setNewShelter({ ...newShelter, activity_type: e.target.value })}
+                placeholder="útulek pro zájmová zvířata"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="capacity">Kapacita</Label>
+              <Input
+                id="capacity"
+                value={newShelter.capacity}
+                onChange={(e) => setNewShelter({ ...newShelter, capacity: e.target.value })}
+                placeholder="pes 10, kočka 50"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="lat">Zem. šířka</Label>
+                <Input
+                  id="lat"
+                  type="number"
+                  step="0.0001"
+                  value={newShelter.lat}
+                  onChange={(e) => setNewShelter({ ...newShelter, lat: e.target.value })}
+                  placeholder="50.0755"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="lng">Zem. délka</Label>
+                <Input
+                  id="lng"
+                  type="number"
+                  step="0.0001"
+                  value={newShelter.lng}
+                  onChange={(e) => setNewShelter({ ...newShelter, lng: e.target.value })}
+                  placeholder="14.4378"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="notes">Poznámky</Label>
+              <Textarea
+                id="notes"
+                value={newShelter.notes}
+                onChange={(e) => setNewShelter({ ...newShelter, notes: e.target.value })}
+                placeholder="Vaše poznámky k tomuto útulku..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Zrušit</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Uložit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
