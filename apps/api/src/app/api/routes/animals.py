@@ -42,6 +42,7 @@ async def _build_animal_response(
     db: AsyncSession,
     kennel_data: dict | None = None,
     intake_data: dict | None = None,
+    _preloaded_kennel_stays=None,
 ) -> AnimalResponse:
     """Build AnimalResponse from ORM object with nested breeds and identifiers."""
     breeds = [
@@ -64,13 +65,21 @@ async def _build_animal_response(
     # default_image_url is now stored in DB - use it directly
     # (no query needed)
 
-    # Use pre-loaded kennel/intake data if provided (list endpoint)
+    # Use pre-loaded kennel data if provided (list endpoint or eager loaded)
     animal_id_str = str(animal.id)
     if kennel_data and animal_id_str in kennel_data:
         kd = kennel_data[animal_id_str]
         resp.current_kennel_id = kd["kennel_id"]
         resp.current_kennel_name = kd["kennel_name"]
         resp.current_kennel_code = kd["kennel_code"]
+    elif _preloaded_kennel_stays:
+        # Use eager-loaded kennel_stays to find current kennel
+        for stay in _preloaded_kennel_stays:
+            if stay.end_at is None and stay.kennel:
+                resp.current_kennel_id = str(stay.kennel_id)
+                resp.current_kennel_name = stay.kennel.name
+                resp.current_kennel_code = stay.kennel.code
+                break
     elif kennel_data is None:
         # Fallback: single animal fetch - query if not provided
         try:
@@ -350,7 +359,9 @@ async def update_animal(
         )
     await db.commit()
     await db.refresh(animal)
-    return await _build_animal_response(animal, db)
+    return await _build_animal_response(
+        animal, db, _preloaded_kennel_stays=getattr(animal, "kennel_stays", None)
+    )
 
 
 @router.delete(

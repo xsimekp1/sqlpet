@@ -275,8 +275,16 @@ class AnimalService:
         organization_id: uuid.UUID,
         animal_id: uuid.UUID,
     ) -> Animal | None:
+        from sqlalchemy.orm import selectinload
+
         result = await self.db.execute(
-            select(Animal).where(
+            select(Animal)
+            .options(
+                selectinload(Animal.animal_breeds).selectinload(AnimalBreed.breed),
+                selectinload(Animal.identifiers),
+                selectinload(Animal.kennel_stays).selectinload("kennel"),
+            )
+            .where(
                 Animal.id == animal_id,
                 Animal.organization_id == organization_id,
                 Animal.deleted_at.is_(None),
