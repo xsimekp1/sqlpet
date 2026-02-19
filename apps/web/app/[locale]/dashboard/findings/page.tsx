@@ -1,15 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Search, MapPin, Clock, Dog, PawPrint, Map, List, Home } from 'lucide-react';
+import { MapPin, Clock, Home, ExternalLink, List, Map } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import ApiClient from '@/app/lib/api';
 
 interface FindingMapData {
@@ -33,61 +32,22 @@ interface FindingsMapResponse {
   findings: FindingMapData[];
 }
 
-const SPECIES_COLORS: Record<string, string> = {
-  dog: '#3b82f6',
-  cat: '#f97316',
-  rabbit: '#22c55e',
-  bird: '#a855f7',
-  other: '#6b7280',
+const SPECIES_ICONS: Record<string, string> = {
+  dog: '🐕',
+  cat: '🐈',
+  rabbit: '🐰',
+  bird: '🐦',
+  other: '🐾',
 };
 
-function getSpeciesColor(species: string | null): string {
-  if (!species) return SPECIES_COLORS.other;
-  return SPECIES_COLORS[species.toLowerCase()] || SPECIES_COLORS.other;
-}
-
-// Load Leaflet from CDN
-function useLeaflet() {
-  const [leaflet, setLeaflet] = useState<any>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // Check if already loaded
-    if ((window as any).L) {
-      setLeaflet((window as any).L);
-      setLoaded(true);
-      return;
-    }
-
-    // Load Leaflet CSS
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    document.head.appendChild(link);
-
-    // Load Leaflet JS
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.onload = () => {
-      setLeaflet((window as any).L);
-      setLoaded(true);
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      link.remove();
-      script.remove();
-    };
-  }, []);
-
-  return { leaflet, loaded };
+function getSpeciesIcon(species: string | null): string {
+  if (!species) return SPECIES_ICONS.other;
+  return SPECIES_ICONS[species.toLowerCase()] || SPECIES_ICONS.other;
 }
 
 export default function FindingsPage() {
   const t = useTranslations('findings');
-  const [viewMode, setViewMode] = useState<'list' | 'map' | 'both'>('both');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [loading, setLoading] = useState(true);
   const [mapData, setMapData] = useState<FindingsMapResponse | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'current' | 'past'>('all');
@@ -113,11 +73,7 @@ export default function FindingsPage() {
     return f.status === selectedStatus;
   }) || [];
 
-  const mapCenter: [number, number] = mapData?.organization?.lat && mapData?.organization?.lng
-    ? [mapData.organization.lat, mapData.organization.lng]
-    : filteredFindings[0]?.where_lat && filteredFindings[0]?.where_lng
-    ? [filteredFindings[0].where_lat, filteredFindings[0].where_lng]
-    : [50.0755, 14.4378];
+  const findingsWithLocation = filteredFindings.filter(f => f.where_lat && f.where_lng);
 
   if (loading) {
     return (
@@ -125,10 +81,7 @@ export default function FindingsPage() {
         <div className="flex items-center justify-between">
           <Skeleton className="h-10 w-48" />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-96" />
-          <Skeleton className="h-96" />
-        </div>
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
@@ -170,6 +123,30 @@ export default function FindingsPage() {
         </div>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{filteredFindings.length}</div>
+            <p className="text-sm text-muted-foreground">Celkem nálezů</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{findingsWithLocation.length}</div>
+            <p className="text-sm text-muted-foreground">S GPS souřadnicemi</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">
+              {filteredFindings.filter(f => f.status === 'current').length}
+            </div>
+            <p className="text-sm text-muted-foreground">Aktuálních</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* View toggle */}
       <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
         <TabsList>
@@ -181,11 +158,6 @@ export default function FindingsPage() {
             <Map className="h-4 w-4" />
             Mapa
           </TabsTrigger>
-          <TabsTrigger value="both" className="gap-2">
-            <Map className="h-4 w-4" />
-            <List className="h-4 w-4" />
-            Obě
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="mt-4">
@@ -194,21 +166,9 @@ export default function FindingsPage() {
 
         <TabsContent value="map" className="mt-4">
           <FindingsMap 
-            findings={filteredFindings} 
+            findings={findingsWithLocation} 
             organization={mapData?.organization}
-            center={mapCenter}
           />
-        </TabsContent>
-
-        <TabsContent value="both" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <FindingsList findings={filteredFindings} organization={mapData?.organization} />
-            <FindingsMap 
-              findings={filteredFindings} 
-              organization={mapData?.organization}
-              center={mapCenter}
-            />
-          </div>
         </TabsContent>
       </Tabs>
     </div>
@@ -259,7 +219,7 @@ function FindingsList({
       </CardHeader>
       <CardContent className="space-y-3">
         {findings.map((finding) => {
-          const speciesIcon = finding.species === 'dog' ? '🐕' : finding.species === 'cat' ? '🐈' : '🐾';
+          const speciesIcon = getSpeciesIcon(finding.species);
           const distance = organization?.lat && organization?.lng && finding.where_lat && finding.where_lng
             ? calculateDistance(organization.lat, organization.lng, finding.where_lat, finding.where_lng)
             : null;
@@ -298,12 +258,26 @@ function FindingsList({
                     )}
                   </div>
                 </div>
-                <Badge 
-                  variant={finding.status === 'current' ? 'default' : 'secondary'}
-                  className="mt-2"
-                >
-                  {finding.status === 'current' ? 'Aktuální' : 'Historický'}
-                </Badge>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge 
+                    variant={finding.status === 'current' ? 'default' : 'secondary'}
+                  >
+                    {finding.status === 'current' ? 'Aktuální' : 'Historický'}
+                  </Badge>
+                  {finding.where_lat && finding.where_lng && (
+                    <a 
+                      href={`https://www.openstreetmap.org/?mlat=${finding.where_lat}&mlon=${finding.where_lng}&zoom=15`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MapPin className="h-3 w-3" />
+                      Otevřít v mapě
+                      <ExternalLink className="h-2 w-2" />
+                    </a>
+                  )}
+                </div>
               </div>
             </Link>
           );
@@ -316,83 +290,49 @@ function FindingsList({
 function FindingsMap({ 
   findings, 
   organization,
-  center,
 }: { 
   findings: FindingMapData[];
   organization?: { lat: number | null; lng: number | null; name: string | null };
-  center: [number, number];
 }) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const { leaflet, loaded } = useLeaflet();
+  // Build OpenStreetMap static URL
+  const bounds = findings.length > 0 
+    ? findings.map(f => [f.where_lat!, f.where_lng!] as [number, number])
+    : organization?.lat && organization?.lng 
+      ? [[organization.lat, organization.lng] as [number, number]]
+      : [[50.0755, 14.4378] as [number, number]];
+  
+  const minLat = Math.min(...bounds.map(b => b[0]));
+  const maxLat = Math.max(...bounds.map(b => b[0]));
+  const minLng = Math.min(...bounds.map(b => b[1]));
+  const maxLng = Math.max(...bounds.map(b => b[1]));
+  
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLng = (minLng + maxLng) / 2;
+  const span = Math.max(maxLat - minLat, maxLng - minLng) * 1.2;
+  const zoom = span > 0.5 ? 10 : span > 0.1 ? 12 : 14;
 
-  useEffect(() => {
-    if (!loaded || !leaflet || !mapRef.current || mapInstanceRef.current) return;
+  // Build markers for map
+  const markersParam = findings
+    .filter(f => f.where_lat && f.where_lng)
+    .map(f => {
+      const icon = f.species === 'dog' ? 'marker-blue' : f.species === 'cat' ? 'marker-orange' : 'marker';
+      return `${icon}|${f.where_lat},${f.where_lng}|${f.animal_name || 'Neznámé zvíře'}`;
+    })
+    .join('&markers=');
 
-    // Create map
-    const map = leaflet.map(mapRef.current).setView(center, 13);
+  const mapUrl = markersParam 
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${centerLng - span}%2C${centerLat - span}%2C${centerLng + span}%2C${centerLat + span}&layer=mapnik&marker=${markersParam}`
+    : `https://www.openstreetmap.org/export/embed.html?bbox=${centerLng - span}%2C${centerLat - span}%2C${centerLng + span}%2C${centerLat + span}&layer=mapnik`;
 
-    leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap',
-    }).addTo(map);
-
-    // Add organization marker (red house)
-    if (organization?.lat && organization?.lng) {
-      const orgIcon = leaflet.divIcon({
-        className: 'custom-marker',
-        html: `<div style="background:#ef4444;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;">🏠</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-      });
-      
-      leaflet.marker([organization.lat, organization.lng], { icon: orgIcon })
-        .addTo(map)
-        .bindPopup(`<b>${organization.name || 'Útulek'}</b><br>Vaše organizace`);
-    }
-
-    // Add finding markers
-    findings.forEach((finding) => {
-      if (!finding.where_lat || !finding.where_lng) return;
-      
-      const color = getSpeciesColor(finding.species);
-      const speciesIcon = finding.species === 'dog' ? '🐕' : finding.species === 'cat' ? '🐈' : '🐾';
-      
-      const icon = leaflet.divIcon({
-        className: 'custom-marker',
-        html: `<div style="background:${color};width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);">${speciesIcon}</div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-      });
-
-      const marker = leaflet.marker([finding.where_lat, finding.where_lng], { icon })
-        .addTo(map);
-
-      const popupContent = `
-        <div style="min-width:150px;">
-          <b style="font-size:14px;">${speciesIcon} ${finding.animal_name || 'Neznámé zvíře'}</b>
-          ${finding.animal_public_code ? `<br><span style="color:#666;font-size:12px;">${finding.animal_public_code}</span>` : ''}
-          ${finding.when_found ? `<br><span style="font-size:12px;">Nalezeno: ${new Date(finding.when_found).toLocaleDateString('cs-CZ')}</span>` : ''}
-          <br><span style="font-size:11px;padding:2px 6px;background:${finding.status === 'current' ? '#3b82f6' : '#6b7280'};color:white;border-radius:4px;">${finding.status === 'current' ? 'Aktuální' : 'Historický'}</span>
-          ${finding.animal_id ? `<br><a href="/dashboard/animals/${finding.animal_id}" style="color:#3b82f6;font-size:12px;">Zobrazit detail →</a>` : ''}
-        </div>
-      `;
-      
-      marker.bindPopup(popupContent);
-    });
-
-    mapInstanceRef.current = map;
-
-    return () => {
-      map.remove();
-      mapInstanceRef.current = null;
-    };
-  }, [loaded, leaflet, findings, organization, center]);
-
-  if (!loaded) {
+  if (findings.length === 0 && !organization?.lat) {
     return (
       <Card>
-        <CardContent className="p-0">
-          <Skeleton className="h-[500px] w-full rounded-lg" />
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <MapPin className="h-10 w-10 text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">Žádné GPS souřadnice k zobrazení</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Vyplňte GPS souřadnice organizace v nastavení
+          </p>
         </CardContent>
       </Card>
     );
@@ -400,25 +340,63 @@ function FindingsMap({
 
   return (
     <Card>
-      <CardContent className="p-0">
-        <div ref={mapRef} className="h-[500px] rounded-lg" />
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Map className="h-5 w-5" />
+          Interaktivní mapa
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="rounded-lg overflow-hidden border">
+          <iframe
+            width="100%"
+            height="450"
+            style={{ border: 0 }}
+            src={mapUrl}
+            allowFullScreen
+            loading="lazy"
+            title="Mapa nálezů"
+          />
+        </div>
         
+        {/* Quick links */}
+        <div className="flex flex-wrap gap-2">
+          {organization?.lat && organization?.lng && (
+            <a 
+              href={`https://www.openstreetmap.org/?mlat=${organization.lat}&mlon=${organization.lng}&zoom=15`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors text-sm font-medium"
+            >
+              <Home className="h-4 w-4" />
+              Váš útulek
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+          <a 
+            href={`https://www.openstreetmap.org/?mlat=${centerLat}&mlon=${centerLng}&zoom=${zoom}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors text-sm font-medium"
+          >
+            <MapPin className="h-4 w-4" />
+            Otevřít v OpenStreetMap
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+
         {/* Legend */}
-        <div className="p-3 border-t flex gap-4 text-sm flex-wrap">
+        <div className="flex gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
-            <span className="text-red-500">🏠</span>
-            <span>Útulek</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-blue-500">🐕</span>
+            <span>🐕</span>
             <span>Pes</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-orange-500">🐈</span>
+            <span>🐈</span>
             <span>Kočka</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-green-500">🐾</span>
+            <span>🐾</span>
             <span>Jiné</span>
           </div>
         </div>
