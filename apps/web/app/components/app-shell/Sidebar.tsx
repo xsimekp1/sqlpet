@@ -40,6 +40,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiClient } from '@/app/lib/api'
 import { toast } from 'sonner'
 import Image from 'next/image'
+import { motion } from 'framer-motion'
+import { usePathname } from 'next/navigation'
 
 interface NavItemConfig {
   label: string
@@ -55,11 +57,13 @@ interface NavSection {
 }
 
 export function Sidebar() {
+  const pathname = usePathname()
   const { user, permissions } = useAuth()
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
   const t = useTranslations()
   const queryClient = useQueryClient()
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   const { data: orgInfo } = useQuery({
@@ -198,18 +202,48 @@ export function Sidebar() {
               </p>
             )}
 
-            <div className="space-y-1">
-              {section.items.map((item) => (
-                <NavItem
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  collapsed={sidebarCollapsed}
-                  permission={item.permission}
-                  sectionTitle={section.title}
+            <div className="space-y-1 relative min-h-[40px]">
+              {section.items.map((item, itemIdx) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                const isHovered = hoveredHref === item.href
+                return (
+                  <NavItem
+                    key={item.href}
+                    href={item.href}
+                    icon={item.icon}
+                    label={item.label}
+                    collapsed={sidebarCollapsed}
+                    permission={item.permission}
+                    isSuperadminOnly={item.isSuperadminOnly}
+                    onMouseEnter={() => setHoveredHref(item.href)}
+                    onMouseLeave={() => setHoveredHref(null)}
+                    isActive={isActive}
+                  />
+                )
+              })}
+              {!sidebarCollapsed && (
+                <motion.div
+                  className="absolute left-0 right-0 h-10 bg-accent rounded-lg -z-10 pointer-events-none"
+                  initial={false}
+                  animate={{
+                    y: (() => {
+                      const activeIdx = section.items.findIndex(item => 
+                        pathname === item.href || pathname.startsWith(item.href + '/')
+                      )
+                      const targetIdx = activeIdx >= 0 ? activeIdx : section.items.findIndex(item => hoveredHref === item.href)
+                      return targetIdx >= 0 ? targetIdx * 44 : 0
+                    })(),
+                    opacity: (() => {
+                      const hasActive = section.items.some(item => 
+                        pathname === item.href || pathname.startsWith(item.href + '/')
+                      )
+                      const hasHover = hoveredHref !== null
+                      return hasActive || hasHover ? 1 : 0
+                    })()
+                  }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
-              ))}
+              )}
             </div>
           </div>
         ))}

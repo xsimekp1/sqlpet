@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { LucideIcon, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
@@ -15,14 +14,14 @@ interface NavItemProps {
   collapsed?: boolean
   permission?: string | null
   isSuperadminOnly?: boolean
-  sectionTitle?: string
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
+  isActive?: boolean
 }
 
-export function NavItem({ href, icon: Icon, label, collapsed = false, permission = null, isSuperadminOnly = false }: NavItemProps) {
-  const pathname = usePathname()
+export function NavItem({ href, icon: Icon, label, collapsed = false, permission = null, isSuperadminOnly = false, onMouseEnter, onMouseLeave, isActive = false }: NavItemProps) {
   const t = useTranslations()
   const { user, permissions } = useAuth()
-  const isActive = pathname === href || pathname.startsWith(href + '/')
   
   const hasPermission = userHasPermission(user, permission, permissions)
   const isDisabled = permission !== null && !hasPermission
@@ -46,10 +45,12 @@ export function NavItem({ href, icon: Icon, label, collapsed = false, permission
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-        isActive && 'bg-accent text-accent-foreground font-medium',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative z-10',
+        isActive && 'text-accent-foreground font-medium',
         collapsed && 'justify-center px-2'
       )}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <Icon className="h-5 w-5 shrink-0" />
       {!collapsed && (
