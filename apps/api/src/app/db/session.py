@@ -21,11 +21,6 @@ async_engine = create_async_engine(
     pool_pre_ping=True,
     poolclass=pool.NullPool,  # NullPool for Supabase PgBouncer compatibility
     pool_timeout=30,
-    connect_args={
-        "statement_cache_size": 0,
-        "ssl": "require",
-        "timeout": 30,
-    },
 )
 
 
