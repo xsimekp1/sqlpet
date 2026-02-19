@@ -51,9 +51,34 @@ from src.app.core.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Skip alembic migrations - tables already exist in production
-    # Migrations are handled manually when needed
-    print("⚠ Skipping alembic migrations - using existing tables")
+    # Run alembic migrations on startup
+    try:
+        import subprocess
+        import sys
+        import os
+
+        script_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "alembic", "upgrade.py"
+        )
+        if os.path.exists(script_path):
+            result = subprocess.run(
+                [sys.executable, script_path],
+                capture_output=True,
+                text=True,
+                env={
+                    **os.environ,
+                    "PYTHONPATH": os.path.join(os.path.dirname(__file__), ".."),
+                },
+            )
+            if result.returncode == 0:
+                print("✓ Alembic migrations completed")
+            else:
+                print(f"⚠ Migration warning: {result.stderr}")
+                print(f"  Stdout: {result.stdout}")
+        else:
+            print("⚠ Skipping alembic migrations - upgrade.py not found")
+    except Exception as e:
+        print(f"⚠ Migration error (non-fatal): {e}")
 
     # Sync missing tables (fallback if migrations fail)
     try:
