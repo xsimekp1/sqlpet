@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "C:\Users\EliteBook\Projects\sqlpet\apps\api\scripts\import_registered_shelters.py", line 179, in <module>
+    from src.app.db.session import AsyncSessionLocal
+  File "C:\Users\EliteBook\Projects\sqlpet\apps\api\src\app\db\session.py", line 18, in <module>
+    async_engine = create_async_engine(
+        settings.DATABASE_URL_ASYNC,
+    ...<3 lines>...
+        pool_timeout=30,
+    )
+  File "C:\Python314\Lib\site-packages\sqlalchemy\ext\asyncio\engine.py", line 120, in create_async_engine
+    sync_engine = _create_engine(url, **kw)
+  File "<string>", line 2, in create_engine
+  File "C:\Python314\Lib\site-packages\sqlalchemy\util\deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "C:\Python314\Lib\site-packages\sqlalchemy\engine\create.py", line 715, in create_engine
+    raise TypeError(
+    ...<10 lines>...
+    )
+TypeError: Invalid argument(s) 'pool_timeout' sent to create_engine(), using configuration PGDialect_asyncpg/NullPool/Engine.  Please check that the keyword arguments are appropriate for this combination of components.

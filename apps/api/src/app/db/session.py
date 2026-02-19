@@ -18,9 +18,8 @@ _request_query_data: ContextVar[dict[str, Any]] = ContextVar(
 async_engine = create_async_engine(
     settings.DATABASE_URL_ASYNC,
     echo=(settings.ENV == "dev"),
-    pool_pre_ping=True,
     poolclass=pool.NullPool,  # NullPool for Supabase PgBouncer compatibility
-    pool_timeout=30,
+    # Note: pool_pre_ping and pool_timeout are not valid with NullPool
 )
 
 
@@ -49,8 +48,8 @@ if async_engine.sync_engine:
 sync_engine = create_engine(
     settings.DATABASE_URL_SYNC,
     echo=(settings.ENV == "dev"),
-    pool_pre_ping=True,
     poolclass=pool.NullPool,  # Critical for Supabase - no connection pooling
+    # Note: pool_pre_ping is not valid with NullPool
 )
 
 AsyncSessionLocal = async_sessionmaker(

@@ -173,11 +173,11 @@ if __name__ == "__main__":
     import asyncio
     import sys
 
-    # Add src to path for local development
-    sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+    # Add apps/api to path so we can import from src.app
+    sys.path.insert(0, str(Path(__file__).parent.parent))
 
-    from app.db.session import AsyncSessionLocal
-    from app.core.config import settings
+    from src.app.db.session import AsyncSessionLocal
+    from src.app.core.config import settings
 
     async def main():
         print(f"Connecting to database...")
