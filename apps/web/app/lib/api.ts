@@ -1629,6 +1629,34 @@ class ApiClient {
     return ApiClient.patch(`/admin/registered-shelters/${shelterId}/notes`, { notes });
   }
 
+  static async getSheltersForMap(): Promise<Array<{
+    id: string;
+    name: string;
+    lat: number;
+    lng: number;
+  }>> {
+    return ApiClient.get('/admin/registered-shelters/map');
+  }
+
+  static async getNearbyShelters(
+    lat: number,
+    lng: number,
+    radiusKm: number = 25
+  ): Promise<Array<{
+    id: string;
+    name: string;
+    address: string;
+    lat: number;
+    lng: number;
+    distance_km: number;
+  }>> {
+    return ApiClient.get('/admin/registered-shelters/nearby', {
+      lat,
+      lng,
+      radius_km: radiusKm
+    });
+  }
+
   static async searchContacts(q: string): Promise<{ id: string; name: string; email: string | null }[]> {
     const result = await ApiClient.get<SearchResults>('/search', { q, limit: 10 });
     return result.contacts;

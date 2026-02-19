@@ -54,6 +54,10 @@ export default function NewFeedingPlanPage() {
   const [selectedAnimalId, setSelectedAnimalId] = useState('');
   const [selectedFoodId, setSelectedFoodId] = useState('');
   const [recommendedAmount, setRecommendedAmount] = useState<number | null>(null);
+  const [calculationDetails, setCalculationDetails] = useState<{
+    mer: number;
+    kcalPer100g: number;
+  } | null>(null);
 
   // Fetch animals
   const { data: animalsData } = useQuery({
@@ -155,6 +159,7 @@ export default function NewFeedingPlanPage() {
         variant: 'destructive',
       });
       setRecommendedAmount(null);
+      setCalculationDetails(null);
       return;
     }
 
@@ -166,6 +171,7 @@ export default function NewFeedingPlanPage() {
         variant: 'destructive',
       });
       setRecommendedAmount(null);
+      setCalculationDetails(null);
       return;
     }
 
@@ -204,8 +210,12 @@ export default function NewFeedingPlanPage() {
     
     // Ensure minimum of 10g
     roundedAmount = Math.max(10, roundedAmount);
-    
+
     setRecommendedAmount(roundedAmount);
+    setCalculationDetails({
+      mer: Math.round(mer),
+      kcalPer100g: kcalPer100g
+    });
   };
 
   const handleFoodChange = (value: string) => {
@@ -219,6 +229,7 @@ export default function NewFeedingPlanPage() {
       }
     } else {
       setRecommendedAmount(null);
+      setCalculationDetails(null);
     }
   };
 
@@ -318,20 +329,25 @@ export default function NewFeedingPlanPage() {
             placeholder="např. 200"
             {...register('amount_g')}
           />
-          {recommendedAmount && (
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground">
-                Doporučená denní dávka: <span className="font-medium text-green-600">{recommendedAmount}g</span> (váha: {selectedAnimal?.weight_current_kg}kg)
+          {recommendedAmount && calculationDetails && (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Doporučená denní dávka: <span className="font-medium text-green-600">{recommendedAmount}g</span> (váha: {selectedAnimal?.weight_current_kg}kg)
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={applyRecommendedAmount}
+                  className="h-6 text-xs text-green-600 hover:text-green-700"
+                >
+                  Použít
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground font-mono">
+                Výpočet: {calculationDetails.mer} kcal/den ÷ {calculationDetails.kcalPer100g} kcal/100g × 100 = {Math.round((calculationDetails.mer / calculationDetails.kcalPer100g) * 100)}g
               </p>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="sm"
-                onClick={applyRecommendedAmount}
-                className="h-6 text-xs text-green-600 hover:text-green-700"
-              >
-                Použít
-              </Button>
             </div>
           )}
         </div>

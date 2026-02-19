@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { MapPin, Building2, Search, Filter, Loader2, Upload, Plus } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { MapPin, Building2, Search, Filter, Loader2, Upload, Plus, Map, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -26,6 +28,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import ApiClient from '@/app/lib/api';
+
+// Dynamic import for map to avoid SSR issues
+const SheltersMap = dynamic(() => import('./SheltersMap'), {
+  ssr: false,
+  loading: () => <div className="h-[500px] bg-muted animate-pulse rounded-lg" />
+});
 
 interface RegisteredShelter {
   id: string;
@@ -49,6 +57,7 @@ export default function RegisteredSheltersPage() {
   const [importing, setImporting] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newShelter, setNewShelter] = useState({
@@ -270,70 +279,107 @@ export default function RegisteredSheltersPage() {
         </Card>
       </div>
 
-      {/* List */}
-      {loading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
-      ) : filteredShelters.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Building2 className="h-10 w-10 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Žádné útulky nenalezeny</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-3">
-          {filteredShelters.map((shelter) => (
-            <Card key={shelter.id} className="hover:bg-accent/50 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-semibold">{shelter.name}</h3>
-                      <Badge variant="outline" className="font-mono text-xs">
-                        {shelter.registration_number}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      {shelter.address}
-                    </div>
-                    <div className="flex items-center gap-4 mt-2 text-xs">
-                      <Badge variant="secondary">{shelter.region}</Badge>
-                      {shelter.activity_type && (
-                        <span className="text-muted-foreground">{shelter.activity_type}</span>
-                      )}
-                      {shelter.registration_date && (
-                        <span className="text-muted-foreground">
-                          Registrován: {new Date(shelter.registration_date).toLocaleDateString('cs-CZ')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {shelter.capacity && (
-                      <p className="text-sm font-medium">{shelter.capacity}</p>
-                    )}
-                    {shelter.lat && shelter.lng ? (
-                      <Badge className="mt-2 bg-green-500">GPS ✓</Badge>
-                    ) : (
-                      <Badge variant="outline" className="mt-2">Bez GPS</Badge>
-                    )}
-                  </div>
-                </div>
-                {shelter.notes && (
-                  <div className="mt-2 p-2 bg-muted rounded-md text-sm">
-                    <span className="font-medium">Poznámky:</span> {shelter.notes}
-                  </div>
-                )}
+      {/* List / Map Tabs */}
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+        <TabsList>
+          <TabsTrigger value="list" className="gap-2">
+            <List className="h-4 w-4" />
+            Seznam
+          </TabsTrigger>
+          <TabsTrigger value="map" className="gap-2">
+            <Map className="h-4 w-4" />
+            Mapa
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list" className="mt-4">
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
+          ) : filteredShelters.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Building2 className="h-10 w-10 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Žádné útulky nenalezeny</p>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+          ) : (
+            <div className="grid gap-3">
+              {filteredShelters.map((shelter) => (
+                <Card key={shelter.id} className="hover:bg-accent/50 transition-colors">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold">{shelter.name}</h3>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {shelter.registration_number}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          {shelter.address}
+                        </div>
+                        <div className="flex items-center gap-4 mt-2 text-xs">
+                          <Badge variant="secondary">{shelter.region}</Badge>
+                          {shelter.activity_type && (
+                            <span className="text-muted-foreground">{shelter.activity_type}</span>
+                          )}
+                          {shelter.registration_date && (
+                            <span className="text-muted-foreground">
+                              Registrován: {new Date(shelter.registration_date).toLocaleDateString('cs-CZ')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {shelter.capacity && (
+                          <p className="text-sm font-medium">{shelter.capacity}</p>
+                        )}
+                        {shelter.lat && shelter.lng ? (
+                          <Badge className="mt-2 bg-green-500">GPS ✓</Badge>
+                        ) : (
+                          <Badge variant="outline" className="mt-2">Bez GPS</Badge>
+                        )}
+                      </div>
+                    </div>
+                    {shelter.notes && (
+                      <div className="mt-2 p-2 bg-muted rounded-md text-sm">
+                        <span className="font-medium">Poznámky:</span> {shelter.notes}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="map" className="mt-4">
+          {loading ? (
+            <div className="h-[500px] bg-muted animate-pulse rounded-lg" />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Map className="h-5 w-5" />
+                  Mapa registrovaných útulků
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SheltersMap
+                  shelters={filteredShelters.filter((s): s is RegisteredShelter & { lat: number; lng: number } =>
+                    s.lat !== null && s.lng !== null
+                  )}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

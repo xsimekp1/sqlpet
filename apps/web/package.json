@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint"
   },
-"dependencies": {
+  "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -20,6 +20,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.34.0",
+    "leaflet": "^1.9.4",
+    "leaflet.heat": "^0.2.0",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "next-intl": "^4.8.2",
@@ -27,6 +29,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
+    "react-leaflet": "^5.0.0",
     "react-qr-code": "^2.0.15",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
@@ -35,6 +38,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

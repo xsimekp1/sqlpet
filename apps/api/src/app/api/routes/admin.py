@@ -1510,7 +1510,7 @@ async def update_shelter_notes(
 
     await db.execute(
         text("""
-            UPDATE registered_shelters 
+            UPDATE registered_shelters
             SET notes = :notes, updated_at = NOW()
             WHERE id = :id
         """),
@@ -1519,3 +1519,85 @@ async def update_shelter_notes(
     await db.commit()
 
     return {"success": True}
+
+
+class ShelterMapPoint(BaseModel):
+    id: str
+    name: str
+    lat: float
+    lng: float
+
+
+@router.get("/registered-shelters/map", response_model=list[ShelterMapPoint])
+async def get_shelters_for_map(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get all shelters with GPS coordinates for map display."""
+    result = await db.execute(
+        text("""
+            SELECT id, name, lat, lng
+            FROM registered_shelters
+            WHERE lat IS NOT NULL AND lng IS NOT NULL
+            ORDER BY name
+        """)
+    )
+    rows = result.fetchall()
+
+    return [
+        ShelterMapPoint(
+            id=str(row[0]),
+            name=row[1],
+            lat=row[2],
+            lng=row[3]
+        )
+        for row in rows
+    ]
+
+
+class NearbyShelter(BaseModel):
+    id: str
+    name: str
+    address: str
+    lat: float
+    lng: float
+    distance_km: float
+
+
+@router.get("/registered-shelters/nearby", response_model=list[NearbyShelter])
+async def get_nearby_shelters(
+    lat: float,
+    lng: float,
+    radius_km: float = 25,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get shelters within radius of a GPS point using Haversine formula."""
+    result = await db.execute(
+        text("""
+            SELECT id, name, address, lat, lng,
+                   (6371 * acos(
+                       cos(radians(:lat)) * cos(radians(lat)) *
+                       cos(radians(lng) - radians(:lng)) +
+                       sin(radians(:lat)) * sin(radians(lat))
+                   )) AS distance_km
+            FROM registered_shelters
+            WHERE lat IS NOT NULL AND lng IS NOT NULL
+            HAVING distance_km <= :radius
+            ORDER BY distance_km
+        """),
+        {"lat": lat, "lng": lng, "radius": radius_km}
+    )
+    rows = result.fetchall()
+
+    return [
+        NearbyShelter(
+            id=str(row[0]),
+            name=row[1],
+            address=row[2],
+            lat=row[3],
+            lng=row[4],
+            distance_km=round(row[5], 2)
+        )
+        for row in rows
+    ]
