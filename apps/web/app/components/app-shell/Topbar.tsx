@@ -8,6 +8,7 @@ import { UserMenu } from '../layout/UserMenu'
 import { LanguageSwitcher } from '../LanguageSwitcher'
 import { Button } from '@/components/ui/button'
 import { useUIStore } from '@/app/stores/uiStore'
+import { WeatherWidget } from './WeatherWidget'
 
 export function Topbar() {
   const { toggleSidebar } = useUIStore()
@@ -28,8 +29,9 @@ export function Topbar() {
           <OrgSwitcher />
         </div>
 
-        {/* Center: Global Search */}
-        <div className="flex-1 max-w-xl">
+        {/* Center: Global Search + Weather */}
+        <div className="flex-1 flex items-center justify-end gap-4 max-w-xl">
+          <WeatherWidget />
           <GlobalSearchTrigger className="text-slate-300" />
         </div>
 
