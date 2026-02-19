@@ -427,8 +427,8 @@ async def get_findings_map_data(
 
     findings = []
     for row in rows:
-        findings.append(
-            FindingMapData(
+        try:
+            finding_data = FindingMapData(
                 id=uuid.UUID(str(row.finding_id))
                 if row.finding_id
                 else uuid.UUID("00000000-0000-0000-0000-000000000000"),
@@ -441,6 +441,11 @@ async def get_findings_map_data(
                 where_lng=float(row.where_lng) if row.where_lng else None,
                 status="current" if row.is_current else "past",
             )
-        )
+            findings.append(finding_data)
+        except Exception as e:
+            print(f"Error creating FindingMapData: {e}")
+            print(
+                f"Row: finding_id={row.finding_id}, animal_id={row.animal_id}, is_current={row.is_current}"
+            )
 
     return FindingsMapResponse(organization=organization, findings=findings)
