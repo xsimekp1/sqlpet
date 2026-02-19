@@ -592,6 +592,7 @@ async def get_animal_kennel_history(
         .where(
             KennelStay.animal_id == animal_id,
             KennelStay.organization_id == organization_id,
+            Kennel.deleted_at.is_(None),  # Only show stays for non-deleted kennels
         )
         .order_by(KennelStay.start_at.asc())
     )
