@@ -64,17 +64,17 @@
   --theme-danger: #EF4444;
   --theme-danger-soft: #FEE2E2;
   
-  /* Surface hierarchy - CLEAR COLORFUL DISTINCTION */
-  --theme-page-bg: linear-gradient(135deg, #F0FDF4 0%, #CCFBF1 100%); /* Teal gradient */
-  --theme-page-bg-solid: #ECFDF5;
+  /* Surface hierarchy - subtle teal hint */
+  --theme-page-bg: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); /* Subtle gray */
+  --theme-page-bg-solid: #F8FAFC;
   --theme-surface: #FFFFFF;
   --theme-surface-elevated: #FFFFFF;
-  --theme-input-bg: #F0FDFA;       /* Very light teal */
-  --theme-surface-muted: #CCFBF1; /* Teal tint */
-  --theme-border: #5EEAD4;         /* Bright teal border */
-  --theme-text: #134E4A;          /* Dark teal text */
-  --theme-text-secondary: #0F766E;
-  --theme-text-muted: #0D9488;
+  --theme-input-bg: #F1F5F9;       /* Light gray */
+  --theme-surface-muted: #E2E8F0; /* Gray */
+  --theme-border: #CBD5E1;         /* Gray border */
+  --theme-text: #1E293B;          /* Dark slate */
+  --theme-text-secondary: #475569;
+  --theme-text-muted: #64748B;
   
   /* Current theme tokens */
   --color-primary: var(--theme-primary);
@@ -274,7 +274,7 @@
   
   /* Apply theme gradient to main content area */
   [data-theme="teal"] main {
-    background: linear-gradient(135deg, #F0FDF4 0%, #CCFBF1 100%);
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
     min-height: 100vh;
   }
   [data-theme="berry"] main {
