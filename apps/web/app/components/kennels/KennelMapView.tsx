@@ -10,9 +10,11 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import ApiClient, { Kennel, Animal } from '@/app/lib/api';
 import { getAnimalImageUrl } from '@/app/lib/utils';
-import { toast } from 'sonner';
 import Link from 'next/link';
 
 interface KennelMapViewProps {
@@ -121,6 +123,12 @@ function DraggableKennelBox({
   pos: KennelPos;
   animalsInKennel: Animal[];
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isEditingMaintenance, setIsEditingMaintenance] = useState(false);
+  const [maintenanceStart, setMaintenanceStart] = useState(kennel.maintenance_start_at?.split('T')[0] || '');
+  const [maintenanceEnd, setMaintenanceEnd] = useState(kennel.maintenance_end_at?.split('T')[0] || '');
+  const [saving, setSaving] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -155,12 +163,35 @@ function DraggableKennelBox({
       ? 'border-l-red-500'
       : 'border-l-green-500';
 
+  const isMaintenanceActive = kennel.maintenance_start_at && 
+    new Date(kennel.maintenance_start_at) <= new Date() && 
+    (!kennel.maintenance_end_at || new Date(kennel.maintenance_end_at) >= new Date());
+
+  const handleSaveMaintenance = async () => {
+    setSaving(true);
+    try {
+      await ApiClient.setKennelMaintenance(kennel.id, {
+        start_at: maintenanceStart || null,
+        end_at: maintenanceEnd || null,
+        reason: kennel.maintenance_reason || null,
+      });
+      toast.success('Maintenance dates updated');
+      setIsEditingMaintenance(false);
+    } catch (error) {
+      toast.error('Failed to update maintenance dates');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div
       ref={setDragRef}
       style={style}
       className={`rounded-lg border border-l-4 bg-card shadow-md flex flex-col overflow-hidden ${borderClass} ${isOver ? 'ring-2 ring-primary ring-offset-1' : ''}`}
       title={`${kennel.dimensions?.length ?? '?'}cm × ${kennel.dimensions?.width ?? '?'}cm`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setIsEditingMaintenance(false); }}
     >
       {/* Header — kennel drag handle only */}
       <div
@@ -196,8 +227,62 @@ function DraggableKennelBox({
         ) : (
           <p className="text-xs text-muted-foreground truncate">{kennel.name}</p>
         )}
-
       </div>
+
+      {/* Maintenance indicator - shows on hover or when active */}
+      {(isHovered || isMaintenanceActive || kennel.maintenance_start_at) && (
+        <div className="px-2 py-1 bg-yellow-50 border-t border-yellow-200 text-xs">
+          {isEditingMaintenance ? (
+            <div className="flex gap-1 items-center" onClick={e => e.stopPropagation()}>
+              <Input
+                type="date"
+                value={maintenanceStart}
+                onChange={e => setMaintenanceStart(e.target.value)}
+                className="h-6 text-xs py-0"
+              />
+              <span className="text-muted-foreground">-</span>
+              <Input
+                type="date"
+                value={maintenanceEnd}
+                onChange={e => setMaintenanceEnd(e.target.value)}
+                className="h-6 text-xs py-0"
+              />
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-1"
+                onClick={handleSaveMaintenance}
+                disabled={saving}
+              >
+                ✓
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-1"
+                onClick={() => setIsEditingMaintenance(false)}
+              >
+                ✕
+              </Button>
+            </div>
+          ) : (
+            <div 
+              className="flex items-center justify-between cursor-pointer hover:bg-yellow-100 rounded px-1 -mx-1"
+              onClick={e => { e.stopPropagation(); setIsEditingMaintenance(true); }}
+            >
+              <span className={isMaintenanceActive ? 'text-yellow-700 font-medium' : 'text-yellow-600'}>
+                🔧 {kennel.maintenance_start_at 
+                  ? `${new Date(kennel.maintenance_start_at).toLocaleDateString('cs-CZ')}${kennel.maintenance_end_at ? ` - ${new Date(kennel.maintenance_end_at).toLocaleDateString('cs-CZ')}` : ''}`
+                  : 'Set maintenance'
+                }
+              </span>
+              {isHovered && (
+                <span className="text-yellow-500 text-[10px]">Click to edit</span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
