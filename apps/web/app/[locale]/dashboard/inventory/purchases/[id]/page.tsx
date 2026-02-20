@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ApiClient } from '@/app/lib/api'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -31,26 +31,29 @@ import { format } from 'date-fns'
 import { useToast } from '@/hooks/use-toast'
 import { Progress } from '@/components/ui/progress'
 
-export default function PurchaseOrderDetailPage({ params }: { params: { id: string } }) {
+export default function PurchaseOrderDetailPage() {
   const t = useTranslations('purchases')
   const router = useRouter()
+  const params = useParams()
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
   const [showReceiveModal, setShowReceiveModal] = useState(false)
   const [isReceiving, setIsReceiving] = useState(false)
 
+  const purchaseOrderId = purchaseOrderId as string
+
   // Fetch purchase order
   const { data: po, isLoading } = useQuery({
-    queryKey: ['purchase-order', params.id],
-    queryFn: () => ApiClient.getPurchaseOrder(params.id),
+    queryKey: ['purchase-order', purchaseOrderId],
+    queryFn: () => ApiClient.getPurchaseOrder(purchaseOrderId),
   })
 
   // Cancel mutation
   const cancelMutation = useMutation({
-    mutationFn: () => ApiClient.cancelPurchaseOrder(params.id),
+    mutationFn: () => ApiClient.cancelPurchaseOrder(purchaseOrderId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['purchase-order', params.id] })
+      queryClient.invalidateQueries({ queryKey: ['purchase-order', purchaseOrderId] })
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] })
       toast({
         title: t('orderCancelled'),
@@ -102,9 +105,9 @@ export default function PurchaseOrderDetailPage({ params }: { params: { id: stri
     }
 
     try {
-      await ApiClient.receivePurchaseOrder(params.id, { items })
+      await ApiClient.receivePurchaseOrder(purchaseOrderId, { items })
 
-      queryClient.invalidateQueries({ queryKey: ['purchase-order', params.id] })
+      queryClient.invalidateQueries({ queryKey: ['purchase-order', purchaseOrderId] })
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] })
       queryClient.invalidateQueries({ queryKey: ['inventory-items'] })
 
