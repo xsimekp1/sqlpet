@@ -112,7 +112,7 @@ export default function FindingsPage() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [searchingContacts, setSearchingContacts] = useState(false);
   const [showHeatMap, setShowHeatMap] = useState(false);
-  const [showShelters, setShowShelters] = useState(true);
+  const [showShelters, setShowShelters] = useState(false);
 
   useEffect(() => {
     loadMapData();
@@ -420,38 +420,38 @@ export default function FindingsPage() {
         )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{filteredFindings.length}</div>
-            <p className="text-sm text-muted-foreground">Celkem nálezů</p>
+      {/* Stats - compact */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <Card className="py-2">
+          <CardContent className="pt-2">
+            <div className="text-lg font-bold">{filteredFindings.length}</div>
+            <p className="text-xs text-muted-foreground">Celkem</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{findingsWithLocation.length}</div>
-            <p className="text-sm text-muted-foreground">S GPS</p>
+        <Card className="py-2">
+          <CardContent className="pt-2">
+            <div className="text-lg font-bold">{findingsWithLocation.length}</div>
+            <p className="text-xs text-muted-foreground">S GPS</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">
+        <Card className="py-2">
+          <CardContent className="pt-2">
+            <div className="text-lg font-bold">
               {filteredFindings.filter(f => f.status === 'current').length}
             </div>
-            <p className="text-sm text-muted-foreground">Aktuálních</p>
+            <p className="text-xs text-muted-foreground">Aktuální</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{statsBySpecies.dog}</div>
-            <p className="text-sm text-muted-foreground">🐕 Psi</p>
+        <Card className="py-2">
+          <CardContent className="pt-2">
+            <div className="text-lg font-bold">{statsBySpecies.dog}</div>
+            <p className="text-xs text-muted-foreground">🐕</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{statsBySpecies.cat}</div>
-            <p className="text-sm text-muted-foreground">🐈 Kočky</p>
+        <Card className="py-2">
+          <CardContent className="pt-2">
+            <div className="text-lg font-bold">{statsBySpecies.cat}</div>
+            <p className="text-xs text-muted-foreground">🐈</p>
           </CardContent>
         </Card>
       </div>
@@ -471,15 +471,20 @@ export default function FindingsPage() {
 
         <TabsContent value="map" className="mt-4">
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* Map - right side, wider on large screens */}
-            <div className="lg:order-2 lg:flex-1 lg:min-w-[400px]">
-              <Card>
+            {/* List - left side, wider */}
+            <div className="lg:order-1 lg:flex-1">
+              <FindingsList
+                findings={filteredFindings}
+                organization={mapData?.organization}
+              />
+            </div>
+            
+            {/* Map - right side, compact square */}
+            <div className="lg:order-2 lg:w-[300px] xl:w-[350px]">
+              <Card className="h-fit">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <MapIcon className="h-5 w-5" />
-                      Mapa
-                    </CardTitle>
+                    <CardTitle className="text-base">Mapa</CardTitle>
                     <div className="flex gap-1">
                       <Button
                         variant={showHeatMap ? 'default' : 'outline'}
@@ -498,8 +503,8 @@ export default function FindingsPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="h-full p-2">
-                  <div className="h-[400px] lg:h-[calc(100vh-280px)] lg:min-h-[500px] w-full">
+                <CardContent className="p-2">
+                  <div className="aspect-square w-full max-w-[280px] mx-auto">
                     <InteractiveMap
                       findings={findingsWithLocation}
                       organization={mapData?.organization}
@@ -512,14 +517,6 @@ export default function FindingsPage() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-            
-            {/* List - left side */}
-            <div className="lg:order-1 lg:w-[350px] xl:w-[400px] flex-shrink-0">
-              <FindingsList
-                findings={filteredFindings}
-                organization={mapData?.organization}
-              />
             </div>
           </div>
         </TabsContent>
