@@ -33,7 +33,9 @@ export function Topbar() {
 
         {/* Center: Global Search + Weather */}
         <div className="flex-1 flex items-center justify-end gap-4 max-w-xl">
-          <WeatherWidget />
+          <div className="hidden lg:block">
+            <WeatherWidget />
+          </div>
           <GlobalSearchTrigger className="text-slate-300" />
         </div>
 
