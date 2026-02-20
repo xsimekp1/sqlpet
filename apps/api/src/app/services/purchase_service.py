@@ -45,6 +45,7 @@ class PurchaseService:
                 )
             )
             .order_by(PurchaseOrder.po_number.desc())
+            .limit(1)
         )
         result = await self.db.execute(stmt)
         last_po = result.scalar_one_or_none()
