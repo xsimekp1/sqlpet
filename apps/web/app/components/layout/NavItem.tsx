@@ -9,6 +9,15 @@ import { userHasPermission } from '@/app/lib/permissions'
 import { useRef } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { formatShortcut } from '@/app/lib/shortcuts'
+import { useShortcutHint } from '@/app/hooks/useShortcutHint'
+
+const ACTION_KEY_MAP: Record<string, { actionKey: string; label: string; shortcut: string }> = {
+  '/dashboard/animals': { actionKey: 'animals', label: 'Zvířata', shortcut: 'Ctrl+Shift+A' },
+  '/dashboard/kennels': { actionKey: 'kennels', label: 'Kotce', shortcut: 'Ctrl+Shift+K' },
+  '/dashboard/tasks': { actionKey: 'tasks', label: 'Úkoly', shortcut: 'Ctrl+Shift+T' },
+  '/dashboard/inventory': { actionKey: 'inventory', label: 'Sklad', shortcut: 'Ctrl+Shift+I' },
+  '/dashboard/feeding': { actionKey: 'feeding', label: 'Krmení', shortcut: 'Ctrl+Shift+F' },
+}
 
 interface NavItemProps {
   href: string
@@ -39,8 +48,24 @@ export function NavItem({
   const { user, permissions } = useAuth()
   const itemRef = useRef<HTMLDivElement>(null)
 
+  const actionConfig = ACTION_KEY_MAP[href]
+  const { trackClick } = useShortcutHint({
+    actionKey: actionConfig?.actionKey || '',
+    shortcut: actionConfig?.shortcut || '',
+    label: actionConfig?.label || '',
+    message: actionConfig ? t('shortcuts.hintMessage', { label: actionConfig.label, shortcut: actionConfig.shortcut }) : undefined,
+    threshold: 3,
+    windowMs: 60000,
+  })
+
   const hasPermission = userHasPermission(user, permission, permissions)
   const isDisabled = permission !== null && !hasPermission
+
+  const handleClick = () => {
+    if (actionConfig) {
+      trackClick()
+    }
+  }
 
   const handleMouseEnter = () => {
     if (itemRef.current && onHoverStart) {
@@ -58,6 +83,7 @@ export function NavItem({
   const navLink = (
     <Link
       href={href}
+      onClick={handleClick}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200 relative z-10',
         collapsed && 'justify-center px-2',

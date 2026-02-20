@@ -1542,6 +1542,9 @@
     "back": "Zpět",
     "saved": "Zkratka uložena",
     "saveError": "Nepodařilo se uložit zkratku",
+    "hints": "Nápovědy ke zkratkám",
+    "hintsDescription": "Po opakovaném použití funkce zobrazit nápovědu na klávesovou zkratku",
+    "hintMessage": "Používáte {label} často. Zkuste {shortcut} pro rychlejší přístup.",
     "actions": {
       "open_search": "Otevřít hledání",
       "open_animals": "Otevřít zvířata",

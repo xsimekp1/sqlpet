@@ -1516,6 +1516,9 @@
     "back": "Back",
     "saved": "Shortcut saved",
     "saveError": "Failed to save shortcut",
+    "hints": "Shortcut hints",
+    "hintsDescription": "Show hint about keyboard shortcut after repeated use of a feature",
+    "hintMessage": "You use {label} often. Try {shortcut} for quicker access.",
     "actions": {
       "open_search": "Open search",
       "open_animals": "Open animals",

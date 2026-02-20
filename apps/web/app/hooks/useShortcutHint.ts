@@ -7,6 +7,7 @@ export interface ShortcutHintConfig {
   actionKey: string;
   shortcut: string;
   label: string;
+  message?: string;
   threshold?: number;
   windowMs?: number;
 }
@@ -24,6 +25,7 @@ export function useShortcutHint(config: ShortcutHintConfig) {
     actionKey,
     shortcut,
     label,
+    message,
     threshold = 3,
     windowMs = 60000, // 1 minute window
   } = config;
@@ -79,15 +81,13 @@ export function useShortcutHint(config: ShortcutHintConfig) {
       state.hintShown = true;
       localStorage.setItem(`shortcut_hint_${actionKey}`, JSON.stringify(state));
       
-      toast.info(
-        `Používáte ${label} často. Zkuste klávesovou zkratku ${shortcut} pro rychlejší přístup.`,
-        {
-          duration: 5000,
-          id: `shortcut-hint-${actionKey}`,
-        }
-      );
+      const toastMessage = message || `Používáte ${label} často. Zkuste ${shortcut} pro rychlejší přístup.`;
+      toast.info(toastMessage, {
+        duration: 5000,
+        id: `shortcut-hint-${actionKey}`,
+      });
     }
-  }, [actionKey, shortcut, label, threshold, windowMs, isEnabled]);
+  }, [actionKey, shortcut, label, message, threshold, windowMs, isEnabled]);
 
   return { trackClick, isEnabled };
 }

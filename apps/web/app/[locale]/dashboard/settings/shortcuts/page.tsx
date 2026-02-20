@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { ApiClient } from '@/app/lib/api';
@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import { Keyboard, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { getShortcutHintsEnabled, setShortcutHintsEnabled } from '@/app/hooks/useShortcutHint';
 
 interface ShortcutEntry {
   action: string;
@@ -23,6 +25,17 @@ export default function ShortcutsSettingsPage() {
   const t = useTranslations('shortcuts');
   const queryClient = useQueryClient();
   const [capturing, setCapturing] = useState<string | null>(null);
+  const [hintsEnabled, setHintsEnabled] = useState(true);
+
+  useEffect(() => {
+    setHintsEnabled(getShortcutHintsEnabled());
+  }, []);
+
+  const handleHintsToggle = (checked: boolean) => {
+    setHintsEnabled(checked);
+    setShortcutHintsEnabled(checked);
+    toast.success(checked ? 'Nápovědy ke zkratkám zapnuty' : 'Nápovědy ke zkratkám vypnuty');
+  };
 
   const { data: shortcuts = [] } = useQuery<ShortcutEntry[]>({
     queryKey: ['shortcuts'],
@@ -82,6 +95,19 @@ export default function ShortcutsSettingsPage() {
           <p className="text-sm text-muted-foreground">{t('description')}</p>
         </div>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{t('hints')}</CardTitle>
+            <CardDescription>{t('hintsDescription')}</CardDescription>
+          </div>
+          <Switch
+            checked={hintsEnabled}
+            onCheckedChange={handleHintsToggle}
+          />
+        </CardHeader>
+      </Card>
 
       <Card>
         <CardHeader>
