@@ -36,6 +36,7 @@ export function EasterEggTrigger() {
 
   useEffect(() => {
     async function loadBreeds() {
+      setLoading(true);
       try {
         const breedList = await ApiClient.getBreeds('dog');
         setBreeds(breedList);
@@ -52,11 +53,28 @@ export function EasterEggTrigger() {
           }
         }
         setBreedImages(images);
+        
+        // Generate questions after loading
+        const breedsWithImages = breedList.filter(b => images[b.id]?.length > 0);
+        if (breedsWithImages.length > 0) {
+          const shuffled = [...breedsWithImages].sort(() => Math.random() - 0.5);
+          const selected = shuffled.slice(0, 10);
+          const newQuestions = selected.map(breed => {
+            const breedImagesList = images[breed.id] || [];
+            const randomImage = breedImagesList[Math.floor(Math.random() * breedImagesList.length)];
+            const otherBreeds = breedList.filter(b => b.id !== breed.id).sort(() => Math.random() - 0.5).slice(0, 2);
+            const options = [...otherBreeds.map(b => b.display_name), breed.display_name].sort(() => Math.random() - 0.5);
+            return { breed, image: randomImage, options };
+          });
+          setQuestions(newQuestions);
+        }
       } catch (error) {
         console.error('Failed to load breeds:', error);
+      } finally {
+        setLoading(false);
       }
     }
-    if (isOpen && breeds.length === 0) {
+    if (isOpen && questions.length === 0) {
       loadBreeds();
     }
   }, [isOpen]);
@@ -139,6 +157,12 @@ export function EasterEggTrigger() {
           {loading && (
             <div className="p-8 text-center">
               <p className="text-[#00E5FF]">Načítám plemena...</p>
+            </div>
+          )}
+          
+          {!loading && !currentQuestion && (
+            <div className="p-8 text-center">
+              <p className="text-white">Načítám...</p>
             </div>
           )}
           
