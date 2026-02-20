@@ -24,7 +24,6 @@ interface Question {
 export function EasterEggTrigger() {
   const [isOpen, setIsOpen] = useState(false);
   const [breeds, setBreeds] = useState<Breed[]>([]);
-  const [breedImages, setBreedImages] = useState<Record<string, BreedImage[]>>({});
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -33,69 +32,65 @@ export function EasterEggTrigger() {
   const [locked, setLocked] = useState(false);
   const [phase, setPhase] = useState<'quiz' | 'result'>('quiz');
   const [loading, setLoading] = useState(false);
+  const [currentImage, setCurrentImage] = useState<BreedImage | null>(null);
+  const [loadingImage, setLoadingImage] = useState(false);
 
+  // Load breeds once when dialog opens
   useEffect(() => {
     async function loadBreeds() {
       setLoading(true);
       try {
         const breedList = await ApiClient.getBreeds('dog');
         setBreeds(breedList);
-        
-        const images: Record<string, BreedImage[]> = {};
-        for (const breed of breedList.slice(0, 30)) {
-          try {
-            const colorImages = await ApiClient.getBreedColorImages(breed.id);
-            if (colorImages.length > 0) {
-              images[breed.id] = colorImages;
-            }
-          } catch (e) {
-            // Ignore errors for individual breeds
-          }
-        }
-        setBreedImages(images);
-        
-        // Generate questions after loading
-        const breedsWithImages = breedList.filter(b => images[b.id]?.length > 0);
-        if (breedsWithImages.length > 0) {
-          const shuffled = [...breedsWithImages].sort(() => Math.random() - 0.5);
-          const selected = shuffled.slice(0, 10);
-          const newQuestions = selected.map(breed => {
-            const breedImagesList = images[breed.id] || [];
-            const randomImage = breedImagesList[Math.floor(Math.random() * breedImagesList.length)];
-            const otherBreeds = breedList.filter(b => b.id !== breed.id).sort(() => Math.random() - 0.5).slice(0, 2);
-            const options = [...otherBreeds.map(b => b.display_name), breed.display_name].sort(() => Math.random() - 0.5);
-            return { breed, image: randomImage, options };
-          });
-          setQuestions(newQuestions);
-        }
       } catch (error) {
         console.error('Failed to load breeds:', error);
       } finally {
         setLoading(false);
       }
     }
-    if (isOpen && questions.length === 0) {
+    if (isOpen && breeds.length === 0) {
       loadBreeds();
     }
   }, [isOpen]);
 
-  const generateQuestions = (count: number = 10): Question[] => {
-    const breedsWithImages = breeds.filter(b => breedImages[b.id]?.length > 0);
-    if (breedsWithImages.length === 0) return [];
+  // Load image for current question
+  useEffect(() => {
+    async function loadQuestionImage() {
+      if (!currentQuestion || phase !== 'quiz') return;
+      
+      setLoadingImage(true);
+      try {
+        const colorImages = await ApiClient.getBreedColorImages(currentQuestion.breed.id);
+        if (colorImages.length > 0) {
+          const randomImage = colorImages[Math.floor(Math.random() * colorImages.length)];
+          setCurrentImage(randomImage);
+        } else {
+          setCurrentImage(null);
+        }
+      } catch (error) {
+        console.error('Failed to load image:', error);
+        setCurrentImage(null);
+      } finally {
+        setLoadingImage(false);
+      }
+    }
     
-    const shuffled = [...breedsWithImages].sort(() => Math.random() - 0.5);
+    if (currentQuestion) {
+      setCurrentImage(null); // Clear previous image
+      loadQuestionImage();
+    }
+  }, [currentQuestion?.breed.id, phase]);
+
+  const generateQuestions = (count: number = 10): Question[] => {
+    const shuffled = [...breeds].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, count);
     
     return selected.map(breed => {
-      const images = breedImages[breed.id] || [];
-      const randomImage = images[Math.floor(Math.random() * images.length)];
-      
       const otherBreeds = breeds.filter(b => b.id !== breed.id).sort(() => Math.random() - 0.5).slice(0, 2);
       const options = [...otherBreeds.map(b => b.display_name), breed.display_name].sort(() => Math.random() - 0.5);
       
       return {
         breed,
-        image: randomImage,
         options,
       };
     });
@@ -181,10 +176,14 @@ export function EasterEggTrigger() {
                 Otázka {currentIndex + 1}/10
               </div>
               
-              {currentQuestion.image && (
+              {loadingImage ? (
+                <div className="flex justify-center p-4">
+                  <p className="text-[#00E5FF]">Načítám obrázek...</p>
+                </div>
+              ) : currentImage && (
                 <div className="flex justify-center">
                   <img 
-                    src={currentQuestion.image.image_url} 
+                    src={currentImage.image_url} 
                     alt="Breed"
                     className="max-h-48 rounded-lg border-2 border-[#2a2a38]"
                   />
