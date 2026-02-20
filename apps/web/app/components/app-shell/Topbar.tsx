@@ -10,6 +10,7 @@ import { LanguageSwitcher } from '../LanguageSwitcher'
 import { Button } from '@/components/ui/button'
 import { useUIStore } from '@/app/stores/uiStore'
 import { WeatherWidget } from './WeatherWidget'
+import { EasterEggTrigger } from '../easter-egg/EasterEggTrigger'
 
 export function Topbar() {
   const { toggleSidebar } = useUIStore()
@@ -51,6 +52,7 @@ export function Topbar() {
           <AlertsBell />
           <LanguageSwitcher />
           <UserMenu />
+          <EasterEggTrigger />
         </div>
       </div>
     </header>
