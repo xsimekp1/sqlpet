@@ -91,42 +91,52 @@
   --color-text-secondary: var(--theme-text-secondary);
   --color-text-muted: var(--theme-text-muted);
 
-  /* Base colors */
-  --background: oklch(0.965 0 0);   /* subtle warm-neutral gray */
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);             /* cards stay pure white */
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.22 264); /* Purple-blue for pet shelter */
+  /* Base colors - linked to theme */
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-primary);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.94 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.94 0 0);
-  --muted-foreground: oklch(0.52 0 0);
-  --accent: oklch(0.94 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.908 0 0);
-  --input: oklch(1 0 0);            /* white background for inputs */
-  --ring: oklch(0.55 0.22 264 / 40%);
+  --secondary: var(--color-surface-muted);
+  --secondary-foreground: var(--color-text-secondary);
+  --muted: var(--color-surface-muted);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-surface-muted);
+  --accent-foreground: var(--color-text-secondary);
+  --destructive: var(--color-danger);
+  --border: var(--color-border);
+  --input: var(--color-surface);
+  --ring: var(--color-primary);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(1 0 0);           /* white sidebar, distinct from gray bg */
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.55 0.22 264);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.96 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.908 0 0);
-  --sidebar-ring: oklch(0.55 0.22 264 / 40%);
+  --sidebar: var(--color-surface);
+  --sidebar-foreground: var(--color-text);
+  --sidebar-primary: var(--color-primary);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: var(--color-surface-muted);
+  --sidebar-accent-foreground: var(--color-text-secondary);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-primary);
   /* Custom accent colors */
   --color-filter: oklch(0.52 0.18 172);    /* Teal - for filters */
-  --color-nav: oklch(0.55 0.2 220);        /* Blue - for navigation (prev/next) */
+  --color-nav: oklch(0.55 0.2 220);        /* Blue - for navigation */
   --color-action: oklch(0.58 0.18 30);     /* Orange - for automated actions */
+}
+
+/* Input focus states - editable fields */
+:root input:focus,
+:root textarea:focus,
+:root select:focus {
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-soft);
 }
 
 /* Theme B: Berry Rescue */
@@ -170,14 +180,42 @@
   --color-text-secondary: var(--theme-text-secondary);
   --color-text-muted: var(--theme-text-muted);
   
-  /* Berry theme colors override */
+  /* Berry theme overrides */
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-primary);
+  --secondary: var(--color-surface-muted);
+  --secondary-foreground: var(--color-text-secondary);
+  --muted: var(--color-surface-muted);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-surface-muted);
+  --accent-foreground: var(--color-text-secondary);
+  --border: var(--color-border);
+  --input: var(--color-surface);
+  --ring: var(--color-primary);
+  --sidebar: var(--color-surface);
+  --sidebar-foreground: var(--color-text);
+  --sidebar-primary: var(--color-primary);
+  --sidebar-accent: var(--color-surface-muted);
+  --sidebar-accent-foreground: var(--color-text-secondary);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-primary);
   --color-filter: oklch(0.65 0.22 290);    /* Purple - for filters */
-  --primary: oklch(0.65 0.22 290);          /* Berry purple */
-  --ring: oklch(0.65 0.22 290 / 40%);
-  --sidebar-primary: oklch(0.65 0.22 290);
-  --sidebar-ring: oklch(0.65 0.22 290 / 40%);
 }
 
+[data-theme="berry"] input:focus,
+[data-theme="berry"] textarea:focus,
+[data-theme="berry"] select:focus {
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-soft);
+}
+ 
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
