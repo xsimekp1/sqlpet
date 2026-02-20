@@ -574,43 +574,58 @@ export default function FindingsPage() {
         </TabsList>
 
         <TabsContent value="map" className="mt-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MapIcon className="h-5 w-5" />
-                  Interaktivní mapa nálezů
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant={showHeatMap ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setShowHeatMap(!showHeatMap)}
-                  >
-                    Heat Map
-                  </Button>
-                  <Button
-                    variant={showShelters ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setShowShelters(!showShelters)}
-                  >
-                    Útulky
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <InteractiveMap
-                findings={findingsWithLocation}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* List - left side */}
+            <div className="lg:col-span-2">
+              <FindingsList
+                findings={filteredFindings}
                 organization={mapData?.organization}
-                gpsCenter={gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : null}
-                radius={radius}
-                onMapClick={handleMapClick}
-                showHeatMap={showHeatMap}
-                showShelters={showShelters}
               />
-            </CardContent>
-          </Card>
+            </div>
+            
+            {/* Map - right side, square */}
+            <div className="lg:sticky lg:top-4 lg:h-fit">
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <MapIcon className="h-5 w-5" />
+                      Mapa
+                    </CardTitle>
+                    <div className="flex gap-1">
+                      <Button
+                        variant={showHeatMap ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setShowHeatMap(!showHeatMap)}
+                      >
+                        Heat
+                      </Button>
+                      <Button
+                        variant={showShelters ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setShowShelters(!showShelters)}
+                      >
+                        Útulky
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="h-full p-2">
+                  <div className="h-[400px] lg:h-[500px] w-full">
+                    <InteractiveMap
+                      findings={findingsWithLocation}
+                      organization={mapData?.organization}
+                      gpsCenter={gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : null}
+                      radius={radius}
+                      onMapClick={handleMapClick}
+                      showHeatMap={showHeatMap}
+                      showShelters={showShelters}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="list" className="mt-4">

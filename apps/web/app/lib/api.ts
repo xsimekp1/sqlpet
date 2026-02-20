@@ -1519,6 +1519,21 @@ class ApiClient {
     return response;
   }
 
+  static async getInventoryItems(params?: {
+    category?: string;
+    search?: string;
+    low_stock?: boolean;
+  }): Promise<any[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.category) searchParams.set('category', params.category);
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.low_stock) searchParams.set('low_stock', 'true');
+    
+    const query = searchParams.toString();
+    const response = await ApiClient.get(`/inventory/items${query ? `?${query}` : ''}`);
+    return response;
+  }
+
   static async deleteInventoryLot(lotId: string): Promise<void> {
     await ApiClient.delete(`/inventory/lots/${lotId}`);
   }

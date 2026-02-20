@@ -189,11 +189,11 @@ export default function InteractiveMap({
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       <MapContainer
         center={center}
         zoom={zoom}
-        style={{ height: '500px', width: '100%', borderRadius: '0.5rem' }}
+        style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}
         scrollWheelZoom={true}
       >
         <TileLayer
