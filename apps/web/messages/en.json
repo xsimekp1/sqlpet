@@ -1043,6 +1043,23 @@
       "litterDate": "Expected litter date: {date}",
       "deathRecorded": "Death recorded",
       "birthRegistered": "Birth: {count} offspring registered"
+    },
+    "collar": {
+      "label": "Collar",
+      "change": "Change collar",
+      "remove": "Remove collar",
+      "none": "No collar",
+      "select": "Select collar color",
+      "colors": {
+        "red": "Red",
+        "blue": "Blue",
+        "green": "Green",
+        "yellow": "Yellow",
+        "orange": "Orange",
+        "purple": "Purple",
+        "pink": "Pink",
+        "brown": "Brown"
+      }
     }
   },
   "tasks": {

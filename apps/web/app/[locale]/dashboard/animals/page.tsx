@@ -34,6 +34,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { userHasPermission } from '@/app/lib/permissions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { CollarRibbon } from '@/app/components/animals/CollarRibbon';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -437,6 +438,9 @@ export default function AnimalsPage() {
                     className="object-cover object-center"
                     unoptimized
                   />
+                    {/* Collar ribbon (litter identification) */}
+                    {animal.collar_color && <CollarRibbon color={animal.collar_color} size="sm" />}
+
                     {/* Top badges row */}
                   <div className="absolute top-1 left-1 right-1 flex items-start justify-between">
                     <div className="flex gap-1 flex-wrap">

@@ -186,6 +186,12 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         Boolean, default=False, nullable=False
     )
 
+    # Litter identification (collar colors)
+    collar_color: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    collar_removed_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
+
     # Relationships
     animal_breeds = relationship(
         "AnimalBreed",

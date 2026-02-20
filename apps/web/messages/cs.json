@@ -980,6 +980,23 @@
       "litterDate": "Očekávaný termín vrhu: {date}",
       "deathRecorded": "Zaevidováno úmrtí",
       "birthRegistered": "Porod: zaevidováno {count} mláďat"
+    },
+    "collar": {
+      "label": "Obojek",
+      "change": "Změnit obojek",
+      "remove": "Sundat obojek",
+      "none": "Bez obojku",
+      "select": "Vybrat barvu obojku",
+      "colors": {
+        "red": "Červený",
+        "blue": "Modrý",
+        "green": "Zelený",
+        "yellow": "Žlutý",
+        "orange": "Oranžový",
+        "purple": "Fialový",
+        "pink": "Růžový",
+        "brown": "Hnědý"
+      }
     }
   },
   "tasks": {
