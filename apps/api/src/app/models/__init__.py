@@ -57,6 +57,7 @@ from src.app.models.finding import Finding
 from src.app.models.registered_shelter import RegisteredShelter
 from src.app.models.user_shortcut import UserKeyboardShortcut
 from src.app.models.incident import AnimalIncident
+from src.app.models.purchase_order import PurchaseOrder, PurchaseOrderItem
 
 __all__ = [
     "Base",
@@ -121,4 +122,6 @@ __all__ = [
     "RegisteredShelter",
     "UserKeyboardShortcut",
     "AnimalIncident",
+    "PurchaseOrder",
+    "PurchaseOrderItem",
 ]
