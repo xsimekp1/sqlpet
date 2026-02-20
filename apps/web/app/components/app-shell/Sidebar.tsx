@@ -179,7 +179,6 @@ export function Sidebar() {
           sidebarCollapsed && 'lg:w-16'
         )}
       >
-    </>
       {/* Logo / Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b">
         {/* Hidden file input (shared) */}
@@ -314,5 +313,6 @@ export function Sidebar() {
         </Button>
       </div>
     </aside>
+    </>
   )
 }
