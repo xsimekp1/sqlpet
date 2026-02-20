@@ -106,6 +106,8 @@ export interface Animal {
   sex: 'male' | 'female' | 'unknown';
   altered_status: 'intact' | 'neutered' | 'spayed' | 'unknown';
   color: string | null;
+  collar_color: string | null;
+  collar_removed_at: string | null;
   estimated_age_years: number | null;
   current_intake_date: string | null;
   status: 'intake' | 'available' | 'reserved' | 'adopted' | 'fostered' | 'returned' | 'deceased' | 'transferred' | 'hold' | 'quarantine' | 'returned_to_owner' | 'euthanized' | 'escaped';
