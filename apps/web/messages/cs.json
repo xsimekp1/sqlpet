@@ -1311,6 +1311,8 @@
       }
     },
     "messages": {
+      "showingItems": "Zobrazeno {count} položek",
+      "outOfStock": "Není skladem",
       "itemCreated": "Položka vytvořena",
       "itemCreatedDesc": "Inventární položka byla úspěšně vytvořena",
       "itemUpdated": "Položka aktualizována",
