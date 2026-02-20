@@ -50,6 +50,48 @@
 
 :root {
   --radius: 0.625rem;
+  
+  /* Theme A: Teal Shelter (default) */
+  --theme-primary: #0F766E;
+  --theme-primary-hover: #115E59;
+  --theme-primary-soft: #CCFBF1;
+  --theme-accent: #2563EB;
+  --theme-accent-soft: #DBEAFE;
+  --theme-success: #16A34A;
+  --theme-success-soft: #DCFCE7;
+  --theme-warning: #F59E0B;
+  --theme-warning-soft: #FEF3C7;
+  --theme-danger: #DC2626;
+  --theme-danger-soft: #FEE2E2;
+  --theme-bg: #F8FAFC;
+  --theme-surface: #FFFFFF;
+  --theme-surface-muted: #F1F5F9;
+  --theme-border: #E2E8F0;
+  --theme-text: #0F172A;
+  --theme-text-secondary: #475569;
+  --theme-text-muted: #64748B;
+  
+  /* Current theme tokens (Teal default) */
+  --color-primary: var(--theme-primary);
+  --color-primary-hover: var(--theme-primary-hover);
+  --color-primary-soft: var(--theme-primary-soft);
+  --color-accent: var(--theme-accent);
+  --color-accent-soft: var(--theme-accent-soft);
+  --color-success: var(--theme-success);
+  --color-success-soft: var(--theme-success-soft);
+  --color-warning: var(--theme-warning);
+  --color-warning-soft: var(--theme-warning-soft);
+  --color-danger: var(--theme-danger);
+  --color-danger-soft: var(--theme-danger-soft);
+  --color-bg: var(--theme-bg);
+  --color-surface: var(--theme-surface);
+  --color-surface-muted: var(--theme-surface-muted);
+  --color-border: var(--theme-border);
+  --color-text: var(--theme-text);
+  --color-text-secondary: var(--theme-text-secondary);
+  --color-text-muted: var(--theme-text-muted);
+
+  /* Base colors */
   --background: oklch(0.965 0 0);   /* subtle warm-neutral gray */
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);             /* cards stay pure white */
@@ -85,6 +127,55 @@
   --color-filter: oklch(0.52 0.18 172);    /* Teal - for filters */
   --color-nav: oklch(0.55 0.2 220);        /* Blue - for navigation (prev/next) */
   --color-action: oklch(0.58 0.18 30);     /* Orange - for automated actions */
+}
+
+/* Theme B: Berry Rescue */
+[data-theme="berry"] {
+  --theme-primary: #7C3AED;
+  --theme-primary-hover: #6D28D9;
+  --theme-primary-soft: #EDE9FE;
+  --theme-accent: #0EA5E9;
+  --theme-accent-soft: #E0F2FE;
+  --theme-success: #16A34A;
+  --theme-success-soft: #DCFCE7;
+  --theme-warning: #F59E0B;
+  --theme-warning-soft: #FEF3C7;
+  --theme-danger: #DC2626;
+  --theme-danger-soft: #FEE2E2;
+  --theme-bg: #FAFAFF;
+  --theme-surface: #FFFFFF;
+  --theme-surface-muted: #F3F4FF;
+  --theme-border: #E7E7F2;
+  --theme-text: #111827;
+  --theme-text-secondary: #4B5563;
+  --theme-text-muted: #6B7280;
+  
+  /* Update current theme tokens */
+  --color-primary: var(--theme-primary);
+  --color-primary-hover: var(--theme-primary-hover);
+  --color-primary-soft: var(--theme-primary-soft);
+  --color-accent: var(--theme-accent);
+  --color-accent-soft: var(--theme-accent-soft);
+  --color-success: var(--theme-success);
+  --color-success-soft: var(--theme-success-soft);
+  --color-warning: var(--theme-warning);
+  --color-warning-soft: var(--theme-warning-soft);
+  --color-danger: var(--theme-danger);
+  --color-danger-soft: var(--theme-danger-soft);
+  --color-bg: var(--theme-bg);
+  --color-surface: var(--theme-surface);
+  --color-surface-muted: var(--theme-surface-muted);
+  --color-border: var(--theme-border);
+  --color-text: var(--theme-text);
+  --color-text-secondary: var(--theme-text-secondary);
+  --color-text-muted: var(--theme-text-muted);
+  
+  /* Berry theme colors override */
+  --color-filter: oklch(0.65 0.22 290);    /* Purple - for filters */
+  --primary: oklch(0.65 0.22 290);          /* Berry purple */
+  --ring: oklch(0.65 0.22 290 / 40%);
+  --sidebar-primary: oklch(0.65 0.22 290);
+  --sidebar-ring: oklch(0.65 0.22 290 / 40%);
 }
 
 .dark {

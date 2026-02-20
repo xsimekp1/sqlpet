@@ -14,6 +14,7 @@ import {
   KeyRound,
   Users,
   Shield,
+  Palette,
 } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -39,6 +40,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useUIStore } from '@/app/stores/uiStore';
 import { useAuth } from '@/app/context/AuthContext';
+import { useTheme } from '@/app/hooks/useTheme';
 import ApiClient from '@/app/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -88,6 +90,7 @@ export default function SettingsPage() {
   const locale = useLocale();
   const { weightUnit, setWeightUnit } = useUIStore();
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   // Default images state
   const [images, setImages] = useState<DefaultImage[]>([]);
@@ -572,6 +575,37 @@ export default function SettingsPage() {
                       onClick={() => setWeightUnit('lbs')}
                     >
                       {t('lbs')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Theme selector */}
+              <div className="flex items-start gap-4">
+                <div className="p-2 rounded-lg bg-muted">
+                  <Palette className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm">Barevný profil</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">Vyberte barevné schéma aplikace</p>
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      variant={theme === 'teal' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTheme('teal')}
+                      className={theme === 'teal' ? 'bg-teal-600 hover:bg-teal-700' : ''}
+                    >
+                      <span className="w-3 h-3 rounded-full bg-teal-600 mr-2"></span>
+                      Teal Shelter
+                    </Button>
+                    <Button
+                      variant={theme === 'berry' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTheme('berry')}
+                      className={theme === 'berry' ? 'bg-violet-600 hover:bg-violet-700' : ''}
+                    >
+                      <span className="w-3 h-3 rounded-full bg-violet-600 mr-2"></span>
+                      Berry Rescue
                     </Button>
                   </div>
                 </div>
