@@ -8,6 +8,7 @@ import {
   MapPin, Clock, ExternalLink, List, Map as MapIcon,
   Search, X, Loader2
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
