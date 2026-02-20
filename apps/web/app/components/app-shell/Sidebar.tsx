@@ -130,7 +130,6 @@ export function Sidebar() {
       title: 'nav.people',
       items: [
         { label: 'nav.people', href: '/dashboard/people', icon: Users, permission: 'people.read' },
-        { label: 'nav.chat', href: '/dashboard/chat', icon: MessageSquare, permission: 'chat.use' },
         { label: 'nav.adoptions', href: '/dashboard/adoptions', icon: Heart, permission: 'adoptions.read' },
       ]
     },

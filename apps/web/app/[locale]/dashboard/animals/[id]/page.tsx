@@ -1180,10 +1180,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                     } : null);
                   }}
                 />
-                <Button variant="outline" size="sm" onClick={() => setMedicalDialogOpen(true)}>
-                  <Stethoscope className="h-4 w-4 mr-2" />
-                  {t('medical.requestProcedure')}
-                </Button>
               </>
             )}
             {animal.is_pregnant && (
@@ -1686,6 +1682,12 @@ if (photoInputRef.current) photoInputRef.current.value = '';
 
 {/* ── Medical ── */}
         <TabsContent value="medical" className="space-y-4">
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => setMedicalDialogOpen(true)}>
+              <Stethoscope className="h-4 w-4 mr-2" />
+              {t('medical.requestProcedure')}
+            </Button>
+          </div>
           {/* Weight history sparkline */}
           {loadingWeight ? (
             <Card>
