@@ -1584,6 +1584,19 @@
       "sendMessage": "Failed to send message"
     }
   },
+  "search": {
+    "placeholder": "Search commands, animals, people...",
+    "commands": "Commands",
+    "noResults": "No results found",
+    "noResultsHint": "Try different keywords",
+    "emptyState": "Start typing to search",
+    "emptyStateHint": "Find commands, animals, and people",
+    "matchReason": {
+      "title": "title",
+      "keyword": "keyword",
+      "synonym": "synonym"
+    }
+  },
   "shoppingList": {
     "title": "Shopping List",
     "addToCart": "Add to cart",

@@ -1611,6 +1611,19 @@
       "sendMessage": "Nepodařilo se odeslat zprávu"
     }
   },
+  "search": {
+    "placeholder": "Hledat akce, zvířata, lidi...",
+    "commands": "Akce",
+    "noResults": "Nic nenalezeno",
+    "noResultsHint": "Zkuste jiné klíčové slovo",
+    "emptyState": "Začněte psát pro vyhledávání",
+    "emptyStateHint": "Najděte akce, zvířata a lidi",
+    "matchReason": {
+      "title": "název",
+      "keyword": "klíčové slovo",
+      "synonym": "synonymum"
+    }
+  },
   "shoppingList": {
     "title": "Nákupní seznam",
     "addToCart": "Do nákupu",
