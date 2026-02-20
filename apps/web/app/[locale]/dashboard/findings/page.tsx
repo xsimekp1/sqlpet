@@ -324,31 +324,31 @@ export default function FindingsPage() {
             Filtry
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Species toggles */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Druh zvířete</Label>
-            <div className="flex flex-wrap gap-2">
-              {SPECIES.map(species => (
-                <Button
-                  key={species}
-                  variant={selectedSpecies.has(species) ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => toggleSpecies(species)}
-                >
-                  <span className="mr-1">{SPECIES_ICONS[species]}</span>
-                  {SPECIES_LABELS[species]}
-                </Button>
-              ))}
+        <CardContent className="space-y-3">
+          {/* Species toggles + Date range - compact single row */}
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Druh zvířete</Label>
+              <div className="flex flex-wrap gap-1">
+                {SPECIES.map(species => (
+                  <Button
+                    key={species}
+                    variant={selectedSpecies.has(species) ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-xs px-2"
+                    onClick={() => toggleSpecies(species)}
+                  >
+                    <span className="mr-1">{SPECIES_ICONS[species]}</span>
+                    {SPECIES_LABELS[species]}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Date range */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm">Období</Label>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Období</Label>
               <Select value={datePreset} onValueChange={setDatePreset}>
-                <SelectTrigger>
+                <SelectTrigger className="h-7 w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -361,27 +361,63 @@ export default function FindingsPage() {
 
             {datePreset === 'all' && (
               <>
-                <div className="space-y-2">
-                  <Label className="text-sm">Od</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Od</Label>
                   <Input
                     type="date"
                     value={dateFrom}
                     onChange={e => setDateFrom(e.target.value)}
+                    className="h-7 w-32"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm">Do</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Do</Label>
                   <Input
                     type="date"
                     value={dateTo}
                     onChange={e => setDateTo(e.target.value)}
+                    className="h-7 w-32"
                   />
                 </div>
               </>
             )}
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Status</Label>
+              <div className="flex gap-1">
+                <Button
+                  variant={selectedStatus === 'current' ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setSelectedStatus(selectedStatus === 'current' ? 'all' : 'current')}
+                >
+                  Aktuální
+                </Button>
+                <Button
+                  variant={selectedStatus === 'past' ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setSelectedStatus(selectedStatus === 'past' ? 'all' : 'past')}
+                >
+                  Historie
+                </Button>
+              </div>
+            </div>
+
+            {hasFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-muted-foreground"
+                onClick={clearAllFilters}
+              >
+                <X className="h-3 w-3 mr-1" />
+                Vymazat
+              </Button>
+            )}
           </div>
 
-          {/* GPS + Geocoding */}
+          {/* GPS + Geocoding - compact */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-sm">Vyhledat místo (geocoding)</Label>

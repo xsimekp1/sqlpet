@@ -12,9 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import {
   Dialog,
@@ -287,64 +284,53 @@ export default function AnimalsPage() {
       </div>
 
       {/* Search & Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Search & Filter</CardTitle>
-          <CardDescription>Find animals by name, species, or breed</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search animals..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-          </div>
-          {/* Status + Species filter chips - single row */}
-          <div className="flex gap-1.5 flex-wrap items-center">
-            <Button
-              variant={statusFilter === 'active' ? 'default' : 'outline'}
-              size="sm"
-              className="h-7 text-xs px-2.5 rounded-full"
-              onClick={() => setStatusFilter('active')}
-            >
-              {t('animals.statusFilter.active')}
-            </Button>
-            <Button
-              variant={statusFilter === 'available' ? 'default' : 'outline'}
-              size="sm"
-              className="h-7 text-xs px-2.5 rounded-full"
-              onClick={() => setStatusFilter('available')}
-            >
-              {t('animals.statusFilter.available')}
-            </Button>
-            <Button
-              variant={statusFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              className="h-7 text-xs px-2.5 rounded-full"
-              onClick={() => setStatusFilter('all')}
-            >
-              {t('animals.statusFilter.all')}
-            </Button>
-            {availableSpecies.length > 1 && availableSpecies.map((sp) => (
-              <Button
-                key={sp}
-                variant={speciesFilter === sp ? 'default' : 'outline'}
-                size="sm"
-                className="h-7 text-xs px-2.5 rounded-full ml-auto"
-                onClick={() => setSpeciesFilter(speciesFilter === sp ? null : sp)}
-              >
-                {SPECIES_EMOJI[sp] || '🐾'} {tSpecies(sp as any)}
-                <span className="ml-1.5 opacity-60">{animals.filter(a => a.species === sp).length}</span>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex gap-2 items-center">
+        <h2 className="text-sm font-medium text-muted-foreground whitespace-nowrap">Search & Filter</h2>
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Hledat zvíře..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8 h-8"
+          />
+        </div>
+        <Button
+          variant={statusFilter === 'active' ? 'default' : 'outline'}
+          size="sm"
+          className="h-8 text-xs px-2.5"
+          onClick={() => setStatusFilter('active')}
+        >
+          {t('animals.statusFilter.active')}
+        </Button>
+        <Button
+          variant={statusFilter === 'available' ? 'default' : 'outline'}
+          size="sm"
+          className="h-8 text-xs px-2.5"
+          onClick={() => setStatusFilter('available')}
+        >
+          {t('animals.statusFilter.available')}
+        </Button>
+        <Button
+          variant={statusFilter === 'all' ? 'default' : 'outline'}
+          size="sm"
+          className="h-8 text-xs px-2.5"
+          onClick={() => setStatusFilter('all')}
+        >
+          {t('animals.statusFilter.all')}
+        </Button>
+        {availableSpecies.length > 1 && availableSpecies.map((sp) => (
+          <Button
+            key={sp}
+            variant={speciesFilter === sp ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs px-2.5"
+            onClick={() => setSpeciesFilter(speciesFilter === sp ? null : sp)}
+          >
+            {tSpecies(sp)}
+          </Button>
+        ))}
+      </div>
 
       {/* Animals Grid / Table */}
       {loading ? (
