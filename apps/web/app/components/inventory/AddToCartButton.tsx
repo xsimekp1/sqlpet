@@ -79,7 +79,7 @@ export function AddToCartButton({ item, totalQuantity }: AddToCartButtonProps) {
   return (
     <Button
       size="sm"
-      variant="outline"
+      variant="filter"
       className="h-8 gap-1"
       onClick={handleAddToCart}
     >

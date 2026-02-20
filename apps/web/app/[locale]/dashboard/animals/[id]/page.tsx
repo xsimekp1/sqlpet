@@ -900,25 +900,27 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           </div>
           {/* Prev / Next arrows */}
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="nav"
+              size="icon"
               onClick={() => prevId && router.push(`/dashboard/animals/${prevId}`)}
               disabled={!prevId}
-              className="w-10 h-10 rounded-full border bg-background shadow hover:bg-accent transition-colors flex items-center justify-center disabled:opacity-30"
               aria-label="Předchozí zvíře"
             >
               <ChevronLeft className="h-5 w-5" />
-            </button>
+            </Button>
             <span className="text-xs text-muted-foreground">
               {currentIdx >= 0 ? `${currentIdx + 1} / ${animalIds.length}` : ''}
             </span>
-            <button
+            <Button
+              variant="nav"
+              size="icon"
               onClick={() => nextId && router.push(`/dashboard/animals/${nextId}`)}
               disabled={!nextId}
-              className="w-10 h-10 rounded-full border bg-background shadow hover:bg-accent transition-colors flex items-center justify-center disabled:opacity-30"
               aria-label="Další zvíře"
             >
               <ChevronRight className="h-5 w-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
