@@ -14,6 +14,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 from ..db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
+from .animal import Species
 
 
 class StorageProvider(str, enum.Enum):
@@ -89,8 +90,8 @@ class EntityFile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 class DefaultAnimalImage(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "default_animal_images"
 
-    species: str = Column(
-        String(20), nullable=False, index=True
+    species: Species = Column(
+        Enum(Species, name="species_enum"), nullable=False, index=True
     )  # 'dog', 'cat', 'rodent', 'bird'
     breed_id: str = Column(
         UUID(as_uuid=True),
