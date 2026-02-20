@@ -1,6 +1,7 @@
 'use client'
 
-import { Menu } from 'lucide-react'
+import { Menu, Settings } from 'lucide-react'
+import Link from 'next/link'
 import { OrgSwitcher } from './OrgSwitcher'
 import { GlobalSearchTrigger } from '../layout/GlobalSearchTrigger'
 import { AlertsBell } from '../layout/AlertsBell'
@@ -35,8 +36,18 @@ export function Topbar() {
           <GlobalSearchTrigger className="text-slate-300" />
         </div>
 
-        {/* Right: Alerts, Language, User */}
-        <div className="flex items-center gap-2 text-slate-200">
+        {/* Right: Settings, Alerts, Language, User */}
+        <div className="flex items-center gap-1 text-slate-200">
+          <Link href="/dashboard/settings">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-slate-300 hover:text-white hover:bg-slate-700"
+              title="Nastavení"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </Link>
           <AlertsBell />
           <LanguageSwitcher />
           <UserMenu />

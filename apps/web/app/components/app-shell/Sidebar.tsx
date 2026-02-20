@@ -139,7 +139,7 @@ export function Sidebar() {
       items: [
         { label: 'nav.intake', href: '/dashboard/intake', icon: Inbox, permission: 'intakes.write' },
         { label: 'nav.reports', href: '/dashboard/reports', icon: BarChart3, permission: 'reports.run' },
-        { label: 'nav.settings', href: '/dashboard/settings', icon: Settings, permission: 'settings.read' },
+        // Settings moved to topbar header
         ...(user?.is_superadmin ? [{ label: 'nav.newOrg', href: '/dashboard/new-org', icon: PlusCircle, permission: null, isSuperadminOnly: true }] : []),
         ...(user?.is_superadmin ? [{ label: 'nav.organizationSettings', href: '/dashboard/settings/organization', icon: Building2, permission: null, isSuperadminOnly: true }] : []),
         ...(user?.is_superadmin ? [{ label: 'nav.performance', href: '/dashboard/settings/performance', icon: Zap, permission: null, isSuperadminOnly: true }] : []),
