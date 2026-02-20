@@ -377,67 +377,65 @@ export default function AnimalsPage() {
                     className="object-cover object-center"
                     unoptimized
                   />
-                  {/* Special needs badge top-left */}
-                  {animal.is_special_needs && (
-                    <div className="absolute top-1.5 left-1.5 w-7 h-7 rounded-full bg-violet-600/80 flex items-center justify-center" title="Zvíře se speciálními potřebami">
-                      <Accessibility className="h-4 w-4 text-white" />
+                  {/* Top row: Name left, Sex center-right, Age circle right */}
+                  <div className="absolute top-1 left-1 right-1 flex items-start justify-between">
+                    <div className="flex-1 min-w-0 pr-8">
+                      {animal.is_special_needs && (
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-violet-600 text-white text-xs" title="Speciální potřeby">
+                          ⭐
+                        </span>
+                      )}
+                      {animal.is_critical && (
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-xs ml-0.5" title="Kritický stav">
+                          !
+                        </span>
+                      )}
+                      {animal.is_diabetic && (
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs ml-0.5" title="Cukrovka">
+                          💉
+                        </span>
+                      )}
                     </div>
-                  )}
-                  {/* Quarantine badge top-right */}
-                  {animal.status === 'quarantine' && (
-                    <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-amber-500/80 flex items-center justify-center" title="Karanténa">
-                      <AlertTriangle className="h-4 w-4 text-white" />
+                    {/* Sex symbol */}
+                    <div className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                      animal.sex === 'male' ? "bg-blue-600 text-white" : 
+                      animal.sex === 'female' ? "bg-pink-600 text-white" : 
+                      "bg-gray-400 text-white"
+                    )}>
+                      {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
                     </div>
-                  )}
+                  </div>
+                  {/* Age circle - top right */}
+                  <div className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/70 text-white text-xs font-bold flex items-center justify-center">
+                    {animal.estimated_age_years != null 
+                      ? `${animal.estimated_age_years}y` 
+                      : animal.age_group === 'baby' ? 'B' :
+                        animal.age_group === 'young' ? 'Y' :
+                        animal.age_group === 'adult' ? 'A' :
+                        animal.age_group === 'senior' ? 'S' : '?'}
+                  </div>
                   {/* Kennel code badge bottom-left */}
                   {animal.current_kennel_code && (
-                    <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-xs font-mono font-semibold">
+                    <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-white text-xs font-mono font-semibold">
                       {animal.current_kennel_code}
                     </div>
                   )}
-                </div>
-                <div className="p-1.5 space-y-1">
-                  <p className="font-bold text-base leading-tight truncate">{animal.name}</p>
-<p className="text-xs text-muted-foreground truncate">
-                    {animal.current_kennel_code && <span className="font-mono mr-1">{animal.current_kennel_code}</span>}
-                    {animal.estimated_age_years != null
-                      ? `${animal.estimated_age_years} r.`
-                      : (animal.age_group !== 'unknown' ? AGE_LABELS[animal.age_group] ?? '—' : '—')}
-                  </p>
-                  <div className="flex items-center gap-1 flex-wrap">
-                    {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
-                      <Scissors className="h-3 w-3 text-primary shrink-0" />
-                    )}
-                    <Badge className={`text-xs px-1.5 py-0 ${getStatusColor(animal.status)}`}>
-                      {t(`animals.status.${animal.status}`)}
-                    </Badge>
-                    {animal.tags && animal.tags.length > 0 && animal.tags.slice(0, 2).map((tag: any) => (
-                      <span key={tag.id} className="text-xs px-1.5 py-0 rounded-full border border-border bg-muted text-muted-foreground leading-5">
-                        {tag.name}
-                      </span>
-                    ))}
-                  </div>
-                  {/* Walk button - only for dogs with active status */}
-                  {animal.species === 'dog' && !['deceased', 'quarantine', 'adopted', 'transferred', 'returned_to_owner', 'euthanized', 'escaped'].includes(animal.status) && (
-                    <div className="flex items-center justify-between mt-1">
-                      {animal.last_walked_at && (
-                        <span className="text-xs text-muted-foreground">
-                          {t('animals.lastWalked')}: {new Date(animal.last_walked_at).toLocaleDateString('cs-CZ')}
-                        </span>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs"
-                        onClick={(e) => handleMarkAsWalked(animal.id, e)}
-                        disabled={walkingAnimals.has(animal.id) || !userHasPermission(user, 'tasks.write', permissions)}
-                        title={!userHasPermission(user, 'tasks.write', permissions) ? t('errors.noPermission') : undefined}
-                      >
-                        <Dog className="h-3 w-3 mr-1" />
-                        {walkingAnimals.has(animal.id) ? '...' : t('animals.markAsWalked')}
-                      </Button>
+                  {/* Altered status - bottom right */}
+                  {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
+                    <div className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center" title="Vykastrované">
+                      <Scissors className="h-3 w-3" />
                     </div>
                   )}
+                </div>
+                {/* Card footer */}
+                <div className="p-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-mono text-muted-foreground">#{animal.public_code}</span>
+                    <Badge className={cn("text-[10px] px-1.5 py-0", getStatusColor(animal.status))}>
+                      {t(`animals.status.${animal.status}`)}
+                    </Badge>
+                  </div>
                 </div>
               </Card>
             </Link>
