@@ -3,7 +3,7 @@ from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import select, text, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.api.dependencies.auth import (
@@ -13,6 +13,7 @@ from src.app.api.dependencies.auth import (
 )
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Animal, Species
+from src.app.models.kennel import Kennel, Zone
 from src.app.services.legal_deadline import compute_legal_deadline
 from src.app.models.animal_event import AnimalEvent, AnimalEventType
 from src.app.models.animal_identifier import AnimalIdentifier
@@ -277,6 +278,121 @@ async def list_animals_lightweight_for_kennels(
         }
         for r in rows
     ]
+
+
+@router.get("/kennels-data")
+async def get_kennels_data(
+    zone_id: str | None = Query(None),
+    status: str | None = Query(None),
+    type: str | None = Query(None),
+    size_category: str | None = Query(None),
+    q: str | None = Query(None),
+    current_user: User = Depends(require_permission("kennels.read")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Combined endpoint for kennels page - returns both kennels and animals in one call.
+    Optimized for drag-drop operations.
+    """
+    # Build kennel filters
+    kennel_filters = [
+        Kennel.organization_id == organization_id,
+        Kennel.deleted_at.is_(None),
+    ]
+    if zone_id:
+        kennel_filters.append(Kennel.zone_id == uuid.UUID(zone_id))
+    if status:
+        kennel_filters.append(Kennel.status == status)
+    if type:
+        kennel_filters.append(Kennel.type == type)
+    if size_category:
+        kennel_filters.append(Kennel.size_category == size_category)
+    if q:
+        kennel_filters.append(
+            or_(Kennel.name.ilike(f"%{q}%"), Kennel.code.ilike(f"%{q}%"))
+        )
+
+    # Get kennels with zones
+    kennel_query = (
+        select(Kennel, Zone.name.label("zone_name"))
+        .outerjoin(Zone, Kennel.zone_id == Zone.id)
+        .where(and_(*kennel_filters))
+        .order_by(Kennel.code)
+    )
+    kennel_result = await db.execute(kennel_query)
+    kennels = []
+    for row in kennel_result.fetchall():
+        kennel, zone_name = row
+        kennels.append(
+            {
+                "id": str(kennel.id),
+                "name": kennel.name,
+                "code": kennel.code,
+                "type": kennel.type,
+                "status": kennel.status,
+                "size_category": kennel.size_category,
+                "capacity": kennel.capacity,
+                "zone_id": str(kennel.zone_id) if kennel.zone_id else None,
+                "zone_name": zone_name,
+            }
+        )
+
+    # Get animals lightweight
+    animals_query = text("""
+        SELECT
+            a.id::text,
+            a.name,
+            a.species::text,
+            a.sex::text,
+            a.status::text,
+            a.altered_status::text,
+            a.is_aggressive,
+            a.is_special_needs,
+            a.primary_photo_url,
+            a.public_code,
+            ks.kennel_id::text AS current_kennel_id,
+            k.name AS current_kennel_name,
+            k.code AS current_kennel_code,
+            i.intake_date AS current_intake_date
+        FROM animals a
+        LEFT JOIN kennel_stays ks ON ks.animal_id = a.id AND ks.end_at IS NULL
+        LEFT JOIN kennels k ON k.id = ks.kennel_id AND k.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+            SELECT intake_date FROM intakes
+            WHERE intakes.animal_id = a.id AND intakes.deleted_at IS NULL
+            ORDER BY intakes.intake_date DESC LIMIT 1
+        ) i ON true
+        WHERE a.organization_id = :org_id AND a.deleted_at IS NULL
+        ORDER BY a.name
+    """)
+    animals_result = await db.execute(animals_query, {"org_id": str(organization_id)})
+    animals = []
+    terminal_statuses = ("deceased", "adopted", "transferred", "returned_to_owner")
+    for r in animals_result.fetchall():
+        if (
+            r[4] not in terminal_statuses and r[13]
+        ):  # status not terminal and has intake_date
+            animals.append(
+                {
+                    "id": str(r[0]),
+                    "name": r[1],
+                    "species": r[2],
+                    "sex": r[3],
+                    "status": r[4],
+                    "altered_status": r[5],
+                    "is_aggressive": r[6] or False,
+                    "is_special_needs": r[7] or False,
+                    "primary_photo_url": r[8],
+                    "public_code": r[9],
+                    "current_kennel_id": r[10],
+                    "current_kennel_name": r[11],
+                    "current_kennel_code": r[12],
+                    "current_intake_date": r[13].isoformat() if r[13] else None,
+                }
+            )
+
+    return {"kennels": kennels, "animals": animals}
 
 
 @router.get(
