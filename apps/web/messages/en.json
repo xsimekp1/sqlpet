@@ -1347,7 +1347,25 @@
       "ml": "Millilitre"
     },
     "transactions": {
-      "comingSoon": "Transaction history coming in a future update"
+      "title": "Transaction History",
+      "add": "Add Transaction",
+      "direction": "Direction",
+      "reason": "Reason",
+      "note": "Note",
+      "notePlaceholder": "Optional note",
+      "noTransactions": "No transactions found",
+      "reasons": {
+        "opening_balance": "Opening Balance",
+        "purchase": "Purchase",
+        "donation": "Donation",
+        "consumption": "Consumption",
+        "writeoff": "Write-off"
+      },
+      "directions": {
+        "in": "In",
+        "out": "Out",
+        "adjust": "Adjust"
+      }
     },
     "messages": {
       "itemCreated": "Item created",
@@ -1363,6 +1381,9 @@
       "lotCreatedDesc": "The inventory lot has been added successfully",
       "transactionRecorded": "Transaction recorded",
       "transactionRecordedDesc": "The inventory transaction has been recorded successfully",
+      "transactionCreated": "Transaction created",
+      "transactionCreatedDesc": "The inventory transaction has been created successfully",
+      "addTransactionDesc": "Record a new transaction for {name}",
       "error": "Error",
       "errorDesc": "Failed to complete the operation",
       "validationError": "Validation Error",

@@ -29,9 +29,18 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive, Pencil } from 'lucide-react';
+import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive, Pencil, ArrowDownToLine, ArrowUpFromLine, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   food: <UtensilsCrossed className="h-8 w-8" />,
@@ -73,11 +82,17 @@ export default function InventoryItemDetailPage() {
   const [addLotOpen, setAddLotOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [addTransactionOpen, setAddTransactionOpen] = useState(false);
   const [lotFormData, setLotFormData] = useState({
     lot_number: '',
     expires_at: '',
     quantity: '',
     cost_per_unit: '',
+  });
+  const [transactionFormData, setTransactionFormData] = useState({
+    reason: 'purchase' as 'opening_balance' | 'purchase' | 'donation' | 'consumption' | 'writeoff',
+    quantity: '',
+    note: '',
   });
 
   // Fetch item details
@@ -100,7 +115,7 @@ export default function InventoryItemDetailPage() {
 
   const lots = Array.isArray(lotsData) ? lotsData : (lotsData?.items ?? []);
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.items ?? []);
-  const totalQuantity = lots.reduce((sum: number, lot: any) => sum + (Number(lot.quantity) || 0), 0);
+  const totalQuantity = item?.quantity_current ?? lots.reduce((sum: number, lot: any) => sum + (Number(lot.quantity) || 0), 0);
 
   // Add lot mutation
   const addLotMutation = useMutation({
@@ -167,11 +182,58 @@ export default function InventoryItemDetailPage() {
     onSuccess: () => {
       toast({ title: t('messages.lotDeleted'), description: t('messages.lotDeletedDesc') });
       queryClient.invalidateQueries({ queryKey: ['inventory-lots', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-item', itemId] });
     },
     onError: (error: Error) => {
       toast({ title: t('messages.error'), description: error.message, variant: 'destructive' });
     },
   });
+
+  // Add transaction mutation
+  const addTransactionMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await ApiClient.createInventoryTransaction({
+        item_id: itemId,
+        reason: data.reason,
+        quantity: Number(data.quantity),
+        note: data.note || undefined,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory-transactions', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-item', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-lots', itemId] });
+      toast({
+        title: t('messages.transactionCreated'),
+        description: t('messages.transactionCreatedDesc'),
+      });
+      setAddTransactionOpen(false);
+      setTransactionFormData({
+        reason: 'purchase',
+        quantity: '',
+        note: '',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t('messages.error'),
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleAddTransaction = () => {
+    if (!transactionFormData.quantity || Number(transactionFormData.quantity) <= 0) {
+      toast({
+        title: t('messages.validationError'),
+        description: t('messages.quantityRequired'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    addTransactionMutation.mutate(transactionFormData);
+  };
 
   const handleAddLot = () => {
     if (!lotFormData.quantity) {
@@ -561,10 +623,136 @@ export default function InventoryItemDetailPage() {
         </TabsContent>
 
         {/* Transactions Tab */}
-        <TabsContent value="transactions">
-          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
-            <Receipt className="h-10 w-10 opacity-30" />
-            <p className="text-sm">{t('transactions.comingSoon' as any)}</p>
+        <TabsContent value="transactions" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-semibold">{t('transactions.title')}</h2>
+            <Dialog open={addTransactionOpen} onOpenChange={setAddTransactionOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('transactions.add')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t('transactions.add')}</DialogTitle>
+                  <DialogDescription>
+                    {t('messages.addTransactionDesc', { name: item.name })}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reason">{t('transactions.reason')}</Label>
+                    <Select
+                      value={transactionFormData.reason}
+                      onValueChange={(value) => setTransactionFormData({ ...transactionFormData, reason: value as any })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="opening_balance">{t('transactions.reasons.opening_balance')}</SelectItem>
+                        <SelectItem value="purchase">{t('transactions.reasons.purchase')}</SelectItem>
+                        <SelectItem value="donation">{t('transactions.reasons.donation')}</SelectItem>
+                        <SelectItem value="consumption">{t('transactions.reasons.consumption')}</SelectItem>
+                        <SelectItem value="writeoff">{t('transactions.reasons.writeoff')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tx_quantity">{t('fields.quantity')} *</Label>
+                    <Input
+                      id="tx_quantity"
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g. 10"
+                      value={transactionFormData.quantity}
+                      onChange={(e) =>
+                        setTransactionFormData({ ...transactionFormData, quantity: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tx_note">{t('transactions.note')}</Label>
+                    <Input
+                      id="tx_note"
+                      placeholder={t('transactions.notePlaceholder')}
+                      value={transactionFormData.note}
+                      onChange={(e) =>
+                        setTransactionFormData({ ...transactionFormData, note: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setAddTransactionOpen(false)}>
+                    {t('cancel')}
+                  </Button>
+                  <Button onClick={handleAddTransaction} disabled={addTransactionMutation.isPending}>
+                    {addTransactionMutation.isPending ? t('adding') : t('transactions.add')}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('transactions.direction')}</TableHead>
+                  <TableHead>{t('transactions.reason')}</TableHead>
+                  <TableHead>{t('fields.quantity')}</TableHead>
+                  <TableHead>{t('transactions.note')}</TableHead>
+                  <TableHead>{t('fields.created')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      {t('transactions.noTransactions')}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  transactions.map((tx: any) => (
+                    <TableRow key={tx.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {tx.direction === 'in' ? (
+                            <ArrowUpFromLine className="h-4 w-4 text-green-600" />
+                          ) : tx.direction === 'out' ? (
+                            <ArrowDownToLine className="h-4 w-4 text-red-600" />
+                          ) : (
+                            <RotateCcw className="h-4 w-4 text-blue-600" />
+                          )}
+                          <Badge variant={tx.direction === 'in' ? 'default' : tx.direction === 'out' ? 'destructive' : 'secondary'}>
+                            {t(`transactions.directions.${tx.direction}`)}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {t(`transactions.reasons.${tx.reason}`)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className={tx.direction === 'in' ? 'text-green-600 font-semibold' : tx.direction === 'out' ? 'text-red-600 font-semibold' : ''}>
+                          {tx.direction === 'in' ? '+' : tx.direction === 'out' ? '-' : ''}
+                          {formatQuantity(tx.quantity, item.unit)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {tx.note || '-'}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {tx.created_at ? format(new Date(tx.created_at), 'MMM d, yyyy HH:mm') : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         </TabsContent>
       </Tabs>

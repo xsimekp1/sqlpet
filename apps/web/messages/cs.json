@@ -1288,7 +1288,26 @@
       "ml": "Mililitr"
     },
     "transactions": {
-      "comingSoon": "Historie transakcí bude přidána v budoucí verzi"
+      "comingSoon": "Historie transakcí bude přidána v budoucí verzi",
+      "title": "Historie transakcí",
+      "add": "Přidat transakci",
+      "direction": "Směr",
+      "reason": "Důvod",
+      "note": "Poznámka",
+      "notePlaceholder": "Volitelná poznámka",
+      "noTransactions": "Žádné transakce nenalezeny",
+      "reasons": {
+        "opening_balance": "Počáteční stav",
+        "purchase": "Nákup",
+        "donation": "Darování",
+        "consumption": "Spotřeba",
+        "writeoff": "Odpis"
+      },
+      "directions": {
+        "in": "Příjem",
+        "out": "Výdej",
+        "adjust": "Úprava"
+      }
     },
     "messages": {
       "itemCreated": "Položka vytvořena",
@@ -1304,6 +1323,9 @@
       "lotCreatedDesc": "Inventární šarže byla úspěšně přidána",
       "transactionRecorded": "Transakce zaznamenána",
       "transactionRecordedDesc": "Inventární transakce byla úspěšně zaznamenána",
+      "transactionCreated": "Transakce vytvořena",
+      "transactionCreatedDesc": "Inventární transakce byla úspěšně vytvořena",
+      "addTransactionDesc": "Zaznamenat novou transakci pro {name}",
       "error": "Chyba",
       "errorDesc": "Nepodařilo se dokončit operaci",
       "validationError": "Validační chyba",

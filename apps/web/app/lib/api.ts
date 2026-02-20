@@ -1523,6 +1523,26 @@ class ApiClient {
     await ApiClient.delete(`/inventory/lots/${lotId}`);
   }
 
+  static async createInventoryTransaction(data: {
+    item_id: string;
+    lot_id?: string;
+    reason: 'opening_balance' | 'purchase' | 'donation' | 'consumption' | 'writeoff';
+    quantity: number;
+    note?: string;
+    related_entity_type?: string;
+    related_entity_id?: string;
+  }): Promise<any> {
+    return ApiClient.post('/inventory/transactions', data);
+  }
+
+  static async getInventoryTransactions(params?: {
+    item_id?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<any> {
+    return ApiClient.get('/inventory/transactions', params);
+  }
+
   static async uploadOrgLogo(file: File): Promise<{ file_url: string }> {
     const formData = new FormData();
     formData.append('file', file);
