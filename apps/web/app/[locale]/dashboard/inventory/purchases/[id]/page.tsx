@@ -41,7 +41,7 @@ export default function PurchaseOrderDetailPage() {
   const [showReceiveModal, setShowReceiveModal] = useState(false)
   const [isReceiving, setIsReceiving] = useState(false)
 
-  const purchaseOrderId = purchaseOrderId as string
+  const purchaseOrderId = params.id as string
 
   // Fetch purchase order
   const { data: po, isLoading } = useQuery({
