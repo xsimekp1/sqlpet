@@ -272,7 +272,7 @@ export default function AnimalsPage() {
           <h1 className="text-3xl font-bold tracking-tight">
             {t('nav.animals')}
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 hidden md:block">
             Manage shelter animals
           </p>
         </div>
@@ -320,77 +320,127 @@ export default function AnimalsPage() {
       </div>
 
       {/* Search & Filters */}
-      <div className="flex gap-2 items-center">
-        <h2 className="text-sm font-medium text-muted-foreground whitespace-nowrap">Search & Filter</h2>
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Hledat zvíře..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-8"
-          />
-        </div>
-        <Button
-          variant={statusFilter === 'active' ? 'default' : 'outline'}
-          size="sm"
-          className="h-8 text-xs px-2.5"
-          onClick={() => setStatusFilter('active')}
-        >
-          {t('animals.statusFilter.active')}
-        </Button>
-        <Button
-          variant={statusFilter === 'available' ? 'default' : 'outline'}
-          size="sm"
-          className="h-8 text-xs px-2.5"
-          onClick={() => setStatusFilter('available')}
-        >
-          {t('animals.statusFilter.available')}
-        </Button>
-        <Button
-          variant={statusFilter === 'all' ? 'default' : 'outline'}
-          size="sm"
-          className="h-8 text-xs px-2.5"
-          onClick={() => setStatusFilter('all')}
-        >
-          {t('animals.statusFilter.all')}
-        </Button>
-        <div className="h-4 w-px bg-border mx-1" />
-        <Button
-          variant={deadlineFilter === 'urgent' ? 'default' : 'outline'}
-          size="sm"
-          className="h-8 text-xs px-2.5 text-orange-600"
-          onClick={() => setDeadlineFilter(deadlineFilter === 'urgent' ? 'all' : 'urgent')}
-        >
-          ⏰ Lhůta do 14d
-        </Button>
-        <Button
-          variant={deadlineFilter === 'expired' ? 'default' : 'outline'}
-          size="sm"
-          className="h-8 text-xs px-2.5 text-red-600"
-          onClick={() => setDeadlineFilter(deadlineFilter === 'expired' ? 'all' : 'expired')}
-        >
-          ❌ Vypršelo
-        </Button>
-        <Button
-          variant={deadlineFilter === 'missing' ? 'default' : 'outline'}
-          size="sm"
-          className="h-8 text-xs px-2.5"
-          onClick={() => setDeadlineFilter(deadlineFilter === 'missing' ? 'all' : 'missing')}
-        >
-          ⚠️ Chybí data
-        </Button>
-        {availableSpecies.length > 1 && availableSpecies.map((sp) => (
+      <div className="space-y-2 md:space-y-0">
+        <div className="flex gap-2 items-center md:flex-nowrap flex-wrap">
+          <h2 className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden md:inline">Search & Filter</h2>
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Hledat zvíře..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8 h-8"
+            />
+          </div>
           <Button
-            key={sp}
-            variant={speciesFilter === sp ? 'default' : 'outline'}
+            variant={statusFilter === 'active' ? 'default' : 'outline'}
             size="sm"
             className="h-8 text-xs px-2.5"
-            onClick={() => setSpeciesFilter(speciesFilter === sp ? null : sp)}
+            onClick={() => setStatusFilter('active')}
           >
-            {tSpecies(sp)}
+            {t('animals.statusFilter.active')}
           </Button>
-        ))}
+          <Button
+            variant={statusFilter === 'available' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs px-2.5"
+            onClick={() => setStatusFilter('available')}
+          >
+            {t('animals.statusFilter.available')}
+          </Button>
+          <Button
+            variant={statusFilter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs px-2.5"
+            onClick={() => setStatusFilter('all')}
+          >
+            {t('animals.statusFilter.all')}
+          </Button>
+        </div>
+
+        {/* Mobile: deadline filters on second row */}
+        <div className="flex gap-2 items-center md:hidden flex-wrap">
+          <div className="h-4 w-px bg-border mx-1" />
+          <Button
+            variant={deadlineFilter === 'urgent' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs px-2.5 text-orange-600"
+            onClick={() => setDeadlineFilter(deadlineFilter === 'urgent' ? 'all' : 'urgent')}
+          >
+            ⏰ Lhůta do 14d
+          </Button>
+          <Button
+            variant={deadlineFilter === 'expired' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs px-2.5 text-red-600"
+            onClick={() => setDeadlineFilter(deadlineFilter === 'expired' ? 'all' : 'expired')}
+          >
+            ❌ Vypršelo
+          </Button>
+          <Button
+            variant={deadlineFilter === 'missing' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs px-2.5"
+            onClick={() => setDeadlineFilter(deadlineFilter === 'missing' ? 'all' : 'missing')}
+          >
+            ⚠️ Chybí data
+          </Button>
+        </div>
+
+        {/* Mobile: species filters on third row */}
+        <div className="flex gap-2 items-center md:hidden flex-wrap">
+          {availableSpecies.length > 1 && availableSpecies.map((sp) => (
+            <Button
+              key={sp}
+              variant={speciesFilter === sp ? 'default' : 'outline'}
+              size="sm"
+              className="h-8 text-xs px-2.5"
+              onClick={() => setSpeciesFilter(speciesFilter === sp ? null : sp)}
+            >
+              {tSpecies(sp)}
+            </Button>
+          ))}
+        </div>
+
+        {/* Desktop: all filters on one row */}
+        <div className="hidden md:flex gap-2 items-center">
+          <div className="h-4 w-px bg-border mx-1" />
+          <Button
+            variant={deadlineFilter === 'urgent' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs px-2.5 text-orange-600"
+            onClick={() => setDeadlineFilter(deadlineFilter === 'urgent' ? 'all' : 'urgent')}
+          >
+            ⏰ Lhůta do 14d
+          </Button>
+          <Button
+            variant={deadlineFilter === 'expired' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs px-2.5 text-red-600"
+            onClick={() => setDeadlineFilter(deadlineFilter === 'expired' ? 'all' : 'expired')}
+          >
+            ❌ Vypršelo
+          </Button>
+          <Button
+            variant={deadlineFilter === 'missing' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 text-xs px-2.5"
+            onClick={() => setDeadlineFilter(deadlineFilter === 'missing' ? 'all' : 'missing')}
+          >
+            ⚠️ Chybí data
+          </Button>
+          {availableSpecies.length > 1 && availableSpecies.map((sp) => (
+            <Button
+              key={sp}
+              variant={speciesFilter === sp ? 'default' : 'outline'}
+              size="sm"
+              className="h-8 text-xs px-2.5"
+              onClick={() => setSpeciesFilter(speciesFilter === sp ? null : sp)}
+            >
+              {tSpecies(sp)}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Animals Grid / Table */}
@@ -430,7 +480,11 @@ export default function AnimalsPage() {
             <Link key={animal.id} href={`/dashboard/animals/${animal.id}`} onClick={(e) => { console.log('[ANIMALS_LIST] Link clicked, animal:', animal); e.preventDefault(); router.push(`/dashboard/animals/${animal.id}`) }}>
               <Card className="hover:bg-accent transition-colors cursor-pointer overflow-hidden">
                 {/* Square thumbnail — equal padding on all sides */}
-                <div className="relative w-full aspect-square bg-muted overflow-hidden">
+                <div className={cn(
+                  "relative w-full aspect-square bg-muted overflow-hidden",
+                  animal.sex === 'male' && "outline outline-1 outline-blue-600 md:outline-0",
+                  animal.sex === 'female' && "outline outline-1 outline-pink-600 md:outline-0"
+                )}>
                   <Image
                     src={getAnimalImageUrl(animal)}
                     alt={animal.name}
@@ -476,9 +530,9 @@ export default function AnimalsPage() {
                         </span>
                       )}
                     </div>
-                    {/* Age + Sex in ONE circle - top right */}
+                    {/* Age + Sex in ONE circle - desktop only */}
                     <div className={cn(
-                      "absolute top-1 right-1 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold",
+                      "hidden md:flex absolute top-1 right-1 w-8 h-8 rounded-full items-center justify-center text-xs font-bold",
                       animal.sex === 'male' ? "bg-blue-600 text-white" : 
                       animal.sex === 'female' ? "bg-pink-600 text-white" : 
                       "bg-gray-500 text-white"
@@ -491,8 +545,12 @@ export default function AnimalsPage() {
                           animal.age_group === 'senior' ? 'S' : '?'}
                     </div>
                   </div>
-                  {/* Bottom row: Name + small sex */}
-                  <div className="absolute bottom-1 left-1 right-1 flex items-end justify-between">
+                  {/* Mobile: just name without sex icon */}
+                  <div className="md:hidden absolute bottom-1 left-1 right-1 flex items-end">
+                    <span className="font-bold text-white text-base drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate">{animal.name}</span>
+                  </div>
+                  {/* Desktop: name + sex icon */}
+                  <div className="hidden md:flex absolute bottom-1 left-1 right-1 items-end justify-between">
                     <span className="font-bold text-white text-base drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate max-w-[100px]">{animal.name}</span>
                     <div className={cn(
                       "text-[10px] font-bold",
