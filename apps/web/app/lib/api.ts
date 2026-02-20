@@ -1903,7 +1903,7 @@ class ApiClient {
     window_from: string;
     window_to: string;
   }> {
-    return this.post('/feeding/tasks/ensure-window', {}, { hours_ahead: hoursAhead });
+    return this.post(`/feeding/tasks/ensure-window?hours_ahead=${hoursAhead}`);
   }
 }
 
