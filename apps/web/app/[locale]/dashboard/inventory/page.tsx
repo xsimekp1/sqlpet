@@ -103,12 +103,20 @@ export default function InventoryPage() {
             {t('description')}
           </p>
         </div>
-        <Link href="/dashboard/inventory/items/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            {t('createItem')}
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/dashboard/inventory/purchases">
+            <Button variant="outline">
+              <Package className="h-4 w-4 mr-2" />
+              {t('viewPurchases')}
+            </Button>
+          </Link>
+          <Link href="/dashboard/inventory/items/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              {t('createItem')}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
