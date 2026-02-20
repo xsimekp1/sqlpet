@@ -282,7 +282,6 @@ class AnimalService:
             .options(
                 selectinload(Animal.animal_breeds).selectinload(AnimalBreed.breed),
                 selectinload(Animal.identifiers),
-                selectinload(Animal.kennel_stays).selectinload("kennel"),
             )
             .where(
                 Animal.id == animal_id,
