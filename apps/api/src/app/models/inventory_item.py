@@ -42,6 +42,9 @@ class InventoryItem(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     reorder_threshold: Mapped[float | None] = mapped_column(
         Numeric(10, 2), nullable=True
     )
+    quantity_current: Mapped[float] = mapped_column(
+        Numeric(10, 2), nullable=False, server_default="0"
+    )
     # Food-specific fields (relevant when category == 'food')
     kcal_per_100g: Mapped[float | None] = mapped_column(Numeric(7, 2), nullable=True)
     price_per_unit: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
