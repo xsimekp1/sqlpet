@@ -23,6 +23,7 @@ class Species(str, enum.Enum):
     DOG = "dog"
     CAT = "cat"
     RODENT = "rodent"
+    RABBIT = "rabbit"  # TODO: M3+ remove after DB migration
     BIRD = "bird"
     OTHER = "other"
 
