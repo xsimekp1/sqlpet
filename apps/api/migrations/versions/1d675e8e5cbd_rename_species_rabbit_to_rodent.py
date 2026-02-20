@@ -36,14 +36,6 @@ def upgrade() -> None:
     conn.execute(sa.text("ALTER TABLE animals ALTER COLUMN species TYPE VARCHAR(20)"))
     conn.execute(
         sa.text(
-            "ALTER TABLE inventory_items ALTER COLUMN target_species TYPE VARCHAR(20)"
-        )
-    )
-    conn.execute(
-        sa.text("ALTER TABLE food ALTER COLUMN target_species TYPE VARCHAR(20)")
-    )
-    conn.execute(
-        sa.text(
             "ALTER TABLE default_animal_images ALTER COLUMN species TYPE VARCHAR(20)"
         )
     )
@@ -51,16 +43,6 @@ def upgrade() -> None:
     # Step 3: Now update the data - only if rabbit exists
     conn.execute(
         sa.text("UPDATE animals SET species = 'rodent' WHERE species = 'rabbit'")
-    )
-    conn.execute(
-        sa.text(
-            "UPDATE inventory_items SET target_species = 'rodent' WHERE target_species = 'rabbit'"
-        )
-    )
-    conn.execute(
-        sa.text(
-            "UPDATE food SET target_species = 'rodent' WHERE target_species = 'rabbit'"
-        )
     )
 
     # Step 4: Remove 'rabbit' from enum - only if 'rabbit' still exists and 'rodent' exists
@@ -83,16 +65,6 @@ def upgrade() -> None:
     conn.execute(
         sa.text(
             "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
-        )
-    )
-    conn.execute(
-        sa.text(
-            "ALTER TABLE inventory_items ALTER COLUMN target_species TYPE species_enum USING target_species::text::species_enum"
-        )
-    )
-    conn.execute(
-        sa.text(
-            "ALTER TABLE food ALTER COLUMN target_species TYPE species_enum USING target_species::text::species_enum"
         )
     )
     conn.execute(
@@ -128,14 +100,6 @@ def downgrade() -> None:
     conn.execute(sa.text("ALTER TABLE animals ALTER COLUMN species TYPE VARCHAR(20)"))
     conn.execute(
         sa.text(
-            "ALTER TABLE inventory_items ALTER COLUMN target_species TYPE VARCHAR(20)"
-        )
-    )
-    conn.execute(
-        sa.text("ALTER TABLE food ALTER COLUMN target_species TYPE VARCHAR(20)")
-    )
-    conn.execute(
-        sa.text(
             "ALTER TABLE default_animal_images ALTER COLUMN species TYPE VARCHAR(20)"
         )
     )
@@ -143,16 +107,6 @@ def downgrade() -> None:
     # Step 3: Update data from 'rodent' to 'rabbit'
     conn.execute(
         sa.text("UPDATE animals SET species = 'rabbit' WHERE species = 'rodent'")
-    )
-    conn.execute(
-        sa.text(
-            "UPDATE inventory_items SET target_species = 'rabbit' WHERE target_species = 'rodent'"
-        )
-    )
-    conn.execute(
-        sa.text(
-            "UPDATE food SET target_species = 'rabbit' WHERE target_species = 'rodent'"
-        )
     )
 
     # Step 4: Recreate enum without rodent
@@ -167,16 +121,6 @@ def downgrade() -> None:
     conn.execute(
         sa.text(
             "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
-        )
-    )
-    conn.execute(
-        sa.text(
-            "ALTER TABLE inventory_items ALTER COLUMN target_species TYPE species_enum USING target_species::text::species_enum"
-        )
-    )
-    conn.execute(
-        sa.text(
-            "ALTER TABLE food ALTER COLUMN target_species TYPE species_enum USING target_species::text::species_enum"
         )
     )
     conn.execute(
