@@ -367,11 +367,11 @@ class AnimalService:
             # Bulk load intake dates with legal fields
             intake_result = await self.db.execute(
                 text("""
-                    SELECT animal_id::text, MAX(intake_date) as intake_date, 
+                    SELECT animal_id::text, MAX(intake_date) as intake_date,
                            MAX(reason) as reason,
                            MAX(notice_published_at) as notice_published_at,
-                           MAX(finder_claims_ownership) as finder_claims_ownership,
-                           MAX(municipality_irrevocably_transferred) as municipality_irrevocably_transferred
+                           BOOL_OR(finder_claims_ownership) as finder_claims_ownership,
+                           BOOL_OR(municipality_irrevocably_transferred) as municipality_irrevocably_transferred
                     FROM intakes
                     WHERE animal_id = ANY(:animal_ids) AND deleted_at IS NULL
                     GROUP BY animal_id
