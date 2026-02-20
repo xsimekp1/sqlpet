@@ -218,9 +218,9 @@ export default function KennelTimeline() {
           if (newStart || newEnd) {
             try {
               await ApiClient.setKennelMaintenance(draggingKennelId, {
-                maintenance_start_at: newStart?.toISOString().split('T')[0] || null,
-                maintenance_end_at: newEnd?.toISOString().split('T')[0] || null,
-                maintenance_reason: kennel.maintenance_reason || null,
+                start_at: newStart?.toISOString().split('T')[0] || null,
+                end_at: newEnd?.toISOString().split('T')[0] || null,
+                reason: kennel.maintenance_reason || null,
               });
               
               // Reload data
