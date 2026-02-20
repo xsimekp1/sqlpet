@@ -34,6 +34,9 @@ class IntakeCreate(BaseModel):
     planned_person_id: Optional[str] = None
     funding_source: Optional[str] = None
     funding_notes: Optional[str] = None
+    notice_published_at: Optional[date] = None
+    finder_claims_ownership: Optional[bool] = None
+    municipality_irrevocably_transferred: Optional[bool] = None
     notes: Optional[str] = None
 
     @field_validator("animal_id")
@@ -317,6 +320,9 @@ async def create_intake(
         else None,
         funding_source=data.funding_source,
         funding_notes=data.funding_notes,
+        notice_published_at=data.notice_published_at,
+        finder_claims_ownership=data.finder_claims_ownership,
+        municipality_irrevocably_transferred=data.municipality_irrevocably_transferred,
         notes=data.notes,
         created_by_id=current_user.id,
     )

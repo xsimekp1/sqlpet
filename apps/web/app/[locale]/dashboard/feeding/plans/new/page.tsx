@@ -240,7 +240,7 @@ export default function NewFeedingPlanPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-5xl">
       <div className="flex items-center gap-4">
         <Link href="/dashboard/feeding/plans">
           <Button variant="ghost" size="icon">
@@ -256,195 +256,203 @@ export default function NewFeedingPlanPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg border">
-        {/* Animal Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="animal_id">{t('fields.animal')} *</Label>
-          <Select
-            value={selectedAnimalId}
-            onValueChange={(value) => { 
-              setSelectedAnimalId(value); 
-              setValue('animal_id', value); 
-            }}
-            required
-          >
-            <SelectTrigger className="bg-white data-[placeholder]:text-muted-foreground">
-              <SelectValue placeholder={t('selectAnimal')} />
-            </SelectTrigger>
-            <SelectContent>
-              {animals.map((animal: any) => {
-                return (
-                  <SelectItem key={animal.id} value={animal.id}>
-                    {animal.name} ({animal.public_code})
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Animal Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="animal_id">{t('fields.animal')} *</Label>
+              <Select
+                value={selectedAnimalId}
+                onValueChange={(value) => { 
+                  setSelectedAnimalId(value); 
+                  setValue('animal_id', value); 
+                }}
+                required
+              >
+                <SelectTrigger className="bg-white data-[placeholder]:text-muted-foreground">
+                  <SelectValue placeholder={t('selectAnimal')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {animals.map((animal: any) => {
+                    return (
+                      <SelectItem key={animal.id} value={animal.id}>
+                        {animal.name} ({animal.public_code})
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
 
-        {/* Food Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="food_id">{t('fields.food')}</Label>
-          <Select
-            value={selectedFoodId}
-            onValueChange={handleFoodChange}
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder={t('selectFoodOptional')} />
-            </SelectTrigger>
-            <SelectContent>
-              {filteredFoods.map((food: any) => (
-                <SelectItem key={food.id} value={food.id}>
-                  {food.name} {food.brand && `(${food.brand})`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-sm text-muted-foreground">
-            {t('foodLinkDesc')}
-          </p>
-          {selectedAnimal && filteredFoods.length === 0 && (
-            <Alert variant="destructive" className="mt-2">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Sklad neobsahuje žádné krmivo vhodné pro druh &ldquo;{selectedAnimal.species}&rdquo;.{' '}
-                <Link
-                  href={`/dashboard/inventory/items/new?category=food&species=${selectedAnimal.species}`}
-                  className="underline font-medium"
-                >
-                  Přidat krmivo
-                </Link>
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
+            {/* Food Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="food_id">{t('fields.food')}</Label>
+              <Select
+                value={selectedFoodId}
+                onValueChange={handleFoodChange}
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder={t('selectFoodOptional')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredFoods.map((food: any) => (
+                    <SelectItem key={food.id} value={food.id}>
+                      {food.name} {food.brand && `(${food.brand})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                {t('foodLinkDesc')}
+              </p>
+              {selectedAnimal && filteredFoods.length === 0 && (
+                <Alert variant="destructive" className="mt-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    Sklad neobsahuje žádné krmivo vhodné pro druh &ldquo;{selectedAnimal.species}&rdquo;.{' '}
+                    <Link
+                      href={`/dashboard/inventory/items/new?category=food&species=${selectedAnimal.species}`}
+                      className="underline font-medium"
+                    >
+                      Přidat krmivo
+                    </Link>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
 
-        {/* Amount */}
-        <div className="space-y-2">
-          <Label htmlFor="amount_g">{t('fields.amountGrams')}</Label>
-          <Input className="bg-white"
-            id="amount_g"
-            type="number"
-            step="1"
-            placeholder="např. 200"
-            {...register('amount_g')}
-          />
-          {recommendedAmount && calculationDetails && (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">
-                  Doporučená denní dávka: <span className="font-medium text-green-600">{recommendedAmount}g</span> (váha: {selectedAnimal?.weight_current_kg}kg)
-                </p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={applyRecommendedAmount}
-                  className="h-6 text-xs text-green-600 hover:text-green-700"
-                >
-                  Použít
+            {/* Amount */}
+            <div className="space-y-2">
+              <Label htmlFor="amount_g">{t('fields.amountGrams')}</Label>
+              <Input className="bg-white"
+                id="amount_g"
+                type="number"
+                step="1"
+                placeholder="např. 200"
+                {...register('amount_g')}
+              />
+              {recommendedAmount && calculationDetails && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      Doporučená denní dávka: <span className="font-medium text-green-600">{recommendedAmount}g</span> (váha: {selectedAnimal?.weight_current_kg}kg)
+                    </p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={applyRecommendedAmount}
+                      className="h-6 text-xs text-green-600 hover:text-green-700"
+                    >
+                      Použít
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    Výpočet: {calculationDetails.mer} kcal/den ÷ {calculationDetails.kcalPer100g} kcal/100g × 100 = {Math.round((calculationDetails.mer / calculationDetails.kcalPer100g) * 100)}g
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Amount text */}
+            <div className="space-y-2">
+              <Label htmlFor="amount_text">{t('fields.amountText')}</Label>
+              <Input className="bg-white"
+                id="amount_text"
+                placeholder="např. 1 kelímek, půl konzervy"
+                {...register('amount_text')}
+              />
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Times per day */}
+            <div className="space-y-2">
+              <Label htmlFor="times_per_day">{t('fields.timesPerDay')}</Label>
+              <Input className="bg-white"
+                id="times_per_day"
+                type="number"
+                min="1"
+                placeholder="e.g. 2"
+                {...register('times_per_day')}
+              />
+            </div>
+
+            {/* Schedule */}
+            <div className="space-y-2">
+              <Label>{t('fields.schedule')}</Label>
+              <div className="flex gap-2">
+                <Input className="bg-white"
+                  type="time"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                />
+                <Button type="button" onClick={addScheduleTime} variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('addTime')}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground font-mono">
-                Výpočet: {calculationDetails.mer} kcal/den ÷ {calculationDetails.kcalPer100g} kcal/100g × 100 = {Math.round((calculationDetails.mer / calculationDetails.kcalPer100g) * 100)}g
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Amount text */}
-        <div className="space-y-2">
-          <Label htmlFor="amount_text">{t('fields.amountText')}</Label>
-          <Input className="bg-white"
-            id="amount_text"
-            placeholder="např. 1 kelímek, půl konzervy"
-            {...register('amount_text')}
-          />
-        </div>
-
-        {/* Times per day */}
-        <div className="space-y-2">
-          <Label htmlFor="times_per_day">{t('fields.timesPerDay')}</Label>
-          <Input className="bg-white"
-            id="times_per_day"
-            type="number"
-            min="1"
-            placeholder="e.g. 2"
-            {...register('times_per_day')}
-          />
-        </div>
-
-        {/* Schedule */}
-        <div className="space-y-2">
-          <Label>{t('fields.schedule')}</Label>
-          <div className="flex gap-2">
-            <Input className="bg-white"
-              type="time"
-              value={newTime}
-              onChange={(e) => setNewTime(e.target.value)}
-            />
-            <Button type="button" onClick={addScheduleTime} variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              {t('addTime')}
-            </Button>
-          </div>
-          {scheduleTimes.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {scheduleTimes.map((time) => (
-                <div
-                  key={time}
-                  className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-md"
-                >
-                  <span className="text-sm font-medium">{time}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeScheduleTime(time)}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+              {scheduleTimes.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {scheduleTimes.map((time) => (
+                    <div
+                      key={time}
+                      className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-md"
+                    >
+                      <span className="text-sm font-medium">{time}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeScheduleTime(time)}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Date Range */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="start_date">{t('fields.startDate')} *</Label>
-            <Input className="bg-white"
-              id="start_date"
-              type="date"
-              {...register('start_date', { required: true })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="end_date">{t('fields.endDate')}</Label>
-            <Input className="bg-white"
-              id="end_date"
-              type="date"
-              {...register('end_date')}
-            />
-            <p className="text-sm text-muted-foreground">
-              {t('endDateDesc')}
-            </p>
-          </div>
-        </div>
+            {/* Date Range */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start_date">{t('fields.startDate')} *</Label>
+                <Input className="bg-white"
+                  id="start_date"
+                  type="date"
+                  {...register('start_date', { required: true })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_date">{t('fields.endDate')}</Label>
+                <Input className="bg-white"
+                  id="end_date"
+                  type="date"
+                  {...register('end_date')}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {t('endDateDesc')}
+                </p>
+              </div>
+            </div>
 
-        {/* Notes */}
-        <div className="space-y-2">
-          <Label htmlFor="notes">{t('fields.notes')}</Label>
-          <Textarea
-            id="notes"
-            rows={3}
-            placeholder="Any special instructions or notes..."
-            {...register('notes')}
-          />
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">{t('fields.notes')}</Label>
+              <Textarea
+                id="notes"
+                rows={3}
+                placeholder="Any special instructions or notes..."
+                {...register('notes')}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 pt-4 border-t">
           <Button
             type="submit"
             disabled={createPlanMutation.isPending}
