@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useShoppingListStore } from '@/app/stores/shoppingListStore'
 import { useTranslations } from 'next-intl'
 import {
@@ -9,8 +11,18 @@ import {
   SheetTitle,
   SheetFooter,
 } from '@/components/ui/sheet'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Minus,
   Plus,
@@ -18,6 +30,7 @@ import {
   Clipboard,
   Download,
   ShoppingCart,
+  Package,
 } from 'lucide-react'
 import { getUnitSymbol } from '@/app/lib/constants'
 import { useToast } from '@/hooks/use-toast'
@@ -26,7 +39,8 @@ export function ShoppingListPanel() {
   const t = useTranslations('shoppingList')
   const tInventory = useTranslations('inventory')
   const { toast } = useToast()
-  
+  const router = useRouter()
+
   const {
     items,
     isOpen,
@@ -35,7 +49,11 @@ export function ShoppingListPanel() {
     decrementQty,
     removeItem,
     clearList,
+    createPurchaseOrder,
   } = useShoppingListStore()
+
+  const [showCreatePOModal, setShowCreatePOModal] = useState(false)
+  const [isCreatingPO, setIsCreatingPO] = useState(false)
 
   const handleCopyToClipboard = async () => {
     const text = items
@@ -65,6 +83,43 @@ export function ShoppingListPanel() {
     a.download = 'nakupni-seznam.json'
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleCreatePO = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsCreatingPO(true)
+
+    const formData = new FormData(e.currentTarget)
+    const supplierName = formData.get('supplier_name') as string
+    const expectedDeliveryDate = formData.get('expected_delivery_date') as string
+    const notes = formData.get('notes') as string
+
+    try {
+      const po = await createPurchaseOrder(
+        supplierName,
+        expectedDeliveryDate || undefined,
+        notes || undefined
+      )
+
+      toast({
+        title: t('purchaseOrderCreated'),
+        description: `${t('poNumber')}: ${po.po_number}`,
+      })
+
+      setShowCreatePOModal(false)
+
+      // Navigate to PO detail page
+      router.push(`/dashboard/inventory/purchases/${po.id}`)
+    } catch (error: any) {
+      console.error('Failed to create purchase order:', error)
+      toast({
+        title: t('error'),
+        description: error.message || t('failedToCreatePO'),
+        variant: 'destructive',
+      })
+    } finally {
+      setIsCreatingPO(false)
+    }
   }
 
   const renderListItems = () => (
@@ -134,34 +189,46 @@ export function ShoppingListPanel() {
 
   const renderFooter = () => (
     items.length > 0 && (
-      <div className="flex flex-row gap-2 pt-2 border-t">
+      <div className="flex flex-col gap-2 pt-2 border-t">
+        {/* Create Purchase Order button - prominent */}
         <Button
-          variant="outline"
-          size="sm"
-          onClick={clearList}
-          className="flex-1"
+          onClick={() => setShowCreatePOModal(true)}
+          className="w-full"
         >
-          <Trash2 className="h-4 w-4 mr-1" />
-          {t('clear')}
+          <Package className="h-4 w-4 mr-2" />
+          {t('createPurchaseOrder')} ({items.length})
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCopyToClipboard}
-          className="flex-1"
-        >
-          <Clipboard className="h-4 w-4 mr-1" />
-          {t('copy')}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportJSON}
-          className="flex-1"
-        >
-          <Download className="h-4 w-4 mr-1" />
-          {t('export')}
-        </Button>
+
+        {/* Other actions */}
+        <div className="flex flex-row gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearList}
+            className="flex-1"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            {t('clear')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyToClipboard}
+            className="flex-1"
+          >
+            <Clipboard className="h-4 w-4 mr-1" />
+            {t('copy')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportJSON}
+            className="flex-1"
+          >
+            <Download className="h-4 w-4 mr-1" />
+            {t('export')}
+          </Button>
+        </div>
       </div>
     )
   )
@@ -215,6 +282,76 @@ export function ShoppingListPanel() {
           {renderMobileSheetContent()}
         </SheetContent>
       </Sheet>
+
+      {/* Create Purchase Order Modal */}
+      <Dialog open={showCreatePOModal} onOpenChange={setShowCreatePOModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('createPurchaseOrder')}</DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleCreatePO}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="supplier_name">
+                  {t('supplierName')} <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="supplier_name"
+                  name="supplier_name"
+                  required
+                  placeholder={t('supplierNamePlaceholder')}
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="expected_delivery_date">
+                  {t('expectedDeliveryDate')}
+                </Label>
+                <Input
+                  id="expected_delivery_date"
+                  name="expected_delivery_date"
+                  type="date"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">{t('notes')}</Label>
+                <Textarea
+                  id="notes"
+                  name="notes"
+                  placeholder={t('notesPlaceholder')}
+                  rows={3}
+                />
+              </div>
+
+              <div className="rounded-md border p-3 bg-muted/50">
+                <div className="text-sm font-medium mb-2">
+                  {t('itemsSummary')}:
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {items.length} {t('itemsCount', { count: items.length })}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreatePOModal(false)}
+                disabled={isCreatingPO}
+              >
+                {t('cancel')}
+              </Button>
+              <Button type="submit" disabled={isCreatingPO}>
+                {isCreatingPO ? t('creating') : t('create')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
