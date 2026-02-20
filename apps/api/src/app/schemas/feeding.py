@@ -1,8 +1,8 @@
 """Pydantic schemas for feeding endpoints."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, date
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import uuid
 
 
@@ -80,6 +80,37 @@ class FeedingPlanBase(BaseModel):
 class FeedingPlanCreate(FeedingPlanBase):
     mer_calculation: Optional[Dict[str, Any]] = None  # MER snapshot at plan creation
 
+    @field_validator('schedule_json')
+    @classmethod
+    def validate_schedule_json(cls, v, info):
+        """Validate schedule_json structure and amounts array."""
+        if v is None:
+            return v
+
+        # Check if times array exists
+        times = v.get('times', [])
+        if not times:
+            return v
+
+        # Check if amounts array exists
+        amounts = v.get('amounts', [])
+        if not amounts:
+            return v
+
+        # Validate amounts length matches times length
+        if len(amounts) != len(times):
+            raise ValueError(f'amounts array length ({len(amounts)}) must match times array length ({len(times)})')
+
+        # Get amount_g from validation info (if available)
+        amount_g = info.data.get('amount_g')
+        if amount_g is not None:
+            # Validate sum of amounts approximately equals amount_g (allow 1g rounding tolerance)
+            total_amount = sum(amounts)
+            if abs(total_amount - amount_g) > 1:
+                raise ValueError(f'Sum of amounts ({total_amount}g) must equal daily amount ({amount_g}g) ±1g')
+
+        return v
+
 
 class FeedingPlanUpdate(BaseModel):
     food_id: Optional[uuid.UUID] = None
@@ -90,6 +121,37 @@ class FeedingPlanUpdate(BaseModel):
     end_date: Optional[date] = None
     notes: Optional[str] = None
     is_active: Optional[bool] = None
+
+    @field_validator('schedule_json')
+    @classmethod
+    def validate_schedule_json(cls, v, info):
+        """Validate schedule_json structure and amounts array."""
+        if v is None:
+            return v
+
+        # Check if times array exists
+        times = v.get('times', [])
+        if not times:
+            return v
+
+        # Check if amounts array exists
+        amounts = v.get('amounts', [])
+        if not amounts:
+            return v
+
+        # Validate amounts length matches times length
+        if len(amounts) != len(times):
+            raise ValueError(f'amounts array length ({len(amounts)}) must match times array length ({len(times)})')
+
+        # Get amount_g from validation info (if available)
+        amount_g = info.data.get('amount_g')
+        if amount_g is not None:
+            # Validate sum of amounts approximately equals amount_g (allow 1g rounding tolerance)
+            total_amount = sum(amounts)
+            if abs(total_amount - amount_g) > 1:
+                raise ValueError(f'Sum of amounts ({total_amount}g) must equal daily amount ({amount_g}g) ±1g')
+
+        return v
 
 
 class FeedingPlanResponse(FeedingPlanBase):

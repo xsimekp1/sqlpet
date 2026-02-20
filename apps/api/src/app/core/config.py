@@ -49,6 +49,9 @@ class Settings(BaseSettings):
         False  # Disabled by default - set True only if api_metrics table exists
     )
 
+    # Feeding Task Settings
+    FEEDING_TASK_HORIZON_HOURS: int = 48  # Default 48h rolling window for task generation
+
     @property
     def max_file_size_bytes(self) -> int:
         return self.MAX_FILE_SIZE_MB * 1024 * 1024

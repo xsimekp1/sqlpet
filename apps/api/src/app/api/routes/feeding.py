@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
 from src.app.api.dependencies.db import get_db
@@ -401,4 +401,32 @@ async def generate_feeding_tasks(
     return {
         "tasks_created": len(tasks),
         "message": f"Generated {len(tasks)} feeding tasks",
+    }
+
+
+# Epic 8 - Rolling window task generation
+@router.post("/tasks/ensure-window", status_code=status.HTTP_201_CREATED)
+async def ensure_feeding_tasks_window(
+    hours_ahead: int = Query(48, ge=1, le=168, description="Hours ahead to generate tasks for"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Ensure feeding tasks exist for next N hours. Idempotent."""
+    from src.app.core.config import settings
+
+    feeding_service = FeedingService(db)
+
+    from_dt = datetime.now(timezone.utc)
+    to_dt = from_dt + timedelta(hours=hours_ahead)
+
+    tasks = await feeding_service.ensure_feeding_tasks_window(
+        organization_id, from_dt, to_dt
+    )
+    await db.commit()
+
+    return {
+        "tasks_created": len(tasks),
+        "window_from": from_dt.isoformat(),
+        "window_to": to_dt.isoformat(),
     }

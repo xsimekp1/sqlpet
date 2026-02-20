@@ -1896,6 +1896,15 @@ class ApiClient {
   }> {
     return this.get(`/animals/vaccinations/expiring`, { days });
   }
+
+  // Epic 8 - Feeding Plans 2.0
+  static async ensureFeedingTasksWindow(hoursAhead: number = 48): Promise<{
+    tasks_created: number;
+    window_from: string;
+    window_to: string;
+  }> {
+    return this.post('/feeding/tasks/ensure-window', {}, { hours_ahead: hoursAhead });
+  }
 }
 
 // Search types

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
@@ -34,6 +34,11 @@ export default function FeedingPlansPage() {
   const queryClient = useQueryClient();
 
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('active');
+
+  // Epic 8 - Lazy fallback: Ensure feeding tasks exist for 48h window when user opens feeding page
+  useEffect(() => {
+    ApiClient.ensureFeedingTasksWindow(48).catch(console.error);
+  }, []);
 
   // Fetch feeding plans
   const { data: plansData, isLoading } = useQuery({
