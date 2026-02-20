@@ -11,6 +11,7 @@ import FindingsReportWidget from '@/app/components/reports/FindingsReportWidget'
 
 // ── Simple SVG line chart for daily animal count ────────────────────────────
 function DailyCountChart({ data }: { data: { date: string; count: number }[] }) {
+  if (!data || data.length === 0) return <p className="text-sm text-muted-foreground">Nedostatek dat pro zobrazení grafu</p>;
   if (data.length < 2) return <p className="text-sm text-muted-foreground">Nedostatek dat pro zobrazení grafu</p>;
 
   const W = 600, H = 200;
@@ -19,11 +20,14 @@ function DailyCountChart({ data }: { data: { date: string; count: number }[] }) 
   const counts = data.map(d => d.count);
   const minC = Math.min(...counts);
   const maxC = Math.max(...counts);
-  const rangeC = maxC - minC || 1;
+  // Add 10% padding to range for better visualization, ensure at least some visual range
+  const rangePadding = Math.max((maxC - minC) * 0.1, 1);
+  const rangeC = Math.max(maxC - minC, 1) + rangePadding;
+  const displayMin = Math.max(minC - rangePadding, 0);
   const avg = counts.reduce((a, b) => a + b, 0) / counts.length;
 
   const toX = (i: number) => padL + (i / (data.length - 1)) * (W - padL - padR);
-  const toY = (v: number) => padT + (H - padT - padB) - ((v - minC) / rangeC) * (H - padT - padB);
+  const toY = (v: number) => padT + (H - padT - padB) - ((v - displayMin) / rangeC) * (H - padT - padB);
 
   const avgY = toY(avg);
   const polyline = data.map((d, i) => `${toX(i)},${toY(d.count)}`).join(' ');
@@ -33,10 +37,12 @@ function DailyCountChart({ data }: { data: { date: string; count: number }[] }) 
 
   // Grid line values: multiples of 5 within chart range
   const gridStep = 5;
+  const gridStart = Math.floor(displayMin / gridStep) * gridStep;
+  const gridEnd = Math.ceil((displayMin + rangeC) / gridStep) * gridStep;
   const gridValues = Array.from(
-    { length: Math.ceil((maxC + gridStep) / gridStep) },
-    (_, i) => i * gridStep,
-  ).filter(v => v >= minC && v <= maxC);
+    { length: Math.ceil((gridEnd - gridStart) / gridStep) + 1 },
+    (_, i) => gridStart + i * gridStep,
+  ).filter(v => v >= displayMin && v <= displayMin + rangeC);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }} aria-hidden>

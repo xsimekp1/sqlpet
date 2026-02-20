@@ -87,7 +87,7 @@ export default function FindingsPage() {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const [loading, setLoading] = useState(true);
   const [mapData, setMapData] = useState<FindingsMapResponse | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
   // Filters
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'current' | 'past'>('all');
@@ -277,9 +277,9 @@ export default function FindingsPage() {
 
         <TabsContent value="map" className="mt-4">
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* Map - left side, capped at 900px */}
-            <div className="lg:w-[60%] lg:max-w-[900px] lg:min-h-[500px]">
-              <Card className="h-full min-h-[400px]">
+            {/* Map - left side, square */}
+            <div className="lg:w-[60%] lg:max-w-[600px] aspect-square">
+              <Card className="h-full min-h-[300px]">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">Mapa</CardTitle>
