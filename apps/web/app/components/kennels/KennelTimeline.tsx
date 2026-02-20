@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { 
   Loader2, ChevronLeft, ChevronRight, 
-  AlertTriangle, BedDouble, Dog, Cat, Bird, Rabbit 
+  AlertTriangle, BedDouble, Dog, Cat, Bird, Rabbit, GripVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import ApiClient, { KennelTimelineData, KennelTimelineStay } from '@/app/lib/api';
 import Image from 'next/image';
 import { getAnimalImageUrl } from '@/app/lib/utils';
+import { toast } from 'sonner';
 
 const CELL_WIDTH = 32;
 const LANE_HEIGHT = 44;
@@ -149,8 +150,103 @@ export default function KennelTimeline() {
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
   
+  // Drag state for maintenance bar
+  const [draggingKennelId, setDraggingKennelId] = useState<string | null>(null);
+  const [dragEdge, setDragEdge] = useState<'start' | 'end' | null>(null);
+  const [dragX, setDragX] = useState<number | null>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  
   const today = useMemo(() => new Date(), []);
   today.setHours(0, 0, 0, 0);
+  
+  // Handle mouse move for dragging
+  useEffect(() => {
+    if (!draggingKennelId || !dragEdge || !data) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!timelineRef.current) return;
+      
+      const rect = timelineRef.current.getBoundingClientRect();
+      const scrollLeft = timelineRef.current.scrollLeft;
+      const x = e.clientX - rect.left + scrollLeft - LEFT_COL_WIDTH;
+      
+      // Calculate day offset from the start of the timeline
+      const dayOffset = Math.round(x / CELL_WIDTH);
+      const viewStart = new Date(data.from_date);
+      const newDate = new Date(viewStart);
+      newDate.setDate(newDate.getDate() + dayOffset);
+      
+      // Clamp to reasonable dates
+      const minDate = new Date();
+      minDate.setFullYear(minDate.getFullYear() - 1);
+      const maxDate = new Date();
+      maxDate.setFullYear(maxDate.getFullYear() + 2);
+      
+      if (newDate < minDate) newDate.setTime(minDate.getTime());
+      if (newDate > maxDate) newDate.setTime(maxDate.getTime());
+      
+      setDragX(newDate.getTime());
+    };
+
+    const handleMouseUp = async () => {
+      if (draggingKennelId && dragX && data) {
+        const kennel = data.kennels.find(k => k.kennel_id === draggingKennelId);
+        if (kennel) {
+          const currentStart = kennel.maintenance_start_at ? new Date(kennel.maintenance_start_at) : null;
+          const currentEnd = kennel.maintenance_end_at ? new Date(kennel.maintenance_end_at) : null;
+          
+          let newStart = currentStart;
+          let newEnd = currentEnd;
+          
+          if (dragEdge === 'start' && currentStart) {
+            newStart = new Date(dragX);
+            // Ensure end is after start
+            if (currentEnd && newStart >= currentEnd) {
+              newStart = new Date(currentEnd.getTime() - 24 * 60 * 60 * 1000);
+            }
+          } else if (dragEdge === 'end' && currentEnd) {
+            newEnd = new Date(dragX);
+            // Ensure start is before end
+            if (currentStart && newEnd <= currentStart) {
+              newEnd = new Date(currentStart.getTime() + 24 * 60 * 60 * 1000);
+            }
+          } else if (dragEdge === 'end' && !currentEnd) {
+            // If no end date, set end to dragged date (extend maintenance)
+            newEnd = new Date(dragX);
+          }
+          
+          if (newStart || newEnd) {
+            try {
+              await ApiClient.setKennelMaintenance(draggingKennelId, {
+                maintenance_start_at: newStart?.toISOString().split('T')[0] || null,
+                maintenance_end_at: newEnd?.toISOString().split('T')[0] || null,
+                maintenance_reason: kennel.maintenance_reason || null,
+              });
+              
+              // Reload data
+              const timelineData = await ApiClient.getStaysTimeline();
+              setData(timelineData);
+              toast.success('Rekonstrukce aktualizována');
+            } catch (err) {
+              toast.error('Nepodařilo se aktualizovat rekonstrukci');
+            }
+          }
+        }
+      }
+      
+      setDraggingKennelId(null);
+      setDragEdge(null);
+      setDragX(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [draggingKennelId, dragEdge, dragX, data]);
   
   useEffect(() => {
     async function loadData() {
@@ -329,6 +425,7 @@ export default function KennelTimeline() {
                 <div 
                   className="relative flex"
                   style={{ width: dates.length * CELL_WIDTH, minHeight: rows * LANE_HEIGHT }}
+                  ref={timelineRef}
                 >
                   {/* Grid lines */}
                   {dates.map((_, idx) => (
@@ -364,60 +461,87 @@ export default function KennelTimeline() {
                       if (maintEnd && maintEnd < viewStart) return null;
                       if (maintStart > viewEnd) return null;
                       
-                      const startOffset = Math.max(0, Math.floor((maintStart.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24)));
+                      let startOffset = Math.max(0, Math.floor((maintStart.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24)));
                       const endDate = maintEnd || viewEnd;
-                      const duration = Math.max(1, Math.ceil((endDate.getTime() - maintStart.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                      let duration = Math.max(1, Math.ceil((endDate.getTime() - maintStart.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                      
+                      // During drag, update position
+                      if (draggingKennelId === kennel.kennel_id && dragX) {
+                        if (dragEdge === 'start') {
+                          const newStart = new Date(dragX);
+                          const currentEnd = maintEnd || viewEnd;
+                          const newDuration = Math.max(1, Math.ceil((currentEnd.getTime() - newStart.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                          startOffset = Math.max(0, Math.floor((newStart.getTime() - viewStart.getTime()) / (1000 * 60 * 60 * 24)));
+                          duration = newDuration;
+                        } else if (dragEdge === 'end' && !maintEnd) {
+                          // Extending end date when no end was set
+                          const newEnd = new Date(dragX);
+                          duration = Math.max(1, Math.ceil((newEnd.getTime() - maintStart.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                        }
+                      }
                       
                       const isActive = maintStart <= today && (!maintEnd || maintEnd >= today);
                       
                       return (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                        <div
+                          className={cn(
+                            "absolute h-full rounded-md flex items-center justify-between z-0 px-1",
+                            isActive ? "bg-yellow-400/40" : "bg-yellow-200/30",
+                            isActive && "animate-pulse",
+                            draggingKennelId === kennel.kennel_id && "ring-2 ring-yellow-500"
+                          )}
+                          style={{
+                            left: startOffset * CELL_WIDTH,
+                            width: duration * CELL_WIDTH,
+                          }}
+                        >
+                          {/* Start handle */}
+                          <div
+                            className="w-3 h-8 bg-yellow-500 rounded cursor-ew-resize hover:bg-yellow-600 flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setDraggingKennelId(kennel.kennel_id);
+                              setDragEdge('start');
+                            }}
+                          >
+                            <GripVertical className="w-2 h-4 text-white" />
+                          </div>
+                          
+                          <span className={cn(
+                            "text-xs font-bold rotate-[-45deg] whitespace-nowrap",
+                            isActive ? "text-yellow-700" : "text-yellow-600/70"
+                          )}>
+                            🔧
+                          </span>
+                          
+                          {/* End handle - only show if there's an end date */}
+                          {maintEnd && (
                             <div
-                              className={cn(
-                                "absolute h-full rounded-md flex items-center justify-center z-0",
-                                isActive ? "bg-yellow-400/40" : "bg-yellow-200/30",
-                                isActive && "animate-pulse"
-                              )}
-                              style={{
-                                left: startOffset * CELL_WIDTH,
-                                width: duration * CELL_WIDTH,
+                              className="w-3 h-8 bg-yellow-500 rounded cursor-ew-resize hover:bg-yellow-600 flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                setDraggingKennelId(kennel.kennel_id);
+                                setDragEdge('end');
                               }}
                             >
-                              <span className={cn(
-                                "text-xs font-bold rotate-[-45deg] whitespace-nowrap",
-                                isActive ? "text-yellow-700" : "text-yellow-600/70"
-                              )}>
-                                🔧
-                              </span>
+                              <GripVertical className="w-2 h-4 text-white" />
                             </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="space-y-1">
-                              <div className="font-semibold flex items-center gap-1">
-                                🔧 {t('maintenance.title') || 'Rekonstrukce'}
-                              </div>
-                              <div>
-                                {t('maintenance.from') || 'Od'}: {maintStart.toLocaleDateString('cs-CZ')}
-                              </div>
-                              {maintEnd && (
-                                <div>
-                                  {t('maintenance.to') || 'Do'}: {maintEnd.toLocaleDateString('cs-CZ')}
-                                </div>
-                              )}
-                              {kennel.maintenance_reason && (
-                                <div className="text-muted-foreground">
-                                  {kennel.maintenance_reason}
-                                </div>
-                              )}
-                              {isActive && (
-                                <div className="font-medium text-yellow-600">
-                                  {t('maintenance.active') || 'Nyní v rekonstrukci'}
-                                </div>
-                              )}
+                          )}
+                          
+                          {/* If no end date, allow extending by dragging right side */}
+                          {!maintEnd && (
+                            <div
+                              className="w-3 h-8 bg-yellow-500/50 rounded cursor-ew-resize hover:bg-yellow-600 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                setDraggingKennelId(kennel.kennel_id);
+                                setDragEdge('end');
+                              }}
+                            >
+                              <GripVertical className="w-2 h-4 text-white" />
                             </div>
-                          </TooltipContent>
-                        </Tooltip>
+                          )}
+                        </div>
                       );
                     })()
                   )}
