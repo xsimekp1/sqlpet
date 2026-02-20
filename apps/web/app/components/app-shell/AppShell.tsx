@@ -2,7 +2,7 @@
 
 import { Topbar } from './Topbar'
 import { Sidebar } from './Sidebar'
-import { MobileBottomNav } from './MobileBottomNav'
+// import { MobileBottomNav } from './MobileBottomNav'  // Disabled per user request
 import { MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/app/context/AuthContext'
@@ -20,11 +20,11 @@ export function AppShell({ children }: AppShellProps) {
       <Topbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto p-6 pb-20 lg:pb-6">
+        <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>
-      <MobileBottomNav />
+      {/* <MobileBottomNav /> */}
       {canUseChat && (
         <Link
           href="/dashboard/chat"
