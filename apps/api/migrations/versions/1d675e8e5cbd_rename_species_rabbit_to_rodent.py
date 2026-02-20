@@ -21,16 +21,27 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema - rename rabbit to rodent in all tables."""
+    # First update the data
     op.execute("UPDATE animals SET species = 'rodent' WHERE species = 'rabbit'")
-    op.execute(
-        "UPDATE animals SET species = 'rodent' WHERE species = 'rodent'"
-    )  # Already renamed, no-op for idempotency
     op.execute(
         "UPDATE inventory_items SET target_species = 'rodent' WHERE target_species = 'rabbit'"
     )
     op.execute(
         "UPDATE food SET target_species = 'rodent' WHERE target_species = 'rabbit'"
     )
+
+    # Then alter the enum type to remove 'rabbit'
+    op.execute("ALTER TYPE species_enum RENAME TO species_enum_old")
+    op.execute(
+        "CREATE TYPE species_enum AS ENUM ('dog', 'cat', 'rodent', 'bird', 'other')"
+    )
+    op.execute(
+        "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+    )
+    op.execute(
+        "ALTER TABLE default_animal_images ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+    )
+    op.execute("DROP TYPE species_enum_old")
 
 
 def downgrade() -> None:
