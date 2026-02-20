@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy import text
 
 revision = "add_qty_current"
-down_revision = "148e97522a3b"
+down_revision = "add_inventory_transactions_v2"
 branch_labels = None
 depends_on = None
 

@@ -378,61 +378,96 @@ export default function AnimalsPage() {
                     className="object-cover object-center"
                     unoptimized
                   />
-                  {/* Top row: Name left, Sex center-right, Age circle right */}
+                  {/* Top badges row */}
                   <div className="absolute top-1 left-1 right-1 flex items-start justify-between">
-                    <div className="flex-1 min-w-0 pr-8">
+                    <div className="flex gap-1 flex-wrap">
                       {animal.is_special_needs && (
                         <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-violet-600 text-white text-xs" title="Speciální potřeby">
                           ⭐
                         </span>
                       )}
                       {animal.is_critical && (
-                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-xs ml-0.5" title="Kritický stav">
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-600 text-white text-xs" title="Kritický stav">
                           !
                         </span>
                       )}
                       {animal.is_diabetic && (
-                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs ml-0.5" title="Cukrovka">
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs" title="Cukrovka">
                           💉
                         </span>
                       )}
                     </div>
-                    {/* Sex symbol */}
-                    <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                      animal.sex === 'male' ? "bg-blue-600 text-white" : 
-                      animal.sex === 'female' ? "bg-pink-600 text-white" : 
-                      "bg-gray-400 text-white"
-                    )}>
-                      {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
+                  </div>
+                  {/* Bottom row: Name + Sex left, Age right */}
+                  <div className="absolute bottom-1 left-1 right-1 flex items-end justify-between">
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-white text-xs drop-shadow-lg truncate max-w-[80px]">{animal.name}</span>
+                      <div className={cn(
+                        "w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold",
+                        animal.sex === 'male' ? "bg-blue-600 text-white" : 
+                        animal.sex === 'female' ? "bg-pink-600 text-white" : 
+                        "bg-gray-400 text-white"
+                      )}>
+                        {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
+                      </div>
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-black/70 text-white text-xs font-bold flex items-center justify-center">
+                      {animal.estimated_age_years != null 
+                        ? `${animal.estimated_age_years}y` 
+                        : animal.age_group === 'baby' ? 'B' :
+                          animal.age_group === 'young' ? 'Y' :
+                          animal.age_group === 'adult' ? 'A' :
+                          animal.age_group === 'senior' ? 'S' : '?'}
                     </div>
                   </div>
-                  {/* Age circle - top right */}
-                  <div className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/70 text-white text-xs font-bold flex items-center justify-center">
-                    {animal.estimated_age_years != null 
-                      ? `${animal.estimated_age_years}y` 
-                      : animal.age_group === 'baby' ? 'B' :
-                        animal.age_group === 'young' ? 'Y' :
-                        animal.age_group === 'adult' ? 'A' :
-                        animal.age_group === 'senior' ? 'S' : '?'}
-                  </div>
-                  {/* Kennel code badge bottom-left */}
-                  {animal.current_kennel_code && (
-                    <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-white text-xs font-mono font-semibold">
-                      {animal.current_kennel_code}
-                    </div>
-                  )}
-                  {/* Altered status - bottom right */}
-                  {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
-                    <div className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center" title="Vykastrované">
-                      <Scissors className="h-3 w-3" />
-                    </div>
-                  )}
                 </div>
                 {/* Card footer */}
-                <div className="p-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-mono text-muted-foreground">#{animal.public_code}</span>
+                <div className="p-2 space-y-1">
+                  {/* Health badges row */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-1 flex-wrap">
+                      {animal.is_critical && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700" title="Kritický stav">
+                          !
+                        </span>
+                      )}
+                      {animal.is_diabetic && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700" title="Cukrovka">
+                          💉
+                        </span>
+                      )}
+                      {animal.is_pregnant && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-pink-100 text-pink-700" title="Březí">
+                          ♀+
+                        </span>
+                      )}
+                      {animal.is_lactating && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-pink-100 text-pink-700" title="Kojící">
+                          ♀~
+                        </span>
+                      )}
+                      {animal.is_cancer && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700" title="Nádor">
+                          ☗
+                        </span>
+                      )}
+                      {animal.is_aggressive && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700" title="Agresivní">
+                          ⚠
+                        </span>
+                      )}
+                      {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700" title="Vykastrované">
+                          ✂
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-mono text-[10px] text-muted-foreground">#{animal.public_code}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    {animal.current_kennel_code && (
+                      <span className="text-xs font-mono font-semibold">{animal.current_kennel_code}</span>
+                    )}
                     <Badge className={cn("text-[10px] px-1.5 py-0", getStatusColor(animal.status))}>
                       {t(`animals.status.${animal.status}`)}
                     </Badge>
