@@ -446,7 +446,7 @@ export default function AnimalsPage() {
                             "inline-flex items-center justify-center px-1.5 h-5 rounded text-xs font-semibold",
                             animal.legal_deadline_state === 'expired' && "bg-red-600 text-white",
                             animal.legal_deadline_state === 'missing_data' && "bg-yellow-500 text-white",
-                            animal.legal_deadline_state === 'running' && animal.legal_deadline_days_left !== null && animal.legal_deadline_days_left <= 14 && "bg-orange-500 text-white"
+                            animal.legal_deadline_state === 'running' && animal.legal_deadline_days_left !== null && animal.legal_deadline_days_left !== undefined && animal.legal_deadline_days_left <= 14 && "bg-orange-500 text-white"
                           )}
                           title={animal.legal_deadline_label || ''}
                         >
