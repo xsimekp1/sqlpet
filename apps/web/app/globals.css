@@ -51,29 +51,30 @@
 :root {
   --radius: 0.625rem;
   
-  /* Theme A: Teal Shelter (default) */
-  --theme-primary: #0F766E;
-  --theme-primary-hover: #115E59;
+  /* Theme A: Teal Shelter - nature, calm, teal-green */
+  --theme-primary: #0D9488;        /* Vibrant teal */
+  --theme-primary-hover: #0F766E;
   --theme-primary-soft: #CCFBF1;
-  --theme-accent: #2563EB;
-  --theme-accent-soft: #DBEAFE;
-  --theme-success: #16A34A;
+  --theme-accent: #14B8A6;          /* Lighter teal */
+  --theme-accent-soft: #F0FDFA;
+  --theme-success: #22C55E;
   --theme-success-soft: #DCFCE7;
   --theme-warning: #F59E0B;
   --theme-warning-soft: #FEF3C7;
-  --theme-danger: #DC2626;
+  --theme-danger: #EF4444;
   --theme-danger-soft: #FEE2E2;
   
-  /* Surface hierarchy - CLEAR DISTINCTION */
-  --theme-page-bg: #F1F5F9;      /* Page background - light gray */
-  --theme-surface: #FFFFFF;        /* Cards/panels - white */
-  --theme-surface-elevated: #FFFFFF; /* Elevated elements */
-  --theme-input-bg: #F8FAFC;      /* Input fields - slightly different */
-  --theme-surface-muted: #E2E8F0;  /* Muted surfaces */
-  --theme-border: #CBD5E1;         /* Borders - visible */
-  --theme-text: #0F172A;
-  --theme-text-secondary: #475569;
-  --theme-text-muted: #64748B;
+  /* Surface hierarchy - CLEAR COLORFUL DISTINCTION */
+  --theme-page-bg: linear-gradient(135deg, #F0FDF4 0%, #CCFBF1 100%); /* Teal gradient */
+  --theme-page-bg-solid: #ECFDF5;
+  --theme-surface: #FFFFFF;
+  --theme-surface-elevated: #FFFFFF;
+  --theme-input-bg: #F0FDFA;       /* Very light teal */
+  --theme-surface-muted: #CCFBF1; /* Teal tint */
+  --theme-border: #5EEAD4;         /* Bright teal border */
+  --theme-text: #134E4A;          /* Dark teal text */
+  --theme-text-secondary: #0F766E;
+  --theme-text-muted: #0D9488;
   
   /* Current theme tokens */
   --color-primary: var(--theme-primary);
@@ -87,7 +88,7 @@
   --color-warning-soft: var(--theme-warning-soft);
   --color-danger: var(--theme-danger);
   --color-danger-soft: var(--theme-danger-soft);
-  --color-bg: var(--theme-page-bg);
+  --color-bg: var(--theme-page-bg-solid);
   --color-surface: var(--theme-surface);
   --color-surface-elevated: var(--theme-surface-elevated);
   --color-input-bg: var(--theme-input-bg);
@@ -144,30 +145,31 @@
   box-shadow: 0 0 0 2px var(--color-primary-soft);
 }
 
-/* Theme B: Berry Rescue */
+/* Theme B: Berry Rescue - purple/violet, friendly, playful */
 [data-theme="berry"] {
-  --theme-primary: #7C3AED;
-  --theme-primary-hover: #6D28D9;
+  --theme-primary: #8B5CF6;        /* Vibrant violet */
+  --theme-primary-hover: #7C3AED;
   --theme-primary-soft: #EDE9FE;
-  --theme-accent: #0EA5E9;
-  --theme-accent-soft: #E0F2FE;
-  --theme-success: #16A34A;
+  --theme-accent: #EC4899;         /* Pink accent */
+  --theme-accent-soft: #FCE7F3;
+  --theme-success: #22C55E;
   --theme-success-soft: #DCFCE7;
   --theme-warning: #F59E0B;
   --theme-warning-soft: #FEF3C7;
-  --theme-danger: #DC2626;
+  --theme-danger: #EF4444;
   --theme-danger-soft: #FEE2E2;
   
   /* Surface hierarchy - Berry style */
-  --theme-page-bg: #F8F9FC;      /* Page - cool white-gray */
-  --theme-surface: #FFFFFF;        /* Cards - white */
+  --theme-page-bg: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%); /* Violet gradient */
+  --theme-page-bg-solid: #F5F3FF;
+  --theme-surface: #FFFFFF;
   --theme-surface-elevated: #FFFFFF;
-  --theme-input-bg: #F5F3FF;     /* Input - slight purple tint */
-  --theme-surface-muted: #EDE9FE; /* Muted - purple tint */
-  --theme-border: #DDDAF0;         /* Borders - visible */
-  --theme-text: #111827;
-  --theme-text-secondary: #4B5563;
-  --theme-text-muted: #6B7280;
+  --theme-input-bg: #F5F3FF;       /* Light violet */
+  --theme-surface-muted: #EDE9FE;   /* Violet tint */
+  --theme-border: #C4B5FD;         /* Bright violet border */
+  --theme-text: #1E1B4B;           /* Dark violet text */
+  --theme-text-secondary: #4C1D95;
+  --theme-text-muted: #7C3AED;
   
   /* Update current theme tokens */
   --color-primary: var(--theme-primary);
@@ -181,6 +183,7 @@
   --color-warning-soft: var(--theme-warning-soft);
   --color-danger: var(--theme-danger);
   --color-danger-soft: var(--theme-danger-soft);
+  --color-bg: var(--theme-page-bg-solid);
   --color-bg: var(--theme-page-bg);
   --color-surface: var(--theme-surface);
   --color-surface-elevated: var(--theme-surface-elevated);
@@ -267,6 +270,16 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Apply theme gradient to main content area */
+  [data-theme="teal"] main {
+    background: linear-gradient(135deg, #F0FDF4 0%, #CCFBF1 100%);
+    min-height: 100vh;
+  }
+  [data-theme="berry"] main {
+    background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+    min-height: 100vh;
   }
 
   /* Subtle card elevation on light gray background */
