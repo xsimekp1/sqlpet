@@ -923,7 +923,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
 
         {/* Photo + nav arrows */}
         <div className="flex-shrink-0 flex flex-col items-center gap-2">
-          <div className="relative w-full max-w-sm aspect-square rounded-xl overflow-hidden bg-muted mx-auto group">
+          <div className="relative w-full max-w-xl aspect-square rounded-xl overflow-hidden bg-muted mx-auto group">
             <Image
               key={animal.id}
               src={getAnimalImageUrl(animal)}
