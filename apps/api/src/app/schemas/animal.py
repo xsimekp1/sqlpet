@@ -135,8 +135,21 @@ class AnimalCreate(BaseModel):
 class AnimalResponse(AnimalCreate):
     organization_id: uuid.UUID
     current_intake_date: date | None = None
+    current_intake_reason: str | None = None
     breeds: list[AnimalBreedResponse] = []
     identifiers: list[AnimalIdentifierResponse] = []
+
+    # Legal deadline (computed for found animals)
+    legal_deadline_at: date | None = None
+    legal_deadline_type: str | None = None
+    legal_deadline_days_left: int | None = None
+    legal_deadline_state: str | None = None
+    legal_deadline_label: str | None = None
+
+    # Intake legal fields
+    notice_published_at: date | None = None
+    finder_claims_ownership: bool | None = None
+    municipality_irrevocably_transferred: bool | None = None
 
 
 class AnimalUpdate(BaseModel):

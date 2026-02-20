@@ -72,6 +72,9 @@ class IntakeUpdate(BaseModel):
     planned_person_id: Optional[str] = None
     funding_source: Optional[str] = None
     funding_notes: Optional[str] = None
+    notice_published_at: Optional[date] = None
+    finder_claims_ownership: Optional[bool] = None
+    municipality_irrevocably_transferred: Optional[bool] = None
     notes: Optional[str] = None
 
     @model_validator(mode="after")
@@ -101,6 +104,9 @@ class IntakeResponse(BaseModel):
     planned_person_id: Optional[str] = None
     funding_source: Optional[str] = None
     funding_notes: Optional[str] = None
+    notice_published_at: Optional[date] = None
+    finder_claims_ownership: Optional[bool] = None
+    municipality_irrevocably_transferred: Optional[bool] = None
     notes: Optional[str] = None
     created_by_id: str
     created_at: datetime
@@ -125,6 +131,9 @@ def _to_response(i: Intake, animal=None) -> IntakeResponse:
         planned_person_id=str(i.planned_person_id) if i.planned_person_id else None,
         funding_source=i.funding_source,
         funding_notes=i.funding_notes,
+        notice_published_at=i.notice_published_at,
+        finder_claims_ownership=i.finder_claims_ownership,
+        municipality_irrevocably_transferred=i.municipality_irrevocably_transferred,
         notes=i.notes,
         created_by_id=str(i.created_by_id),
         created_at=i.created_at,

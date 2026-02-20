@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from enum import Enum
 
-from sqlalchemy import Date, ForeignKey, String, Text
+from sqlalchemy import Date, ForeignKey, String, Text, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -68,6 +68,13 @@ class Intake(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     # Funding
     funding_source: Mapped[str | None] = mapped_column(String(255), nullable=True)
     funding_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Legal deadline fields (for found animals)
+    notice_published_at: Mapped[date | None] = mapped_column(Date, nullable=True)
+    finder_claims_ownership: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    municipality_irrevocably_transferred: Mapped[bool | None] = mapped_column(
+        Boolean, nullable=True
+    )
 
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 

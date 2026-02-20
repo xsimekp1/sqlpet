@@ -364,10 +364,14 @@ class AnimalService:
                     "kennel_code": row[3],
                 }
 
-            # Bulk load intake dates
+            # Bulk load intake dates with legal fields
             intake_result = await self.db.execute(
                 text("""
-                    SELECT animal_id::text, MAX(intake_date) as intake_date
+                    SELECT animal_id::text, MAX(intake_date) as intake_date, 
+                           MAX(reason) as reason,
+                           MAX(notice_published_at) as notice_published_at,
+                           MAX(finder_claims_ownership) as finder_claims_ownership,
+                           MAX(municipality_irrevocably_transferred) as municipality_irrevocably_transferred
                     FROM intakes
                     WHERE animal_id = ANY(:animal_ids) AND deleted_at IS NULL
                     GROUP BY animal_id
@@ -375,7 +379,13 @@ class AnimalService:
                 {"animal_ids": [str(aid) for aid in animal_ids]},
             )
             for row in intake_result.fetchall():
-                intake_data[row[0]] = row[1]
+                intake_data[row[0]] = {
+                    "intake_date": row[1],
+                    "reason": row[2],
+                    "notice_published_at": row[3],
+                    "finder_claims_ownership": row[4],
+                    "municipality_irrevocably_transferred": row[5],
+                }
 
         # Build extra data dict
         extra_data = {

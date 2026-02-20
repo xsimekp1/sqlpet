@@ -13,6 +13,7 @@ from src.app.api.dependencies.auth import (
 )
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Animal, Species
+from src.app.services.legal_deadline import compute_legal_deadline
 from src.app.models.animal_event import AnimalEvent, AnimalEventType
 from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.models.animal_weight_log import AnimalWeightLog
@@ -93,13 +94,22 @@ async def _build_animal_response(
             pass
 
     if intake_data and animal_id_str in intake_data:
-        resp.current_intake_date = intake_data[animal_id_str]
+        intake_info = intake_data[animal_id_str]
+        resp.current_intake_date = intake_info.get("intake_date")
+        resp.current_intake_reason = intake_info.get("reason")
+        resp.notice_published_at = intake_info.get("notice_published_at")
+        resp.finder_claims_ownership = intake_info.get("finder_claims_ownership")
+        resp.municipality_irrevocably_transferred = intake_info.get(
+            "municipality_irrevocably_transferred"
+        )
     elif intake_data is None:
         # Fallback: single animal fetch - query if not provided
         try:
             intake_result = await db.execute(
                 text("""
-                    SELECT intake_date FROM intakes
+                    SELECT intake_date, reason, notice_published_at, 
+                           finder_claims_ownership, municipality_irrevocably_transferred
+                    FROM intakes
                     WHERE animal_id = :animal_id AND deleted_at IS NULL
                     ORDER BY intake_date DESC
                     LIMIT 1
@@ -109,8 +119,26 @@ async def _build_animal_response(
             intake_row = intake_result.first()
             if intake_row:
                 resp.current_intake_date = intake_row[0]
+                resp.current_intake_reason = intake_row[1]
+                resp.notice_published_at = intake_row[2]
+                resp.finder_claims_ownership = intake_row[3]
+                resp.municipality_irrevocably_transferred = intake_row[4]
         except Exception:
             pass
+
+    # Compute legal deadline if this is a found animal
+    if resp.current_intake_reason == "found" and resp.notice_published_at is not None:
+        deadline_info = compute_legal_deadline(
+            notice_published_at=resp.notice_published_at,
+            shelter_received_at=resp.current_intake_date,
+            finder_claims_ownership=resp.finder_claims_ownership,
+            municipality_irrevocably_transferred=resp.municipality_irrevocably_transferred,
+        )
+        resp.legal_deadline_at = deadline_info.deadline_at
+        resp.legal_deadline_type = deadline_info.deadline_type
+        resp.legal_deadline_days_left = deadline_info.days_left
+        resp.legal_deadline_state = deadline_info.deadline_state
+        resp.legal_deadline_label = deadline_info.label
 
     # Generate thumbnail URL from primary_photo_url
     if animal.primary_photo_url:
