@@ -34,16 +34,30 @@ class InventoryItem(Base, UUIDPrimaryKeyMixin, TimestampMixin):
             name="inventory_category_enum",
             create_constraint=False,
             native_enum=False,
-            values_callable=lambda x: [e.value for e in x]
+            values_callable=lambda x: [e.value for e in x],
         ),
         nullable=False,
     )
     unit: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    reorder_threshold: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    reorder_threshold: Mapped[float | None] = mapped_column(
+        Numeric(10, 2), nullable=True
+    )
+    # Cached current quantity - updated via transactions (source of truth)
+    quantity_current: Mapped[float] = mapped_column(
+        Numeric(10, 2), nullable=False, default=0
+    )
     # Food-specific fields (relevant when category == 'food')
     kcal_per_100g: Mapped[float | None] = mapped_column(Numeric(7, 2), nullable=True)
     price_per_unit: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
-    allowed_species: Mapped[list | None] = mapped_column(JSONB, nullable=True)  # e.g. ["dog", "cat"]
-    food_type: Mapped[str | None] = mapped_column(String(20), nullable=True)  # dry, wet, canned, treats, raw, other
-    shelf_life_days: Mapped[int | None] = mapped_column(Integer, nullable=True)  # Shelf life after opening in days
-    unit_weight_g: Mapped[int | None] = mapped_column(Integer, nullable=True)  # Package weight in grams
+    allowed_species: Mapped[list | None] = mapped_column(
+        JSONB, nullable=True
+    )  # e.g. ["dog", "cat"]
+    food_type: Mapped[str | None] = mapped_column(
+        String(20), nullable=True
+    )  # dry, wet, canned, treats, raw, other
+    shelf_life_days: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )  # Shelf life after opening in days
+    unit_weight_g: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )  # Package weight in grams

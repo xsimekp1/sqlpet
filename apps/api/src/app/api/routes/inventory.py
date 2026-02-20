@@ -8,7 +8,11 @@ from typing import Optional, List
 
 logger = logging.getLogger(__name__)
 
-from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
+from src.app.api.dependencies.auth import (
+    get_current_user,
+    get_current_organization_id,
+    require_permission,
+)
 from src.app.api.dependencies.db import get_db
 from src.app.models.user import User
 from src.app.models.inventory_item import InventoryCategory
@@ -338,51 +342,54 @@ async def delete_inventory_lot(
 )
 async def create_inventory_transaction(
     transaction_data: InventoryTransactionCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("inventory.write")),
     db: AsyncSession = Depends(get_db),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
-    """Record an inventory transaction."""
+    """Record an inventory transaction.
+
+    Validates that stock won't go negative.
+    """
     inventory_service = InventoryService(db)
 
     try:
-        transaction_type = TransactionType(transaction_data.type)
-    except ValueError:
+        transaction = await inventory_service.record_transaction(
+            organization_id=organization_id,
+            item_id=transaction_data.item_id,
+            reason=transaction_data.reason,
+            quantity=transaction_data.quantity,
+            note=transaction_data.note,
+            lot_id=transaction_data.lot_id,
+            related_entity_type=transaction_data.related_entity_type,
+            related_entity_id=transaction_data.related_entity_id,
+            user_id=current_user.id,
+        )
+        await db.commit()
+        return transaction
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid transaction type: {transaction_data.type}",
+            detail=str(e),
         )
-
-    transaction = await inventory_service.record_transaction(
-        organization_id=organization_id,
-        item_id=transaction_data.item_id,
-        transaction_type=transaction_type,
-        quantity=transaction_data.quantity,
-        reason=transaction_data.reason,
-        lot_id=transaction_data.lot_id,
-        related_entity_type=transaction_data.related_entity_type,
-        related_entity_id=transaction_data.related_entity_id,
-        user_id=current_user.id,
-    )
-    await db.commit()
-    return transaction
 
 
 @router.get("/transactions", response_model=List[InventoryTransactionResponse])
 async def list_inventory_transactions(
     item_id: Optional[uuid.UUID] = Query(None, description="Filter by item"),
-    days: int = Query(90, ge=1, le=365, description="Days of history"),
-    current_user: User = Depends(get_current_user),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(50, ge=1, le=100, description="Items per page"),
+    current_user: User = Depends(require_permission("inventory.read")),
     db: AsyncSession = Depends(get_db),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
 ):
-    """List inventory transactions."""
+    """List inventory transactions with pagination."""
     inventory_service = InventoryService(db)
 
     transactions = await inventory_service.get_transaction_history(
         organization_id=organization_id,
         item_id=item_id,
-        days=days,
+        page=page,
+        page_size=page_size,
     )
     return transactions
 

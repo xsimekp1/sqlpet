@@ -1,9 +1,16 @@
 """Pydantic schemas for inventory endpoints."""
 
+from enum import Enum
 from pydantic import BaseModel, Field
 from datetime import datetime, date
 from typing import Optional, Dict, Any
 import uuid
+
+from src.app.models.inventory_transaction import (
+    TransactionReason as ModelTransactionReason,
+    TransactionType as ModelTransactionType,
+)
+from src.app.models.inventory_item import InventoryCategory
 
 
 # Inventory Item schemas
@@ -41,8 +48,66 @@ class InventoryItemUpdate(BaseModel):
 class InventoryItemResponse(InventoryItemBase):
     id: uuid.UUID
     organization_id: uuid.UUID
+    quantity_current: float = 0  # Cached current quantity
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Re-export for API use
+TransactionDirection = ModelTransactionType
+TransactionReason = ModelTransactionReason
+
+
+# Reason to direction mapping
+REASON_TO_DIRECTION = {
+    TransactionReason.OPENING_BALANCE: TransactionDirection.IN,
+    TransactionReason.PURCHASE: TransactionDirection.IN,
+    TransactionReason.DONATION: TransactionDirection.IN,
+    TransactionReason.CONSUMPTION: TransactionDirection.OUT,
+    TransactionReason.WRITEOFF: TransactionDirection.OUT,
+}
+
+
+class InventoryTransactionCreate(BaseModel):
+    item_id: uuid.UUID
+    lot_id: Optional[uuid.UUID] = None
+    reason: (
+        TransactionReason  # opening_balance, purchase, donation, consumption, writeoff
+    )
+    quantity: float = Field(..., gt=0)
+    note: Optional[str] = None
+    related_entity_type: Optional[str] = None
+    related_entity_id: Optional[uuid.UUID] = None
+
+
+class InventoryTransactionResponse(BaseModel):
+    id: uuid.UUID
+    organization_id: uuid.UUID
+    item_id: uuid.UUID
+    lot_id: Optional[uuid.UUID]
+    direction: str  # in, out, adjust
+    reason: str  # opening_balance, purchase, donation, consumption, writeoff
+    quantity: float
+    note: Optional[str]
+    related_entity_type: Optional[str]
+    related_entity_id: Optional[uuid.UUID]
+    created_by_user_id: Optional[uuid.UUID]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Stock information response
+class InventoryStockResponse(BaseModel):
+    item: InventoryItemResponse
+    total_quantity: float
+    quantity_current: float  # From item cache
+    lots_count: int
+    oldest_expiry: Optional[date]
 
     class Config:
         from_attributes = True
@@ -72,45 +137,6 @@ class InventoryLotResponse(InventoryLotBase):
     organization_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-# Inventory Transaction schemas
-class InventoryTransactionCreate(BaseModel):
-    item_id: uuid.UUID
-    lot_id: Optional[uuid.UUID] = None
-    type: str  # in, out, adjust
-    quantity: float
-    reason: str
-    related_entity_type: Optional[str] = None
-    related_entity_id: Optional[uuid.UUID] = None
-
-
-class InventoryTransactionResponse(BaseModel):
-    id: uuid.UUID
-    organization_id: uuid.UUID
-    item_id: uuid.UUID
-    lot_id: Optional[uuid.UUID]
-    type: str
-    quantity: float
-    reason: str
-    related_entity_type: Optional[str]
-    related_entity_id: Optional[uuid.UUID]
-    created_by_user_id: Optional[uuid.UUID]
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-# Stock information response
-class InventoryStockResponse(BaseModel):
-    item: InventoryItemResponse
-    total_quantity: float
-    lots_count: int
-    oldest_expiry: Optional[date]
 
     class Config:
         from_attributes = True

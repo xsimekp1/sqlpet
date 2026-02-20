@@ -8,7 +8,12 @@ import uuid
 
 from src.app.models.inventory_item import InventoryItem, InventoryCategory
 from src.app.models.inventory_lot import InventoryLot
-from src.app.models.inventory_transaction import InventoryTransaction, TransactionType
+from src.app.models.inventory_transaction import (
+    InventoryTransaction,
+    TransactionType,
+    TransactionReason,
+    REASON_TO_DIRECTION,
+)
 from src.app.services.audit_service import AuditService
 
 
@@ -81,7 +86,7 @@ class InventoryService:
         item_id: uuid.UUID,
         organization_id: uuid.UUID,
         user_id: uuid.UUID,
-        **updates
+        **updates,
     ) -> InventoryItem:
         """Update an inventory item."""
         stmt = select(InventoryItem).where(
@@ -157,9 +162,9 @@ class InventoryService:
             organization_id=organization_id,
             item_id=item_id,
             lot_id=lot.id,
-            transaction_type=TransactionType.IN,
+            reason=TransactionReason.OPENING_BALANCE,
             quantity=quantity,
-            reason=f"Initial stock for lot {lot_number or lot.id}",
+            note=f"Initial stock for lot {lot_number or lot.id}",
             user_id=created_by_id,
         )
 
@@ -179,7 +184,7 @@ class InventoryService:
         lot_id: uuid.UUID,
         organization_id: uuid.UUID,
         user_id: uuid.UUID,
-        **updates
+        **updates,
     ) -> InventoryLot:
         """Update an inventory lot."""
         stmt = select(InventoryLot).where(
@@ -218,28 +223,74 @@ class InventoryService:
         self,
         organization_id: uuid.UUID,
         item_id: uuid.UUID,
-        transaction_type: TransactionType,
+        reason: TransactionReason,
         quantity: float,
-        reason: str,
+        note: Optional[str] = None,
         lot_id: Optional[uuid.UUID] = None,
         related_entity_type: Optional[str] = None,
         related_entity_id: Optional[uuid.UUID] = None,
         user_id: Optional[uuid.UUID] = None,
     ) -> InventoryTransaction:
-        """Record an inventory transaction and update lot quantity."""
+        """Record an inventory transaction and update item quantity_current.
+
+        Validates that reason is consistent with direction:
+        - IN: opening_balance, purchase, donation
+        - OUT: consumption, writeoff
+
+        Prevents negative stock.
+        """
+        # Validate reason -> direction mapping
+        direction = REASON_TO_DIRECTION.get(reason)
+        if not direction:
+            raise ValueError(f"Invalid transaction reason: {reason}")
+
+        # Calculate delta based on direction
+        if direction == TransactionType.IN:
+            quantity_delta = quantity
+        elif direction == TransactionType.OUT:
+            quantity_delta = -abs(quantity)
+        else:  # ADJUST
+            quantity_delta = quantity
+
+        # Get current item to check if we can deduct
+        item_stmt = select(InventoryItem).where(
+            and_(
+                InventoryItem.id == item_id,
+                InventoryItem.organization_id == organization_id,
+            )
+        )
+        item_result = await self.db.execute(item_stmt)
+        item = item_result.scalar_one_or_none()
+
+        if not item:
+            raise ValueError(f"Inventory item not found: {item_id}")
+
+        # Check for negative stock prevention
+        new_quantity = (item.quantity_current or 0) + quantity_delta
+        if new_quantity < 0:
+            raise ValueError(
+                f"Cannot {reason.value}: stock would be negative. "
+                f"Current: {item.quantity_current}, Requested: {abs(quantity_delta)}"
+            )
+
+        # Create transaction record
         transaction = InventoryTransaction(
             id=uuid.uuid4(),
             organization_id=organization_id,
             item_id=item_id,
             lot_id=lot_id,
-            type=transaction_type,
-            quantity=quantity,
+            direction=direction,
             reason=reason,
+            quantity=abs(quantity),
+            note=note,
             related_entity_type=related_entity_type,
             related_entity_id=related_entity_id,
             created_by_user_id=user_id,
         )
         self.db.add(transaction)
+
+        # Update item quantity_current (cache)
+        item.quantity_current = new_quantity
 
         # Update lot quantity if lot_id provided
         if lot_id:
@@ -248,12 +299,12 @@ class InventoryService:
             lot = lot_result.scalar_one_or_none()
 
             if lot:
-                if transaction_type == TransactionType.IN:
-                    lot.quantity += quantity
-                elif transaction_type == TransactionType.OUT:
-                    lot.quantity -= abs(quantity)  # Ensure it's subtracted
-                elif transaction_type == TransactionType.ADJUST:
-                    lot.quantity = quantity  # Set to exact amount
+                if direction == TransactionType.IN:
+                    lot.quantity = (lot.quantity or 0) + quantity
+                elif direction == TransactionType.OUT:
+                    lot.quantity = max(0, (lot.quantity or 0) - abs(quantity))
+                elif direction == TransactionType.ADJUST:
+                    lot.quantity = quantity
 
         await self.db.flush()
 
@@ -265,7 +316,8 @@ class InventoryService:
                 entity_type="inventory_transaction",
                 entity_id=transaction.id,
                 after={
-                    "type": transaction_type.value,
+                    "reason": reason.value,
+                    "direction": direction.value,
                     "quantity": quantity,
                     "item_id": str(item_id),
                 },
@@ -329,9 +381,9 @@ class InventoryService:
             organization_id=organization_id,
             item_id=item.id,
             lot_id=lot.id,
-            transaction_type=TransactionType.OUT,
+            reason=TransactionReason.CONSUMPTION,
             quantity=quantity_to_deduct,
-            reason=f"Fed animal (feeding_log #{feeding_log_id})",
+            note=f"Fed animal (feeding_log #{feeding_log_id})",
             related_entity_type="feeding_log",
             related_entity_id=feeding_log_id,
             user_id=user_id,
@@ -363,14 +415,11 @@ class InventoryService:
         result = []
         for item in items:
             # Get total quantity across all lots
-            lots_stmt = (
-                select(
-                    func.sum(InventoryLot.quantity).label("total_quantity"),
-                    func.count(InventoryLot.id).label("lots_count"),
-                    func.min(InventoryLot.expires_at).label("oldest_expiry"),
-                )
-                .where(InventoryLot.item_id == item.id)
-            )
+            lots_stmt = select(
+                func.sum(InventoryLot.quantity).label("total_quantity"),
+                func.count(InventoryLot.id).label("lots_count"),
+                func.min(InventoryLot.expires_at).label("oldest_expiry"),
+            ).where(InventoryLot.item_id == item.id)
             lots_result = await self.db.execute(lots_stmt)
             lots_data = lots_result.one()
 
@@ -383,12 +432,14 @@ class InventoryService:
                 if total_quantity >= item.reorder_threshold:
                     continue
 
-            result.append({
-                "item": item,
-                "total_quantity": total_quantity,
-                "lots_count": lots_data.lots_count,
-                "oldest_expiry": lots_data.oldest_expiry,
-            })
+            result.append(
+                {
+                    "item": item,
+                    "total_quantity": total_quantity,
+                    "lots_count": lots_data.lots_count,
+                    "oldest_expiry": lots_data.oldest_expiry,
+                }
+            )
 
         return result
 
@@ -397,8 +448,10 @@ class InventoryService:
         organization_id: uuid.UUID,
         item_id: Optional[uuid.UUID] = None,
         days: int = 90,
+        page: int = 1,
+        page_size: int = 50,
     ) -> List[InventoryTransaction]:
-        """Get transaction history."""
+        """Get transaction history with pagination."""
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
 
         conditions = [
@@ -412,6 +465,8 @@ class InventoryService:
             select(InventoryTransaction)
             .where(and_(*conditions))
             .order_by(InventoryTransaction.created_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
         )
         result = await self.db.execute(stmt)
         return result.scalars().all()
