@@ -231,12 +231,18 @@ export default function IntakePage() {
                 {intakes.map(intake => (
                   <tr key={intake.id} className="border-b hover:bg-muted/50 transition-colors">
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/dashboard/animals/${intake.animal_id}`}
-                        className="text-primary hover:underline font-medium text-sm"
-                      >
-                        {intake.animal_name ?? (intake.animal_id ? `${intake.animal_id.slice(0, 8)}…` : 'Neznámé')}
-                      </Link>
+                      {intake.animal_id ? (
+                        <Link
+                          href={`/dashboard/animals/${intake.animal_id}`}
+                          className="text-primary hover:underline font-medium text-sm"
+                        >
+                          {intake.animal_name ?? `${intake.animal_id.slice(0, 8)}…`}
+                        </Link>
+                      ) : (
+                        <span className="font-medium text-sm text-muted-foreground">
+                          {intake.animal_name ?? 'Hotelová rezervace'}
+                        </span>
+                      )}
                       {intake.animal_species && (
                         <span className="ml-2 text-xs text-muted-foreground capitalize">{intake.animal_species}</span>
                       )}
