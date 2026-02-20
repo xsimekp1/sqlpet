@@ -21,47 +21,72 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema - rename rabbit to rodent in all tables (idempotent)."""
+    conn = op.get_bind()
+
     # First update the data - only if rabbit exists
-    op.execute("UPDATE animals SET species = 'rodent' WHERE species = 'rabbit'")
-    op.execute(
-        "UPDATE inventory_items SET target_species = 'rodent' WHERE target_species = 'rabbit'"
+    conn.execute(
+        sa.text("UPDATE animals SET species = 'rodent' WHERE species = 'rabbit'")
     )
-    op.execute(
-        "UPDATE food SET target_species = 'rodent' WHERE target_species = 'rabbit'"
+    conn.execute(
+        sa.text(
+            "UPDATE inventory_items SET target_species = 'rodent' WHERE target_species = 'rabbit'"
+        )
+    )
+    conn.execute(
+        sa.text(
+            "UPDATE food SET target_species = 'rodent' WHERE target_species = 'rabbit'"
+        )
     )
 
     # Check if 'rabbit' still exists in enum, then rename
-    result = op.execute(
-        "SELECT 1 FROM pg_enum WHERE enumlabel = 'rabbit' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum')"
+    result = conn.execute(
+        sa.text(
+            "SELECT 1 FROM pg_enum WHERE enumlabel = 'rabbit' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum')"
+        )
     ).fetchone()
 
     if result:
         # Check if 'rodent' doesn't already exist
-        result_rodent = op.execute(
-            "SELECT 1 FROM pg_enum WHERE enumlabel = 'rodent' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum')"
+        result_rodent = conn.execute(
+            sa.text(
+                "SELECT 1 FROM pg_enum WHERE enumlabel = 'rodent' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum')"
+            )
         ).fetchone()
 
         if not result_rodent:
             # Rename the enum type
-            op.execute("ALTER TYPE species_enum RENAME TO species_enum_old")
-            op.execute(
-                "CREATE TYPE species_enum AS ENUM ('dog', 'cat', 'rodent', 'bird', 'other')"
+            conn.execute(sa.text("ALTER TYPE species_enum RENAME TO species_enum_old"))
+            conn.execute(
+                sa.text(
+                    "CREATE TYPE species_enum AS ENUM ('dog', 'cat', 'rodent', 'bird', 'other')"
+                )
             )
-            op.execute(
-                "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+            conn.execute(
+                sa.text(
+                    "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+                )
             )
-            op.execute(
-                "ALTER TABLE default_animal_images ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+            conn.execute(
+                sa.text(
+                    "ALTER TABLE default_animal_images ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+                )
             )
-            op.execute("DROP TYPE species_enum_old")
+            conn.execute(sa.text("DROP TYPE species_enum_old"))
 
 
 def downgrade() -> None:
     """Downgrade schema - rename rodent back to rabbit."""
-    op.execute("UPDATE animals SET species = 'rabbit' WHERE species = 'rodent'")
-    op.execute(
-        "UPDATE inventory_items SET target_species = 'rabbit' WHERE target_species = 'rodent'"
+    conn = op.get_bind()
+    conn.execute(
+        sa.text("UPDATE animals SET species = 'rabbit' WHERE species = 'rodent'")
     )
-    op.execute(
-        "UPDATE food SET target_species = 'rabbit' WHERE target_species = 'rodent'"
+    conn.execute(
+        sa.text(
+            "UPDATE inventory_items SET target_species = 'rabbit' WHERE target_species = 'rodent'"
+        )
+    )
+    conn.execute(
+        sa.text(
+            "UPDATE food SET target_species = 'rabbit' WHERE target_species = 'rodent'"
+        )
     )
