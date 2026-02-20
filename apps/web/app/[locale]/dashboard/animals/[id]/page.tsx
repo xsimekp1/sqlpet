@@ -1136,7 +1136,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                       ❌ Lhůta vypršela
                       {animal.legal_deadline_label && <span className="font-normal ml-1">({animal.legal_deadline_label})</span>}
                     </div>
-                  ) : animal.legal_deadline_days_left !== null && animal.legal_deadline_days_left <= 14 ? (
+                  ) : animal.legal_deadline_days_left != null && animal.legal_deadline_days_left <= 14 ? (
                     <div className="text-orange-600 dark:text-orange-400 font-semibold">
                       ⏰ Zbývá {animal.legal_deadline_days_left} dní
                       {animal.legal_deadline_label && <span className="font-normal ml-1">({animal.legal_deadline_label})</span>}

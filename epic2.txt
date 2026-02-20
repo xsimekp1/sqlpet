@@ -1,0 +1,187 @@
+2 barevné profily (Theme switch) + přepínání v Nastavení
+Cíl
+
+Uživatel si může v Nastavení vybrat mezi dvěma barevnými profily (themes). Nejde o light/dark, ale o dvě brand palety. Zbytek UI (layout, komponenty) zůstává stejný — mění se jen tokeny a jejich aplikace.
+
+Požadavky na implementaci
+
+Zavést theme tokeny přes CSS variables (doporučeno) nebo centrální design tokens tak, aby:
+
+komponenty nepoužívaly “natvrdo” barvy,
+
+vše šlo řídit přes tokeny (--primary, --accent, --success, --warning, --danger, --surface, --border, --text, …).
+
+Přepínání theme v UI
+
+Přidat do Settings (ideálně Settings → Appearance nebo Settings → Personalization) volbu:
+
+Color profile: Teal Shelter (default) / Berry Rescue
+
+UI ovládání: select nebo segmented control (toggle), sladěný se stylem aplikace.
+
+Výběr se uloží:
+
+minimálně do localStorage (ok pro MVP),
+
+pokud je uživatelský profil/organizace: ideálně i do backendu jako user/org preference (volitelně, pokud je to už v projektu snadné).
+
+Po refreshi se theme musí zachovat.
+
+Theme se aplikuje na celý web (např. přes data-theme="teal" na <html> nebo <body>).
+
+Komponenty musí automaticky reagovat
+
+Primární CTA tlačítka (“Create/Add/New”) musí měnit barvu podle theme.
+
+Filter toggles/chips, focus ringy, aktivní stavy v sidebaru i header chips musí být navázané na tokeny.
+
+Definice 2 barevných profilů
+Theme A (default): Teal Shelter
+
+Vibe: příroda, důvěra, klid.
+
+Primary (CTA): #0F766E
+
+Primary hover: #115E59
+
+Primary soft: #CCFBF1
+
+Accent (info): #2563EB
+
+Accent soft: #DBEAFE
+
+Success: #16A34A | soft #DCFCE7
+
+Warning: #F59E0B | soft #FEF3C7
+
+Danger: #DC2626 | soft #FEE2E2
+
+Background: #F8FAFC
+
+Surface: #FFFFFF
+
+Muted surface: #F1F5F9
+
+Border: #E2E8F0
+
+Text: #0F172A
+
+Text secondary: #475569
+
+Text muted: #64748B
+
+Theme B: Berry Rescue
+
+Vibe: přátelské, trochu hravější, ale pořád profi (útulek, péče).
+
+Primary (CTA): #7C3AED (violet 600)
+
+Primary hover: #6D28D9 (violet 700)
+
+Primary soft: #EDE9FE (violet 100)
+
+Accent (info): #0EA5E9 (sky 500/600)
+
+Accent soft: #E0F2FE (sky 100)
+
+Success: #16A34A | soft #DCFCE7 (stejné, ať jsou stavy konzistentní)
+
+Warning: #F59E0B | soft #FEF3C7
+
+Danger: #DC2626 | soft #FEE2E2
+
+Background: #FAFAFF (lehce “cool white”)
+
+Surface: #FFFFFF
+
+Muted surface: #F3F4FF (jemný fialový nádech)
+
+Border: #E7E7F2
+
+Text: #111827
+
+Text secondary: #4B5563
+
+Text muted: #6B7280
+
+Tokeny, které musí existovat (minimum)
+
+Claude Code musí zavést minimálně tyto tokeny (CSS variables), které budou mít hodnoty podle zvoleného profilu:
+
+--color-bg
+
+--color-surface
+
+--color-surface-muted
+
+--color-border
+
+--color-text
+
+--color-text-secondary
+
+--color-text-muted
+
+--color-primary
+
+--color-primary-hover
+
+--color-primary-soft
+
+--color-accent
+
+--color-accent-soft
+
+--color-success / --color-success-soft
+
+--color-warning / --color-warning-soft
+
+--color-danger / --color-danger-soft
+
+--focus-ring (většinou --color-primary)
+
+Kde se theme projeví (konkrétně v appce)
+
+Buttons
+
+Primary CTA (Create/Add/New): vždy --color-primary
+
+Hover: --color-primary-hover
+
+Filter toggles/chips
+
+Selected: --color-primary-soft background + --color-primary text/border
+
+Sidebar
+
+Active item: --color-primary-soft + --color-primary
+
+Hover highlight animace zachovat, jen barva z tokenu
+
+Topbar
+
+Search focus ring: --focus-ring
+
+Teplota chip: použít --color-accent-soft + --color-accent
+
+Editable vs read-only
+
+Read-only: --color-surface-muted
+
+Editable: --color-surface + focus ring primary
+
+Toasty
+
+success/info/warning: tokeny stavových barev, jednotné varianty
+
+Akceptační kritéria pro Theme switch
+
+V Settings jde přepnout Teal Shelter ↔ Berry Rescue.
+
+Změna se projeví okamžitě bez rozbití layoutu.
+
+Po refreshi zůstane zvolený profil.
+
+Žádné “hardcoded” barvy pro CTA / chips / focus ring / aktivní sidebar.
+
+Aplikace vypadá konzistentně v obou profilech.

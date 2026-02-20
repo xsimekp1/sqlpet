@@ -74,13 +74,13 @@ export function ShelterStatsWidget({ editMode, onRemove, dragHandleProps }: Shel
     >
       <div className="space-y-3">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-violet-100 dark:bg-violet-900/30">
-            <BarChart3 className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+          <div className="p-3 rounded-xl bg-primary/10">
+            <BarChart3 className="h-6 w-6 text-primary" />
           </div>
           {loading ? (
-            <div className="h-8 w-16 rounded bg-violet-100/50 animate-pulse" />
+            <div className="h-10 w-20 rounded bg-primary/10 animate-pulse" />
           ) : (
-            <p className="text-4xl font-bold text-violet-700 dark:text-violet-400">{stats?.total ?? '–'}</p>
+            <p className="text-6xl font-bold text-primary tracking-tight">{stats?.total ?? '–'}</p>
           )}
         </div>
 

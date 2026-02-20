@@ -1,0 +1,171 @@
+Zadání pro Claude Code: „Nálezové lhůty + odpočet“ (integrace do existujícího datového modelu)
+Cíl
+
+Do aplikace doplnit funkci pro nalezená zvířata: automaticky spočítat právní lhůty (2 měsíce / 4 měsíce podle scénáře) a zobrazovat odpočet v detailu zvířete + přehledové štítky/filtry. Řešení musí být kompatibilní se stávající DB strukturou a využít existující pole/koncepty, které už v projektu jsou.
+
+1) Než začneš: prozkoumej existující data (povinný krok)
+
+V kódu a DB zjisti, kde už dnes evidujeme informace o nálezu, intake a původu:
+
+Existuje intake záznam / intake_type / intake_date?
+
+Existuje status_reason, found_place, public_code, identifiers, notes?
+
+Má animal tabulka něco jako intake_date, intake_type, intake_place, found_date?
+
+Máme už “události” (timeline/calendar), kam by šlo lhůty promítnout?
+
+Zásada: pokud už nějaká pole existují (byť se jmenují jinak), re-use, nevymýšlej nové duplicity.
+
+2) Nové pole přidávej jen minimálně (MVP)
+Co nejspíš už máte a použijeme:
+
+animal.intake_date nebo intake.intake_date → použít jako datum převzetí do útulku (pokud odpovídá realitě)
+
+animal.status_reason / notes → může obsahovat text „nalezeno…“, ale pro výpočet musí být datum strukturované
+
+Co pravděpodobně chybí a je potřeba přidat (jen pro výpočet lhůt)
+
+Přidej strukturovaná pole pro právní události (na úroveň, kterou dává smysl ve vašem modelu — preferuj tam, kde už je intake; jinak na animals):
+
+notice_published_at (DATE, nullable)
+Datum vyhlášení nálezu obcí (klíčové pro výpočet).
+
+shelter_received_at (DATE, nullable)
+Datum, kdy zvíře převzal útulek (pokud už existuje intake_date, mapuj na něj a nové pole nepřidávej).
+
+finder_claims_ownership (BOOLEAN, nullable)
+True = nálezce chce nabýt, False = nechce, Null = neznámo.
+
+municipality_irrevocably_transferred (BOOLEAN, nullable)
+True, pokud obec svěřila zvíře útulku „neodvolatelně“ (scénář 4 měsíce).
+
+Volitelné (pokud už nemáte):
+
+found_date (DATE, nullable)
+
+found_place (TEXT, nullable)
+
+Pozn.: Pokud už existuje intake tabulka, přidej to tam (intake = „found intake“). Pokud intake neexistuje nebo je to moc zásah, přidej to na animals (nejmenší změna).
+
+3) Scénáře a výpočet (MVP logika)
+Scénář A — nálezce chce zvíře nabýt
+
+Podmínka: finder_claims_ownership = true
+
+Deadline: 2 měsíce od notice_published_at
+
+Pokud chybí notice_published_at → deadline nejde spočítat (UI zobrazí „doplň datum vyhlášení“)
+
+Scénář B — nálezce nechce, obec svěří útulku (neodvolatelně)
+
+Podmínka: finder_claims_ownership = false AND municipality_irrevocably_transferred = true
+
+Deadline: 4 měsíce od:
+
+notice_published_at, pokud bylo vyhlášení až po převzetí (tj. notice_published_at > shelter_received_at)
+
+jinak od shelter_received_at
+
+Pokud chybí oba → deadline nejde spočítat
+
+Kalendářní měsíce
+
+Počítej kalendářní měsíce, ne “60 dní”.
+(31.1 + 1 měsíc → poslední den cílového měsíce)
+
+4) API návrh (bez rozbití klienta)
+Varianta preferovaná (doporučená pro MVP): “computed fields”
+
+Nemigruj “legal_deadline” do DB jako povinné pole, místo toho:
+
+backend vrací computed:
+
+legal_deadline_at (date | null)
+
+legal_deadline_type (2m_notice | 4m_transfer | unknown)
+
+legal_deadline_label (string pro UI)
+
+days_left (int | null)
+
+deadline_state (running | expired | missing_data)
+
+To může být součást:
+
+GET /animals/:id (detail zvířete)
+
+případně GET /animals jako volitelné query paramy (pokud chceš filtrování)
+
+Zachovej kompatibilitu: nic nerozbíjej, jen přidej nové fieldy.
+
+5) UI integrace (minimal invasive)
+Detail zvířete: sekce „Nálezové lhůty“
+
+Zobraz sekci jen pokud (a) zvíře má intake typu “found” nebo (b) is_found_animal flag / status_reason odpovídá.
+
+Pole pro editaci (podle toho, co v DB zvolíš):
+
+vyhlášení obcí (datum)
+
+převzetí útulkem (datum) — pokud už existuje, jen ho zobraz a nepřidávej duplicitní input
+
+volba: nálezce chce nabýt / nechce / neznámo
+
+checkbox: obec svěřila neodvolatelně
+
+Box s odpočtem (CTA info)
+
+Badge: Lhůta běží / Lhůta vypršela / Chybí údaje
+
+Text: „Deadline: DD.MM.YYYY (2 měsíce od vyhlášení)“
+
+Odpočet: „Zbývá X dní“ nebo „Vypršelo před X dny“
+
+Pokud missing_data: ukaž přesně co chybí (např. „Chybí datum vyhlášení obcí“)
+
+Přehled zvířat (list)
+
+Přidej malé štítky (chip/badge) k nalezencům:
+
+Lhůta: 17 dní
+
+Lhůta vypršela
+
+Chybí vyhlášení
+
+Přidej quick filtry:
+
+“Lhůta do 14 dnů”
+
+“Lhůta vypršela”
+
+“Chybí data”
+
+Zásada: UI stylově navázat na stávající badge/filters, žádné nové designové paradigma.
+
+6) Migrace existujících dat (bez rizika)
+
+MVP migrace má být bezpečná:
+
+nové sloupce nullable (kromě booleanů může být nullable i bool)
+
+žádné přepočítávání stávajících záznamů, pokud nemáte jistá data
+
+volitelně: pokud intake_date existuje a odpovídá “převzetí útulkem”, použít ho automaticky jako shelter_received_at (bez duplicity)
+
+7) Bonus (ne MVP, ale připravit)
+
+dashboard widget: „Nálezové lhůty“ (top 10 nejbližších)
+
+notifikace (14 dní / 3 dny / po vypršení) – až později; zatím stačí UI
+
+Akceptační kritéria (MVP)
+
+U nalezeného zvířete jde zadat datum vyhlášení a scénář → systém ukáže deadline + odpočet.
+
+Deadline se počítá správně pro 2 měsíce i 4 měsíce včetně varianty “vyhlášení až po převzetí”.
+
+V přehledu zvířat jsou vidět štítky/filtry pro blížící se deadline a chybějící data.
+
+Změna je kompatibilní se stávajícím datovým řešením: žádné duplicity, maximální reuse existujících polí.

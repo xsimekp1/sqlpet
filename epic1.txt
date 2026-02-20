@@ -1,0 +1,529 @@
+Zadání: Document Templates (tiskové šablony) + generování PDF pro zvíře
+Kontext
+
+Aplikace pro správu zvířecích útulků. Chci přidat funkci tiskových dokumentů (smlouvy/protokoly), kde:
+
+existuje šablona (editovatelná),
+
+do šablony se umí natáhnout data z DB (zvíře, organizace, kontakty),
+
+výsledkem je vygenerovaný dokument (PDF/print view) svázaný s konkrétním zvířetem,
+
+uživatel může před vygenerováním doplnit pár polí (např. místo, datum, dárce).
+
+MVP první šablona: „DAROVACÍ SMLOUVA NA PSA“ (text níže).
+
+1) UX / Kde se na to kliká (MVP)
+1.1 Detail zvířete – tlačítko „Dokumenty“
+
+Na stránce detailu zvířete (Animal detail) přidat sekci nebo tlačítko v pravém horním rohu:
+„Vytvořit dokument“ (primary CTA)
+Vedle toho menší: „Historie dokumentů“ (secondary)
+
+Chování:
+
+Klik na Vytvořit dokument otevře modal / panel:
+
+Select „Typ dokumentu“ (zatím jen: Darovací smlouva na psa)
+
+(volitelně) Select „Kontakt – dárce“ (pokud existuje entita kontaktů)
+
+Předvyplněná pole: datum, místo, čas
+
+Tlačítko „Vygenerovat“ (primary)
+
+Tlačítko „Náhled“ (secondary, opens preview)
+
+Po kliknutí na Vygenerovat:
+
+backend vytvoří „DocumentInstance“,
+
+vrátí PDF URL nebo HTML preview URL,
+
+UI otevře náhled v novém panelu / nové tab (nebo inline viewer) + tlačítko „Tisk“.
+
+1.2 Historie dokumentů (na detailu zvířete)
+
+Pod tlačítkem nebo v tab „Dokumenty“ zobrazit tabulku:
+
+Název (Darovací smlouva…)
+
+Datum vytvoření
+
+Vytvořil uživatel
+
+Stav (draft/final) — MVP může být jen „final“
+
+Akce: Zobrazit / Stáhnout PDF / Smazat (smazání jen pro admin)
+
+2) Návaznost na barevné schéma (UI sjednocení)
+
+Chci, aby tato feature dodržovala sjednocený vizuál. Zároveň chci připravit systém pro 2 barevné profily (Theme A/B), přepínatelné v Nastavení.
+
+2.1 Pravidla barev (konzistentní role barev)
+
+Definuj role (tokeny) a drž je všude:
+
+CTA tlačítka
+
+Primary CTA (např. „Vytvořit“, „Uložit“, „Vygenerovat“): vždy stejná barva (brand).
+
+Secondary (např. „Náhled“, „Zrušit“): neutrální.
+
+Destructive (např. „Smazat“): červená.
+
+Toggles/Filters
+
+Filtrační chips/toggles mají jednotný styl:
+
+active = brand tinted background + brand border
+
+inactive = muted background
+
+Panely / karty
+
+Cards/panels: jednotné pozadí, border, shadow.
+
+Hover highlight v sidebaru zachovat (je „signature“), ale barva highlightu se řídí tématem.
+
+Editovatelná vs read-only pole
+
+Read-only data: muted background, jemný border, kurzor default.
+
+Editovatelné inputy: čisté pozadí, brand focus ring.
+
+Toasty
+
+Použij 3 typy: success, info, warning (případně error pro systémové)
+
+Každý typ má konzistentní barvu ikonky + border + background tint.
+
+2.2 Dva barevné profily (Theme A/B)
+
+Přidat do Nastavení > Vzhled:
+
+Přepínač: „Barevný profil“
+
+„Shelter Calm“ (Theme A) – seriózní, čisté
+
+„Warm Paw“ (Theme B) – přívětivější, teplejší
+
+Theme A: “Shelter Calm” (default)
+
+Brand (primary): #2563EB (blue 600)
+
+Accent (hover/highlight): #60A5FA (blue 400)
+
+Success: #16A34A (green 600)
+
+Info: #0EA5E9 (sky 500)
+
+Warning: #F59E0B (amber 500)
+
+Destructive: #DC2626 (red 600)
+
+Background: #0B0F19 / #FFFFFF (dle light/dark)
+
+Card: mírně oddělené (border + shadow-sm)
+
+Theme B: “Warm Paw”
+
+Brand (primary): #F97316 (orange 500)
+
+Accent: #FDBA74 (orange 300)
+
+Success: #22C55E (green 500)
+
+Info: #38BDF8 (sky 400)
+
+Warning: #FB923C (orange 400) nebo amber 500
+
+Destructive: #EF4444 (red 500)
+
+Technická poznámka pro implementaci:
+Preferovat tokeny přes CSS variables (např. --brand, --brand-foreground, --accent, atd.), aby sidebar hover animace, header, buttons, badges a toasty automaticky přebíraly theme.
+
+3) Header + Sidebar – jak do toho zapadá nový modul
+Header
+
+V headeru je search bar, teplota a pár ikon.
+
+Nepřidávat sem nové výrazné prvky.
+
+Pokud bude „Dokumenty“ samostatný modul později, tak max ikonka vpravo (ne MVP).
+
+Dodržet spacing a typografii.
+
+Sidebar
+
+Zatím NEpřidávat novou sekci „Dokumenty“ jako samostatnou položku (MVP).
+
+Dokumenty jsou kontextové akce v detailu zvířete.
+
+Sidebar animovaný hover highlight zachovat; jen se ujistit, že používá theme token pro highlight.
+
+4) Šablona: DAROVACÍ SMLOUVA NA PSA (Template #1)
+4.1 Obsah šablony
+
+Text šablony je daný (viz vstup uživatele). V šabloně musí být placeholdery pro data.
+
+Mapování placeholderů (MVP)
+
+Zvíře (Animal):
+
+{{animal.name}} – jméno
+
+{{animal.species}} – (může být fix „pes“, ale nechat obecně)
+
+{{animal.breed}} – plemeno
+
+{{animal.sex}} – pohlaví
+
+{{animal.age}} – stáří (odvozené z birth_date / age_group)
+
+{{animal.color}} – barva
+
+{{animal.microchip}} – čip (z identifiers)
+
+{{animal.weight_kg}} – váha
+
+{{animal.description}} nebo „povaha“ (pokud existuje pole behavior_notes)
+
+Organizace (Organization):
+
+{{org.name}}
+
+{{org.address}}
+
+{{org.phone}}
+
+{{org.representative}}
+
+{{org.city}} (pokud relevantní)
+
+logo (volitelně do hlavičky)
+
+Dárce (Contact / ruční pole)
+
+{{donor.full_name}}
+
+{{donor.birth_date}} (nebo ručně)
+
+{{donor.address}}
+
+{{donor.phone}}
+
+{{donor.zip}}
+
+Meta:
+
+{{doc.place}}
+
+{{doc.date}}
+
+{{doc.time}}
+
+{{doc.created_by}}
+
+4.2 Co je ručně doplnitelné před generováním
+
+V modalu „Vytvořit dokument“ umožnit doplnit:
+
+místo (text)
+
+datum (date)
+
+čas (time)
+
+zdravotní stav (textarea)
+
+povaha psa (textarea)
+
+jiné důležité údaje (textarea)
+
+data o nálezu (datum nálezu, ulice, obec, čas, evidence) – volitelně
+
+Tohle se uloží do DocumentInstance jako manual_fields (JSON), aby byla reprodukovatelnost.
+
+5) Editor šablon (požadavek: editovat, uložit)
+5.1 Kde bude editor (MVP – admin)
+
+Nastavení > Organizace / Administrace (nebo superadmin-only):
+
+Stránka: „Šablony dokumentů“
+
+Seznam šablon:
+
+název
+
+typ
+
+jazyk (cs)
+
+poslední úprava
+
+aktivní verze
+
+akce: editovat, duplikovat, deaktivovat
+
+5.2 Typ editoru (MVP realistický)
+
+MVP doporučení:
+
+editor jako HTML/Markdown textarea + live preview.
+
+Placeholdery vkládané přes dropdown „Vložit pole“:
+
+Animal fields
+
+Donor fields
+
+Organization fields
+
+Document meta fields
+
+Později lze WYSIWYG, ale MVP stačí jednoduchý editor s preview.
+
+6) Backend návrh (modely + API)
+6.1 Modely
+DocumentTemplate
+
+id UUID
+
+organization_id UUID (nebo global + override)
+
+code (např. donation_contract_dog)
+
+name (CS)
+
+language (cs)
+
+content_html (text)
+
+is_active boolean
+
+created_at, updated_at
+
+DocumentInstance
+
+id UUID
+
+organization_id
+
+animal_id
+
+template_id
+
+created_by_user_id
+
+manual_fields JSONB
+
+rendered_html (optional cache)
+
+pdf_storage_path / pdf_url (optional)
+
+status (final/draft) – MVP klidně jen final
+
+created_at
+
+6.2 API endpointy (MVP)
+
+GET /document-templates (admin)
+
+POST /document-templates (admin)
+
+PUT /document-templates/{id} (admin)
+
+POST /animals/{animal_id}/documents
+body: { template_code, donor_contact_id?, manual_fields }
+returns: { document_id, preview_url, pdf_url? }
+
+GET /animals/{animal_id}/documents (list history)
+
+GET /documents/{document_id} (detail + preview url)
+
+POST /documents/{document_id}/render (optional)
+
+POST /documents/{document_id}/pdf (optional if async)
+
+6.3 Render pipeline
+
+MVP: render server-side HTML template -> return HTML preview endpoint (print-friendly).
+PDF generování může být:
+
+MVP1: pouze print view (uživatel tiskne z browseru)
+
+MVP2: generovat PDF (Playwright/Chromium) a uložit do storage (Supabase storage bucket).
+
+7) Frontend návrh (komponenty)
+7.1 Animal detail – integrace
+
+Přidat komponentu DocumentsPanel:
+
+CTA button
+
+modal create
+
+history table
+
+7.2 Create Document Modal
+
+Select template (zatím fixed)
+
+donor select (optional)
+
+form fields (place/date/time + textareas)
+
+actions: Preview / Generate
+
+7.3 Preview stránka
+
+/dashboard/animals/[id]/documents/[docId]/preview nebo /dashboard/documents/[docId]/preview
+
+Print-friendly layout:
+
+page margins, A4 style
+
+header s org logem (optional)
+
+obsah smlouvy
+
+podpisová místa
+
+8) Pravidla kvality / “nezničit platformu”
+
+Nedělat velký redesign mimo tokeny.
+
+Zachovat současné komponenty a jen je sjednotit přes theme tokeny.
+
+Neodstraňovat sidebar hover animaci — jen napojit barvu na theme.
+
+Vše nové musí být responsivní.
+
+Všechny texty přes i18n (aspoň klíče), smlouva obsah je cs.
+
+9) MVP scope pro první iteraci
+
+Template „Darovací smlouva na psa“ existuje v DB jako HTML template s placeholdery.
+
+V detailu zvířete tlačítko „Vytvořit dokument“ → modal → preview (HTML).
+
+Uloží se DocumentInstance + historie dokumentů u zvířete.
+
+Nastavení: „Barevný profil“ A/B přes tokeny.
+
+Toasty: success/info/warning sjednocené.
+
+Pokud chceš, můžu ti ještě doplnit konkrétní návrh placeholder syntaxe (např. {{animal.name}}) a „katalog polí“ do dropdownu editoru, aby Claude přesně věděl, co má nabídnout.
+
+No ale připiš mi do toho zadání i přímo znění té smlouvy, at máme první template
+
+Jasně — doplňuju do zadání plné znění smlouvy jako první template (jen jsem do ní vložil placeholdery {{...}}, aby se z ní dala rovnou generovat verze pro konkrétní zvíře a dárce).
+
+Template #1 (CS): donation_contract_dog — „DAROVACÍ SMLOUVA NA PSA“
+
+Pozn.: Text níže je uložit do DocumentTemplate.content_html (nebo jako Markdown).
+Placeholdery se při generování nahradí daty z DB + manual_fields.
+
+DAROVACÍ SMLOUVA NA PSA
+uzavřená podle § 2055 a násl. zákona č. 89/2012 Sb, občanský zákoník
+
+Smluvní strany
+
+pan/paní: {{donor.full_name}}
+datum narození: {{donor.birth_date}}
+bytem: {{donor.address_line1}}
+{{donor.address_line2}}
+Telefon: {{donor.phone}}
+PSČ: {{donor.zip}}
+dále jen dárce
+
+{{org.name}}
+{{org.subtitle}}
+{{org.representative}}
+{{org.address_line1}}
+{{org.address_line2}}
+Tel: {{org.phone}}
+dále jen obdarovaný
+
+V {{doc.place}} dne {{doc.date}}
+
+Obsah smlouvy
+
+Preambule: Účel smlouvy
+Účelem této darovací smlouvy je bezplatný převod vlastnického práva ke psu
+charakterizovanému níže v této smlouvě (viz čl. 1) dárcem na obdarovaného a přijetí
+uvedeného daru obdarovaným od dárce s cílem zajistit tak uvedenému psu další život
+v řádných podmínkách odpovídajících jeho potřebám a právním předpisům.
+
+Článek 1: Charakteristika psa a jeho identifikační znaky
+Jméno: {{animal.name}}
+Plemeno: {{animal.breed}}
+Pohlaví: {{animal.sex}}
+Stáří: {{animal.age}}
+Barva: {{animal.color}}
+Čip: {{animal.microchip}}
+Váha: {{animal.weight_kg}}
+Případné další vhodné údaje: {{animal.other_notes}}
+
+Prohlášení dárce
+o Dárce prohlašuje, že je výhradním vlastníkem psa/kočky, že psa/kočku řádně nabyl do
+svého vlastnictví v souladu s příslušnými ustanoveními zákona č. 89/2012 Sb., občanský
+zákoník, a že je jakožto výhradní vlastník oprávněn s tímto předmětem daru nakládat, zejm.
+jej převést do vlastnictví jiného.
+
+o Dárce dále prohlašuje, že pes, který je předmětem daru dle této smlouvy, byl jakožto
+ztracené zvíře, u něhož je zjevné, že mělo vlastníka (avšak z okolností nebylo možno
+poznat, komu by mělo být vráceno) a jakožto zvíře zjevně určené k zájmovému chovu,
+nalezen dne {{manual.found_date}} na ulici {{manual.found_street}} na území
+{{manual.found_city}} v čase {{manual.found_time}}, vedený v evidenci nalezených psů
+{{manual.found_registry}}.
+
+Článek 2: Ujednání o darování psa
+Dárce touto smlouvou bezplatně převádí vlastnické právo ke psu, jehož identifikační znaky a
+charakteristika jsou uvedeny v článku 1 této darovací smlouvy, na obdarovaného a
+obdarovaný tento dar přijímá.
+
+Článek 3: Očkovací průkaz a zdravotní stav psa
+Odst. 1: Při předání psa byl vydán očkovací průkaz. Pes byl očkován proti vzteklině a jiným
+infekčním chorobám, podrobnosti obsahuje očkovací průkaz. Pes je odčerven.
+
+Odst. 2: Dárce před podpisem této darovací smlouvy obdarovaným upozornil obdarovaného na:
+- tento zdravotní stav psa: {{manual.health_state}}
+- povaha psa: {{manual.temperament}}
+- jiné důležité údaje: {{manual.other_important}}
+
+Článek 5: Předání psa
+Vlastnictví k předmětu daru přechází na obdarovaného okamžikem, kdy je na základě této
+darovací smlouvy předmět daru (výše uvedený pes) předán dárcem obdarovanému a
+obdarovaným od dárce převzat. Tímto okamžikem přecházejí na obdarovaného i veškerá
+práva s darem spojená, veškeré užitky, nebezpečí a povinnosti. Smluvní strany potvrzují, že
+k předání a převzetí psa, který je předmětem daru dle této smlouvy, došlo.
+
+Místo: {{manual.handover_place}} v čase: {{manual.handover_time}} dne: {{manual.handover_date}}
+
+Článek 6: Zpracování osobních údajů
+Obdarovaný souhlasí se zpracováním osobních údajů pro účely související s předmětem této
+smlouvy.
+
+Článek 7: Ostatní ustanovení
+a) každý je povinen zabezpečit zvířeti v zájmovém chovu přiměřené podmínky pro
+zachování jeho fyziologických funkcí a zajištění jeho biologických potřeb tak, aby
+nedocházelo k bolesti, utrpení nebo poškození zdraví zvířete, a učinit opatření proti úniku
+zvířat.
+
+b) každý, kdo chová zvíře v zájmovém chovu nebo se ujal toulavého, případně opuštěného
+zvířete, odpovídá za jeho zdraví a dobrý stav; za splnění této povinnosti se považuje i
+oznámení místa nálezu obci nebo předání toulavého, případně opuštěného zvířete do
+útulku.
+
+Obdarovaný:                               Za dárce:
+…………………………………..                 ……………………………………..
+
+Doporučené defaulty pro org.* (aby šablona fungovala hned)
+
+org.subtitle = např. „Soukromý azyl pro týrané a opuštěné psy“
+
+org.representative = „Diana Šlechtová, DiS.“ (nebo z DB)
+
+org.address_line1 / org.address_line2 = adresa organizace
