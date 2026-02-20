@@ -82,6 +82,7 @@ export default function AnimalsPage() {
   const [search, setSearch] = useState('');
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'active' | 'available' | 'all'>('active');
+  const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'urgent' | 'expired' | 'missing'>('all');
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'table'>('grid');
@@ -188,7 +189,24 @@ export default function AnimalsPage() {
       statusFilter === 'all' ? true :
       statusFilter === 'available' ? a.status === 'available' :
       /* active */ !INACTIVE_STATUSES.includes(a.status);
-    return matchesSearch && matchesSpecies && matchesStatus;
+    
+    // Legal deadline filter - only for found animals
+    const isFoundAnimal = a.current_intake_reason === 'found';
+    let matchesDeadline = true;
+    if (deadlineFilter !== 'all') {
+      if (!isFoundAnimal) {
+        matchesDeadline = false;
+      } else if (deadlineFilter === 'urgent') {
+        // 14 days or less
+        matchesDeadline = a.legal_deadline_state === 'running' && a.legal_deadline_days_left !== null && a.legal_deadline_days_left <= 14;
+      } else if (deadlineFilter === 'expired') {
+        matchesDeadline = a.legal_deadline_state === 'expired';
+      } else if (deadlineFilter === 'missing') {
+        matchesDeadline = a.legal_deadline_state === 'missing_data';
+      }
+    }
+    
+    return matchesSearch && matchesSpecies && matchesStatus && matchesDeadline;
   });
 
   const toggleSelect = (id: string) => {
@@ -320,6 +338,31 @@ export default function AnimalsPage() {
         >
           {t('animals.statusFilter.all')}
         </Button>
+        <div className="h-4 w-px bg-border mx-1" />
+        <Button
+          variant={deadlineFilter === 'urgent' ? 'default' : 'outline'}
+          size="sm"
+          className="h-8 text-xs px-2.5 text-orange-600"
+          onClick={() => setDeadlineFilter(deadlineFilter === 'urgent' ? 'all' : 'urgent')}
+        >
+          ⏰ Lhůta do 14d
+        </Button>
+        <Button
+          variant={deadlineFilter === 'expired' ? 'default' : 'outline'}
+          size="sm"
+          className="h-8 text-xs px-2.5 text-red-600"
+          onClick={() => setDeadlineFilter(deadlineFilter === 'expired' ? 'all' : 'expired')}
+        >
+          ❌ Vypršelo
+        </Button>
+        <Button
+          variant={deadlineFilter === 'missing' ? 'default' : 'outline'}
+          size="sm"
+          className="h-8 text-xs px-2.5"
+          onClick={() => setDeadlineFilter(deadlineFilter === 'missing' ? 'all' : 'missing')}
+        >
+          ⚠️ Chybí data
+        </Button>
         {availableSpecies.length > 1 && availableSpecies.map((sp) => (
           <Button
             key={sp}
@@ -378,7 +421,7 @@ export default function AnimalsPage() {
                     className="object-cover object-center"
                     unoptimized
                   />
-                  {/* Top badges row */}
+                    {/* Top badges row */}
                   <div className="absolute top-1 left-1 right-1 flex items-start justify-between">
                     <div className="flex gap-1 flex-wrap">
                       {animal.is_special_needs && (
@@ -393,7 +436,23 @@ export default function AnimalsPage() {
                       )}
                       {animal.is_diabetic && (
                         <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-xs" title="Cukrovka">
-                          💉
+                        💉
+                      </span>
+                      )}
+                      {/* Legal deadline badge - only for found animals */}
+                      {animal.current_intake_reason === 'found' && animal.legal_deadline_state && animal.legal_deadline_state !== 'running' && (
+                        <span 
+                          className={cn(
+                            "inline-flex items-center justify-center px-1.5 h-5 rounded text-xs font-semibold",
+                            animal.legal_deadline_state === 'expired' && "bg-red-600 text-white",
+                            animal.legal_deadline_state === 'missing_data' && "bg-yellow-500 text-white",
+                            animal.legal_deadline_state === 'running' && animal.legal_deadline_days_left !== null && animal.legal_deadline_days_left <= 14 && "bg-orange-500 text-white"
+                          )}
+                          title={animal.legal_deadline_label || ''}
+                        >
+                          {animal.legal_deadline_state === 'expired' ? '❌' : 
+                           animal.legal_deadline_state === 'missing_data' ? '⚠️' :
+                           animal.legal_deadline_days_left !== null ? `${animal.legal_deadline_days_left}d` : '?'}
                         </span>
                       )}
                     </div>
