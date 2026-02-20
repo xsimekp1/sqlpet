@@ -198,7 +198,7 @@ export default function AnimalsPage() {
         matchesDeadline = false;
       } else if (deadlineFilter === 'urgent') {
         // 14 days or less
-        matchesDeadline = a.legal_deadline_state === 'running' && a.legal_deadline_days_left !== null && a.legal_deadline_days_left <= 14;
+        matchesDeadline = a.legal_deadline_state === 'running' && a.legal_deadline_days_left !== null && a.legal_deadline_days_left !== undefined && a.legal_deadline_days_left <= 14;
       } else if (deadlineFilter === 'expired') {
         matchesDeadline = a.legal_deadline_state === 'expired';
       } else if (deadlineFilter === 'missing') {
