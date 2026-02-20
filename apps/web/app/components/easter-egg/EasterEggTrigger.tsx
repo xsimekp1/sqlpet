@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ApiClient from '@/app/lib/api';
 
 interface BreedImage {
@@ -133,6 +133,9 @@ export function EasterEggTrigger() {
       
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-lg p-0 overflow-hidden border-none bg-gradient-to-b from-[#05010a] via-[#0b0220] to-[#02010a] text-white">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Uhodni plemeno</DialogTitle>
+          </DialogHeader>
           {loading && (
             <div className="p-8 text-center">
               <p className="text-[#00E5FF]">Načítám plemena...</p>
