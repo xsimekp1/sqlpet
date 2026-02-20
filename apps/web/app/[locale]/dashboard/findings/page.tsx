@@ -70,13 +70,6 @@ const SPECIES_LABELS: Record<string, string> = {
   other: 'Jiné',
 };
 
-const DATE_PRESETS = [
-  { value: 'all', label: 'Všechny' },
-  { value: 'today', label: 'Dnes' },
-  { value: 'week', label: 'Týden' },
-  { value: 'month', label: 'Měsíc' },
-];
-
 function getSpeciesIcon(species: string | null): string {
   if (!species) return SPECIES_ICONS.other;
   return SPECIES_ICONS[species.toLowerCase()] || SPECIES_ICONS.other;
@@ -92,7 +85,6 @@ export default function FindingsPage() {
   // Filters
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'current' | 'past'>('all');
   const [selectedSpecies, setSelectedSpecies] = useState<Set<string>>(new Set(SPECIES));
-  const [datePreset, setDatePreset] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
@@ -193,35 +185,8 @@ export default function FindingsPage() {
       f.where_lat !== null && f.where_lng !== null
   );
 
-  const getDateRange = () => {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-
-    switch (datePreset) {
-      case 'today':
-        return { from: today, to: today };
-      case 'week': {
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return { from: weekAgo.toISOString().split('T')[0], to: today };
-      }
-      case 'month': {
-        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        return { from: monthAgo.toISOString().split('T')[0], to: today };
-      }
-      default:
-        return { from: dateFrom || '', to: dateTo || '' };
-    }
-  };
-
-  useEffect(() => {
-    const range = getDateRange();
-    setDateFrom(range.from);
-    setDateTo(range.to);
-  }, [datePreset]);
-
   const hasFilters = selectedStatus !== 'all' ||
                      selectedSpecies.size !== SPECIES.length ||
-                     datePreset !== 'all' ||
                      dateFrom ||
                      dateTo ||
                      gpsLat !== null;
@@ -229,7 +194,6 @@ export default function FindingsPage() {
   const clearAllFilters = () => {
     setSelectedStatus('all');
     setSelectedSpecies(new Set(SPECIES));
-    setDatePreset('all');
     setDateFrom('');
     setDateTo('');
     clearGpsFilter();
@@ -358,17 +322,21 @@ export default function FindingsPage() {
                       ))}
                     </div>
 
-                    {/* Date */}
-                    <Select value={datePreset} onValueChange={setDatePreset}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DATE_PRESETS.map(p => (
-                          <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {/* Date from */}
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="h-8 w-[140px]"
+                    />
+                    
+                    {/* Date to */}
+                    <Input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="h-8 w-[140px]"
+                    />
 
                     {/* Status */}
                     <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as any)}>
@@ -478,16 +446,18 @@ export default function FindingsPage() {
                 ))}
               </div>
 
-              <Select value={datePreset} onValueChange={setDatePreset}>
-                <SelectTrigger className="h-7 w-28">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DATE_PRESETS.map(p => (
-                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="h-7 w-[120px]"
+              />
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="h-7 w-[120px]"
+              />
 
               <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as any)}>
                 <SelectTrigger className="h-7 w-28">
