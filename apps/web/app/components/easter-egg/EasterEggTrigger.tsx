@@ -1,27 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { DOG_BREEDS } from './breeds';
+import ApiClient from '@/app/lib/api';
 
-interface Question {
-  correct: string;
-  options: string[];
+interface BreedImage {
+  color: string;
+  image_url: string;
 }
 
-function generateQuestions(count: number = 10): Question[] {
-  const shuffled = [...DOG_BREEDS].sort(() => Math.random() - 0.5);
-  const selected = shuffled.slice(0, count);
-  
-  return selected.map(correct => {
-    const others = DOG_BREEDS.filter(b => b !== correct).sort(() => Math.random() - 0.5).slice(0, 2);
-    const options = [...others, correct].sort(() => Math.random() - 0.5);
-    return { correct, options };
-  });
+interface Breed {
+  id: string;
+  name: string;
+  display_name: string;
+}
+
+interface Question {
+  breed: Breed;
+  image?: BreedImage;
+  options: string[];
 }
 
 export function EasterEggTrigger() {
   const [isOpen, setIsOpen] = useState(false);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [breedImages, setBreedImages] = useState<Record<string, BreedImage[]>>({});
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -29,9 +32,63 @@ export function EasterEggTrigger() {
   const [score, setScore] = useState(0);
   const [locked, setLocked] = useState(false);
   const [phase, setPhase] = useState<'quiz' | 'result'>('quiz');
+  const [loading, setLoading] = useState(false);
 
-  const startQuiz = () => {
-    setQuestions(generateQuestions(10));
+  useEffect(() => {
+    async function loadBreeds() {
+      try {
+        const breedList = await ApiClient.getBreeds('dog');
+        setBreeds(breedList);
+        
+        const images: Record<string, BreedImage[]> = {};
+        for (const breed of breedList.slice(0, 30)) {
+          try {
+            const colorImages = await ApiClient.getBreedColorImages(breed.id);
+            if (colorImages.length > 0) {
+              images[breed.id] = colorImages;
+            }
+          } catch (e) {
+            // Ignore errors for individual breeds
+          }
+        }
+        setBreedImages(images);
+      } catch (error) {
+        console.error('Failed to load breeds:', error);
+      }
+    }
+    if (isOpen && breeds.length === 0) {
+      loadBreeds();
+    }
+  }, [isOpen]);
+
+  const generateQuestions = (count: number = 10): Question[] => {
+    const breedsWithImages = breeds.filter(b => breedImages[b.id]?.length > 0);
+    if (breedsWithImages.length === 0) return [];
+    
+    const shuffled = [...breedsWithImages].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, count);
+    
+    return selected.map(breed => {
+      const images = breedImages[breed.id] || [];
+      const randomImage = images[Math.floor(Math.random() * images.length)];
+      
+      const otherBreeds = breeds.filter(b => b.id !== breed.id).sort(() => Math.random() - 0.5).slice(0, 2);
+      const options = [...otherBreeds.map(b => b.display_name), breed.display_name].sort(() => Math.random() - 0.5);
+      
+      return {
+        breed,
+        image: randomImage,
+        options,
+      };
+    });
+  };
+
+  const startQuiz = async () => {
+    setLoading(true);
+    if (questions.length === 0) {
+      const newQuestions = generateQuestions(10);
+      setQuestions(newQuestions);
+    }
     setCurrentIndex(0);
     setScore(0);
     setSelectedOption(null);
@@ -39,6 +96,7 @@ export function EasterEggTrigger() {
     setLocked(false);
     setPhase('quiz');
     setIsOpen(true);
+    setLoading(false);
   };
 
   const handleAnswer = (index: number) => {
@@ -46,7 +104,7 @@ export function EasterEggTrigger() {
     
     setSelectedOption(index);
     setLocked(true);
-    const correct = questions[currentIndex].correct === questions[currentIndex].options[index];
+    const correct = questions[currentIndex].breed.display_name === questions[currentIndex].options[index];
     setIsCorrect(correct);
     if (correct) setScore(s => s + 1);
   };
@@ -75,9 +133,14 @@ export function EasterEggTrigger() {
       
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-lg p-0 overflow-hidden border-none bg-gradient-to-b from-[#05010a] via-[#0b0220] to-[#02010a] text-white">
-          {phase === 'quiz' && currentQuestion && (
+          {loading && (
+            <div className="p-8 text-center">
+              <p className="text-[#00E5FF]">Načítám plemena...</p>
+            </div>
+          )}
+          
+          {!loading && phase === 'quiz' && currentQuestion && (
             <div className="p-6 space-y-6">
-              {/* Header */}
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-[#00E5FF] drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]">
                   Uhodni plemeno!
@@ -87,17 +150,24 @@ export function EasterEggTrigger() {
                 </span>
               </div>
               
-              {/* Progress */}
               <div className="text-center text-sm text-[#FFE600]">
                 Otázka {currentIndex + 1}/10
               </div>
               
-              {/* Question */}
+              {currentQuestion.image && (
+                <div className="flex justify-center">
+                  <img 
+                    src={currentQuestion.image.image_url} 
+                    alt="Breed"
+                    className="max-h-48 rounded-lg border-2 border-[#2a2a38]"
+                  />
+                </div>
+              )}
+              
               <div className="text-center mb-4">
                 <p className="text-lg">Jaké je to plemeno?</p>
               </div>
               
-              {/* Options */}
               <div className="space-y-3">
                 {currentQuestion.options.map((option, idx) => {
                   let btnClass = "w-full p-4 text-center border-2 border-[#2a2a38] bg-[#0b0b12] text-white rounded-lg transition-all ";
@@ -108,7 +178,7 @@ export function EasterEggTrigger() {
                     } else {
                       btnClass += "bg-[#1a0707] border-[#FF3131] text-[#ffd0d0] shadow-[0_0_22px_rgba(255,49,49,0.55)]";
                     }
-                  } else if (locked && !isCorrect && option === currentQuestion.correct) {
+                  } else if (locked && !isCorrect && option === currentQuestion.breed.display_name) {
                     btnClass += "bg-[#071a0a] border-[#39FF14] text-[#caffc0] shadow-[0_0_22px_rgba(57,255,20,0.55)]";
                   } else {
                     btnClass += "hover:shadow-[0_0_18px_rgba(0,229,255,0.35)] hover:border-[#00E5FF]";
@@ -127,7 +197,6 @@ export function EasterEggTrigger() {
                 })}
               </div>
               
-              {/* Next button */}
               {locked && (
                 <button
                   onClick={nextQuestion}
@@ -139,7 +208,7 @@ export function EasterEggTrigger() {
             </div>
           )}
           
-          {phase === 'result' && (
+          {!loading && phase === 'result' && (
             <div className="p-8 text-center space-y-6">
               <h2 className="text-3xl font-bold text-[#FFE600] drop-shadow-[0_0_12px_rgba(255,230,0,0.8)]">
                 Výsledek!
@@ -152,7 +221,15 @@ export function EasterEggTrigger() {
               </p>
               <div className="flex gap-3 justify-center">
                 <button
-                  onClick={startQuiz}
+                  onClick={() => {
+                    setQuestions(generateQuestions(10));
+                    setCurrentIndex(0);
+                    setScore(0);
+                    setSelectedOption(null);
+                    setIsCorrect(null);
+                    setLocked(false);
+                    setPhase('quiz');
+                  }}
                   className="px-6 py-2 bg-[#FF00E5] text-white font-bold rounded-lg hover:bg-[#e000d4] transition-colors"
                 >
                   Hrát znovu
