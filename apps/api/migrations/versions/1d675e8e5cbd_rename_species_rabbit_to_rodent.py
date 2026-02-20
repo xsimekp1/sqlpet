@@ -32,7 +32,23 @@ def upgrade() -> None:
     if not result_rodent:
         conn.execute(sa.text("ALTER TYPE species_enum ADD VALUE 'rodent'"))
 
-    # Step 2: Now update the data - only if rabbit exists
+    # Step 2: Convert column to VARCHAR to avoid "uncommitted enum" issue
+    conn.execute(sa.text("ALTER TABLE animals ALTER COLUMN species TYPE VARCHAR(20)"))
+    conn.execute(
+        sa.text(
+            "ALTER TABLE inventory_items ALTER COLUMN target_species TYPE VARCHAR(20)"
+        )
+    )
+    conn.execute(
+        sa.text("ALTER TABLE food ALTER COLUMN target_species TYPE VARCHAR(20)")
+    )
+    conn.execute(
+        sa.text(
+            "ALTER TABLE default_animal_images ALTER COLUMN species TYPE VARCHAR(20)"
+        )
+    )
+
+    # Step 3: Now update the data - only if rabbit exists
     conn.execute(
         sa.text("UPDATE animals SET species = 'rodent' WHERE species = 'rabbit'")
     )
@@ -47,7 +63,7 @@ def upgrade() -> None:
         )
     )
 
-    # Step 3: Remove 'rabbit' from enum - only if 'rabbit' still exists and 'rodent' exists
+    # Step 4: Remove 'rabbit' from enum - only if 'rabbit' still exists and 'rodent' exists
     result_rabbit = conn.execute(
         sa.text(
             "SELECT 1 FROM pg_enum WHERE enumlabel = 'rabbit' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum')"
@@ -62,16 +78,36 @@ def upgrade() -> None:
                 "CREATE TYPE species_enum AS ENUM ('dog', 'cat', 'rodent', 'bird', 'other')"
             )
         )
-        conn.execute(
-            sa.text(
-                "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
-            )
+
+    # Step 5: Convert back to enum
+    conn.execute(
+        sa.text(
+            "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
         )
-        conn.execute(
-            sa.text(
-                "ALTER TABLE default_animal_images ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
-            )
+    )
+    conn.execute(
+        sa.text(
+            "ALTER TABLE inventory_items ALTER COLUMN target_species TYPE species_enum USING target_species::text::species_enum"
         )
+    )
+    conn.execute(
+        sa.text(
+            "ALTER TABLE food ALTER COLUMN target_species TYPE species_enum USING target_species::text::species_enum"
+        )
+    )
+    conn.execute(
+        sa.text(
+            "ALTER TABLE default_animal_images ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+        )
+    )
+
+    # Step 6: Drop old enum if still exists
+    result_rabbit_after = conn.execute(
+        sa.text(
+            "SELECT 1 FROM pg_enum WHERE enumlabel = 'rabbit' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum_old')"
+        )
+    ).fetchone()
+    if result_rabbit_after:
         conn.execute(sa.text("DROP TYPE species_enum_old"))
 
 
@@ -88,7 +124,23 @@ def downgrade() -> None:
     if not result_rabbit:
         conn.execute(sa.text("ALTER TYPE species_enum ADD VALUE 'rabbit'"))
 
-    # Step 2: Update data from 'rodent' to 'rabbit'
+    # Step 2: Convert to VARCHAR first
+    conn.execute(sa.text("ALTER TABLE animals ALTER COLUMN species TYPE VARCHAR(20)"))
+    conn.execute(
+        sa.text(
+            "ALTER TABLE inventory_items ALTER COLUMN target_species TYPE VARCHAR(20)"
+        )
+    )
+    conn.execute(
+        sa.text("ALTER TABLE food ALTER COLUMN target_species TYPE VARCHAR(20)")
+    )
+    conn.execute(
+        sa.text(
+            "ALTER TABLE default_animal_images ALTER COLUMN species TYPE VARCHAR(20)"
+        )
+    )
+
+    # Step 3: Update data from 'rodent' to 'rabbit'
     conn.execute(
         sa.text("UPDATE animals SET species = 'rabbit' WHERE species = 'rodent'")
     )
@@ -102,3 +154,36 @@ def downgrade() -> None:
             "UPDATE food SET target_species = 'rabbit' WHERE target_species = 'rodent'"
         )
     )
+
+    # Step 4: Recreate enum without rodent
+    conn.execute(sa.text("ALTER TYPE species_enum RENAME TO species_enum_old"))
+    conn.execute(
+        sa.text(
+            "CREATE TYPE species_enum AS ENUM ('dog', 'cat', 'rabbit', 'bird', 'other')"
+        )
+    )
+
+    # Step 5: Convert back to enum
+    conn.execute(
+        sa.text(
+            "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+        )
+    )
+    conn.execute(
+        sa.text(
+            "ALTER TABLE inventory_items ALTER COLUMN target_species TYPE species_enum USING target_species::text::species_enum"
+        )
+    )
+    conn.execute(
+        sa.text(
+            "ALTER TABLE food ALTER COLUMN target_species TYPE species_enum USING target_species::text::species_enum"
+        )
+    )
+    conn.execute(
+        sa.text(
+            "ALTER TABLE default_animal_images ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+        )
+    )
+
+    # Step 6: Drop old enum
+    conn.execute(sa.text("DROP TYPE IF EXISTS species_enum_old"))
