@@ -397,29 +397,32 @@ export default function AnimalsPage() {
                         </span>
                       )}
                     </div>
-                    {/* Sex + Age in top right */}
-                    <div className="flex items-center gap-1">
-                      <div className={cn(
-                        "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
-                        animal.sex === 'male' ? "bg-blue-600 text-white" : 
-                        animal.sex === 'female' ? "bg-pink-600 text-white" : 
-                        "bg-gray-400 text-white"
-                      )}>
-                        {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : '?'}
-                      </div>
-                      <div className="w-6 h-6 rounded-full bg-black/70 text-white text-[10px] font-bold flex items-center justify-center">
-                        {animal.estimated_age_years != null 
-                          ? `${animal.estimated_age_years}y` 
-                          : animal.age_group === 'baby' ? 'B' :
-                            animal.age_group === 'young' ? 'Y' :
-                            animal.age_group === 'adult' ? 'A' :
-                            animal.age_group === 'senior' ? 'S' : '?'}
-                      </div>
+                    {/* Age + Sex in ONE circle - top right */}
+                    <div className={cn(
+                      "absolute top-1 right-1 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold",
+                      animal.sex === 'male' ? "bg-blue-600 text-white" : 
+                      animal.sex === 'female' ? "bg-pink-600 text-white" : 
+                      "bg-gray-500 text-white"
+                    )}>
+                      {animal.estimated_age_years != null 
+                        ? `${animal.estimated_age_years}` 
+                        : animal.age_group === 'baby' ? 'B' :
+                          animal.age_group === 'young' ? 'Y' :
+                          animal.age_group === 'adult' ? 'A' :
+                          animal.age_group === 'senior' ? 'S' : '?'}
                     </div>
                   </div>
-                  {/* Bottom row: Name left */}
-                  <div className="absolute bottom-1 left-1 right-1 flex items-end">
-                    <span className="font-bold text-white text-xs drop-shadow-lg truncate max-w-[100px]">{animal.name}</span>
+                  {/* Bottom row: Name + small sex */}
+                  <div className="absolute bottom-1 left-1 right-1 flex items-end justify-between">
+                    <span className="font-bold text-white text-base drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] truncate max-w-[100px]">{animal.name}</span>
+                    <div className={cn(
+                      "text-[10px] font-bold",
+                      animal.sex === 'male' ? "text-blue-600" : 
+                      animal.sex === 'female' ? "text-pink-600" : 
+                      "text-gray-400"
+                    )}>
+                      {animal.sex === 'male' ? '♂' : animal.sex === 'female' ? '♀' : ''}
+                    </div>
                   </div>
                 </div>
                 {/* Card footer */}
