@@ -5,6 +5,7 @@ from datetime import date
 from sqlalchemy import (
     Boolean,
     Date,
+    DateTime,
     Enum,
     ForeignKey,
     Index,
