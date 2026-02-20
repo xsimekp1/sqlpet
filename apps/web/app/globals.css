@@ -63,15 +63,19 @@
   --theme-warning-soft: #FEF3C7;
   --theme-danger: #DC2626;
   --theme-danger-soft: #FEE2E2;
-  --theme-bg: #F8FAFC;
-  --theme-surface: #FFFFFF;
-  --theme-surface-muted: #F1F5F9;
-  --theme-border: #E2E8F0;
+  
+  /* Surface hierarchy - CLEAR DISTINCTION */
+  --theme-page-bg: #F1F5F9;      /* Page background - light gray */
+  --theme-surface: #FFFFFF;        /* Cards/panels - white */
+  --theme-surface-elevated: #FFFFFF; /* Elevated elements */
+  --theme-input-bg: #F8FAFC;      /* Input fields - slightly different */
+  --theme-surface-muted: #E2E8F0;  /* Muted surfaces */
+  --theme-border: #CBD5E1;         /* Borders - visible */
   --theme-text: #0F172A;
   --theme-text-secondary: #475569;
   --theme-text-muted: #64748B;
   
-  /* Current theme tokens (Teal default) */
+  /* Current theme tokens */
   --color-primary: var(--theme-primary);
   --color-primary-hover: var(--theme-primary-hover);
   --color-primary-soft: var(--theme-primary-soft);
@@ -83,15 +87,17 @@
   --color-warning-soft: var(--theme-warning-soft);
   --color-danger: var(--theme-danger);
   --color-danger-soft: var(--theme-danger-soft);
-  --color-bg: var(--theme-bg);
+  --color-bg: var(--theme-page-bg);
   --color-surface: var(--theme-surface);
+  --color-surface-elevated: var(--theme-surface-elevated);
+  --color-input-bg: var(--theme-input-bg);
   --color-surface-muted: var(--theme-surface-muted);
   --color-border: var(--theme-border);
   --color-text: var(--theme-text);
   --color-text-secondary: var(--theme-text-secondary);
   --color-text-muted: var(--theme-text-muted);
 
-  /* Base colors - linked to theme */
+  /* Base colors - linked */
   --background: var(--color-bg);
   --foreground: var(--color-text);
   --card: var(--color-surface);
@@ -108,7 +114,7 @@
   --accent-foreground: var(--color-text-secondary);
   --destructive: var(--color-danger);
   --border: var(--color-border);
-  --input: var(--color-surface);
+  --input: var(--color-input-bg);
   --ring: var(--color-primary);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -151,10 +157,14 @@
   --theme-warning-soft: #FEF3C7;
   --theme-danger: #DC2626;
   --theme-danger-soft: #FEE2E2;
-  --theme-bg: #FAFAFF;
-  --theme-surface: #FFFFFF;
-  --theme-surface-muted: #F3F4FF;
-  --theme-border: #E7E7F2;
+  
+  /* Surface hierarchy - Berry style */
+  --theme-page-bg: #F8F9FC;      /* Page - cool white-gray */
+  --theme-surface: #FFFFFF;        /* Cards - white */
+  --theme-surface-elevated: #FFFFFF;
+  --theme-input-bg: #F5F3FF;     /* Input - slight purple tint */
+  --theme-surface-muted: #EDE9FE; /* Muted - purple tint */
+  --theme-border: #DDDAF0;         /* Borders - visible */
   --theme-text: #111827;
   --theme-text-secondary: #4B5563;
   --theme-text-muted: #6B7280;
@@ -171,8 +181,10 @@
   --color-warning-soft: var(--theme-warning-soft);
   --color-danger: var(--theme-danger);
   --color-danger-soft: var(--theme-danger-soft);
-  --color-bg: var(--theme-bg);
+  --color-bg: var(--theme-page-bg);
   --color-surface: var(--theme-surface);
+  --color-surface-elevated: var(--theme-surface-elevated);
+  --color-input-bg: var(--theme-input-bg);
   --color-surface-muted: var(--theme-surface-muted);
   --color-border: var(--theme-border);
   --color-text: var(--theme-text);
@@ -204,12 +216,12 @@
   --sidebar-border: var(--color-border);
   --sidebar-ring: var(--color-primary);
   --color-filter: oklch(0.65 0.22 290);    /* Purple - for filters */
+  --input: var(--color-input-bg);
 }
 
 [data-theme="berry"] input:focus,
 [data-theme="berry"] textarea:focus,
 [data-theme="berry"] select:focus {
-  background-color: var(--color-surface-muted);
   border-color: var(--color-primary);
   outline: none;
   box-shadow: 0 0 0 2px var(--color-primary-soft);
