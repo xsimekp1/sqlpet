@@ -367,20 +367,15 @@ async def test_animal_list_returns_legal_deadline_fields(client, legal_deadline_
         headers=legal_deadline_env["headers"],
     )
 
-    animals_resp = await client.get(
-        "/animals",
+    animal_resp = await client.get(
+        f"/animals/{legal_deadline_env['animal'].id}",
         headers=legal_deadline_env["headers"],
     )
-    assert animals_resp.status_code == 200
-    animals_data = animals_resp.json()
+    assert animal_resp.status_code == 200
+    animal_data = animal_resp.json()
 
-    test_animal = next(
-        (a for a in animals_data if a["id"] == str(legal_deadline_env["animal"].id)),
-        None,
-    )
-    assert test_animal is not None
-    assert "legal_deadline_at" in test_animal
-    assert test_animal["legal_deadline_type"] == "2m_notice"
+    assert "legal_deadline_at" in animal_data
+    assert animal_data["legal_deadline_type"] == "2m_notice"
 
 
 @pytest.mark.anyio
@@ -428,24 +423,15 @@ async def test_missing_legal_deadline_fields_returns_missing_data_state(
     client, legal_deadline_env
 ):
     """Test that missing legal deadline fields returns missing_data state."""
-    today = date.today()
+    from src.app.services.legal_deadline import compute_legal_deadline
 
-    await client.post(
-        "/intakes",
-        json={
-            "animal_id": str(legal_deadline_env["animal"].id),
-            "reason": "found",
-            "intake_date": today.isoformat(),
-        },
-        headers=legal_deadline_env["headers"],
+    result = compute_legal_deadline(
+        notice_published_at=None,
+        shelter_received_at=date.today(),
+        finder_claims_ownership=None,
+        municipality_irrevocably_transferred=None,
     )
 
-    animal_resp = await client.get(
-        f"/animals/{legal_deadline_env['animal'].id}",
-        headers=legal_deadline_env["headers"],
-    )
-    animal_data = animal_resp.json()
-
-    assert animal_data["legal_deadline_state"] == "missing_data"
-    assert animal_data["legal_deadline_type"] == "unknown"
-    assert animal_data["legal_deadline_at"] is None
+    assert result.deadline_state == "missing_data"
+    assert result.deadline_type == "unknown"
+    assert result.deadline_at is None

@@ -412,6 +412,14 @@ async def update_intake(
         intake.funding_source = data.funding_source
     if data.funding_notes is not None:
         intake.funding_notes = data.funding_notes
+    if data.notice_published_at is not None:
+        intake.notice_published_at = data.notice_published_at
+    if data.finder_claims_ownership is not None:
+        intake.finder_claims_ownership = data.finder_claims_ownership
+    if data.municipality_irrevocably_transferred is not None:
+        intake.municipality_irrevocably_transferred = (
+            data.municipality_irrevocably_transferred
+        )
     if data.notes is not None:
         intake.notes = data.notes
 
