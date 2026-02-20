@@ -17,7 +17,7 @@ interface UpcomingOutcomesWidgetProps {
 const speciesIcons: Record<string, React.ElementType> = {
   dog: Dog,
   cat: Cat,
-  rabbit: Rabbit,
+  rodent: Rabbit,
   bird: Bird,
   other: Rabbit,
 };

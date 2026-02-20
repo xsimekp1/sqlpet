@@ -53,11 +53,11 @@ interface Contact {
   email: string | null;
 }
 
-const SPECIES = ['dog', 'cat', 'rabbit', 'bird', 'other'];
+const SPECIES = ['dog', 'cat', 'rodent', 'bird', 'other'];
 const SPECIES_ICONS: Record<string, string> = {
   dog: '🐕',
   cat: '🐈',
-  rabbit: '🐰',
+  rodent: '🐹',
   bird: '🐦',
   other: '🐾',
 };
@@ -65,7 +65,7 @@ const SPECIES_ICONS: Record<string, string> = {
 const SPECIES_LABELS: Record<string, string> = {
   dog: 'Pes',
   cat: 'Kočka',
-  rabbit: 'Králík',
+  rodent: 'Hlodavec',
   bird: 'Pták',
   other: 'Jiné',
 };

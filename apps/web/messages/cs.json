@@ -562,7 +562,7 @@
       "capacitiesDesc": "Maximální kapacity útulku pro jednotlivé druhy zvířat",
       "dogs": "Psi",
       "cats": "Kočky",
-      "rabbits": "Králíci",
+      "rabbits": "Hlodavci",
       "small": "Hlodavci",
       "birds": "Ptáci",
       "save": "Uložit",
@@ -607,7 +607,7 @@
       "deleteError": "Nepodařilo se smazat obrázek",
       "species_dog": "Pes",
       "species_cat": "Kočka",
-      "species_rabbit": "Králík",
+      "species_rodent": "Hlodavec",
       "species_bird": "Pták",
       "species_other": "Jiné"
     },
@@ -663,7 +663,7 @@
       "label": "Druh",
       "dog": "Pes",
       "cat": "Kočka",
-      "rabbit": "Králík",
+      "rodent": "Hlodavec",
       "bird": "Pták",
       "other": "Jiné"
     },

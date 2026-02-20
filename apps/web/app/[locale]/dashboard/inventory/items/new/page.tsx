@@ -24,7 +24,7 @@ import { UNIT_OPTIONS } from '@/app/lib/constants';
 const SPECIES_OPTIONS = [
   { value: 'dog',    label: '🐕 Pes' },
   { value: 'cat',    label: '🐈 Kočka' },
-  { value: 'rabbit', label: '🐇 Králík' },
+  { value: 'rodent', label: '🐹 Hlodavec' },
   { value: 'bird',   label: '🐦 Pták' },
   { value: 'other',  label: '🐾 Jiné' },
 ] as const;

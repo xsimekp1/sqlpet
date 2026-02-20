@@ -83,7 +83,7 @@ interface BreedAdmin {
   translations: BreedTranslation[];
 }
 
-const SPECIES_VALUES = ['dog', 'cat', 'rabbit', 'bird', 'other'] as const;
+const SPECIES_VALUES = ['dog', 'cat', 'rodent', 'bird', 'other'] as const;
 
 export default function SettingsPage() {
   const t = useTranslations('settings');
@@ -606,6 +606,15 @@ export default function SettingsPage() {
                     >
                       <span className="w-3 h-3 rounded-full bg-violet-600 mr-2"></span>
                       Berry Rescue
+                    </Button>
+                    <Button
+                      variant={theme === 'safari' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTheme('safari')}
+                      className={theme === 'safari' ? 'bg-amber-700 hover:bg-amber-800' : ''}
+                    >
+                      <span className="w-3 h-3 rounded-full bg-amber-700 mr-2"></span>
+                      Safari Shelter
                     </Button>
                   </div>
                 </div>

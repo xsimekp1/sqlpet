@@ -22,7 +22,7 @@ from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDelet
 class Species(str, enum.Enum):
     DOG = "dog"
     CAT = "cat"
-    RABBIT = "rabbit"
+    RODENT = "rodent"
     BIRD = "bird"
     OTHER = "other"
 

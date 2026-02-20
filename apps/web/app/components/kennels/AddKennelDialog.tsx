@@ -36,11 +36,11 @@ import ApiClient, { Kennel, KennelZone } from '@/app/lib/api';
 import { toast } from 'sonner';
 
 const SPECIES_OPTIONS = [
-  { value: 'dog',    label: '🐕 Pes',    autoName: 'Kotec' },
-  { value: 'cat',    label: '🐈 Kočka',  autoName: 'Kotec' },
-  { value: 'rabbit', label: '🐇 Králík', autoName: 'Kotec' },
-  { value: 'bird',   label: '🐦 Pták',   autoName: 'Voliéra' },
-  { value: 'other',  label: '🐾 Jiné',   autoName: 'Kotec' },
+  { value: 'dog',    label: '🐕 Pes',      autoName: 'Kotec' },
+  { value: 'cat',    label: '🐈 Kočka',    autoName: 'Kotec' },
+  { value: 'rodent', label: '🐹 Hlodavec', autoName: 'Klec' },
+  { value: 'bird',   label: '🐦 Pták',     autoName: 'Voliéra' },
+  { value: 'other',  label: '🐾 Jiné',     autoName: 'Kotec' },
 ] as const;
 
 function getAutoName(species: string[]): string | null {

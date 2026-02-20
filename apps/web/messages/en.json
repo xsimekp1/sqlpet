@@ -629,7 +629,7 @@
       "capacitiesDesc": "Maximum shelter capacities for each species",
       "dogs": "Dogs",
       "cats": "Cats",
-      "rabbits": "Rabbits",
+      "rabbits": "Rodents",
       "small": "Small Animals",
       "birds": "Birds",
       "save": "Save",
@@ -674,7 +674,7 @@
       "deleteError": "Failed to delete image",
       "species_dog": "Dog",
       "species_cat": "Cat",
-      "species_rabbit": "Rabbit",
+      "species_rodent": "Rodent",
       "species_bird": "Bird",
       "species_other": "Other"
     },

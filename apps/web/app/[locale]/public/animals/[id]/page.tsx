@@ -43,7 +43,7 @@ const SPECIES_CONFIG: Record<string, { emoji: string; label: string; icon: typeo
   dog: { emoji: '🐕', label: 'Pes', icon: Dog },
   cat: { emoji: '🐈', label: 'Kočka', icon: Cat },
   bird: { emoji: '🐦', label: 'Pták', icon: PawPrint },
-  rabbit: { emoji: '🐇', label: 'Králík', icon: PawPrint },
+  rodent: { emoji: '🐹', label: 'Hlodavec', icon: PawPrint },
   other: { emoji: '🐾', label: 'Jiné', icon: PawPrint },
 };
 

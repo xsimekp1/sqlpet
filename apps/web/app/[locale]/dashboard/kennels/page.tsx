@@ -269,7 +269,7 @@ const SPECIES_BADGE: Record<string, { emoji: string; bg: string; title: string }
   dog:    { emoji: '🐕', bg: 'bg-amber-100 text-amber-700',   title: 'Pes' },
   cat:    { emoji: '🐈', bg: 'bg-purple-100 text-purple-700', title: 'Kočka' },
   bird:   { emoji: '🐦', bg: 'bg-sky-100 text-sky-700',       title: 'Pták' },
-  rabbit: { emoji: '🐇', bg: 'bg-pink-100 text-pink-700',     title: 'Králík' },
+  rodent: { emoji: '🐹', bg: 'bg-pink-100 text-pink-700',     title: 'Hlodavec' },
   other:  { emoji: '🐾', bg: 'bg-gray-100 text-gray-600',     title: 'Jiné' },
 };
 

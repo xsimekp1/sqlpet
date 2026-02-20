@@ -50,10 +50,10 @@ const SPECIES_CONFIG: Record<string, { emoji: string; label: string; bg: string 
   dog:    { emoji: '🐕', label: 'Pes',    bg: 'bg-amber-100 text-amber-700' },
   cat:    { emoji: '🐈', label: 'Kočka',  bg: 'bg-purple-100 text-purple-700' },
   bird:   { emoji: '🐦', label: 'Pták',   bg: 'bg-sky-100 text-sky-700' },
-  rabbit: { emoji: '🐇', label: 'Králík', bg: 'bg-pink-100 text-pink-700' },
+  rodent: { emoji: '🐹', label: 'Hlodavec', bg: 'bg-pink-100 text-pink-700' },
   other:  { emoji: '🐾', label: 'Jiné',   bg: 'bg-gray-100 text-gray-600' },
 };
-const ALL_SPECIES = ['dog', 'cat', 'bird', 'rabbit', 'other'];
+const ALL_SPECIES = ['dog', 'cat', 'bird', 'rodent', 'other'];
 
 const getStatusColor = (status: string) => {
   switch (status) {

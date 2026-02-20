@@ -233,7 +233,7 @@ export default function NewAnimalPage() {
                       <SelectContent>
                         <SelectItem value="dog">{tSpecies('dog')}</SelectItem>
                         <SelectItem value="cat">{tSpecies('cat')}</SelectItem>
-                        <SelectItem value="rabbit">{tSpecies('rabbit')}</SelectItem>
+                        <SelectItem value="rodent">{tSpecies('rodent')}</SelectItem>
                         <SelectItem value="bird">{tSpecies('bird')}</SelectItem>
                         <SelectItem value="other">{tSpecies('other')}</SelectItem>
                       </SelectContent>

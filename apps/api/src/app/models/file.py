@@ -91,7 +91,7 @@ class DefaultAnimalImage(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     species: str = Column(
         String(20), nullable=False, index=True
-    )  # 'dog', 'cat', 'rabbit', 'bird'
+    )  # 'dog', 'cat', 'rodent', 'bird'
     breed_id: str = Column(
         UUID(as_uuid=True),
         ForeignKey("breeds.id", ondelete="SET NULL"),

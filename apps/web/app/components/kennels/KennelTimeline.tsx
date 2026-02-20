@@ -34,7 +34,7 @@ const SPECIES_ICONS: Record<string, typeof Rabbit> = {
   dog: Dog,
   cat: Cat,
   bird: Bird,
-  rabbit: Rabbit,
+  rodent: Rabbit,
   other: Rabbit,
 };
 

@@ -72,7 +72,7 @@ const createCustomIcon = (color: string, emoji: string) => {
 
 const dogIcon = createCustomIcon('#3b82f6', '🐕');
 const catIcon = createCustomIcon('#f97316', '🐈');
-const rabbitIcon = createCustomIcon('#8b5cf6', '🐰');
+const rodentIcon = createCustomIcon('#8b5cf6', '🐹');
 const birdIcon = createCustomIcon('#10b981', '🐦');
 const otherIcon = createCustomIcon('#6b7280', '🐾');
 
@@ -114,7 +114,7 @@ function getIconForSpecies(species: string | null): L.DivIcon {
   const s = species.toLowerCase();
   if (s === 'dog') return dogIcon;
   if (s === 'cat') return catIcon;
-  if (s === 'rabbit') return rabbitIcon;
+  if (s === 'rodent') return rodentIcon;
   if (s === 'bird') return birdIcon;
   return otherIcon;
 }

@@ -34,7 +34,7 @@ const SPECIES_CONFIG: Record<string, { emoji: string; label: string }> = {
   dog: { emoji: '🐕', label: 'Pes' },
   cat: { emoji: '🐈', label: 'Kočka' },
   bird: { emoji: '🐦', label: 'Pták' },
-  rabbit: { emoji: '🐇', label: 'Králík' },
+  rodent: { emoji: '🐹', label: 'Hlodavec' },
   other: { emoji: '🐾', label: 'Jiné' },
 };
 

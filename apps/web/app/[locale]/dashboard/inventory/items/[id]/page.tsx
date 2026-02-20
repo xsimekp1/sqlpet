@@ -51,7 +51,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 const SPECIES_LABELS: Record<string, string> = {
   dog: 'Pes',
   cat: 'Kočka',
-  rabbit: 'Králík',
+  rodent: 'Hlodavec',
   bird: 'Pták',
   small_animal: 'Drobné zvíře',
   reptile: 'Plaz',
