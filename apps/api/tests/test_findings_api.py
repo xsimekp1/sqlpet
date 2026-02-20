@@ -348,3 +348,50 @@ class TestFindingsAPI:
         assert data["page_size"] == 2
         assert data["total"] == 3
         assert len(data["items"]) == 2
+
+    async def test_map_data_returns_organization_coords(
+        self, client: AsyncClient, findings_with_data
+    ):
+        """Test /findings/map-data returns organization coordinates."""
+        org_id = findings_with_data["org_id"]
+        user_id = findings_with_data["findings"][0].id
+
+        response = await client.get(
+            "/findings/map-data",
+            headers=get_auth_headers(user_id, org_id),
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "organization" in data
+        assert "findings" in data
+        assert isinstance(data["findings"], list)
+
+    async def test_map_data_returns_findings_with_gps(
+        self, client: AsyncClient, findings_with_data
+    ):
+        """Test /findings/map-data returns only findings with GPS coordinates."""
+        org_id = findings_with_data["org_id"]
+        user_id = findings_with_data["findings"][0].id
+
+        response = await client.get(
+            "/findings/map-data",
+            headers=get_auth_headers(user_id, org_id),
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["findings"]) == 2  # Only 2 findings have GPS
+
+    async def test_map_data_without_auth_returns_401(
+        self, client: AsyncClient, findings_with_data
+    ):
+        """Test /findings/map-data returns 401 without auth."""
+        org_id = findings_with_data["org_id"]
+
+        response = await client.get(
+            "/findings/map-data",
+            headers={"X-Organization-Id": str(org_id)},
+        )
+
+        assert response.status_code == 401
