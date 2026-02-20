@@ -20,9 +20,20 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
-    op.execute("ALTER TYPE animal_status_enum ADD VALUE 'with_owner'")
-    op.execute("ALTER TYPE animal_status_enum ADD VALUE 'lost'")
+    """Upgrade schema - idempotent: only add if not exists."""
+    # Check if 'with_owner' exists, add if not
+    result = op.execute(
+        "SELECT 1 FROM pg_enum WHERE enumlabel = 'with_owner' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'animal_status_enum')"
+    ).fetchone()
+    if not result:
+        op.execute("ALTER TYPE animal_status_enum ADD VALUE 'with_owner'")
+
+    # Check if 'lost' exists, add if not
+    result = op.execute(
+        "SELECT 1 FROM pg_enum WHERE enumlabel = 'lost' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'animal_status_enum')"
+    ).fetchone()
+    if not result:
+        op.execute("ALTER TYPE animal_status_enum ADD VALUE 'lost'")
 
 
 def downgrade() -> None:

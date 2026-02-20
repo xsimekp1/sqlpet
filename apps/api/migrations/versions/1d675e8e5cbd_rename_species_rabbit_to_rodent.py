@@ -20,8 +20,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Upgrade schema - rename rabbit to rodent in all tables."""
-    # First update the data
+    """Upgrade schema - rename rabbit to rodent in all tables (idempotent)."""
+    # First update the data - only if rabbit exists
     op.execute("UPDATE animals SET species = 'rodent' WHERE species = 'rabbit'")
     op.execute(
         "UPDATE inventory_items SET target_species = 'rodent' WHERE target_species = 'rabbit'"
@@ -30,18 +30,30 @@ def upgrade() -> None:
         "UPDATE food SET target_species = 'rodent' WHERE target_species = 'rabbit'"
     )
 
-    # Then alter the enum type to remove 'rabbit'
-    op.execute("ALTER TYPE species_enum RENAME TO species_enum_old")
-    op.execute(
-        "CREATE TYPE species_enum AS ENUM ('dog', 'cat', 'rodent', 'bird', 'other')"
-    )
-    op.execute(
-        "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
-    )
-    op.execute(
-        "ALTER TABLE default_animal_images ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
-    )
-    op.execute("DROP TYPE species_enum_old")
+    # Check if 'rabbit' still exists in enum, then rename
+    result = op.execute(
+        "SELECT 1 FROM pg_enum WHERE enumlabel = 'rabbit' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum')"
+    ).fetchone()
+
+    if result:
+        # Check if 'rodent' doesn't already exist
+        result_rodent = op.execute(
+            "SELECT 1 FROM pg_enum WHERE enumlabel = 'rodent' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum')"
+        ).fetchone()
+
+        if not result_rodent:
+            # Rename the enum type
+            op.execute("ALTER TYPE species_enum RENAME TO species_enum_old")
+            op.execute(
+                "CREATE TYPE species_enum AS ENUM ('dog', 'cat', 'rodent', 'bird', 'other')"
+            )
+            op.execute(
+                "ALTER TABLE animals ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+            )
+            op.execute(
+                "ALTER TABLE default_animal_images ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
+            )
+            op.execute("DROP TYPE species_enum_old")
 
 
 def downgrade() -> None:
