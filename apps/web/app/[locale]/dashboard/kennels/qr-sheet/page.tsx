@@ -26,7 +26,7 @@ export default function KennelQRSheetPage() {
     async function loadKennels() {
       try {
         const data = await ApiClient.getKennels();
-        setKennels(Array.isArray(data) ? data : data.items);
+        setKennels(data);
       } catch (error) {
         console.error('Failed to load kennels:', error);
         toast.error('Nepodařilo se načíst kotce');
