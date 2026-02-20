@@ -90,7 +90,7 @@ export function NavItem({
         isActive && 'bg-accent font-medium'
       )}
     >
-      <Icon className="h-5 w-5 shrink-0" />
+      <Icon className={cn("h-5 w-5 shrink-0 transition-colors hover:text-blue-600 dark:hover:text-blue-400")} />
       {!collapsed && (
         <span className={cn("truncate", isActive && "font-medium")}>{t(label)}</span>
       )}
@@ -111,7 +111,7 @@ export function NavItem({
         )}
         title={t('errors.noPermission')}
       >
-        <Icon className="h-5 w-5 shrink-0" />
+      <Icon className={cn("h-5 w-5 shrink-0 transition-colors hover:text-blue-600 dark:hover:text-blue-400")} />
         {!collapsed && <span>{t(label)}</span>}
       </div>
     )

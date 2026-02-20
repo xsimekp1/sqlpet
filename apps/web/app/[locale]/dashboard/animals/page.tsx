@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/app/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { userHasPermission } from '@/app/lib/permissions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -58,7 +59,7 @@ const getStatusColor = (status: string) => {
 };
 
 const SPECIES_EMOJI: Record<string, string> = {
-  dog: '🐕', cat: '🐈', rabbit: '🐇', bird: '🐦', other: '🐾',
+  dog: '🐕', cat: '🐈', rodent: '🐹', bird: '🐦', other: '🐾',
 };
 
 const AGE_LABELS: Record<string, string> = {
@@ -68,8 +69,9 @@ const AGE_LABELS: Record<string, string> = {
   senior: 'Senior',
 };
 
-function formatBreedName(b: { display_name?: string; breed_name: string }): string {
+function formatBreedName(b: { display_name?: string; breed_name?: string }): string {
   if (b.display_name) return b.display_name;
+  if (!b.breed_name) return '—';
   // Prettify slug: "akita-inu" → "Akita Inu"
   return b.breed_name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
