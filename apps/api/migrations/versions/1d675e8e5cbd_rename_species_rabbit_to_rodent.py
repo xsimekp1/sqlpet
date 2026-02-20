@@ -23,16 +23,21 @@ def upgrade() -> None:
     """Upgrade schema - rename rabbit to rodent in all tables (idempotent)."""
     conn = op.get_bind()
 
-    # Step 1: Add 'rodent' to enum if not exists (idempotent)
+    # Step 1: Check if 'rodent' already exists
     result_rodent = conn.execute(
         sa.text(
             "SELECT 1 FROM pg_enum WHERE enumlabel = 'rodent' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum')"
         )
     ).fetchone()
+
+    # Step 1a: Add 'rodent' to enum if not exists and commit
     if not result_rodent:
         conn.execute(sa.text("ALTER TYPE species_enum ADD VALUE 'rodent'"))
+        # Commit to make the new enum value available
+        conn.execute(sa.text("COMMIT"))
+        conn.execute(sa.text("BEGIN"))
 
-    # Step 2: Convert column to VARCHAR to avoid "uncommitted enum" issue
+    # Step 2: Convert column to VARCHAR
     conn.execute(sa.text("ALTER TABLE animals ALTER COLUMN species TYPE VARCHAR(20)"))
     conn.execute(
         sa.text(
@@ -40,26 +45,31 @@ def upgrade() -> None:
         )
     )
 
-    # Step 3: Now update the data - only if rabbit exists
+    # Step 3: Update the data from rabbit to rodent
     conn.execute(
         sa.text("UPDATE animals SET species = 'rodent' WHERE species = 'rabbit'")
     )
+    conn.execute(
+        sa.text("UPDATE default_animal_images SET species = 'rodent' WHERE species = 'rabbit'")
+    )
 
-    # Step 4: Remove 'rabbit' from enum - only if 'rabbit' still exists and 'rodent' exists
+    # Step 4: Check if 'rabbit' still exists in enum
     result_rabbit = conn.execute(
         sa.text(
             "SELECT 1 FROM pg_enum WHERE enumlabel = 'rabbit' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum')"
         )
     ).fetchone()
 
-    if result_rabbit and result_rodent:
-        # Rename the enum type to remove 'rabbit'
+    # Step 4a: If rabbit exists, recreate enum without it
+    if result_rabbit:
         conn.execute(sa.text("ALTER TYPE species_enum RENAME TO species_enum_old"))
         conn.execute(
             sa.text(
                 "CREATE TYPE species_enum AS ENUM ('dog', 'cat', 'rodent', 'bird', 'other')"
             )
         )
+        # Drop old enum if it exists
+        conn.execute(sa.text("DROP TYPE IF EXISTS species_enum_old"))
 
     # Step 5: Convert back to enum
     conn.execute(
@@ -72,15 +82,6 @@ def upgrade() -> None:
             "ALTER TABLE default_animal_images ALTER COLUMN species TYPE species_enum USING species::text::species_enum"
         )
     )
-
-    # Step 6: Drop old enum if still exists
-    result_rabbit_after = conn.execute(
-        sa.text(
-            "SELECT 1 FROM pg_enum WHERE enumlabel = 'rabbit' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'species_enum_old')"
-        )
-    ).fetchone()
-    if result_rabbit_after:
-        conn.execute(sa.text("DROP TYPE species_enum_old"))
 
 
 def downgrade() -> None:
