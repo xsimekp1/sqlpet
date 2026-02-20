@@ -135,6 +135,22 @@ export interface Animal {
   breeds?: AnimalBreed[];
   tags?: { id: string; name: string; color?: string }[];
   identifiers?: AnimalIdentifier[];
+  
+  // Intake info
+  current_intake_reason?: string | null;
+  
+  // Legal deadline (for found animals)
+  legal_deadline_at?: string | null;
+  legal_deadline_type?: string | null;
+  legal_deadline_days_left?: number | null;
+  legal_deadline_state?: string | null;
+  legal_deadline_label?: string | null;
+  
+  // Intake legal fields
+  notice_published_at?: string | null;
+  finder_claims_ownership?: boolean | null;
+  municipality_irrevocably_transferred?: boolean | null;
+  
   created_at: string;
   updated_at: string;
 }
@@ -1423,6 +1439,18 @@ class ApiClient {
     data: { outcome: 'adopted' | 'deceased' | 'lost' | 'hotel_end'; notes?: string },
   ): Promise<any> {
     return this.post(`/intakes/${intakeId}/close`, data);
+  }
+
+  // Update intake (including legal deadline fields)
+  static async updateIntake(
+    intakeId: string,
+    data: {
+      notice_published_at?: string | null;
+      finder_claims_ownership?: boolean | null;
+      municipality_irrevocably_transferred?: boolean | null;
+    },
+  ): Promise<any> {
+    return this.patch(`/intakes/${intakeId}`, data);
   }
 
   // Upcoming outcomes types

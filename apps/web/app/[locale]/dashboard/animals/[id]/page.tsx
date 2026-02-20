@@ -177,6 +177,15 @@ export default function AnimalDetailPage() {
   const [intakeDateInput, setIntakeDateInput] = useState('');
   const [savingIntakeDate, setSavingIntakeDate] = useState(false);
 
+  // Legal deadline editing
+  const [editingLegalDeadline, setEditingLegalDeadline] = useState(false);
+  const [legalDeadlineForm, setLegalDeadlineForm] = useState({
+    notice_published_at: '',
+    finder_claims_ownership: '' as '' | 'true' | 'false',
+    municipality_irrevocably_transferred: '' as '' | 'true' | 'false',
+  });
+  const [savingLegalDeadline, setSavingLegalDeadline] = useState(false);
+
   // Superadmin: delete stay
   const [deletingStay, setDeletingStay] = useState(false);
 
@@ -745,6 +754,47 @@ if (photoInputRef.current) photoInputRef.current.value = '';
     }
   };
 
+  const handleSaveLegalDeadline = async () => {
+    if (!animal) return;
+    setSavingLegalDeadline(true);
+    try {
+      // Find the intake ID for this animal
+      const intakes = await ApiClient.get('/intakes', { animal_id: animal.id });
+      const activeIntake = Array.isArray(intakes) && intakes.length > 0 ? intakes[0] : null;
+      
+      if (!activeIntake?.id) {
+        toast.error('Neexistuje intake záznam');
+        return;
+      }
+
+      await ApiClient.patch(`/intakes/${activeIntake.id}`, {
+        notice_published_at: legalDeadlineForm.notice_published_at || null,
+        finder_claims_ownership: legalDeadlineForm.finder_claims_ownership === '' ? null : legalDeadlineForm.finder_claims_ownership === 'true',
+        municipality_irrevocably_transferred: legalDeadlineForm.municipality_irrevocably_transferred === '' ? null : legalDeadlineForm.municipality_irrevocably_transferred === 'true',
+      });
+      
+      // Refresh animal data
+      const updated = await ApiClient.getAnimal(animal.id);
+      setAnimal(updated);
+      toast.success('Nálezové lhůty aktualizovány');
+      setEditingLegalDeadline(false);
+    } catch (e: any) {
+      toast.error(e.message || 'Chyba při ukládání');
+    } finally {
+      setSavingLegalDeadline(false);
+    }
+  };
+
+  const startEditLegalDeadline = () => {
+    if (!animal) return;
+    setLegalDeadlineForm({
+      notice_published_at: animal.notice_published_at?.split('T')[0] || '',
+      finder_claims_ownership: animal.finder_claims_ownership === null ? '' : animal.finder_claims_ownership ? 'true' : 'false',
+      municipality_irrevocably_transferred: animal.municipality_irrevocably_transferred === null ? '' : animal.municipality_irrevocably_transferred ? 'true' : 'false',
+    });
+    setEditingLegalDeadline(true);
+  };
+
   const handleDeleteCurrentStay = async () => {
     if (!animal || !animal.current_kennel_id) return;
     if (!confirm('Opravdu chcete smazat aktuální pobyt v kotci? Tato akce je nevratná.')) return;
@@ -1005,6 +1055,103 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                     ✏️
                   </Button>
                 </>
+              )}
+            </div>
+          )}
+
+          {/* Legal Deadline Section - for found animals */}
+          {animal.current_intake_reason === 'found' && (
+            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-amber-800 dark:text-amber-200 text-sm">
+                  ⚖️ Nálezové lhůty
+                </h4>
+                {isSuperadmin && !editingLegalDeadline && (
+                  <Button size="sm" variant="ghost" onClick={startEditLegalDeadline} className="h-6 text-xs">
+                    ✏️
+                  </Button>
+                )}
+              </div>
+              
+              {editingLegalDeadline ? (
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs w-24">Vyhlášení obcí:</label>
+                    <Input
+                      type="date"
+                      value={legalDeadlineForm.notice_published_at}
+                      onChange={(e) => setLegalDeadlineForm({ ...legalDeadlineForm, notice_published_at: e.target.value })}
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs w-24">Nálezce chce:</label>
+                    <Select
+                      value={legalDeadlineForm.finder_claims_ownership}
+                      onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, finder_claims_ownership: v as '' | 'true' | 'false' })}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue placeholder="--" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">--</SelectItem>
+                        <SelectItem value="true">Ano</SelectItem>
+                        <SelectItem value="false">Ne</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs w-24">Obec převedla:</label>
+                    <Select
+                      value={legalDeadlineForm.municipality_irrevocably_transferred}
+                      onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, municipality_irrevocably_transferred: v as '' | 'true' | 'false' })}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue placeholder="--" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">--</SelectItem>
+                        <SelectItem value="true">Ano</SelectItem>
+                        <SelectItem value="false">Ne</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Button size="sm" onClick={handleSaveLegalDeadline} disabled={savingLegalDeadline} className="h-7 text-xs">
+                      {savingLegalDeadline ? '...' : '💾 Uložit'}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingLegalDeadline(false)} className="h-7 text-xs">
+                      ✕
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1 text-sm">
+                  {animal.legal_deadline_state === 'missing_data' ? (
+                    <div className="text-red-600 dark:text-red-400">
+                      ⚠️ {animal.legal_deadline_label || 'Chybí údaje pro výpočet lhůty'}
+                    </div>
+                  ) : animal.legal_deadline_state === 'expired' ? (
+                    <div className="text-red-600 dark:text-red-400 font-semibold">
+                      ❌ Lhůta vypršela
+                      {animal.legal_deadline_label && <span className="font-normal ml-1">({animal.legal_deadline_label})</span>}
+                    </div>
+                  ) : animal.legal_deadline_days_left !== null && animal.legal_deadline_days_left <= 14 ? (
+                    <div className="text-orange-600 dark:text-orange-400 font-semibold">
+                      ⏰ Zbývá {animal.legal_deadline_days_left} dní
+                      {animal.legal_deadline_label && <span className="font-normal ml-1">({animal.legal_deadline_label})</span>}
+                    </div>
+                  ) : (
+                    <div className="text-green-600 dark:text-green-400">
+                      ✓ {animal.legal_deadline_label || 'Bez lhůty'}
+                    </div>
+                  )}
+                  {animal.notice_published_at && (
+                    <div className="text-xs text-muted-foreground">
+                      Vyhlášeno: {new Date(animal.notice_published_at).toLocaleDateString('cs-CZ')}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
