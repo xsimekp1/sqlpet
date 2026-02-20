@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 
-export type Theme = 'teal' | 'berry';
+export type Theme = 'teal' | 'berry' | 'safari';
 
 const THEME_KEY = 'sqlpet_theme';
 
 export function getStoredTheme(): Theme {
   if (typeof window === 'undefined') return 'teal';
   const stored = localStorage.getItem(THEME_KEY);
-  if (stored === 'teal' || stored === 'berry') return stored;
+  if (stored === 'teal' || stored === 'berry' || stored === 'safari') return stored;
   return 'teal';
 }
 
@@ -23,22 +23,22 @@ export function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme);
 }
 
-export function useTheme() {
-  const [theme, setTheme] = useState<Theme>('teal');
+export function useTheme(): { theme: Theme; setTheme: (theme: Theme) => void; mounted: boolean } {
+  const [theme, setThemeState] = useState<Theme>('teal');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const stored = getStoredTheme();
-    setTheme(stored);
+    setThemeState(stored);
     applyTheme(stored);
     setMounted(true);
   }, []);
 
-  const toggleTheme = (newTheme: Theme) => {
-    setTheme(newTheme);
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
     setStoredTheme(newTheme);
     applyTheme(newTheme);
   };
 
-  return { theme, setTheme: toggleTheme, mounted };
+  return { theme, setTheme, mounted };
 }
