@@ -987,6 +987,7 @@
       "remove": "Sundat obojek",
       "none": "Bez obojku",
       "select": "Vybrat barvu obojku",
+      "hint": "Pro identifikaci štěňat/koťat ve vrhu",
       "colors": {
         "red": "Červený",
         "blue": "Modrý",

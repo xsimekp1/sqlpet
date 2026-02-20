@@ -1050,6 +1050,7 @@
       "remove": "Remove collar",
       "none": "No collar",
       "select": "Select collar color",
+      "hint": "For identifying puppies/kittens in a litter",
       "colors": {
         "red": "Red",
         "blue": "Blue",

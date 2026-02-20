@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Edit, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import ApiClient from '@/app/lib/api';
+import { COLLAR_COLORS, getCollarColor, type CollarColor } from '@/app/lib/collarColors';
 
 interface Breed {
   id: string;
@@ -98,6 +99,7 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
     sex: animal.sex,
     breed_id: animal.breeds?.[0]?.breed_id || '',
     color: animal.color || '',
+    collar_color: animal.collar_color || '',
     ageMode: 'years' as 'years' | 'date',
     ageYears: getInitialAgeYears(),
     ageBirthDate: ((animal as any).birth_date_estimated as string | null) ?? '',
@@ -160,6 +162,9 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
       }
       if (editedData.color !== (animal.color || '')) {
         updateData.color = editedData.color || null;
+      }
+      if (editedData.collar_color !== (animal.collar_color || '')) {
+        updateData.collar_color = editedData.collar_color || null;
       }
       // Compute birth_date_estimated from age input
       let newBirthDate: string | null = null;
@@ -278,6 +283,38 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
           </div>
         )}
 
+        {/* Collar Color (for litter identification) */}
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">{t('collar.label')}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`px-3 py-1.5 rounded border transition-colors ${!editedData.collar_color ? 'bg-primary text-primary-foreground border-primary' : 'border-input hover:bg-accent'}`}
+              onClick={() => setEditedData(prev => ({ ...prev, collar_color: '' }))}
+              disabled={isSaving}
+            >
+              {t('collar.none')}
+            </button>
+            {COLLAR_COLORS.map((color) => {
+              const config = getCollarColor(color);
+              if (!config) return null;
+              return (
+                <button
+                  key={color}
+                  type="button"
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded border transition-colors ${editedData.collar_color === color ? 'ring-2 ring-primary ring-offset-2' : 'border-input hover:bg-accent'}`}
+                  onClick={() => setEditedData(prev => ({ ...prev, collar_color: color }))}
+                  disabled={isSaving}
+                >
+                  <div className={`w-4 h-4 rounded-full ${config.bg} ${config.darkBg} border-2 border-white dark:border-gray-800`} />
+                  <span className="text-sm capitalize">{t(`collar.colors.${color}`)}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">{t('collar.hint')}</p>
+        </div>
+
         {/* Age / Birth date */}
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Věk</p>
@@ -391,6 +428,37 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
           <p className="font-medium">{animal.color ? t(`colors.${animal.color}` as any) || animal.color : '—'}</p>
         </div>
       )}
+
+      {/* Collar Color - editable */}
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground flex items-center gap-2">
+          {t('collar.label')}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={startEdit}
+            className="h-6 w-6 p-0"
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+        </p>
+        {animal.collar_color ? (
+          <div className="flex items-center gap-2">
+            {(() => {
+              const config = getCollarColor(animal.collar_color);
+              if (!config) return <span className="text-muted-foreground">—</span>;
+              return (
+                <>
+                  <div className={`w-4 h-4 rounded-full ${config.bg} ${config.darkBg} border-2 border-white dark:border-gray-800`} />
+                  <span className="font-medium capitalize">{t(`collar.colors.${animal.collar_color}`)}</span>
+                </>
+              );
+            })()}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </div>
 
       {/* Age (computed from birth_date_estimated) - editable */}
       <div className="space-y-1">
