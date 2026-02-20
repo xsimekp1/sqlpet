@@ -155,12 +155,31 @@ export function Sidebar() {
   })).filter(section => section.items.length > 0)
 
   return (
-    <aside
-      className={cn(
-        'hidden lg:flex flex-col border-r bg-card transition-all duration-300',
-        sidebarCollapsed ? 'w-16' : 'w-64'
+    <>
+      {/* Mobile overlay backdrop */}
+      {!sidebarCollapsed && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity"
+          onClick={toggleSidebar}
+        />
       )}
-    >
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          // Mobile: fixed overlay, slide in from left
+          'fixed lg:relative inset-y-0 left-0 z-50',
+          'flex flex-col border-r bg-card transition-all duration-300',
+          // Mobile visibility
+          'lg:flex',
+          sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0',
+          // Desktop width
+          'w-64 lg:w-auto',
+          !sidebarCollapsed && 'lg:w-64',
+          sidebarCollapsed && 'lg:w-16'
+        )}
+      >
+    </>
       {/* Logo / Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b">
         {/* Hidden file input (shared) */}
@@ -265,6 +284,12 @@ export function Sidebar() {
                       }
                     }}
                     onHoverEnd={() => setHoverBounds(null)}
+                    onNavigate={() => {
+                      // Close sidebar on mobile after navigation
+                      if (window.innerWidth < 1024) {
+                        toggleSidebar()
+                      }
+                    }}
                   />
                 )
               })}

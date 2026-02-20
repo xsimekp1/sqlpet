@@ -29,6 +29,7 @@ interface NavItemProps {
   isActive?: boolean
   onHoverStart?: (bounds: DOMRect) => void
   onHoverEnd?: () => void
+  onNavigate?: () => void
   shortcut?: string
 }
 
@@ -42,6 +43,7 @@ export function NavItem({
   isActive = false,
   onHoverStart,
   onHoverEnd,
+  onNavigate,
   shortcut
 }: NavItemProps) {
   const t = useTranslations()
@@ -64,6 +66,9 @@ export function NavItem({
   const handleClick = () => {
     if (actionConfig) {
       trackClick()
+    }
+    if (onNavigate) {
+      onNavigate()
     }
   }
 
