@@ -1,0 +1,248 @@
+EPIC: Barevné obojky pro novorozená mláďata (Kotěcí “litter identification”)
+Problém
+
+Když se narodí koťata (nebo štěňata) v jednom kotci, jsou vizuálně téměř nerozlišitelná. Potřebujeme jednoduchý systém identifikace mláďat pomocí barevných obojků (max 8 základních barev), který se automaticky nastaví při vytvoření porodu, je snadno editovatelný, a je viditelný v UI (grid i list).
+
+Cíl MVP
+
+Při akci “Porod / Create litter” systém automaticky přiřadí mláďatům unikátní barvy obojků (z palety max 8).
+
+Uživatel může u každého mláděte barvu změnit nebo obojek sundat.
+
+Barva je jasně viditelná v grid kartě i v řádkovém zobrazení.
+
+Zároveň je to auditovatelné (kdo změnil obojek, kdy).
+
+Uživatelské scénáře
+1) Porod → automatické barvy
+
+Kde: Detail samice / kotce / událost “Porod” (už existuje BirthDialog apod.)
+
+Uživatel klikne na “Porod”
+
+Zadá počet mláďat (např. 5) a základní info (dle stávajícího flow)
+
+Před potvrzením dialog ukáže “Náhled mláďat”:
+
+seznam mláďat 1..N
+
+každé má předvybranou barvu obojku (unikátní)
+
+dropdown pro změnu barvy
+
+možnost “Bez obojku”
+
+Uložit → vytvoří se N zvířat + přiřazené obojky
+
+Automatické přidělení barev:
+
+Paleta 8 barev (viz níže)
+
+Přiřazuj postupně (round-robin), primárně unikátně dokud jsou volné
+
+Když je mláďat víc než 8:
+
+barvy se opakují, ale UI ukáže varování “Barvy se opakují”
+
+uživatel může ručně upravit (neřešíme teď komplexní vzory)
+
+2) Změna barvy obojku (později)
+
+Kde: Detail zvířete (kotě), případně inline z listu (volitelné)
+
+Uživatel klikne na “Obojek” (badge/ikona)
+
+Vybere jinou barvu
+
+Uloží se změna + audit log
+
+3) Sundání obojku
+
+Kde: Detail zvířete
+
+Akce “Sundat obojek”
+
+Stav obojku přejde na none (nebo inactive) + datum sundání
+
+V gridu zmizí barevný pruh / zobrazí se neutrální
+
+UI Specifikace
+A) Grid zobrazení zvířat (karty)
+
+Na kartě zvířete (malé):
+
+Fotka
+
+Jméno
+
+Public code
+
+Věk (odhad)
+
+Vizuální indikace obojku:
+
+barevný “pruh přes roh” (corner ribbon) přes horní levý roh fotky/karty
+
+tvar: trojúhelník nebo pás (např. 14px výška)
+
+tooltip: “Obojek: Červený” / “Bez obojku”
+
+když obojek chybí: žádný pruh
+
+B) Tabulkové / řádkové zobrazení
+
+V tabulce přidat sloupec:
+
+Obojek: malý barevný puntík/badge + text (volitelně)
+
+např. ● Červený nebo jen ● s tooltipem
+
+Pokud bez obojku: — nebo prázdné
+
+C) Litter / porod dialog
+
+V dialogu “Porod”:
+
+Po zadání počtu mláďat se zobrazí sekce:
+
+“Identifikace mláďat”
+
+řádek pro každé mládě: Kotě #1 | [ColorSelect] | [Bez obojku checkbox]
+
+CTA: “Vytvořit mláďata”
+
+D) Detail zvířete (kotě)
+
+V detailu zvířete:
+
+Sekce “Identifikace”
+
+“Obojek: Červený” (badge)
+
+tlačítka: “Změnit” / “Sundat obojek”
+
+historie: poslední změna + kdo (mini)
+
+Datový model / backend
+Nové pole na Animal (MVP varianta)
+
+Přidat do animals:
+
+collar_color (nullable string / enum), hodnoty: red, blue, green, yellow, orange, purple, pink, teal (nebo jiné)
+
+collar_assigned_at (timestamp, nullable)
+
+collar_removed_at (timestamp, nullable)
+
+collar_assigned_by_user_id (nullable) – pokud máte audit systém, může být i jen audit log
+
+(Volitelné) Samostatná tabulka pro historii obojku
+
+Pokud chcete historii čistě:
+
+animal_collar_events
+
+id, animal_id, color, action(assign|change|remove), created_at, created_by
+MVP může být jen audit log entry.
+
+API změny
+
+POST /animals/birth nebo existující endpoint pro porod:
+
+rozšířit payload o litter_collar_colors: string[] (délka = počet mláďat)
+
+PATCH /animals/{id}:
+
+povolit změnu collar_color + nastavování timestamps
+
+Validace:
+
+collar_color ∈ paleta nebo null
+
+při remove: collar_color=null + collar_removed_at=now
+
+Paleta 8 barev (návrh)
+
+Základní, výrazné, “friendly” pro útulek:
+
+Red
+
+Blue
+
+Green
+
+Yellow
+
+Orange
+
+Purple
+
+Pink
+
+Teal
+
+Pro UI (Tailwind-ish tokeny):
+
+red: bg-red-500
+
+blue: bg-blue-500
+
+green: bg-green-500
+
+yellow: bg-yellow-400 + tmavší text
+
+orange: bg-orange-500
+
+purple: bg-purple-500
+
+pink: bg-pink-500
+
+teal: bg-teal-500
+
+Pravidla a logika přidělení (MVP)
+
+Input: n = number_of_kittens
+
+Output: array colors[n]
+
+Algoritmus:
+
+vezmi paletu 8 barev
+
+promíchej nebo nech stabilní pořadí (doporučuji stabilní kvůli predikovatelnosti)
+
+přiřaď colors[i] = palette[i % 8]
+
+V dialogu umožnit ruční přepsání + “Bez obojku”.
+
+Permissions
+
+Vytvoření porodu + přiřazení obojků: animals.write (nebo existující permission pro porod)
+
+Změna/sundání obojku: animals.write
+
+Čtení: animals.read
+
+Telemetrie / audit
+
+Logovat akce:
+
+collar_assigned (bulk při porodu)
+
+collar_changed
+
+collar_removed
+
+U každé akce: user_id, animal_id, old_color, new_color
+
+Acceptance criteria
+
+Po porodu jsou všechna mláďata vytvořena a mají collar_color dle náhledu (pokud nebyl “bez obojku”).
+
+V gridu je barevný corner pruh viditelný a odpovídá barvě.
+
+V tabulce je badge/dot + tooltip.
+
+Uživatel umí barvu změnit i sundat obojek.
+
+Nehází to 500 a funguje i když je mláďat > 8 (jen se opakují barvy).

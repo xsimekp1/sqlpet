@@ -1,202 +1,400 @@
-Epic4 - očkovací průkaz
+uživatel píše do jednoho search baru
 
-Mini-Epic: Očkovací průkaz (Pet Passport) – integrace do platformy útulku
-Cíl
+výsledky jsou akce (commands) + případně entity (zvířata, lidé) – to už máte
 
-U každého zvířete evidovat “očkovací průkaz / pas”:
+synonyma pomůžou najít akce i když uživatel píše jinak
 
-mít rychlý přehled o očkování a platnostech (kvůli adopci, převozu, karanténě),
+u výsledků bude vidět “proč to našlo” (ikonka + match text)
 
-mít důkazní dokument (scan/foto),
+nové funkce se integrují postupně přes metadata (ať Claude ví, kde to rozšiřovat)
 
-umět vytisknout / exportovat základní info a připojit do generovaných smluv.
+MVP: “Unified Search” + Synonymika jen pro commandy
+Cíl MVP
+Uživatel napíše vakcíny a search nabídne akci “Zapsat očkování” / “Očkování” i když se menu jmenuje jinak.
 
-UX / Kde se na to kliká
-1) Detail zvířete (Animal Detail)
+U výsledku uvidí malý štítek:
 
-Přidat sekci / tab “Dokumenty” (pokud už existuje) nebo samostatnou kartu “Očkovací průkaz”.
+🔁 synonym: vakcíny → očkování
 
-Uvnitř:
+nebo 🔎 label match: očkování
 
-Stav: “Nahrán / Nenahrán”
+V admin nastavení bude jednoduchý editor synonym + tlačítko “Navrhnout synonyma (AI)” (jen návrh, ručně potvrdit).
 
-Číslo průkazu (pokud existuje)
+Co je “Command” (akce) v MVP
+Command = jedna navigační položka nebo akce v appce (route / modal / panel).
 
-Čip zvířete (pokud je) + vazba na průkaz
+Každý command má metadata:
 
-Rychlý souhrn očkování (poslední + příští termín)
+type Command = {
+  id: string
+  title: string              // zobrazované jméno
+  description?: string       // krátký popis
+  href?: string              // kam navigovat
+  icon?: string              // název ikonky (lucide)
+  keywords: string[]         // ruční klíčová slova (bez synonym)
+  tags: string[]             // např. ["medical","inventory"]
+}
+MVP pravidlo hledání commandů:
 
-CTA:
+normalizuj text (lowercase + bez diakritiky)
 
-Nahrát scan/foto (PDF/JPG/PNG)
+najdi match na:
 
-Přidat očkování (ručně)
+title
 
-Export (PDF souhrn pro adopci / veterináře)
+keywords
 
-2) Přehled zvířat (Animals list / grid)
+synonyms (přes slovník)
 
-Volitelný indikátor na kartě / v tabulce:
+žádná váha, žádné složité dotazy:
 
-ikona “Passport” / “Vakcína”
+prostě “obsahuje substring” nebo “token match”
 
-tooltip: “Chybí očkovací průkaz” nebo “Vzteklinka platná do …”
+Synonymní slovník (ruční + AI návrhy)
+Uložení: klidně jako JSON v DB (rychlé), nebo jednoduchá tabulka.
 
-3) Nastavení / Administrace (Settings)
+MVP struktura:
 
-Konfigurace:
+type SynonymEntry = {
+  canonical: string          // např. "ockovani"
+  synonyms: string[]         // ["vakciny","vakcinace","imunizace"]
+  locale: "cs" | "en"
+}
+Jak se použije v searchi (MVP jednoduchost)
+uživatelův dotaz q se normalizuje → qNorm
 
-jaké vakcíny trackovat (minimálně “vzteklina”, “kombinovaná”),
+vytvoříš expandedTerms = [qNorm] + všechny synonyma, kde qNorm je canonical nebo v synonyms
 
-připomínky: “upozornit X dní před expirací”.
+pak jen testuješ: “obsahuje některý term title/keywords?”
 
-Co s tím v praxi (MVP scénáře)
-S1: Zvíře přijato → průkaz chybí
+Jak zobrazit “proč to matchlo”
+Každý výsledný command dostane matchReason:
 
-Staff založí zvíře, v detailu vidí “Očkovací průkaz: Nenahrán”
+label (match v title)
 
-může nahrát scan nebo jen vyplnit, že průkaz “neexistuje / čekáme na veterinu”.
+keyword:<word>
 
-S2: Zvíře má průkaz → nahrát scan
+synonym:<typed>→<canonical>
 
-Uživateli stačí vyfotit mobilem a nahrát (vícestránkový PDF nebo více fotek).
+UI potom ukáže malý badge:
 
-V systému se uloží jako dokumenty (storage + DB metadata).
+🔎 title nebo 🏷 keyword nebo 🔁 synonym
 
-S3: Evidence očkování
+Jak do toho postupně integrovat nové funkce (bez rozkopání)
+Varianty (doporučení: začni nejjednodušší)
+Varianta A (MVP nejrychlejší): “registry soubor”
+vytvoříš jeden soubor apps/web/app/lib/search/commands.ts
 
-Uživatel přidá záznam očkování (typ, datum, platnost do, lot/šarže vakcíny, vet/klinika).
+ručně tam přidáváš commandy (id, title, href, icon, keywords, tags)
 
-Systém spočítá expiraci (kde to jde) a ukáže upozornění.
+výhoda: jednoduché, kontrola
 
-S4: Adopce / darovací smlouva
+nevýhoda: musíš myslet na přidání
 
-Šablona dokumentu umí vytáhnout:
+Varianta B (lepší postupná integrace): “metadata u stránky”
+každá stránka (route) může exportovat metadata:
 
-identifikaci zvířete (jméno, čip),
+export const searchMeta = {
+  commands: [
+    { id: "medical.vaccination", title: "Očkování", href: "/dashboard/medical", keywords: ["vakciny","vzteklina"] }
+  ]
+}
+při buildu (nebo runtime) se z toho udělá index commandů
 
-poslední očkování,
+MVP kompromis: začni Varianta A, ale nastav strukturu tak, aby šla později převést na B.
 
-link/odkaz na dokument průkazu nebo přílohu (MVP stačí odkaz a “v příloze průkaz”).
+Admin UI pro synonyma + AI návrhy (AI nepoužívat při hledání)
+UI: /dashboard/settings/search
+Sekce:
 
-Uložení dat: scan vs. strukturovaná data
-MVP doporučení: “Hybrid”
+Synonyma
 
-Scan/foto = důkazní dokument (nejdůležitější, nejrychlejší).
+seznam canonical termů
 
-Strukturovaná data očkování = pro filtraci, upozornění a “co je kdy potřeba”.
+edit synonyms (add/remove)
 
-OCR/automatické čtení: neřešit v MVP. (Může být future enhancement: “pokus o OCR” u PDF/JPG.)
+tlačítko “Navrhnout synonyma (AI)”
 
-Má průkaz číslo?
+Command registry
 
-Ano, často mívá:
+read-only seznam commandů (ať admin ví, co je indexované)
 
-číslo očkovacího průkazu / pasu (formát se liší),
+quick link “Upravit keywords” (pokud MVP dovolí)
 
-pas EU má své číslování, někdy je i kód distributora.
+AI návrhy (pouze asistované)
+Admin klikne na command “Očkování”
 
-V MVP:
+AI dostane: title + description + keywords + tags + locale
 
-pole passport_number (string, max třeba 64),
+AI vrátí seznam návrhů synonym + krátké odůvodnění
 
-volitelně issuer (veterina / organizace / “Státní veterinární správa” není vydavatel průkazu, spíš dozor; vydavatel bývá vet/klinika nebo distributor tiskopisu).
+Admin klikne “Přidat vybrané”
 
-Datový model (DB návrh)
-Tabulka animal_passports (1:1 nebo 1:N na zvíře)
+Důležité MVP pravidlo: AI nic samo neukládá bez potvrzení.
 
-MVP:
+Co bude v search výsledcích (UI)
+Jeden search bar → výsledky rozdělené do sekcí:
 
-id UUID
+Akce (commandy)
 
-animal_id UUID (FK)
+Zvířata
 
-passport_number VARCHAR(64) NULL
+Lidé
 
-issued_at DATE NULL
+Každá položka:
 
-issuer_name VARCHAR(128) NULL (klinika / vet)
+ikonka
 
-notes TEXT NULL
+název
 
-created_at, updated_at
+malý “reason chip”:
 
-Tabulka animal_passport_documents (scan/foto)
+🔁 synonym: vakcíny → očkování
 
-id
+🏷 keyword: vzteklina
 
-passport_id FK
+🔎 title match
 
-file_id FK na existující “files” tabulku (už máš uploady)
+Jak to udržíš použitelné v čase (mini systém)
+Pravidlo pro tým (proces)
+Když přidáš novou feature:
 
-document_type ENUM('scan','photo') default 'scan'
+přidej command do registru (nebo searchMeta)
 
-created_at
+přidej 2–5 keywords
 
-Tabulka animal_vaccinations (strukturovaně)
+pokud to má často jiné názvosloví, klikni v adminu “AI návrhy” → vyber 3–8 synonym
 
-id
+Tohle je přesně ta “postupná integrace” bez přestřelení.
 
-animal_id FK
+Co ode mě chceš jako další krok
+Můžu ti z toho udělat přímo zadání pro Claude Code jako EPIC (backend + frontend + data model + UI), ale řekni mi jednu věc:
 
-vaccine_type ENUM (např. 'rabies', 'dhpp', 'lepto', 'bordetella', 'other')
+Chceš synonyma řešit jen pro “Akce/Commandy”, nebo i pro entity (zvířata/lidi)?
+(MVP bych fakt nechal jen na commandy, ať to je rychlé a nerozbije to relevance u zvířat.)
 
-administered_at DATE
+dej zadání pro claude code, nezmiňuj tam to AI asi vůbec ať ho nepleteme
+Níže je zadání pro Claude Code (bez zmínek o AI), pro MVP “Unified Search” tak, aby šlo v jednom search baru hledat akce (navigace/funkce) i entity (zvířata, lidé) a zároveň aby fungovala jednoduchá synonymika u akcí.
 
-valid_until DATE NULL
+EPIC: Unified Search (Akce + Zvířata + Lidé) + Synonyma pro akce (MVP)
+Kontext
+V aplikaci už existuje search bar (v headeru). Dnes se používá hlavně na hledání zvířat a lidí. S rostoucí komplexitou platformy potřebujeme, aby uživatel v jednom search baru našel i “funkce” typu naskladnění, očkování, inventář, darovací smlouva — bez toho, aby se zaváděly složité dotazovací operátory.
 
-lot_number VARCHAR(64) NULL
+Cíl MVP
+Zachovat jeden search bar v top headeru.
 
-veterinarian_name VARCHAR(128) NULL
+Uživatel může psát např. Rafík, Novák, ale i naskladnění, vakcíny, očkování, odpis, hotel.
 
-clinic_name VARCHAR(128) NULL
+Výsledky se zobrazí ve třech sekcích:
 
-notes TEXT NULL
+Akce (navigační položky / “commands”)
 
-created_at
+Zvířata
 
-Pozn.: pokud už existuje u tebe očkování v jiné tabulce, tak místo nové tabulky jen napojit pas jako “source document”.
+Lidé
 
-API endpoints (MVP)
+Pro Akce musí fungovat jednoduchá synonymika (např. vakcíny → “Očkování”).
 
-GET /animals/{id}/passport → passport + documents + summary vaccinations
+U každého výsledku musí být vidět “proč” se matchnul (např. badge 🔁 synonym, 🔎 title, 🏷 keyword).
 
-POST /animals/{id}/passport → create/update passport metadata
+Scope (MVP)
+1) “Akce / Commands” index (frontend)
+Implementuj jednoduchý registry seznam akcí, které se mají vyhledávat.
 
-POST /animals/{id}/passport/documents → upload scan/foto (multipart)
+Datový model (TypeScript)
 
-GET /animals/{id}/vaccinations → list
+Vytvoř apps/web/app/lib/search/commands.ts:
 
-POST /animals/{id}/vaccinations → create
+export type Command = {
+  id: string
+  title: string
+  description?: string
+  href: string
+  icon?: any // lucide component reference
+  keywords: string[] // bez synonym, jen ručně
+  tags?: string[]
+}
+Požadavky na registry
 
-PATCH /vaccinations/{id} / DELETE /vaccinations/{id}
+Naplnit minimálně o klíčové akce:
 
-Práva a audit
+Dashboard
 
-animals.read → číst pas i očkování
+Zvířata (list)
 
-animals.write nebo medical.write → přidávat/editovat očkování + nahrávat dokument
+Detail zvířete (nepovinné)
 
-Audit log (pokud máš): logovat upload dokumentu a změny očkování.
+Očkování / Medical
 
-Notifikace / upozornění (MVP “light”)
+Inventory (seznam)
 
-V detailu zvířete: badge “Očkování brzy končí (X dní)”
+Inventory: transakce / příjem / výdej / odpis (může být jako deep-link na existující route)
 
-V dashboardu: widget “Očkování do 14 dní”
+Hotel (rezervace)
 
-Později: email/push.
+Nákupní seznam (panel / stránka pokud existuje)
 
-Definition of Done (MVP)
+Kontakty / People
 
-Umím u zvířete:
+Reports
 
-uložit číslo průkazu + poznámku,
+Settings
 
-nahrát scan/foto,
+Help
 
-přidat očkování s platností,
+Každý command musí mít keywords (2–10 slov).
 
-vidět expirace a varování v UI.
+Ikonky použij lucide, stejně jako v sidebaru.
 
-Export/souhrn: minimálně “zobrazit a stáhnout scan”, plus jednoduchý “vaccination summary” view.
+2) Synonymika (MVP, jen pro Akce)
+Zavést jednoduchý slovník synonym (bez jakýchkoliv dotazovacích operátorů, bez vážení).
+
+Datový model
+
+Vytvoř apps/web/app/lib/search/synonyms.ts:
+
+export type SynonymEntry = {
+  canonical: string
+  synonyms: string[]
+  locale: 'cs' | 'en'
+}
+
+export const SYNONYMS: SynonymEntry[] = [
+  { canonical: 'ockovani', synonyms: ['vakciny', 'vakcina', 'vakcinace', 'imunizace'], locale: 'cs' },
+  { canonical: 'naskladneni', synonyms: ['prijem', 'prijmout', 'dorazilo', 'dodavka'], locale: 'cs' },
+  { canonical: 'odpis', synonyms: ['vyrazeni', 'ztrata', 'skoda'], locale: 'cs' },
+  // …
+]
+Normalizace textu
+
+Implementuj helper normalize(text):
+
+lowercase
+
+odstranit diakritiku (á→a)
+
+trim
+
+nahradit vícenásobné mezery jednou
+
+Rozšíření dotazu
+
+Z dotazu q udělej qNorm.
+
+Vytvoř expandedTerms:
+
+vždy obsahuje qNorm
+
+pokud qNorm odpovídá canonical nebo některému synonymu, přidej i canonical + všechny jeho synonyms
+
+Nepoužívej AND/OR. Jen: “jestli se některý term vyskytuje v title/keywords”.
+
+Match logika (MVP)
+
+Command je match pokud:
+
+některý expandedTerm je substring v normalize(command.title)
+
+nebo v některém normalize(keyword)
+
+Vrať i matchReason:
+
+title
+
+keyword:<kw>
+
+synonym:<typed>→<canonical>
+
+3) Unified Search UX (header + overlay)
+Zachovat stávající header search bar, ale rozšířit ho o overlay výsledků.
+
+Chování
+
+Po focus do search inputu a při psaní:
+
+zobraz dropdown/overlay panel pod inputem
+
+zobrazuje sekce: Akce / Zvířata / Lidé
+
+Escape zavře panel
+
+Enter:
+
+když je vybraný výsledek, provede navigaci na jeho href
+
+Šipky nahoru/dolů pro výběr položky (MVP doporučeno)
+
+Výsledky
+
+Každý item:
+
+ikonka
+
+label
+
+malý reason badge:
+
+🔎 title
+
+🏷 keyword
+
+🔁 synonym
+
+Sekce mají nadpis a oddělovač.
+
+4) Integrace se stávajícím vyhledáváním zvířat a lidí
+Neměň API logiku pro zvířata/lidi, pouze sjednoť UI výstup do jednoho overlay panelu.
+
+Výsledky zvířat a lidí ponech podle stávajícího chování (jakmile existují).
+
+Akce jsou čistě lokální (frontend registry).
+
+Non-goals (výslovně nedělat v MVP)
+Žádné OR/AND operátory v dotazu.
+
+Žádné váhy, skórování, relevance modely.
+
+Žádné fulltext vyhledávání na backendu.
+
+Žádné generování synonym automaticky.
+
+Žádné ukládání historie vyhledávání / analytics.
+
+Akceptační kritéria
+Když uživatel napíše vakcíny, uvidí v sekci Akce položku vedoucí na Medical/Očkování, s badge 🔁 synonym.
+
+Když napíše naskladnění, uvidí v sekci Akce link na inventory/nákupy/příjem (dle existující route) a badge 🔎 title nebo 🏷 keyword nebo 🔁 synonym.
+
+Když napíše jméno zvířete Rafík, stále se zobrazí v sekci Zvířata.
+
+Jediný search bar, jednotný overlay a konzistentní UI.
+
+Kód je snadno rozšiřitelný: přidání nové funkce = přidat nový Command do registry + keywords (+ případně synonym entry).
+
+Technické poznámky / Implementační tipy
+Doporučená struktura:
+
+app/lib/search/normalize.ts
+
+app/lib/search/commands.ts
+
+app/lib/search/synonyms.ts
+
+app/lib/search/searchCommands.ts (funkce vracející matchy + reason)
+
+Overlay může být shadcn Command komponenta (pokud ji už používáte) nebo vlastní.
+
+Výsledky renderuj “flat list” s oddělovači sekcí, ale zachovej sekční nadpisy.
+
+Dbej na výkon: debounce input 150–250ms pro entity fetch (pokud už fetchujete), akce match je instantní.
+
+Dodání
+PR obsahuje:
+
+nové soubory registry a synonym
+
+aktualizaci header search komponenty na unified overlay
+
+základní sada commandů pokrývající hlavní navigaci
+
+unit testy pro normalize + synonym expansion (pokud máte test setup; jinak aspoň jednoduché runtime sanity)
