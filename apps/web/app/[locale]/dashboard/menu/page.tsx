@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
@@ -201,34 +201,6 @@ export default function MenuPage() {
           </div>
         ))}
       </div>
-
-      {/* Quick Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('quickStats.title')}</CardTitle>
-          <CardDescription>{t('quickStats.description')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">24</div>
-              <div className="text-sm text-muted-foreground">{t('quickStats.animals')}</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">18</div>
-              <div className="text-sm text-muted-foreground">{t('quickStats.occupiedKennels')}</div>
-            </div>
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">3</div>
-              <div className="text-sm text-muted-foreground">{t('quickStats.medicationDue')}</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">8</div>
-              <div className="text-sm text-muted-foreground">{t('quickStats.tasksToday')}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
