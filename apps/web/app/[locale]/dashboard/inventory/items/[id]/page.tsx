@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive, Pencil, ArrowDownToLine, ArrowUpFromLine, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive, Pencil, ArrowDownToLine, ArrowUpFromLine, RotateCcw, Truck } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import {
@@ -97,6 +97,13 @@ export default function InventoryItemDetailPage() {
   const { data: item, isLoading: itemLoading } = useQuery({
     queryKey: ['inventory-item', itemId],
     queryFn: () => ApiClient.get(`/inventory/items/${itemId}`),
+  });
+
+  // Fetch on-the-way quantity
+  const { data: onTheWayData } = useQuery({
+    queryKey: ['on-the-way', itemId],
+    queryFn: () => ApiClient.getOnTheWayQuantity(itemId),
+    enabled: !!itemId,
   });
 
   // Fetch lots
@@ -317,6 +324,12 @@ export default function InventoryItemDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight">{item.name}</h1>
             {getCategoryBadge(item.category)}
+            {onTheWayData && onTheWayData.quantity_on_the_way > 0 && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                <Truck className="h-3 w-3 mr-1" />
+                {formatQuantity(onTheWayData.quantity_on_the_way, item.unit)} {t('onTheWay')}
+              </Badge>
+            )}
           </div>
           <p className="text-muted-foreground">
             {t('totalStock')}: <span className="font-semibold">{formatQuantity(totalQuantity, item.unit)}</span> {item.unit ? t(`units.${item.unit}`) : ''}
