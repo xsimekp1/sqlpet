@@ -31,6 +31,8 @@ import ApiClient, { Animal, AnimalIdentifier } from '@/app/lib/api';
 import { getAnimalImageUrl } from '@/app/lib/utils';
 import { toast } from 'sonner';
 import { useAuth } from '@/app/context/AuthContext';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/app/context/AuthContext';
 import { userHasPermission } from '@/app/lib/permissions';
 
 const getStatusColor = (status: string) => {

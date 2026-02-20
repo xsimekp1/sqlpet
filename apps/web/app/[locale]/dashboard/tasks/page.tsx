@@ -230,6 +230,31 @@ export default function TasksPage() {
     return <Badge variant={variants[priority] || 'outline'}>{PRIORITY_LABELS[priority] || priority}</Badge>;
   };
 
+  const getDueDateColor = (dueAt: string | null, status: string) => {
+    if (!dueAt || status === 'completed' || status === 'cancelled') {
+      return 'text-muted-foreground';
+    }
+    
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const dueDate = new Date(dueAt);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    const diffDays = Math.floor((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      // Overdue - red background
+      return 'bg-red-100 text-red-800 font-semibold px-2 py-0.5 rounded';
+    } else if (diffDays === 0) {
+      // Today - amber/orange background
+      return 'bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded';
+    } else if (diffDays <= 2) {
+      // Upcoming soon - lighter amber
+      return 'bg-amber-50 text-amber-700';
+    }
+    return '';
+  };
+
   const handleCompleteTask = (task: Task) => {
     const isFeedingTask = task.type === 'feeding';
     completeTaskMutation.mutate({ taskId: task.id, isFeedingTask });
@@ -457,7 +482,7 @@ export default function TasksPage() {
                   <TableCell>{getStatusBadge(task.status)}</TableCell>
                   <TableCell>
                     {task.due_at ? (
-                      <div className="text-sm">
+                      <div className={`text-sm inline-block ${getDueDateColor(task.due_at, task.status)}`}>
                         {format(new Date(task.due_at), 'd. M. yyyy HH:mm')}
                       </div>
                     ) : (
