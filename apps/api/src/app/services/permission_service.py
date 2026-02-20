@@ -30,6 +30,14 @@ class PermissionService:
         if self._is_superadmin or self._user_email == "admin@example.com":
             return True
 
+        # Check if user is superadmin in database
+        result = await self.db.execute(
+            select(User.is_superadmin).where(User.id == user_id)
+        )
+        is_superadmin = result.scalar_one_or_none()
+        if is_superadmin:
+            return True
+
         # Find active membership in org
         result = await self.db.execute(
             select(Membership.role_id).where(

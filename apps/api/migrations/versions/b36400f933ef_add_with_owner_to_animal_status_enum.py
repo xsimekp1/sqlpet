@@ -22,6 +22,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     op.execute("ALTER TYPE animal_status_enum ADD VALUE 'with_owner'")
+    op.execute("ALTER TYPE animal_status_enum ADD VALUE 'lost'")
 
 
 def downgrade() -> None:
