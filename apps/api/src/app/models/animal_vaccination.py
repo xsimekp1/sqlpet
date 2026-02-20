@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, date
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, Date, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -45,6 +45,7 @@ class AnimalVaccination(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         nullable=True,
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    valid_until: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     organization = relationship("Organization")
     animal = relationship("Animal")

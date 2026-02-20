@@ -1752,6 +1752,90 @@ class ApiClient {
     const params = vaccinationType ? { vaccination_type: vaccinationType } : {};
     return this.get('/vaccinations/lots/available', params);
   }
+
+  static async getAnimalVaccinations(animalId: string, page: number = 1, pageSize: number = 20): Promise<any> {
+    return this.get(`/vaccinations/animal/${animalId}`, { page, page_size: pageSize });
+  }
+
+  // Animal Passports
+  static async getAnimalPassport(animalId: string): Promise<{
+    id: string;
+    animal_id: string;
+    passport_number: string | null;
+    issued_at: string | null;
+    issuer_name: string | null;
+    notes: string | null;
+    created_at: string;
+    updated_at: string;
+    documents: Array<{
+      id: string;
+      file_id: string;
+      document_type: string;
+      created_at: string;
+      file_url: string | null;
+      file_name: string | null;
+    }>;
+  }> {
+    return this.get(`/animals/${animalId}/passport`);
+  }
+
+  static async updateAnimalPassport(animalId: string, data: {
+    passport_number?: string;
+    issued_at?: string | null;
+    issuer_name?: string;
+    notes?: string;
+  }): Promise<any> {
+    return this.post(`/animals/${animalId}/passport`, data);
+  }
+
+  static async uploadPassportDocument(animalId: string, file: File): Promise<{
+    id: string;
+    file_id: string;
+    document_type: string;
+    created_at: string;
+    file_url: string;
+    file_name: string;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/animals/${animalId}/passport/documents`,
+        formData,
+        {
+          headers: {
+            ...this.getAuthHeaders(),
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Upload passport document error:', error);
+      throw error;
+    }
+  }
+
+  static async getExpiringVaccinations(days: number = 14): Promise<{
+    total_vaccinations: number;
+    expiring_within_14_days: number;
+    expiring_within_30_days: number;
+    expired: number;
+    upcoming: Array<{
+      id: string;
+      animal_id: string;
+      animal_name: string;
+      animal_public_code: string | null;
+      vaccine_type: string;
+      administered_at: string;
+      valid_until: string | null;
+      days_until_expiration: number | null;
+      status: string;
+    }>;
+  }> {
+    return this.get(`/animals/vaccinations/expiring`, { days });
+  }
 }
 
 // Search types

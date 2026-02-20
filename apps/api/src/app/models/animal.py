@@ -218,3 +218,9 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         cascade="all, delete-orphan",
         order_by="AnimalBCSLog.measured_at.desc()",
     )
+    passport = relationship(
+        "AnimalPassport",
+        back_populates="animal",
+        uselist=False,
+        lazy="noload",
+    )

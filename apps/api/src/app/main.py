@@ -37,6 +37,7 @@ from src.app.api.routes.incidents import router as incidents_router
 from src.app.api.routes.organization import router as organization_router
 from src.app.api.routes.finding import router as finding_router
 from src.app.api.routes.vaccinations import router as vaccinations_router
+from src.app.api.routes.animal_passport import router as animal_passport_router
 from src.app.api.routes.walks import router as walks_router
 from src.app.api.routes.chat import router as chat_router
 from src.app.api.routes.calendar import router as calendar_router
@@ -475,6 +476,7 @@ app.include_router(incidents_router)
 app.include_router(organization_router)
 app.include_router(finding_router)
 app.include_router(vaccinations_router)
+app.include_router(animal_passport_router)
 app.include_router(walks_router)
 app.include_router(chat_router)
 app.include_router(calendar_router)

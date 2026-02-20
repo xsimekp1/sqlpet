@@ -55,6 +55,7 @@ import { EditableAnimalName, EditableAnimalDetails, AssignKennelButton } from '@
 import { calcMER, calcRER, getMERFactor, getMERFactorLabel } from '@/app/lib/energy';
 import { useAuth } from '@/app/context/AuthContext';
 import PersonalityTab from '@/app/components/animals/PersonalityTab';
+import PassportTab from '@/app/components/animals/PassportTab';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -1221,6 +1222,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           <TabsTrigger value="timeline">{t('tabs.timeline')}</TabsTrigger>
           <TabsTrigger value="feeding">{t('tabs.feeding')}</TabsTrigger>
           <TabsTrigger value="medical">{t('tabs.medical')}</TabsTrigger>
+          <TabsTrigger value="passport">Očkovací průkaz</TabsTrigger>
           {(animal.species === 'dog' || animal.species === 'cat') && (
             <TabsTrigger value="personality">{t('tabs.personality')}</TabsTrigger>
           )}
@@ -1759,6 +1761,11 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Passport ── */}
+        <TabsContent value="passport">
+          <PassportTab animalId={animal.id} />
         </TabsContent>
 
 {/* ── Personality + Behavior ── */}

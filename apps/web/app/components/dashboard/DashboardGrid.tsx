@@ -16,6 +16,7 @@ import { RecentlyAdmittedWidget } from './RecentlyAdmittedWidget'
 import { WalksTodayWidget } from './WalksTodayWidget'
 import { MyTasksWidget } from './MyTasksWidget'
 import { UpcomingOutcomesWidget } from './UpcomingOutcomesWidget'
+import VaccinationsExpiringWidget from './VaccinationsExpiringWidget'
 
 const ALL_WIDGETS: { id: string; size: WidgetSize }[] = [
   { id: 'medical-today', size: 'large' },
@@ -27,6 +28,7 @@ const ALL_WIDGETS: { id: string; size: WidgetSize }[] = [
   { id: 'walks-today', size: 'small' },
   { id: 'my-tasks', size: 'small' },
   { id: 'upcoming-outcomes', size: 'small' },
+  { id: 'vaccinations-expiring', size: 'small' },
 ]
 
 const widgetLabels: Record<string, string> = {
@@ -39,6 +41,7 @@ const widgetLabels: Record<string, string> = {
   'walks-today': 'walksToday',
   'my-tasks': 'myTasks',
   'upcoming-outcomes': 'upcomingOutcomes',
+  'vaccinations-expiring': 'vaccinationsExpiring',
 }
 
 // Widget registry
@@ -52,6 +55,7 @@ const widgetComponents = {
   'walks-today': WalksTodayWidget,
   'my-tasks': MyTasksWidget,
   'upcoming-outcomes': UpcomingOutcomesWidget,
+  'vaccinations-expiring': VaccinationsExpiringWidget,
 }
 
 interface SortableWidgetProps {

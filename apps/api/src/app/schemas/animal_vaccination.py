@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -13,6 +13,7 @@ class VaccinationCreate(BaseModel):
     administered_by_id: Optional[uuid.UUID] = None
     task_id: Optional[uuid.UUID] = None
     notes: Optional[str] = None
+    valid_until: Optional[date] = None
 
 
 class VaccinationUpdate(BaseModel):
@@ -20,6 +21,7 @@ class VaccinationUpdate(BaseModel):
     lot_id: Optional[uuid.UUID] = None
     administered_at: Optional[datetime] = None
     notes: Optional[str] = None
+    valid_until: Optional[date] = None
 
 
 class VaccinationResponse(BaseModel):
@@ -33,6 +35,7 @@ class VaccinationResponse(BaseModel):
     administered_by_id: Optional[uuid.UUID] = None
     task_id: Optional[uuid.UUID] = None
     notes: Optional[str] = None
+    valid_until: Optional[date] = None
     created_at: datetime
     updated_at: datetime
 
