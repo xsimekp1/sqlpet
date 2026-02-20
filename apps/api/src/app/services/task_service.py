@@ -69,7 +69,7 @@ class TaskService:
         task_id: uuid.UUID,
         organization_id: uuid.UUID,
         user_id: uuid.UUID,
-        **updates
+        **updates,
     ) -> Task:
         """Update task fields."""
         stmt = select(Task).where(
@@ -94,6 +94,7 @@ class TaskService:
 
         if changes:
             await self.db.flush()
+            await self.db.refresh(task)
             await self.audit.log_action(
                 organization_id=organization_id,
                 actor_user_id=user_id,
@@ -206,8 +207,10 @@ class TaskService:
             Task.deleted_at.is_(None),
         ]
 
-        if status == 'active':
-            conditions.append(Task.status.in_([TaskStatus.PENDING, TaskStatus.IN_PROGRESS]))
+        if status == "active":
+            conditions.append(
+                Task.status.in_([TaskStatus.PENDING, TaskStatus.IN_PROGRESS])
+            )
         elif status:
             try:
                 conditions.append(Task.status == TaskStatus(status))
@@ -222,7 +225,10 @@ class TaskService:
             conditions.append(
                 and_(
                     Task.due_at >= datetime.fromisoformat(due_date),
-                    Task.due_at < datetime.fromisoformat(due_date).replace(hour=23, minute=59, second=59)
+                    Task.due_at
+                    < datetime.fromisoformat(due_date).replace(
+                        hour=23, minute=59, second=59
+                    ),
                 )
             )
         if related_entity_id:
