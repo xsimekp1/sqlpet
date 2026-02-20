@@ -375,6 +375,7 @@
     "view": {
       "table": "Tabulka",
       "grid": "Karty",
+      "map": "Mapa",
       "timeline": "Časová osa"
     },
     "occupancy": {

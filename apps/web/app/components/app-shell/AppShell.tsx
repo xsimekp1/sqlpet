@@ -12,8 +12,8 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const { hasPermission } = useAuth()
-  const canUseChat = hasPermission('chat.use')
+  const { permissions } = useAuth()
+  const canUseChat = permissions.includes('chat.use')
 
   return (
     <div className="flex h-screen flex-col">
