@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import ApiClient from '@/app/lib/api';
 import { toast } from 'sonner';
-import FindingsReportWidget from '@/app/components/reports/FindingsReportWidget';
 
 // ── Simple SVG line chart for daily animal count ────────────────────────────
 function DailyCountChart({ data }: { data: { date: string; count: number }[] }) {
@@ -156,9 +155,6 @@ const plannedReports = [
           )}
 </CardContent>
       </Card>
-
-      {/* ── Findings Report Widget ── */}
-      <FindingsReportWidget />
 
       {/* ── Planned reports placeholder ── */}
       <Card className="border-dashed">
