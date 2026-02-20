@@ -922,6 +922,12 @@ export default function KennelDetailPage() {
                     level="M"
                   />
                 </div>
+                <div className="text-center">
+                  <p className="font-mono font-bold text-lg">{kennel.code}</p>
+                  {kennel.zone_name && (
+                    <p className="text-muted-foreground text-sm">{kennel.zone_name}</p>
+                  )}
+                </div>
                 <p className="text-center text-sm text-muted-foreground">
                   Naskenujte QR kód pro rychlý přístup k informacím o zvířatech v tomto kotci.
                 </p>

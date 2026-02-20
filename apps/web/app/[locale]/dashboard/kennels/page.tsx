@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import {
   Plus, Search, Loader2, Grid, Table, Settings,
   Footprints, MoreHorizontal, Users, Edit,
-  ArrowRight, Map, Accessibility, Calendar
+  ArrowRight, Map, Accessibility, Calendar, QrCode
 } from 'lucide-react';
 import {
   DndContext,
@@ -615,6 +615,20 @@ export default function KennelsPage() {
             <Footprints className="h-4 w-4" />
             {t('quickActions.walkMode')}
           </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/dashboard/kennels/qr-sheet">
+                  <Button variant="outline" size="icon">
+                    <QrCode className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>QR sheet</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4" />
             {t('quickActions.addKennel')}

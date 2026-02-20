@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList, Dog, Download, Zap, Syringe, Milk, Heart } from 'lucide-react';
+import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList, Dog, Download, Zap, Syringe, Milk, Heart, QrCode } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -295,6 +295,20 @@ export default function AnimalsPage() {
               <><LayoutGrid className="h-4 w-4 mr-2" />{t('animals.view.grid')}</>
             )}
           </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/dashboard/animals/qr-sheet">
+                  <Button variant="outline" size="icon">
+                    <QrCode className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>QR sheet</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <Button className="gap-2" onClick={() => setCreateChoiceOpen(true)}>
             <Plus className="h-4 w-4" />
             {t('animals.createChoice.withIntake')}

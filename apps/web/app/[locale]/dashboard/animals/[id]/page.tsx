@@ -9,9 +9,11 @@ import {
   CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors,
   ChevronLeft, ChevronRight, Baby, Scale, Accessibility, Home, Camera,
   PersonStanding, LogIn, CheckCheck, FileText, Upload, X, ExternalLink,
+  QrCode,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import QRCode from 'react-qr-code';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -145,6 +147,7 @@ export default function AnimalDetailPage() {
   const [loadingIntakes, setLoadingIntakes] = useState(false);
   const [medicalDialogOpen, setMedicalDialogOpen] = useState(false);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [togglingDewormed, setTogglingDewormed] = useState(false);
   const [togglingAggressive, setTogglingAggressive] = useState(false);
   const [togglingAltered, setTogglingAltered] = useState(false);
@@ -1207,6 +1210,18 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               <Trash2 className="h-4 w-4 mr-2" />
               {t('delete')}
             </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={() => setQrDialogOpen(true)} className="h-8 w-8">
+                    <QrCode className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>QR kód</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </div>
@@ -2143,6 +2158,52 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               {recordingEscape ? t('saving') : t('escape.confirm')}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Code Dialog */}
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>QR kód pro zvíře</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            {animal && (
+              <>
+                <div className="bg-white p-4 rounded-lg border">
+                  <QRCode
+                    value={`https://sqlpet.vercel.app/cs/dashboard/animals/${animal.id}`}
+                    size={200}
+                    level="M"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="font-mono font-bold text-lg">{animal.public_code}</p>
+                  <p className="text-muted-foreground">{animal.name}</p>
+                </div>
+                <p className="text-center text-sm text-muted-foreground">
+                  Naskenujte QR kód pro rychlý přístup k záznamu o zvířeti v systému.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const svg = document.querySelector('svg');
+                    if (!svg) return;
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = `animal-${animal.public_code}-qr.svg`;
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  Stáhnout QR
+                </Button>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
