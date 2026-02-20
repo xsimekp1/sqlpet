@@ -15,7 +15,6 @@ import {
   Heart,
   ChevronLeft,
   Package,
-  ShoppingCart,
   HelpCircle,
   CalendarDays,
   Camera,
@@ -123,7 +122,6 @@ export function Sidebar() {
         { label: 'nav.medical', href: '/dashboard/medical', icon: HeartPulse, permission: 'medical.read' },
         { label: 'nav.feeding', href: '/dashboard/feeding', icon: Bone, permission: 'feeding.read', shortcut: 'ctrl+shift+f' },
         { label: 'nav.inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory.read', shortcut: 'ctrl+shift+i' },
-        { label: 'nav.purchases', href: '/dashboard/inventory/purchases', icon: ShoppingCart, permission: 'inventory.read' },
         { label: 'nav.tasks', href: '/dashboard/tasks', icon: CheckSquare, permission: 'tasks.read', shortcut: 'ctrl+shift+t' },
         { label: 'nav.calendar', href: '/dashboard/calendar', icon: CalendarDays, permission: null },
       ]
