@@ -471,17 +471,9 @@ export default function FindingsPage() {
 
         <TabsContent value="map" className="mt-4">
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* List - left side */}
-            <div className="lg:w-2/3">
-              <FindingsList
-                findings={filteredFindings}
-                organization={mapData?.organization}
-              />
-            </div>
-            
-            {/* Map - right side, compact square */}
-            <div className="lg:w-1/3 lg:max-w-[320px]">
-              <Card className="h-fit">
+            {/* Map - left side, main area */}
+            <div className="lg:flex-1 lg:min-h-[500px]">
+              <Card className="h-full min-h-[400px]">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">Mapa</CardTitle>
@@ -503,8 +495,8 @@ export default function FindingsPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-2">
-                  <div className="aspect-square w-full">
+                <CardContent className="p-2 h-[calc(100%-60px)]">
+                  <div className="w-full h-full">
                     <InteractiveMap
                       findings={findingsWithLocation}
                       organization={mapData?.organization}
@@ -517,6 +509,14 @@ export default function FindingsPage() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+            
+            {/* List - right side, compact */}
+            <div className="lg:w-80 xl:w-96">
+              <FindingsList
+                findings={filteredFindings}
+                organization={mapData?.organization}
+              />
             </div>
           </div>
         </TabsContent>
