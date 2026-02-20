@@ -53,6 +53,8 @@ export function EasterEggTrigger() {
     }
   }, [isOpen]);
 
+  const currentQuestion = questions[currentIndex];
+
   // Load image for current question
   useEffect(() => {
     async function loadQuestionImage() {
@@ -76,7 +78,7 @@ export function EasterEggTrigger() {
     }
     
     if (currentQuestion) {
-      setCurrentImage(null); // Clear previous image
+      setCurrentImage(null);
       loadQuestionImage();
     }
   }, [currentQuestion?.breed.id, phase]);
@@ -132,8 +134,6 @@ export function EasterEggTrigger() {
       setPhase('result');
     }
   };
-
-  const currentQuestion = questions[currentIndex];
 
   return (
     <>
