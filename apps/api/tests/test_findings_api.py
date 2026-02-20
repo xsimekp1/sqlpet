@@ -45,6 +45,7 @@ async def findings_env(db_session, test_user):
         "intake.read",
         "intake.write",
         "people.read",
+        "reports.run",
     ):
         perm_result = await db_session.execute(
             select(Permission).where(Permission.key == perm_key)
@@ -78,7 +79,7 @@ async def findings_env(db_session, test_user):
     animal = Animal(
         id=animal_id,
         organization_id=org_id,
-        public_code="T001",
+        public_code=f"FND-{animal_id.hex[:6]}",
         name="Test Animal",
         species="dog",
         sex="male",
@@ -150,6 +151,7 @@ async def findings_with_data(db_session, findings_env):
         "contact_id": contact_id,
         "animal_id": animal_id,
         "findings": findings,
+        "user_id": findings_env["user_id"],
     }
 
 
@@ -195,7 +197,7 @@ class TestFindingsAPI:
     async def test_list_findings(self, client: AsyncClient, findings_with_data):
         """Test listing all findings."""
         org_id = findings_with_data["org_id"]
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         response = await client.get(
             "/findings",
@@ -212,7 +214,7 @@ class TestFindingsAPI:
     ):
         """Test filtering findings by date range."""
         org_id = findings_with_data["org_id"]
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         from datetime import date
 
@@ -235,7 +237,7 @@ class TestFindingsAPI:
         """Test filtering findings by animal_id."""
         org_id = findings_with_data["org_id"]
         animal_id = findings_with_data["animal_id"]
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         response = await client.get(
             f"/findings?animal_id={animal_id}",
@@ -252,7 +254,7 @@ class TestFindingsAPI:
         """Test filtering findings by who_found_id."""
         org_id = findings_with_data["org_id"]
         contact_id = findings_with_data["contact_id"]
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         response = await client.get(
             f"/findings?who_found_id={contact_id}",
@@ -267,7 +269,7 @@ class TestFindingsAPI:
         """Test getting a single finding by ID."""
         org_id = findings_with_data["org_id"]
         finding_id = findings_with_data["findings"][0].id
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         response = await client.get(
             f"/findings/{finding_id}",
@@ -282,7 +284,7 @@ class TestFindingsAPI:
         """Test updating a finding."""
         org_id = findings_with_data["org_id"]
         finding_id = findings_with_data["findings"][0].id
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         payload = {
             "notes": "Updated notes",
@@ -302,7 +304,7 @@ class TestFindingsAPI:
         """Test deleting a finding."""
         org_id = findings_with_data["org_id"]
         finding_id = findings_with_data["findings"][0].id
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         response = await client.delete(
             f"/findings/{finding_id}",
@@ -321,7 +323,7 @@ class TestFindingsAPI:
         """Test getting findings for a specific contact."""
         org_id = findings_with_data["org_id"]
         contact_id = findings_with_data["contact_id"]
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         response = await client.get(
             f"/findings/contact/{contact_id}/findings",
@@ -335,7 +337,7 @@ class TestFindingsAPI:
     async def test_pagination(self, client: AsyncClient, findings_with_data):
         """Test pagination of findings."""
         org_id = findings_with_data["org_id"]
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         response = await client.get(
             "/findings?page=1&page_size=2",
@@ -354,7 +356,7 @@ class TestFindingsAPI:
     ):
         """Test /findings/map-data returns organization coordinates."""
         org_id = findings_with_data["org_id"]
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         response = await client.get(
             "/findings/map-data",
@@ -372,7 +374,7 @@ class TestFindingsAPI:
     ):
         """Test /findings/map-data returns only findings with GPS coordinates."""
         org_id = findings_with_data["org_id"]
-        user_id = findings_with_data["findings"][0].id
+        user_id = findings_with_data["user_id"]
 
         response = await client.get(
             "/findings/map-data",

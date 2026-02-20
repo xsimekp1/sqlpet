@@ -73,11 +73,6 @@ export function NavItem({
           S
         </span>
       )}
-      {shortcut && (
-        <span className={cn("ml-auto text-xs text-muted-foreground font-mono", collapsed && "hidden")}>
-          {formatShortcut(shortcut)}
-        </span>
-      )}
     </Link>
   )
 
