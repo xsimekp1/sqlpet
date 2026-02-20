@@ -6,15 +6,13 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
   MapPin, Clock, ExternalLink, List, Map as MapIcon,
-  Search, X, Loader2, Calendar, Filter
+  Search, X, Loader2
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
@@ -316,213 +314,110 @@ export default function FindingsPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filtry
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Species toggles + Date range - compact single row */}
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Druh zvířete</Label>
-              <div className="flex flex-wrap gap-1">
-                {SPECIES.map(species => (
-                  <Button
-                    key={species}
-                    variant={selectedSpecies.has(species) ? 'default' : 'outline'}
-                    size="sm"
-                    className="h-7 text-xs px-2"
-                    onClick={() => toggleSpecies(species)}
-                  >
-                    <span className="mr-1">{SPECIES_ICONS[species]}</span>
-                    {SPECIES_LABELS[species]}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Období</Label>
-              <Select value={datePreset} onValueChange={setDatePreset}>
-                <SelectTrigger className="h-7 w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DATE_PRESETS.map(p => (
-                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {datePreset === 'all' && (
-              <>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Od</Label>
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={e => setDateFrom(e.target.value)}
-                    className="h-7 w-32"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Do</Label>
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={e => setDateTo(e.target.value)}
-                    className="h-7 w-32"
-                  />
-                </div>
-              </>
-            )}
-
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Status</Label>
-              <div className="flex gap-1">
-                <Button
-                  variant={selectedStatus === 'current' ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => setSelectedStatus(selectedStatus === 'current' ? 'all' : 'current')}
-                >
-                  Aktuální
-                </Button>
-                <Button
-                  variant={selectedStatus === 'past' ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => setSelectedStatus(selectedStatus === 'past' ? 'all' : 'past')}
-                >
-                  Historie
-                </Button>
-              </div>
-            </div>
-
-            {hasFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-muted-foreground"
-                onClick={clearAllFilters}
-              >
-                <X className="h-3 w-3 mr-1" />
-                Vymazat
-              </Button>
-            )}
-          </div>
-
-          {/* GPS + Geocoding - compact */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm">Vyhledat místo (geocoding)</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Zadejte obec nebo adresu..."
-                  value={locationQuery}
-                  onChange={(e) => setLocationQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleGeocodeSearch()}
-                />
-                <Button
-                  onClick={handleGeocodeSearch}
-                  disabled={geocoding || !locationQuery.trim()}
-                  size="icon"
-                >
-                  {geocoding ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Search className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm">GPS filtr (klikněte na mapu)</Label>
-              <div className="flex gap-2 items-center">
-                {gpsLat !== null && gpsLng !== null ? (
-                  <>
-                    <div className="flex-1 flex items-center gap-2 bg-primary/10 px-3 py-2 rounded">
-                      <MapPin className="h-4 w-4" />
-                      <span className="text-sm">
-                        {gpsLat.toFixed(4)}, {gpsLng.toFixed(4)}
-                      </span>
-                    </div>
-                    <Select
-                      value={radius.toString()}
-                      onValueChange={(v) => setRadius(parseInt(v))}
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {RADIUS_OPTIONS.map(r => (
-                          <SelectItem key={r.value} value={r.value.toString()}>
-                            {r.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button onClick={clearGpsFilter} size="icon" variant="ghost">
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <span className="text-sm text-muted-foreground py-2">
-                    Klikněte na mapu pro nastavení GPS filtru
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Status filter */}
-          <div className="space-y-2">
-            <Label className="text-sm">Status</Label>
-            <div className="flex gap-2">
-              <Button
-                variant={selectedStatus === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedStatus('all')}
-              >
-                Vše
-              </Button>
-              <Button
-                variant={selectedStatus === 'current' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedStatus('current')}
-              >
-                Aktuální
-              </Button>
-              <Button
-                variant={selectedStatus === 'past' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedStatus('past')}
-              >
-                Historie
-              </Button>
-            </div>
-          </div>
-
-          {/* Clear filters */}
-          {hasFilters && (
+      {/* Filters - compact row */}
+      <div className="flex flex-wrap items-end gap-2 p-3 bg-muted/30 rounded-lg">
+        <div className="flex flex-wrap gap-1">
+          {SPECIES.map(species => (
             <Button
-              variant="ghost"
+              key={species}
+              variant={selectedSpecies.has(species) ? 'default' : 'outline'}
               size="sm"
-              onClick={clearAllFilters}
-              className="w-full"
+              className="h-7 text-xs px-2"
+              onClick={() => toggleSpecies(species)}
             >
-              <X className="h-4 w-4 mr-2" />
-              Vymazat všechny filtry
+              <span className="mr-1">{SPECIES_ICONS[species]}</span>
+              {SPECIES_LABELS[species]}
             </Button>
-          )}
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+
+        <div className="h-6 w-px bg-border mx-1" />
+
+        <Select value={datePreset} onValueChange={setDatePreset}>
+          <SelectTrigger className="h-7 w-28">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {DATE_PRESETS.map(p => (
+              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {datePreset === 'all' && (
+          <>
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="h-7 w-32"
+              placeholder="Od"
+            />
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="h-7 w-32"
+              placeholder="Do"
+            />
+          </>
+        )}
+
+        <div className="h-6 w-px bg-border mx-1" />
+
+        <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as any)}>
+          <SelectTrigger className="h-7 w-28">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Vše</SelectItem>
+            <SelectItem value="current">Aktuální</SelectItem>
+            <SelectItem value="past">Historie</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="h-6 w-px bg-border mx-1" />
+
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Hledat místo..."
+            value={locationQuery}
+            onChange={(e) => setLocationQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleGeocodeSearch()}
+            className="h-7 w-40"
+          />
+          <Button
+            onClick={handleGeocodeSearch}
+            disabled={geocoding || !locationQuery.trim()}
+            size="icon"
+            className="h-7 w-7"
+          >
+            {geocoding ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
+          </Button>
+        </div>
+
+        {gpsLat !== null && gpsLng !== null && (
+          <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded text-xs">
+            <MapPin className="h-3 w-3" />
+            <span>{gpsLat.toFixed(2)}, {gpsLng.toFixed(2)}</span>
+            <Button onClick={clearGpsFilter} size="icon" variant="ghost" className="h-4 w-4">
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+
+        {hasFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs text-muted-foreground"
+            onClick={clearAllFilters}
+          >
+            <X className="h-3 w-3 mr-1" />
+            Vymazat
+          </Button>
+        )}
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -574,17 +469,9 @@ export default function FindingsPage() {
         </TabsList>
 
         <TabsContent value="map" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* List - left side */}
-            <div className="lg:col-span-2">
-              <FindingsList
-                findings={filteredFindings}
-                organization={mapData?.organization}
-              />
-            </div>
-            
-            {/* Map - right side, square */}
-            <div className="lg:sticky lg:top-4 lg:h-fit">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Map - right side, wider on large screens */}
+            <div className="lg:order-2 lg:flex-1 lg:min-w-[400px]">
               <Card>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
@@ -611,7 +498,7 @@ export default function FindingsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="h-full p-2">
-                  <div className="h-[400px] lg:h-[500px] w-full">
+                  <div className="h-[400px] lg:h-[calc(100vh-280px)] lg:min-h-[500px] w-full">
                     <InteractiveMap
                       findings={findingsWithLocation}
                       organization={mapData?.organization}
@@ -624,6 +511,14 @@ export default function FindingsPage() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+            
+            {/* List - left side */}
+            <div className="lg:order-1 lg:w-[350px] xl:w-[400px] flex-shrink-0">
+              <FindingsList
+                findings={filteredFindings}
+                organization={mapData?.organization}
+              />
             </div>
           </div>
         </TabsContent>
