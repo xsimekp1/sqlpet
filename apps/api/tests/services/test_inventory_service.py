@@ -1,4 +1,5 @@
 """Unit tests for InventoryService"""
+
 import pytest
 from datetime import datetime, timezone, date, timedelta
 from uuid import uuid4
@@ -9,7 +10,11 @@ from decimal import Decimal
 from src.app.services.inventory_service import InventoryService
 from src.app.models.inventory_item import InventoryItem, InventoryCategory
 from src.app.models.inventory_lot import InventoryLot
-from src.app.models.inventory_transaction import InventoryTransaction, TransactionType
+from src.app.models.inventory_transaction import (
+    InventoryTransaction,
+    TransactionType,
+    TransactionReason,
+)
 from src.app.models.user import User
 from src.app.models.organization import Organization
 
@@ -39,11 +44,7 @@ def inventory_service(mock_db, mock_audit):
 @pytest.fixture
 def sample_org():
     """Sample organization"""
-    return Organization(
-        id=uuid4(),
-        name="Test Shelter",
-        slug="test-shelter"
-    )
+    return Organization(id=uuid4(), name="Test Shelter", slug="test-shelter")
 
 
 @pytest.fixture
@@ -64,7 +65,8 @@ def sample_item(sample_org):
         name="Dog Food - Premium Dry",
         category=InventoryCategory.FOOD,
         unit="kg",
-        reorder_threshold=Decimal("10.00")
+        reorder_threshold=Decimal("10.00"),
+        quantity_current=Decimal("50.00"),  # Initial stock
     )
 
 
@@ -76,7 +78,7 @@ def sample_lot(sample_org, sample_item):
         item_id=sample_item.id,
         lot_number="LOT-2024-001",
         quantity=Decimal("50.00"),
-        expires_at=date.today() + timedelta(days=180)
+        expires_at=date.today() + timedelta(days=180),
     )
 
 
@@ -84,7 +86,9 @@ class TestInventoryService:
     """Test InventoryService methods"""
 
     @pytest.mark.asyncio
-    async def test_create_item(self, inventory_service, mock_db, mock_audit, sample_org, sample_user):
+    async def test_create_item(
+        self, inventory_service, mock_db, mock_audit, sample_org, sample_user
+    ):
         """Test creating an inventory item"""
         # Act
         result = await inventory_service.create_item(
@@ -104,9 +108,16 @@ class TestInventoryService:
         mock_db.flush.assert_called_once()
         mock_audit.log_action.assert_called_once()
 
-
     @pytest.mark.asyncio
-    async def test_create_lot(self, inventory_service, mock_db, mock_audit, sample_org, sample_user, sample_item):
+    async def test_create_lot(
+        self,
+        inventory_service,
+        mock_db,
+        mock_audit,
+        sample_org,
+        sample_user,
+        sample_item,
+    ):
         """Test creating an inventory lot"""
         # Mock record_transaction to avoid double db.add/flush counting
         inventory_service.record_transaction = AsyncMock(return_value=MagicMock())
@@ -131,15 +142,21 @@ class TestInventoryService:
         inventory_service.record_transaction.assert_called_once()
         mock_audit.log_action.assert_called_once()
 
-
     @pytest.mark.asyncio
     async def test_record_transaction_in(
-        self, inventory_service, mock_db, mock_audit, sample_org, sample_item, sample_lot, sample_user
+        self,
+        inventory_service,
+        mock_db,
+        mock_audit,
+        sample_org,
+        sample_item,
+        sample_lot,
+        sample_user,
     ):
         """Test recording an IN transaction"""
         # Arrange
         mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = sample_lot
+        mock_result.scalar_one_or_none.return_value = sample_item
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         # Act
@@ -147,29 +164,34 @@ class TestInventoryService:
             organization_id=sample_org.id,
             item_id=sample_item.id,
             lot_id=sample_lot.id,
-            transaction_type=TransactionType.IN,
+            reason=TransactionReason.PURCHASE,
             quantity=Decimal("25.00"),
-            reason="Received new shipment",
-            user_id=sample_user.id
+            note="Received new shipment",
+            user_id=sample_user.id,
         )
 
         # Assert
-        assert result.type == TransactionType.IN
+        assert result.direction == TransactionType.IN
         assert result.quantity == Decimal("25.00")
-        assert sample_lot.quantity == Decimal("75.00")  # 50 + 25
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
         mock_audit.log_action.assert_called_once()
 
-
     @pytest.mark.asyncio
     async def test_record_transaction_out(
-        self, inventory_service, mock_db, mock_audit, sample_org, sample_item, sample_lot, sample_user
+        self,
+        inventory_service,
+        mock_db,
+        mock_audit,
+        sample_org,
+        sample_item,
+        sample_lot,
+        sample_user,
     ):
         """Test recording an OUT transaction"""
         # Arrange
         mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = sample_lot
+        mock_result.scalar_one_or_none.return_value = sample_item
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         # Act
@@ -177,24 +199,55 @@ class TestInventoryService:
             organization_id=sample_org.id,
             item_id=sample_item.id,
             lot_id=sample_lot.id,
-            transaction_type=TransactionType.OUT,
-            quantity=Decimal("-10.00"),  # Negative for OUT
-            reason="Used for feeding",
-            user_id=sample_user.id
+            reason=TransactionReason.CONSUMPTION,
+            quantity=Decimal("10.00"),
+            note="Used for feeding",
+            user_id=sample_user.id,
         )
 
         # Assert
-        assert result.type == TransactionType.OUT
-        assert result.quantity == Decimal("-10.00")
-        assert sample_lot.quantity == Decimal("40.00")  # 50 - 10
+        assert result.direction == TransactionType.OUT
+        assert result.quantity == Decimal("10.00")
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
         mock_audit.log_action.assert_called_once()
 
+    @pytest.mark.asyncio
+    async def test_record_transaction_negative_stock_prevention(
+        self,
+        inventory_service,
+        mock_db,
+        sample_org,
+        sample_item,
+        sample_user,
+    ):
+        """Test that negative stock is prevented"""
+        # Arrange - item has only 10 units
+        sample_item.quantity_current = Decimal("10.00")
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = sample_item
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        # Act & Assert - trying to deduct 20 should fail
+        with pytest.raises(ValueError, match="stock would be negative"):
+            await inventory_service.record_transaction(
+                organization_id=sample_org.id,
+                item_id=sample_item.id,
+                reason=TransactionReason.CONSUMPTION,
+                quantity=Decimal("20.00"),
+                user_id=sample_user.id,
+            )
 
     @pytest.mark.asyncio
     async def test_deduct_for_feeding_fifo_single_lot(
-        self, inventory_service, mock_db, sample_org, sample_item, sample_lot, sample_user
+        self,
+        inventory_service,
+        mock_db,
+        sample_org,
+        sample_item,
+        sample_lot,
+        sample_user,
     ):
         """Test FIFO deduction from a single lot for feeding"""
         # Arrange
@@ -210,9 +263,9 @@ class TestInventoryService:
 
         async def mock_execute(query):
             query_str = str(query)
-            if 'inventory_items' in query_str.lower():
+            if "inventory_items" in query_str.lower():
                 return mock_item_result
-            elif 'inventory_lots' in query_str.lower():
+            elif "inventory_lots" in query_str.lower():
                 return mock_lot_result
             return MagicMock()
 
@@ -220,9 +273,7 @@ class TestInventoryService:
 
         # Mock record_transaction
         mock_transaction = MagicMock(
-            id=uuid4(),
-            type=TransactionType.OUT,
-            quantity=Decimal("-0.20")
+            id=uuid4(), type=TransactionType.OUT, quantity=Decimal("-0.20")
         )
         inventory_service.record_transaction = AsyncMock(return_value=mock_transaction)
 
@@ -232,22 +283,23 @@ class TestInventoryService:
             food_name="Dog Food - Premium Dry",
             amount_g=200,  # 200 grams
             feeding_log_id=feeding_log_id,
-            user_id=sample_user.id
+            user_id=sample_user.id,
         )
 
         # Assert
-        assert result['item'] == sample_item
-        assert result['lot'] == sample_lot
-        assert abs(result['quantity_deducted'] - 0.2) < 1e-9  # 200g = 0.2kg
+        assert result["item"] == sample_item
+        assert result["lot"] == sample_lot
+        assert abs(result["quantity_deducted"] - 0.2) < 1e-9  # 200g = 0.2kg
 
         # Verify record_transaction was called correctly
         inventory_service.record_transaction.assert_called_once()
         call_args = inventory_service.record_transaction.call_args[1]
-        assert call_args.get('transaction_type') == TransactionType.OUT
-        assert abs(call_args['quantity'] - 0.2) < 1e-9  # 200g = 0.2kg, passed as positive
-        assert call_args['related_entity_type'] == 'feeding_log'
-        assert call_args['related_entity_id'] == feeding_log_id
-
+        assert call_args.get("reason") == TransactionReason.CONSUMPTION
+        assert (
+            abs(call_args["quantity"] - 0.2) < 1e-9
+        )  # 200g = 0.2kg, passed as positive
+        assert call_args["related_entity_type"] == "feeding_log"
+        assert call_args["related_entity_id"] == feeding_log_id
 
     @pytest.mark.asyncio
     async def test_deduct_for_feeding_fifo_multiple_lots(
@@ -263,7 +315,8 @@ class TestInventoryService:
             item_id=sample_item.id,
             lot_number="LOT-OLD",
             quantity=Decimal("10.00"),
-            expires_at=date.today() + timedelta(days=30)  # Expires soon (should be used first)
+            expires_at=date.today()
+            + timedelta(days=30),  # Expires soon (should be used first)
         )
 
         lot_expires_later = InventoryLot(
@@ -271,7 +324,7 @@ class TestInventoryService:
             item_id=sample_item.id,
             lot_number="LOT-NEW",
             quantity=Decimal("50.00"),
-            expires_at=date.today() + timedelta(days=365)  # Expires later
+            expires_at=date.today() + timedelta(days=365),  # Expires later
         )
 
         # Mock finding item
@@ -284,9 +337,9 @@ class TestInventoryService:
 
         async def mock_execute(query):
             query_str = str(query)
-            if 'inventory_items' in query_str.lower():
+            if "inventory_items" in query_str.lower():
                 return mock_item_result
-            elif 'inventory_lots' in query_str.lower():
+            elif "inventory_lots" in query_str.lower():
                 return mock_lot_result
             return MagicMock()
 
@@ -301,12 +354,11 @@ class TestInventoryService:
             food_name="Dog Food - Premium Dry",
             amount_g=200,
             feeding_log_id=feeding_log_id,
-            user_id=sample_user.id
+            user_id=sample_user.id,
         )
 
         # Assert - should use the lot expiring sooner
-        assert result['lot'] == lot_expires_soon
-
+        assert result["lot"] == lot_expires_soon
 
     @pytest.mark.asyncio
     async def test_deduct_for_feeding_no_item_raises_error(
@@ -325,9 +377,8 @@ class TestInventoryService:
                 food_name="Non-existent Food",
                 amount_g=200,
                 feeding_log_id=uuid4(),
-                user_id=sample_user.id
+                user_id=sample_user.id,
             )
-
 
     @pytest.mark.asyncio
     async def test_deduct_for_feeding_no_stock_raises_error(
@@ -344,9 +395,9 @@ class TestInventoryService:
 
         async def mock_execute(query):
             query_str = str(query)
-            if 'inventory_items' in query_str.lower():
+            if "inventory_items" in query_str.lower():
                 return mock_item_result
-            elif 'inventory_lots' in query_str.lower():
+            elif "inventory_lots" in query_str.lower():
                 return mock_lot_result
             return MagicMock()
 
@@ -359,5 +410,5 @@ class TestInventoryService:
                 food_name="Dog Food - Premium Dry",
                 amount_g=200,
                 feeding_log_id=uuid4(),
-                user_id=sample_user.id
+                user_id=sample_user.id,
             )

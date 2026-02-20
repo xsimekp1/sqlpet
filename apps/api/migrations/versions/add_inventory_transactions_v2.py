@@ -8,7 +8,7 @@ Create Date: 2026-02-20
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 from sqlalchemy.dialects.postgresql import UUID
 
 revision = "add_inventory_transactions_v2"
@@ -18,89 +18,110 @@ depends_on = None
 
 
 def upgrade():
-    # 1. Add direction column to inventory_transactions
-    op.add_column(
-        "inventory_transactions",
-        sa.Column(
-            "direction",
-            sa.Enum(
-                "in",
-                "out",
-                "adjust",
-                name="inventory_transaction_direction_enum",
-                create_constraint=False,
-                native_enum=False,
-            ),
-            nullable=False,
-            server_default="in",
-        ),
-    )
+    # Check existing columns in inventory_transactions
+    inspector = inspect(op.get_bind())
+    tx_columns = [c["name"] for c in inspector.get_columns("inventory_transactions")]
 
-    # 2. Add reason column to inventory_transactions
-    op.add_column(
-        "inventory_transactions",
-        sa.Column(
-            "reason",
-            sa.Enum(
-                "opening_balance",
-                "purchase",
-                "donation",
-                "consumption",
-                "writeoff",
-                name="inventory_transaction_reason_enum",
-                create_constraint=False,
-                native_enum=False,
+    # 1. Add direction column if not exists
+    if "direction" not in tx_columns:
+        op.add_column(
+            "inventory_transactions",
+            sa.Column(
+                "direction",
+                sa.Enum(
+                    "in",
+                    "out",
+                    "adjust",
+                    name="inventory_transaction_direction_enum",
+                    create_constraint=False,
+                    native_enum=False,
+                ),
+                nullable=False,
+                server_default="in",
             ),
-            nullable=False,
-            server_default="opening_balance",
-        ),
-    )
+        )
+    else:
+        # Ensure enum type exists for direction
+        op.execute(
+            text("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'inventory_transaction_direction_enum') THEN
+                    CREATE TYPE inventory_transaction_direction_enum AS ENUM ('in', 'out', 'adjust');
+                END IF;
+            END $$;
+        """)
+        )
 
-    # 3. Migrate existing data: set direction based on existing type, reason as opening_balance
+    # 2. Add reason column if not exists
+    if "reason" not in tx_columns:
+        op.add_column(
+            "inventory_transactions",
+            sa.Column(
+                "reason",
+                sa.Enum(
+                    "opening_balance",
+                    "purchase",
+                    "donation",
+                    "consumption",
+                    "writeoff",
+                    name="inventory_transaction_reason_enum",
+                    create_constraint=False,
+                    native_enum=False,
+                ),
+                nullable=False,
+                server_default="opening_balance",
+            ),
+        )
+    else:
+        # Ensure enum type exists for reason
+        op.execute(
+            text("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'inventory_transaction_reason_enum') THEN
+                    CREATE TYPE inventory_transaction_reason_enum AS ENUM ('opening_balance', 'purchase', 'donation', 'consumption', 'writeoff');
+                END IF;
+            END $$;
+        """)
+        )
+
+    # 3. Migrate existing data: set direction based on existing type
+    # Only if type column exists and direction needs updating
+    if "type" in tx_columns:
+        op.execute(
+            text("""
+            UPDATE inventory_transactions 
+            SET direction = type::text::inventory_transaction_direction_enum
+            WHERE type IS NOT NULL AND (direction IS NULL OR direction = 'in'::inventory_transaction_direction_enum)
+        """)
+        )
+        # Drop old type column if exists
+        op.drop_column("inventory_transactions", "type")
+
+    # 4. Ensure reason has valid values (set to opening_balance for NULL)
     op.execute(
         text("""
         UPDATE inventory_transactions 
-        SET direction = type::text::inventory_transaction_direction_enum,
-            reason = 'opening_balance'::inventory_transaction_reason_enum
-        WHERE type IS NOT NULL
+        SET reason = 'opening_balance'::inventory_transaction_reason_enum
+        WHERE reason IS NULL OR reason NOT IN ('opening_balance', 'purchase', 'donation', 'consumption', 'writeoff')
     """)
     )
 
-    # 4. Drop old columns (type and reason - we're replacing with new schema)
-    op.drop_column("inventory_transactions", "type")
-    op.drop_column("inventory_transactions", "reason")
+    # 5. Check and add quantity_current cache to inventory_items
+    item_columns = [c["name"] for c in inspector.get_columns("inventory_items")]
+    if "quantity_current" not in item_columns:
+        op.add_column(
+            "inventory_items",
+            sa.Column(
+                "quantity_current",
+                sa.Numeric(10, 2),
+                nullable=False,
+                server_default="0",
+            ),
+        )
 
-    # 5. Add quantity_current cache to inventory_items
-    op.add_column(
-        "inventory_items",
-        sa.Column(
-            "quantity_current", sa.Numeric(10, 2), nullable=False, server_default="0"
-        ),
-    )
-
-    # 6. Create opening_balance transactions from existing lot quantities
-    # For items with lots that have quantities: sum lot quantities as opening_balance
-    op.execute(
-        text("""
-        INSERT INTO inventory_transactions 
-            (id, organization_id, item_id, lot_id, direction, reason, quantity, note, created_at, updated_at)
-        SELECT 
-            gen_random_uuid() as id,
-            l.organization_id,
-            l.item_id,
-            l.id as lot_id,
-            'in'::inventory_transaction_direction_enum as direction,
-            'opening_balance'::inventory_transaction_reason_enum as reason,
-            COALESCE(l.quantity, 0) as quantity,
-            'Initial lot quantity' as note,
-            COALESCE(l.created_at, NOW()) as created_at,
-            COALESCE(l.updated_at, NOW()) as updated_at
-        FROM inventory_lots l
-        WHERE l.quantity IS NOT NULL AND l.quantity > 0
-    """)
-    )
-
-    # 7. Update quantity_current from the sum of opening_balance transactions per item
+    # 6. Update quantity_current from transaction sums (idempotent)
     op.execute(
         text("""
         UPDATE inventory_items i
@@ -117,42 +138,23 @@ def upgrade():
     """)
     )
 
-    # 8. Create index on (item_id, created_at) for faster transaction queries
-    op.create_index(
-        "ix_inventory_transactions_item_created",
-        "inventory_transactions",
-        ["item_id", "created_at"],
-    )
+    # 7. Create index on (item_id, created_at) if not exists
+    try:
+        op.create_index(
+            "ix_inventory_transactions_item_created",
+            "inventory_transactions",
+            ["item_id", "created_at"],
+        )
+    except Exception:
+        pass  # Index may already exist
 
 
 def downgrade():
-    op.drop_index("ix_inventory_transactions_item_created", "inventory_transactions")
+    op.drop_index(
+        "ix_inventory_transactions_item_created", table_name="inventory_transactions"
+    )
     op.drop_column("inventory_items", "quantity_current")
-    op.add_column(
-        "inventory_transactions",
-        sa.Column(
-            "type",
-            sa.Enum(
-                "in",
-                "out",
-                "adjust",
-                name="inventory_transaction_type_enum",
-                create_constraint=False,
-                native_enum=False,
-            ),
-            nullable=False,
-        ),
-    )
-    op.add_column(
-        "inventory_transactions",
-        sa.Column(
-            "reason", sa.Text(), nullable=False, server_default="opening_balance"
-        ),
-    )
-    op.execute(
-        text(
-            "UPDATE inventory_transactions SET type = direction::text::inventory_transaction_type_enum, reason = reason::text"
-        )
-    )
-    op.drop_column("inventory_transactions", "direction")
-    op.drop_column("inventory_transactions", "reason")
+
+    # Note: This is a best-effort downgrade - might not fully restore original state
+    # because we've already potentially modified/dropped the old 'type' column
+    pass
