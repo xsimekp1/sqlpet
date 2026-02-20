@@ -175,11 +175,25 @@ async def get_findings_map_data(
     )
 
     findings_query = text("""
-        SELECT f.id as finding_id
+        SELECT
+            f.id as finding_id,
+            f.animal_id,
+            f.when_found,
+            f.where_lat,
+            f.where_lng,
+            a.name as animal_name,
+            a.public_code as animal_public_code,
+            a.species,
+            CASE
+                WHEN f.animal_id IS NOT NULL AND a.status IN ('adopted', 'deceased', 'lost') THEN 'past'
+                ELSE 'current'
+            END as status
         FROM findings f
-        WHERE f.organization_id = :org_id 
-          AND f.where_lat IS NOT NULL 
+        LEFT JOIN animals a ON a.id = f.animal_id
+        WHERE f.organization_id = :org_id
+          AND f.where_lat IS NOT NULL
           AND f.where_lng IS NOT NULL
+        ORDER BY f.when_found DESC
     """)
 
     findings_result = await db.execute(findings_query, {"org_id": str(organization_id)})
@@ -189,15 +203,15 @@ async def get_findings_map_data(
     for row in rows:
         findings.append(
             FindingMapData(
-                id=uuid.UUID(str(row.finding_id)),
-                animal_id=None,
-                animal_name=None,
-                animal_public_code=None,
-                species=None,
-                when_found=None,
-                where_lat=None,
-                where_lng=None,
-                status="current",
+                id=row.finding_id,
+                animal_id=row.animal_id,
+                animal_name=row.animal_name,
+                animal_public_code=row.animal_public_code,
+                species=row.species,
+                when_found=row.when_found,
+                where_lat=row.where_lat,
+                where_lng=row.where_lng,
+                status=row.status,
             )
         )
 
