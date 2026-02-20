@@ -56,6 +56,7 @@ import BirthDialog from '@/app/components/animals/BirthDialog';
 import { EditableAnimalName, EditableAnimalDetails, AssignKennelButton } from '@/app/components/animals';
 import { calcMER, calcRER, getMERFactor, getMERFactorLabel } from '@/app/lib/energy';
 import { useAuth } from '@/app/context/AuthContext';
+import { useOrganizationStore } from '@/app/stores/organizationStore';
 import PersonalityTab from '@/app/components/animals/PersonalityTab';
 import PassportTab from '@/app/components/animals/PassportTab';
 
@@ -136,6 +137,7 @@ export default function AnimalDetailPage() {
   const params = useParams();
   const t = useTranslations('animals');
   const { user } = useAuth();
+  const { selectedOrg } = useOrganizationStore();
   const isSuperadmin = user?.is_superadmin === true;
 
   const [animal, setAnimal] = useState<Animal | null>(null);
@@ -2172,7 +2174,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               <>
                 <div className="bg-white p-4 rounded-lg border">
                   <QRCode
-                    value={`https://sqlpet.vercel.app/cs/dashboard/animals/${animal.id}`}
+                    value={`https://sqlpet.vercel.app/cs/public/${selectedOrg?.slug || 'animals'}/${animal.id}`}
                     size={200}
                     level="M"
                   />

@@ -37,6 +37,7 @@ import { KennelTaskDialog } from '@/app/components/kennels/KennelTaskDialog';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import QRCode from 'react-qr-code';
+import { useOrganizationStore } from '@/app/stores/organizationStore';
 
 function getAuthHeaders(): Record<string, string> {
   if (typeof window === 'undefined') return {};
@@ -111,6 +112,7 @@ export default function KennelDetailPage() {
   const params = useParams();
   const kennelId = params.id as string;
   const t = useTranslations('kennels');
+  const { selectedOrg } = useOrganizationStore();
 
   const [kennel, setKennel] = useState<Kennel | null>(null);
   const [stays, setStays] = useState<KennelStay[]>([]);
@@ -917,7 +919,7 @@ export default function KennelDetailPage() {
               <>
                 <div className="bg-white p-4 rounded-lg border">
                   <QRCode
-                    value={`https://sqlpet.vercel.app/cs/public/kennels/${kennelId}`}
+                    value={`https://sqlpet.vercel.app/cs/public/${selectedOrg?.slug || 'kennels'}/${kennelId}`}
                     size={200}
                     level="M"
                   />
