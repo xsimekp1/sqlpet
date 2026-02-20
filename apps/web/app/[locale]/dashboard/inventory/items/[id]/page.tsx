@@ -113,7 +113,7 @@ export default function InventoryItemDetailPage() {
 
   const lots = Array.isArray(lotsData) ? lotsData : (lotsData?.items ?? []);
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.items ?? []);
-  const totalQuantity = item?.quantity_current ?? lots.reduce((sum: number, lot: any) => sum + (Number(lot.quantity) || 0), 0);
+  const totalQuantity = lots.reduce((sum: number, lot: any) => sum + (Number(lot.quantity) || 0), 0);
 
   // Add lot mutation
   const addLotMutation = useMutation({

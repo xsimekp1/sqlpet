@@ -48,7 +48,6 @@ class InventoryItemUpdate(BaseModel):
 class InventoryItemResponse(InventoryItemBase):
     id: uuid.UUID
     organization_id: uuid.UUID
-    quantity_current: float = 0  # Cached current quantity
     created_at: datetime
     updated_at: datetime
 
@@ -105,7 +104,6 @@ class InventoryTransactionResponse(BaseModel):
 class InventoryStockResponse(BaseModel):
     item: InventoryItemResponse
     total_quantity: float
-    quantity_current: float  # From item cache
     lots_count: int
     oldest_expiry: Optional[date]
 
