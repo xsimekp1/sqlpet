@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { ApiClient } from '@/app/lib/api'
 
 export type ShoppingItem = {
   inventoryItemId: string
@@ -36,6 +37,11 @@ interface ShoppingListState {
   addLowStockItems: (items: InventoryItemWithStock[]) => void
   isInList: (id: string) => boolean
   getItemQty: (id: string) => number
+  createPurchaseOrder: (
+    supplierName: string,
+    expectedDeliveryDate?: string,
+    notes?: string
+  ) => Promise<any>
 }
 
 const calculateDefaultQty = (
@@ -158,6 +164,33 @@ export const useShoppingListStore = create<ShoppingListState>()(
       getItemQty: (id) => {
         const item = get().items.find((i) => i.inventoryItemId === id)
         return item?.desiredQty ?? 0
+      },
+
+      createPurchaseOrder: async (supplierName, expectedDeliveryDate, notes) => {
+        const items = get().items
+
+        if (items.length === 0) {
+          throw new Error('Shopping list is empty')
+        }
+
+        // Convert shopping list items to PO items
+        const poData = {
+          supplier_name: supplierName,
+          items: items.map((item) => ({
+            inventory_item_id: item.inventoryItemId,
+            quantity_ordered: item.desiredQty,
+          })),
+          expected_delivery_date: expectedDeliveryDate,
+          notes: notes,
+        }
+
+        // Create purchase order via API
+        const po = await ApiClient.createPurchaseOrder(poData)
+
+        // Clear shopping list on success
+        set({ items: [] })
+
+        return po
       },
     }),
     {

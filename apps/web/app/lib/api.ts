@@ -1586,6 +1586,64 @@ class ApiClient {
     return ApiClient.get('/inventory/transactions', params);
   }
 
+  // Purchase Orders
+  static async createPurchaseOrder(data: {
+    supplier_name: string;
+    items: Array<{
+      inventory_item_id: string;
+      quantity_ordered: number;
+      unit_price?: number;
+      notes?: string;
+    }>;
+    expected_delivery_date?: string;
+    notes?: string;
+  }): Promise<any> {
+    return ApiClient.post('/purchase-orders', data);
+  }
+
+  static async getPurchaseOrders(params?: {
+    status?: string;
+    date_from?: string;
+    date_to?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<any[]> {
+    return ApiClient.get('/purchase-orders', params);
+  }
+
+  static async getPurchaseOrder(id: string): Promise<any> {
+    return ApiClient.get(`/purchase-orders/${id}`);
+  }
+
+  static async receivePurchaseOrder(id: string, data: {
+    items: Array<{
+      item_id: string;
+      quantity_received: number;
+      lot_number?: string;
+      expiration_date?: string;
+      notes?: string;
+    }>;
+  }): Promise<any> {
+    return ApiClient.post(`/purchase-orders/${id}/receive`, data);
+  }
+
+  static async cancelPurchaseOrder(id: string): Promise<any> {
+    return ApiClient.patch(`/purchase-orders/${id}/cancel`, {});
+  }
+
+  static async getOnTheWayQuantity(itemId: string): Promise<{
+    inventory_item_id: string;
+    quantity_on_the_way: number;
+    purchase_orders: Array<{
+      po_number: string;
+      quantity_remaining: number;
+      expected_delivery_date: string | null;
+      status: string;
+    }>;
+  }> {
+    return ApiClient.get(`/purchase-orders/items/${itemId}/on-the-way`);
+  }
+
   static async uploadOrgLogo(file: File): Promise<{ file_url: string }> {
     const formData = new FormData();
     formData.append('file', file);
