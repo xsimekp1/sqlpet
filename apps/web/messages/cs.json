@@ -533,6 +533,7 @@
   "settings": {
     "title": "Nastavení",
     "description": "Spravujte své předvolby",
+    "cancel": "Zrušit",
     "tabs": {
       "general": "Obecné",
       "defaultImages": "Výchozí obrázky",

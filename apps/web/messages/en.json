@@ -347,7 +347,8 @@
     },
     "settings": {
       "title": "Settings",
-      "description": "System settings and configuration"
+      "description": "System settings and configuration",
+      "cancel": "Cancel"
     },
     "quickStats": {
       "title": "Quick Stats",
