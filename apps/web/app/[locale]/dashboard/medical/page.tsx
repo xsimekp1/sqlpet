@@ -453,10 +453,10 @@ const getPriorityColor = (priority: string) => {
                       <tr key={item.id} className="border-t hover:bg-muted/30 transition-colors">
                         <td className="px-3 py-2.5">
                           {status === 'out' && (
-                            <AlertCircle className="h-4 w-4 text-red-500" title={t('medical.stock.outOfStock')} />
+                            <AlertCircle className="h-4 w-4 text-red-500" aria-label={t('medical.stock.outOfStock')} />
                           )}
                           {status === 'low' && (
-                            <AlertTriangle className="h-4 w-4 text-yellow-500" title={t('medical.stock.lowStock')} />
+                            <AlertTriangle className="h-4 w-4 text-yellow-500" aria-label={t('medical.stock.lowStock')} />
                           )}
                           {status === 'ok' && (
                             <CheckCircle2 className="h-4 w-4 text-green-500" />
