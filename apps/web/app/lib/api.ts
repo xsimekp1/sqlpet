@@ -1375,6 +1375,7 @@ class ApiClient {
       birth_date?: string;
       naming_scheme?: 'number' | 'letter' | 'color';
       collar_colors?: (string | null)[];
+      mother_lactating?: boolean;
     }
   ): Promise<{ created: number; offspring: { id: string; public_code: string; name: string }[] }> {
     const response = await axios.post(
