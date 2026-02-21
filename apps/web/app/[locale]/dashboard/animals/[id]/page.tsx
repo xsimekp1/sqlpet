@@ -259,7 +259,7 @@ export default function AnimalDetailPage() {
     setUploadingPhoto(true);
     try {
       const result = await ApiClient.uploadAnimalPhoto(animal.id, file);
-      setAnimal(prev => prev ? { ...prev, primary_photo_url: result.thumbnail_url || result.file_url } : prev);
+      setAnimal(prev => prev ? { ...prev, primary_photo_url: result.file_url, thumbnail_url: result.thumbnail_url } : prev);
       toast.success('Fotka nahrána');
     } catch (err: any) {
       toast.error('Nepodařilo se nahrát fotku: ' + (err.message || ''));
@@ -1035,7 +1035,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           <div className="relative w-full max-w-xl aspect-square rounded-xl overflow-hidden bg-muted mx-auto group">
             <Image
               key={animal.id}
-              src={getAnimalImageUrl(animal)}
+              src={animal.primary_photo_url || animal.default_image_url || getAnimalImageUrl(animal)}
               alt={animal.name}
               fill
               className="object-cover object-center"
