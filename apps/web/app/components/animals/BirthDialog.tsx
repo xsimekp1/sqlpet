@@ -133,7 +133,20 @@ export default function BirthDialog({
                 min={1}
                 max={20}
                 value={litterCount}
-                onChange={e => setLitterCount(parseInt(e.target.value, 10) || 1)}
+                onChange={e => {
+                  const val = parseInt(e.target.value, 10);
+                  if (!isNaN(val)) {
+                    setLitterCount(val);
+                  } else if (e.target.value === '') {
+                    // Allow empty field for typing
+                    setLitterCount(0);
+                  }
+                }}
+                onBlur={e => {
+                  // On blur, ensure valid value
+                  if (litterCount < 1) setLitterCount(1);
+                  if (litterCount > 20) setLitterCount(20);
+                }}
                 className="w-28"
               />
             </div>
