@@ -150,6 +150,7 @@ class AnimalResponse(AnimalCreate):
     # Website publication tracking (for found animals)
     website_published_at: date | None = None
     website_deadline_at: date | None = None
+    website_deadline_type: str | None = None  # "shelter" (4 months) or "finder" (2 months)
     website_days_left: int | None = None  # Computed: days until deadline
     website_deadline_state: str | None = (
         None  # "waiting" | "expired" | "not_published"

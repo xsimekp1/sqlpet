@@ -151,6 +151,7 @@ export interface Animal {
   // Website publication tracking (for found animals)
   website_published_at?: string | null;
   website_deadline_at?: string | null;
+  website_deadline_type?: string | null; // "shelter" (4 months) or "finder" (2 months)
   website_days_left?: number | null;
   website_deadline_state?: string | null; // "waiting" | "expired" | "not_published"
 
@@ -985,10 +986,10 @@ class ApiClient {
     }
   }
 
-  static async publishAnimalToWebsite(id: string): Promise<Animal> {
+  static async publishAnimalToWebsite(id: string, type: 'shelter' | 'finder' = 'shelter'): Promise<Animal> {
     try {
       const response = await axios.post(
-        `${API_URL}/animals/${id}/publish-to-website`,
+        `${API_URL}/animals/${id}/publish-to-website?type=${type}`,
         {},
         { headers: this.getAuthHeaders() }
       );

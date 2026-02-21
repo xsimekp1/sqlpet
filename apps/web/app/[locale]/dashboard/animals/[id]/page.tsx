@@ -836,27 +836,34 @@ if (photoInputRef.current) photoInputRef.current.value = '';
     }
   };
 
-  const handlePublishToWebsite = async () => {
+  const handlePublishToWebsite = async (type: 'shelter' | 'finder' = 'shelter') => {
     if (!animal) return;
 
-    // Confirm dialog
+    // Confirm dialog with different messages based on type
+    const months = type === 'shelter' ? 4 : 2;
     const deadline = new Date();
-    deadline.setMonth(deadline.getMonth() + 4);
-    const confirmed = window.confirm(
-      `Opravdu chcete vystavit ${animal.name} na web? Běžet začne 4měsíční čekací lhůta (do ${deadline.toLocaleDateString('cs-CZ')}).`
-    );
+    deadline.setMonth(deadline.getMonth() + months);
+
+    const message = type === 'shelter'
+      ? `Opravdu chcete vyhlásit nález ${animal.name} (útulek)? Běžet začne ${months}měsíční čekací lhůta (do ${deadline.toLocaleDateString('cs-CZ')}).`
+      : `Opravdu chcete vyhlásit nález ${animal.name} (nálezce si nechá)? Běžet začne ${months}měsíční čekací lhůta (do ${deadline.toLocaleDateString('cs-CZ')}). Po vypršení bude zvíře oficiálně u nálezce.`;
+
+    const confirmed = window.confirm(message);
 
     if (!confirmed) return;
 
     setPublishing(true);
     try {
-      const updated = await ApiClient.publishAnimalToWebsite(animal.id);
+      const updated = await ApiClient.publishAnimalToWebsite(animal.id, type);
       setAnimal(updated);
-      toast.success(
-        `Zvíře vystaveno na webu. Lhůta vyprší ${new Date(updated.website_deadline_at!).toLocaleDateString('cs-CZ')}.`
-      );
+
+      const successMessage = type === 'shelter'
+        ? `Nález vyhlášen (útulek). Lhůta vyprší ${new Date(updated.website_deadline_at!).toLocaleDateString('cs-CZ')}.`
+        : `Nález vyhlášen (nálezce). Lhůta vyprší ${new Date(updated.website_deadline_at!).toLocaleDateString('cs-CZ')}. Zvíře je u nálezce.`;
+
+      toast.success(successMessage);
     } catch (err: any) {
-      toast.error(err?.message || 'Chyba při vystavení na web');
+      toast.error(err?.message || 'Chyba při vyhlášení nálezu');
     } finally {
       setPublishing(false);
     }
@@ -1303,15 +1310,27 @@ if (photoInputRef.current) photoInputRef.current.value = '';
             {activeIntakeReason === 'found' &&
              !animal.website_published_at &&
              ['intake', 'quarantine'].includes(animal.status) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePublishToWebsite()}
-                disabled={publishing}
-              >
-                <Globe className="h-4 w-4 mr-2" />
-                Vystaveno na webu
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePublishToWebsite('shelter')}
+                  disabled={publishing}
+                >
+                  <Globe className="h-4 w-4 mr-2" />
+                  Útulek (4 měsíce)
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePublishToWebsite('finder')}
+                  disabled={publishing}
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300"
+                >
+                  <Home className="h-4 w-4 mr-2" />
+                  Nálezce si nechá (2 měsíce)
+                </Button>
+              </>
             )}
             {/* Special action for animals in waiting_adoption - Return to Original Owner */}
             {animal.status === 'waiting_adoption' && activeIntakeId && (

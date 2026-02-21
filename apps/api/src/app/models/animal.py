@@ -198,7 +198,10 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     website_published_at: Mapped[date | None] = mapped_column(Date, nullable=True)
     website_deadline_at: Mapped[date | None] = mapped_column(
         Date, nullable=True
-    )  # Computed: published_at + 4 months
+    )  # Computed: published_at + 2 or 4 months depending on type
+    website_deadline_type: Mapped[str | None] = mapped_column(
+        String(20), nullable=True
+    )  # "shelter" (4 months) or "finder" (2 months)
     website_published_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
     )

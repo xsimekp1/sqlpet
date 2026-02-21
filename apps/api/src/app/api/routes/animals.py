@@ -1126,6 +1126,7 @@ async def mark_animal_walked(
 @router.post("/{animal_id}/publish-to-website", response_model=AnimalResponse)
 async def publish_animal_to_website(
     animal_id: uuid.UUID,
+    type: str = Query("shelter", description="Publication type: 'shelter' (4 months) or 'finder' (2 months)"),
     current_user: User = Depends(require_permission("animals.write")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
@@ -1133,7 +1134,9 @@ async def publish_animal_to_website(
     """
     Mark a found animal as published on the website.
 
-    This triggers the 4-month waiting period before the animal can be adopted.
+    - type='shelter': Animal in shelter, 4-month waiting period, status → waiting_adoption
+    - type='finder': Finder keeps animal, 2-month waiting period, status → with_owner
+
     Only for animals with intake_reason='found' and status in ['intake', 'quarantine'].
     """
     from src.app.models.animal import AnimalStatus
@@ -1178,14 +1181,26 @@ async def publish_animal_to_website(
     if animal.website_published_at:
         raise HTTPException(status_code=400, detail="Animal already published to website")
 
-    # Set publication date and compute deadline (4 months)
+    # Validate type parameter
+    if type not in ["shelter", "finder"]:
+        raise HTTPException(status_code=400, detail="Invalid type. Must be 'shelter' or 'finder'")
+
+    # Set publication date and compute deadline based on type
     today = date.today()
-    deadline = today + relativedelta(months=4)
+    if type == "shelter":
+        # Animal in shelter: 4-month waiting period
+        deadline = today + relativedelta(months=4)
+        new_status = AnimalStatus.WAITING_ADOPTION
+    else:  # type == "finder"
+        # Finder keeps animal: 2-month waiting period
+        deadline = today + relativedelta(months=2)
+        new_status = AnimalStatus.WITH_OWNER
 
     animal.website_published_at = today
     animal.website_deadline_at = deadline
+    animal.website_deadline_type = type
     animal.website_published_by_user_id = current_user.id
-    animal.status = AnimalStatus.WAITING_ADOPTION
+    animal.status = new_status
 
     await db.commit()
     await db.refresh(animal)
@@ -1204,7 +1219,8 @@ async def publish_animal_to_website(
         after_value={
             "website_published_at": str(today),
             "website_deadline_at": str(deadline),
-            "status": "waiting_adoption",
+            "website_deadline_type": type,
+            "status": new_status.value if hasattr(new_status, "value") else str(new_status),
         },
     )
 
