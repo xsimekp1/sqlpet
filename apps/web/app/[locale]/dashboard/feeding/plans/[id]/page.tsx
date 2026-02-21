@@ -326,7 +326,7 @@ export default function EditFeedingPlanPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Quick preset buttons */}
-            <TimePresetsButtons onSelect={handlePresetSelect} />
+            <TimePresetsButtons onSelect={handlePresetSelect} scheduleTimes={scheduleTimes} />
 
             {/* Current times list */}
             {scheduleTimes.length > 0 && (
