@@ -2012,6 +2012,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
         <BirthDialog
           animalId={animal.id}
           animalName={animal.name}
+          species={animal.species as 'dog' | 'cat'}
           open={birthDialogOpen}
           onOpenChange={setBirthDialogOpen}
           onBirthRegistered={(count) => {

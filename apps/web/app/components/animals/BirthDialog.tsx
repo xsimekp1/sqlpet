@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Baby } from 'lucide-react';
+import { Baby, Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 import { OffspringCollarPreview } from './OffspringCollarPreview';
 import {
@@ -34,6 +34,7 @@ import {
 interface BirthDialogProps {
   animalId: string;
   animalName: string;
+  species: 'dog' | 'cat';
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Called after successful birth registration */
@@ -43,13 +44,17 @@ interface BirthDialogProps {
 export default function BirthDialog({
   animalId,
   animalName,
+  species,
   open,
   onOpenChange,
   onBirthRegistered,
 }: BirthDialogProps) {
   const t = useTranslations('birth');
   const [step, setStep] = useState<1 | 2>(1);
-  const [litterCount, setLitterCount] = useState(1);
+
+  // Default litter size based on species
+  const defaultLitterSize = species === 'cat' ? 4 : 6;
+  const [litterCount, setLitterCount] = useState(defaultLitterSize);
   const [birthDate, setBirthDate] = useState(new Date().toISOString().split('T')[0]);
   const [motherLactating, setMotherLactating] = useState(true);
   const [namingScheme, setNamingScheme] = useState<'number' | 'letter' | 'color'>('number');
@@ -126,29 +131,35 @@ export default function BirthDialog({
         {step === 1 && (
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="litter-count">{t('litterCount')}</Label>
-              <Input
-                id="litter-count"
-                type="number"
-                min={1}
-                max={20}
-                value={litterCount}
-                onChange={e => {
-                  const val = parseInt(e.target.value, 10);
-                  if (!isNaN(val)) {
-                    setLitterCount(val);
-                  } else if (e.target.value === '') {
-                    // Allow empty field for typing
-                    setLitterCount(0);
-                  }
-                }}
-                onBlur={e => {
-                  // On blur, ensure valid value
-                  if (litterCount < 1) setLitterCount(1);
-                  if (litterCount > 20) setLitterCount(20);
-                }}
-                className="w-28"
-              />
+              <Label>{t('litterCount')}</Label>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setLitterCount(Math.max(1, litterCount - 1))}
+                  disabled={litterCount <= 1}
+                  className="h-10 w-10"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <div className="flex items-center justify-center w-16 h-10 text-lg font-semibold border rounded-md bg-white">
+                  {litterCount}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setLitterCount(Math.min(20, litterCount + 1))}
+                  disabled={litterCount >= 20}
+                  className="h-10 w-10"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  {getOffspringLabel(litterCount)}
+                </span>
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="birth-date">{t('birthDate')}</Label>
