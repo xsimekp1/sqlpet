@@ -40,7 +40,7 @@ export default function CreateDocumentDialog({
   onOpenChange,
   onDocumentCreated,
 }: CreateDocumentDialogProps) {
-  const t = useTranslations('documents');
+  const t = useTranslations('animals.documents');
 
   // Form state
   const [templateCode] = useState('donation_contract_dog'); // MVP: only one template
