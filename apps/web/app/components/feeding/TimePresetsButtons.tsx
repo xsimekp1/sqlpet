@@ -1,35 +1,57 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 const PRESETS = [
-  { times: 1, schedule: ['08:00'] },
-  { times: 2, schedule: ['08:00', '18:00'] },
-  { times: 3, schedule: ['08:00', '13:00', '18:00'] },
-  { times: 4, schedule: ['07:00', '12:00', '17:00', '22:00'] },
-  { times: 5, schedule: ['07:00', '11:00', '15:00', '19:00', '23:00'] },
-  { times: 6, schedule: ['06:00', '10:00', '14:00', '18:00', '22:00', '02:00'] },
+  {
+    times: 1,
+    label: '1× denně',
+    sublabel: 'ráno',
+    schedule: ['07:00'],
+  },
+  {
+    times: 2,
+    label: '2× denně',
+    sublabel: 'ráno + večer',
+    schedule: ['07:00', '18:00'],
+  },
+  {
+    times: 3,
+    label: '3× denně',
+    sublabel: 'ráno · poledne · večer',
+    schedule: ['07:00', '12:00', '18:00'],
+  },
 ];
 
 interface TimePresetsButtonsProps {
   onSelect: (times: string[]) => void;
+  scheduleTimes: string[];
 }
 
-export function TimePresetsButtons({ onSelect }: TimePresetsButtonsProps) {
+export function TimePresetsButtons({ onSelect, scheduleTimes }: TimePresetsButtonsProps) {
+  const activeIndex = PRESETS.findIndex(
+    (p) =>
+      p.schedule.length === scheduleTimes.length &&
+      p.schedule.every((t, i) => scheduleTimes[i] === t),
+  );
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <Label className="w-full text-sm text-muted-foreground">Quick presets:</Label>
-      {PRESETS.map(preset => (
-        <Button
-          key={preset.times}
+    <div className="grid grid-cols-3 gap-2">
+      {PRESETS.map((preset, i) => (
+        <button
           type="button"
-          variant="outline"
-          size="sm"
+          key={preset.times}
           onClick={() => onSelect(preset.schedule)}
+          className={cn(
+            'flex flex-col items-center gap-0.5 rounded-lg border p-3 text-sm transition-colors',
+            activeIndex === i
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-input bg-background hover:bg-accent',
+          )}
         >
-          {preset.times}× per day
-        </Button>
+          <span className="font-semibold">{preset.label}</span>
+          <span className="text-xs text-muted-foreground">{preset.sublabel}</span>
+        </button>
       ))}
     </div>
   );

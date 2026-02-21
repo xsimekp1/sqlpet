@@ -1266,6 +1266,11 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                       Vyhlášeno: {new Date(animal.notice_published_at).toLocaleDateString('cs-CZ')}
                     </div>
                   )}
+                  {animal.legal_deadline_type === '4m_notice' && (
+                    <div className="text-xs text-muted-foreground">
+                      Přímé předání nálezcem · lhůta 4 měsíce od vyhlášení
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1345,14 +1350,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                 Návrat k původnímu majiteli
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDocumentDialogOpen(true)}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              {t('documents.createDocument')}
-            </Button>
             {activeIntakeId && (
               <Button
                 variant="outline"
@@ -1367,18 +1364,20 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               <Trash2 className="h-4 w-4 mr-2" />
               {t('delete')}
             </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => setQrDialogOpen(true)} className="h-8 w-8">
-                    <QrCode className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>QR kód</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="hidden md:flex">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => setQrDialogOpen(true)} className="h-8 w-8">
+                      <QrCode className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>QR kód</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </div>
       </div>
@@ -1986,7 +1985,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                   <CardTitle>{t('documents.title')}</CardTitle>
                   <CardDescription>{t('documents.description')}</CardDescription>
                 </div>
-                <div>
+                <div className="flex gap-2">
                   <input
                     ref={documentInputRef}
                     type="file"
@@ -1994,6 +1993,14 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                     className="hidden"
                     onChange={handleDocumentUpload}
                   />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDocumentDialogOpen(true)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    {t('documents.createDocument')}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -2005,7 +2012,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                     ) : (
                       <Upload className="h-4 w-4 mr-2" />
                     )}
-                    Nahrát dokument
+                    {t('documents.upload')}
                   </Button>
                 </div>
               </div>
@@ -2019,8 +2026,8 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               ) : documents.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p>Žádné dokumenty</p>
-                  <p className="text-sm mt-1">Nahrajte první dokument pomocí tlačítka výše</p>
+                  <p>{t('documents.empty')}</p>
+                  <p className="text-sm mt-1">{t('documents.emptyHint')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2046,7 +2053,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                         </div>
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {doc.uploaded_by_user_name && <span>Nahrál: {doc.uploaded_by_user_name}</span>}
+                        {doc.uploaded_by_user_name && <span>{t('documents.uploadedBy', { name: doc.uploaded_by_user_name })}</span>}
                         {doc.uploaded_by_user_name && doc.created_at && <span> · </span>}
                         {doc.created_at && <span>{new Date(doc.created_at).toLocaleDateString('cs-CZ')}</span>}
                       </div>
@@ -2054,7 +2061,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                         <Button variant="outline" size="sm" className="flex-1" asChild>
                           <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-3 w-3 mr-1" />
-                            Otevřít
+                            {t('documents.open')}
                           </a>
                         </Button>
                         <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={() => handleDeleteDocument(doc.id)}>

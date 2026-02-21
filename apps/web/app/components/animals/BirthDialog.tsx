@@ -97,14 +97,9 @@ export default function BirthDialog({
         birth_date: birthDate || undefined,
         naming_scheme: namingScheme,
         collar_colors: namingScheme === 'color' ? collarColors.map(c => c || 'none') : undefined,
+        mother_lactating: motherLactating,
       });
       toast.success(t('success', { count: result.created }));
-
-      // Set mother as lactating if checkbox is checked
-      if (motherLactating) {
-        await ApiClient.updateAnimal(animalId, { is_lactating: true } as any);
-        toast.success(t('motherLactatingSet'));
-      }
 
       onOpenChange(false);
       onBirthRegistered?.(result.created);

@@ -191,7 +191,10 @@
       "medications": "Léky",
       "vaccines": "Vakcíny",
       "comingSoon": "Připravujeme...",
-      "implementNote": "Integrace se skladem bude přidána v další fázi"
+      "implementNote": "Integrace se skladem bude přidána v další fázi",
+      "viewAll": "Zobrazit inventář",
+      "noMedications": "Žádné léky ani vakcíny v inventáři",
+      "activeLots": "Šarže"
     },
     "tasks": {
       "title": "Lékařské úkoly",
@@ -913,7 +916,12 @@
       "cancel": "Zrušit",
       "documentCreated": "Dokument byl úspěšně vytvořen",
       "createError": "Nepodařilo se vytvořit dokument",
-      "previewError": "Nepodařilo se zobrazit náhled"
+      "previewError": "Nepodařilo se zobrazit náhled",
+      "upload": "Nahrát dokument",
+      "empty": "Žádné dokumenty",
+      "emptyHint": "Nahrajte první dokument pomocí tlačítka výše",
+      "uploadedBy": "Nahrál: {name}",
+      "open": "Otevřít"
     },
     "weight": {
       "estimated": "odhadovaná váha",
@@ -1408,7 +1416,8 @@
       "addLot": "Přidat šarži",
       "noLotsFound": "Žádné šarže nenalezeny. Přidejte šarži pro sledování zásob.",
       "vial": "lahvička",
-      "ampule": "ampule"
+      "ampule": "ampule",
+      "lotsCreatedOnReceiving": "Šarže se vytvářejí automaticky při naskladnění"
     }
   },
   "colors": {

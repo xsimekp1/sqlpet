@@ -52,7 +52,9 @@ export function Topbar() {
             </Button>
           </Link>
           <AlertsBell />
-          <LanguageSwitcher />
+          <div className="hidden md:flex">
+            <LanguageSwitcher />
+          </div>
           <UserMenu />
           <EasterEggTrigger />
         </div>

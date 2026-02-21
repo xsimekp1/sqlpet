@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,21 @@ export default function InventoryPage() {
 
   const items = Array.isArray(itemsData) ? itemsData : [];
 
+  const onTheWayQueries = useQueries({
+    queries: items.map((stock: any) => ({
+      queryKey: ['on-the-way', stock.item.id],
+      queryFn: () => ApiClient.getOnTheWayQuantity(stock.item.id),
+      staleTime: 5 * 60 * 1000,
+      enabled: items.length > 0,
+    })),
+  });
+
+  const onTheWayMap = new Map<string, number>();
+  items.forEach((stock: any, index: number) => {
+    const qty = onTheWayQueries[index]?.data?.quantity_on_the_way ?? 0;
+    if (qty > 0) onTheWayMap.set(stock.item.id, qty);
+  });
+
   const getCategoryBadge = (category: string) => {
     const colors: Record<string, string> = {
       medication: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
@@ -99,7 +114,7 @@ export default function InventoryPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground hidden md:block">
             {t('description')}
           </p>
         </div>
@@ -169,7 +184,7 @@ export default function InventoryPage() {
               <TableHead className="w-12"></TableHead>
               <TableHead>{t('fields.name')}</TableHead>
               <TableHead>{t('fields.category')}</TableHead>
-              <TableHead>{t('totalQuantity')}</TableHead>
+              <TableHead className="text-right whitespace-normal leading-tight w-28">{t('totalQuantity')}</TableHead>
               <TableHead>{t('fields.unit')}</TableHead>
               <TableHead>{t('lots')}</TableHead>
               <TableHead>{t('reorderThreshold')}</TableHead>
@@ -214,22 +229,31 @@ export default function InventoryPage() {
                     )}
                   </TableCell>
                   <TableCell>{getCategoryBadge(stock.item.category)}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-right">
                     <span className={
                       isOutOfStock(stock)
                         ? 'text-red-600 font-semibold'
                         : isLowStock(stock)
                         ? 'text-yellow-600 font-semibold'
                         : 'font-medium'
-}>
+                    }>
                       {formatQuantity(stock.total_quantity, stock.item.unit) || '0'}
                     </span>
+                    {onTheWayMap.has(stock.item.id) && (
+                      <span className="ml-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                        +{formatQuantity(onTheWayMap.get(stock.item.id)!, stock.item.unit)}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell>{getUnitSymbol(stock.item.unit)}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">
-                      {stock.lots_count || 0} lot(s)
-                    </Badge>
+                    {['medication', 'vaccine', 'food'].includes(stock.item.category) ? (
+                      <Badge variant="secondary">
+                        {stock.lots_count || 0} lot(s)
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {stock.item.reorder_threshold ? (

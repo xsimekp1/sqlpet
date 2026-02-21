@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { AlertTriangle, Package, Stethoscope, Calendar, Loader2, Syringe, Check, X, Zap } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslations, useLocale } from 'next-intl';
+import { AlertTriangle, Package, Stethoscope, Calendar, Loader2, Syringe, Check, X, Zap, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,13 +50,29 @@ interface Task {
   related_entity_id: string | null;
 }
 
+function getStockStatus(qty: number, threshold: number | null) {
+  if (qty === 0) return 'out';
+  if (threshold && qty <= threshold) return 'low';
+  return 'ok';
+}
+
 export default function MedicalPage() {
   const t = useTranslations();
+  const locale = useLocale();
   const [quarantineAnimals, setQuarantineAnimals] = useState<Animal[]>([]);
   const [allAnimals, setAllAnimals] = useState<Animal[]>([]);
   const [medicationStock, setMedicationStock] = useState<InventoryItem[]>([]);
   const [medicalTasks, setMedicalTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Med stock query (medication + vaccine items from inventory)
+  const { data: medStockData, isLoading: stockLoading } = useQuery({
+    queryKey: ['inventory-items-medical'],
+    queryFn: () => ApiClient.get('/inventory/items'),
+    select: (data: any) =>
+      (Array.isArray(data) ? data : data?.items ?? [])
+        .filter((s: any) => ['medication', 'vaccine'].includes(s.item?.category ?? s.category)),
+  });
 
   // Health issues filter
   const [healthFilter, setHealthFilter] = useState<string>('all');
@@ -219,7 +236,7 @@ const getPriorityColor = (priority: string) => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">{t('medical.title')}</h1>
-        <p className="text-muted-foreground mt-2">{t('medical.description')}</p>
+        <p className="text-muted-foreground mt-2 hidden md:block">{t('medical.description')}</p>
       </div>
 
       {/* Section 1: Animals in Quarantine */}
@@ -386,15 +403,102 @@ const getPriorityColor = (priority: string) => {
               <Package className="h-5 w-5 text-blue-600" />
               <CardTitle>{t('medical.stock.title')}</CardTitle>
             </div>
+            <Link href={`/${locale}/dashboard/inventory`}>
+              <Button variant="ghost" size="sm">
+                <ExternalLink className="h-4 w-4 mr-1" />
+                {t('medical.stock.viewAll')}
+              </Button>
+            </Link>
           </div>
           <CardDescription>{t('medical.stock.description')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>{t('medical.stock.comingSoon')}</p>
-            <p className="text-sm mt-2">{t('medical.stock.implementNote')}</p>
-          </div>
+          {stockLoading ? (
+            <div className="space-y-2">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-3 h-10 animate-pulse">
+                  <div className="h-5 w-5 bg-muted rounded-full" />
+                  <div className="h-4 flex-1 bg-muted rounded" />
+                  <div className="h-4 w-16 bg-muted rounded" />
+                  <div className="h-4 w-12 bg-muted rounded" />
+                  <div className="h-4 w-10 bg-muted rounded" />
+                </div>
+              ))}
+            </div>
+          ) : !medStockData || medStockData.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>{t('medical.stock.noMedications')}</p>
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left px-3 py-2 font-medium w-8"></th>
+                    <th className="text-left px-3 py-2 font-medium">{t('inventory.fields.name')}</th>
+                    <th className="text-left px-3 py-2 font-medium hidden sm:table-cell">{t('inventory.category')}</th>
+                    <th className="text-right px-3 py-2 font-medium">{t('inventory.quantity')}</th>
+                    <th className="text-right px-3 py-2 font-medium hidden md:table-cell">{t('medical.stock.activeLots')}</th>
+                    <th className="text-right px-3 py-2 font-medium hidden md:table-cell">{t('inventory.reorderThreshold')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {medStockData.map((stock: any) => {
+                    const item = stock.item ?? stock;
+                    const qty: number = stock.total_quantity ?? 0;
+                    const threshold: number | null = item.reorder_threshold ?? null;
+                    const status = getStockStatus(qty, threshold);
+                    return (
+                      <tr key={item.id} className="border-t hover:bg-muted/30 transition-colors">
+                        <td className="px-3 py-2.5">
+                          {status === 'out' && (
+                            <AlertCircle className="h-4 w-4 text-red-500" title={t('medical.stock.outOfStock')} />
+                          )}
+                          {status === 'low' && (
+                            <AlertTriangle className="h-4 w-4 text-yellow-500" title={t('medical.stock.lowStock')} />
+                          )}
+                          {status === 'ok' && (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <Link
+                            href={`/${locale}/dashboard/inventory/items/${item.id}`}
+                            className="hover:underline text-primary font-medium"
+                          >
+                            {item.name}
+                          </Link>
+                        </td>
+                        <td className="px-3 py-2.5 hidden sm:table-cell">
+                          {item.category === 'medication' ? (
+                            <Badge className="bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-300">
+                              {t('medical.stock.medications')}
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/40 dark:text-purple-300">
+                              {t('medical.stock.vaccines')}
+                            </Badge>
+                          )}
+                        </td>
+                        <td className={`px-3 py-2.5 text-right font-medium ${
+                          status === 'out' ? 'text-red-600' : status === 'low' ? 'text-yellow-600' : ''
+                        }`}>
+                          {qty} {item.unit || ''}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-muted-foreground hidden md:table-cell">
+                          {stock.lots_count ?? 0}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-muted-foreground hidden md:table-cell">
+                          {threshold ?? '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

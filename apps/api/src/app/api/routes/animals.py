@@ -628,6 +628,7 @@ class BirthRequest(BaseModel):
     birth_date: date | None = None  # defaults to today
     collar_colors: list[str | None] | None = None  # Optional collar colors for each offspring
     naming_scheme: str = "number"  # "number", "letter", or "color"
+    mother_lactating: bool = False  # Set mother as lactating after birth
 
     @field_validator('collar_colors')
     @classmethod
@@ -798,6 +799,8 @@ async def register_birth(
     # Clear expected litter date and unmark pregnant on mother
     mother.expected_litter_date = None
     mother.is_pregnant = False
+    if data.mother_lactating:
+        mother.is_lactating = True
 
     await db.commit()
     return {"created": len(created), "offspring": created}

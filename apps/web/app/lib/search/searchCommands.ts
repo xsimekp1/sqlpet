@@ -58,7 +58,7 @@ export function searchCommands(
     }
 
     // Check keyword match (direct)
-    const directKeywordMatch = keywords.find(kw => kw.includes(normalized))
+    const directKeywordMatch = keywords.find(kw => kw.startsWith(normalized))
     if (directKeywordMatch) {
       results.push({
         command,
@@ -87,7 +87,7 @@ export function searchCommands(
       }
 
       // Check if expanded term matches keywords
-      const synonymKeywordMatch = keywords.find(kw => kw.includes(term))
+      const synonymKeywordMatch = keywords.find(kw => kw.startsWith(term))
       if (synonymKeywordMatch) {
         results.push({
           command,

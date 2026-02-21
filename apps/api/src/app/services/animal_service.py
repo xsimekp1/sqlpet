@@ -1,10 +1,13 @@
 import uuid
 from datetime import date, datetime, timezone
 
+from fastapi import HTTPException
 from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from decimal import Decimal
+
+PREGNANCY_MIN_AGE_DAYS = 270  # ~9 months
 
 from src.app.models.animal import Animal, AnimalStatus, Species, Sex
 from src.app.models.animal_breed import AnimalBreed
@@ -454,6 +457,15 @@ class AnimalService:
 
         # Track status change before applying
         new_status = update_data.get("status")
+
+        # Validate: pregnant/lactating not allowed for animals younger than 9 months
+        if update_data.get("is_pregnant") or update_data.get("is_lactating"):
+            bd = animal.birth_date_estimated or update_data.get("birth_date_estimated")
+            if bd and (date.today() - bd).days < PREGNANCY_MIN_AGE_DAYS:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Animal is too young to be set as pregnant or lactating (must be at least 9 months old).",
+                )
 
         # Update scalar fields
         for field, value in update_data.items():

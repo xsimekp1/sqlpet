@@ -123,10 +123,11 @@ class TestLegalDeadlineService:
         assert result.deadline_type == "4m_transfer"
         assert result.deadline_at is not None
 
-    def test_no_deadline_when_finder_no_claim_and_no_municipality(self):
-        """Test no deadline when finder doesn't claim and municipality hasn't transferred."""
+    def test_no_deadline_when_finder_no_claim_no_municipality_no_notice(self):
+        """Test no deadline when finder doesn't claim, municipality hasn't transferred,
+        and notice date is unknown (animal went directly to shelter without prior notice)."""
         result = compute_legal_deadline(
-            notice_published_at=date.today(),
+            notice_published_at=None,
             shelter_received_at=date.today(),
             finder_claims_ownership=False,
             municipality_irrevocably_transferred=False,
@@ -135,6 +136,47 @@ class TestLegalDeadlineService:
         assert result.deadline_state == "running"
         assert result.deadline_at is None
         assert "Bez lhůty" in result.label
+
+    def test_scenario_c_direct_handover_4m_from_notice(self):
+        """Test Scenario C: finder kept animal, notice already published, then brought to shelter.
+        Deadline = 4 months from original notice_published_at."""
+        from src.app.services.legal_deadline import _add_months
+        notice = date.today() - timedelta(days=30)  # published 30 days ago
+        result = compute_legal_deadline(
+            notice_published_at=notice,
+            shelter_received_at=date.today(),
+            finder_claims_ownership=False,
+            municipality_irrevocably_transferred=False,
+        )
+        assert result.deadline_type == "4m_notice"
+        assert result.deadline_at == _add_months(notice, 4)
+        assert result.deadline_state == "running"
+
+    def test_scenario_c_municipality_none_notice_set(self):
+        """Test Scenario C also triggers when municipality_irrevocably_transferred is None."""
+        from src.app.services.legal_deadline import _add_months
+        notice = date.today() - timedelta(days=10)
+        result = compute_legal_deadline(
+            notice_published_at=notice,
+            shelter_received_at=date.today(),
+            finder_claims_ownership=False,
+            municipality_irrevocably_transferred=None,
+        )
+        assert result.deadline_type == "4m_notice"
+        assert result.deadline_at == _add_months(notice, 4)
+
+    def test_scenario_c_expired(self):
+        """Test Scenario C shows expired when 4 months from notice have passed."""
+        old_notice = date(2020, 1, 1)
+        result = compute_legal_deadline(
+            notice_published_at=old_notice,
+            shelter_received_at=date(2020, 3, 1),
+            finder_claims_ownership=False,
+            municipality_irrevocably_transferred=False,
+        )
+        assert result.deadline_type == "4m_notice"
+        assert result.deadline_state == "expired"
+        assert result.days_left is not None and result.days_left < 0
 
     def test_deadline_month_edge_case_january(self):
         """Test deadline calculation at month end (Jan -> Mar)."""

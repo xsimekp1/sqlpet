@@ -327,7 +327,7 @@ export default function TasksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Úkoly</h1>
-          <p className="text-muted-foreground">Správa a plnění úkolů organizace</p>
+          <p className="text-muted-foreground hidden md:block">Správa a plnění úkolů organizace</p>
         </div>
         <Button onClick={() => setShowNewTaskForm((v) => !v)}>
           <Plus className="h-4 w-4 mr-2" />

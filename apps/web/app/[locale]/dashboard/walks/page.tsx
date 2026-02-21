@@ -142,7 +142,7 @@ export default function WalksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('management')}</p>
+          <p className="text-muted-foreground hidden md:block">{t('management')}</p>
         </div>
         <div className="flex gap-2">
           <Button

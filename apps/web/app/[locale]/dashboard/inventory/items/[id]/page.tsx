@@ -77,16 +77,9 @@ export default function InventoryItemDetailPage() {
   const itemId = params.id as string;
   const queryClient = useQueryClient();
 
-  const [addLotOpen, setAddLotOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [addTransactionOpen, setAddTransactionOpen] = useState(false);
-  const [lotFormData, setLotFormData] = useState({
-    lot_number: '',
-    expires_at: '',
-    quantity: '',
-    cost_per_unit: '',
-  });
   const [transactionFormData, setTransactionFormData] = useState({
     reason: 'purchase' as 'opening_balance' | 'purchase' | 'donation' | 'consumption' | 'writeoff',
     quantity: '',
@@ -121,41 +114,6 @@ export default function InventoryItemDetailPage() {
   const lots = Array.isArray(lotsData) ? lotsData : (lotsData?.items ?? []);
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.items ?? []);
   const totalQuantity = lots.reduce((sum: number, lot: any) => sum + (Number(lot.quantity) || 0), 0);
-
-  // Add lot mutation
-  const addLotMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return await ApiClient.post('/inventory/lots', {
-        item_id: itemId,
-        lot_number: data.lot_number || undefined,
-        expires_at: data.expires_at || undefined,
-        quantity: Number(data.quantity),
-        cost_per_unit: data.cost_per_unit ? Number(data.cost_per_unit) : undefined,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventory-lots', itemId] });
-      queryClient.invalidateQueries({ queryKey: ['inventory-item', itemId] });
-      toast({
-        title: t('messages.lotCreated'),
-        description: t('messages.lotCreatedDesc'),
-      });
-      setAddLotOpen(false);
-      setLotFormData({
-        lot_number: '',
-        expires_at: '',
-        quantity: '',
-        cost_per_unit: '',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: t('messages.error'),
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
 
   const deleteItemMutation = useMutation({
     mutationFn: () => ApiClient.deleteInventoryItem(itemId),
@@ -240,18 +198,6 @@ export default function InventoryItemDetailPage() {
     addTransactionMutation.mutate(transactionFormData);
   };
 
-  const handleAddLot = () => {
-    if (!lotFormData.quantity) {
-      toast({
-        title: t('messages.validationError'),
-        description: t('messages.quantityRequired'),
-        variant: 'destructive',
-      });
-      return;
-    }
-    addLotMutation.mutate(lotFormData);
-  };
-
   const getCategoryBadge = (category: string) => {
     const colors: Record<string, string> = {
       medication: 'bg-red-100 text-red-800',
@@ -331,9 +277,6 @@ export default function InventoryItemDetailPage() {
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground">
-            {t('totalStock')}: <span className="font-semibold">{formatQuantity(totalQuantity, item.unit)}</span> {item.unit ? t(`units.${item.unit}`) : ''}
-          </p>
         </div>
         <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
           <DialogTrigger asChild>
@@ -426,7 +369,7 @@ export default function InventoryItemDetailPage() {
       </div>
 
       {/* Item Info Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="border rounded-lg p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <Package className="h-4 w-4" />
@@ -454,20 +397,27 @@ export default function InventoryItemDetailPage() {
             {item.reorder_threshold !== null && item.reorder_threshold !== undefined ? item.reorder_threshold : '-'}
           </div>
         </div>
-      </div>
-
-      {/* Kcal (food only) */}
-      {item.category === 'food' && item.kcal_per_100g && (
         <div className="border rounded-lg p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <UtensilsCrossed className="h-4 w-4" />
-            {t('fields.kcalPer100g')}
+            <Receipt className="h-4 w-4" />
+            {t('fields.pricePerUnit')}
           </div>
           <div className="text-2xl font-bold">
-            {item.kcal_per_100g} kcal / 100g
+            {item.price_per_unit != null
+              ? `${item.price_per_unit} Kč`
+              : <span className="text-muted-foreground text-base">—</span>}
           </div>
         </div>
-      )}
+        {item.category === 'food' && item.kcal_per_100g && (
+          <div className="border rounded-lg p-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+              <UtensilsCrossed className="h-4 w-4" />
+              {t('fields.kcalPer100g')}
+            </div>
+            <div className="text-2xl font-bold">{item.kcal_per_100g} kcal / 100g</div>
+          </div>
+        )}
+      </div>
 
       {/* Allowed species (food only) */}
       {item.category === 'food' && item.allowed_species?.length > 0 && (
@@ -489,81 +439,8 @@ export default function InventoryItemDetailPage() {
         {/* Lots Tab */}
         <TabsContent value="lots" className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Inventory Lots</h2>
-            <Dialog open={addLotOpen} onOpenChange={setAddLotOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t('addLot')}
-                </Button>
-              </DialogTrigger>
-                <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{t('addLot')}</DialogTitle>
-                  <DialogDescription>
-                    {t('messages.addNewLotTitle', { name: item.name })}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="lot_number">{t('fields.lotNumber')}</Label>
-                    <Input
-                      id="lot_number"
-                      placeholder="e.g. LOT-2024-001"
-                      value={lotFormData.lot_number}
-                      onChange={(e) =>
-                        setLotFormData({ ...lotFormData, lot_number: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expires_at">{t('fields.expiresAt')}</Label>
-                    <Input
-                      id="expires_at"
-                      type="date"
-                      value={lotFormData.expires_at}
-                      onChange={(e) =>
-                        setLotFormData({ ...lotFormData, expires_at: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">{t('fields.quantity')} *</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      step="0.01"
-                      placeholder="e.g. 50"
-                      value={lotFormData.quantity}
-                      onChange={(e) =>
-                        setLotFormData({ ...lotFormData, quantity: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cost_per_unit">{t('fields.costPerUnit')}</Label>
-                    <Input
-                      id="cost_per_unit"
-                      type="number"
-                      step="0.01"
-                      placeholder="e.g. 25.50"
-                      value={lotFormData.cost_per_unit}
-                      onChange={(e) =>
-                        setLotFormData({ ...lotFormData, cost_per_unit: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setAddLotOpen(false)}>
-                    {t('cancel')}
-                  </Button>
-                  <Button onClick={handleAddLot} disabled={addLotMutation.isPending}>
-                    {addLotMutation.isPending ? t('adding') : t('addLot')}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <h2 className="text-lg font-semibold">{t('lots')}</h2>
+            <p className="text-sm text-muted-foreground">{t('messages.lotsCreatedOnReceiving')}</p>
           </div>
 
           <div className="border rounded-lg">
@@ -608,7 +485,7 @@ export default function InventoryItemDetailPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {lot.cost_per_unit ? `$${lot.cost_per_unit}` : '-'}
+                        {lot.cost_per_unit != null ? `${lot.cost_per_unit} Kč` : '-'}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(lot.created_at), 'MMM d, yyyy')}

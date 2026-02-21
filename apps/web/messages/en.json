@@ -196,7 +196,10 @@
       "medications": "Medications",
       "vaccines": "Vaccines",
       "comingSoon": "Coming soon...",
-      "implementNote": "Inventory integration will be added in a future phase"
+      "implementNote": "Inventory integration will be added in a future phase",
+      "viewAll": "View inventory",
+      "noMedications": "No medications or vaccines in inventory",
+      "activeLots": "Lots"
     },
     "tasks": {
       "title": "Medical Tasks",
@@ -1002,7 +1005,12 @@
       "cancel": "Cancel",
       "documentCreated": "Document created successfully",
       "createError": "Failed to create document",
-      "previewError": "Failed to show preview"
+      "previewError": "Failed to show preview",
+      "upload": "Upload document",
+      "empty": "No documents",
+      "emptyHint": "Upload your first document using the button above",
+      "uploadedBy": "Uploaded by: {name}",
+      "open": "Open"
     },
     "weight": {
       "estimated": "estimated weight",
@@ -1496,7 +1504,8 @@
       "actions": "Actions",
       "viewDetails": "Details",
       "showingItems": "Showing {count} items",
-      "outOfStock": "Out of stock"
+      "outOfStock": "Out of stock",
+      "lotsCreatedOnReceiving": "Lots are created automatically when receiving stock"
     }
   },
   "colors": {

@@ -1,11 +1,13 @@
 """Legal deadline computation for found animals.
 
 Czech law: 2 months from notice publication if finder claims ownership,
-4 months from notice/shelter transfer if municipality irrevocably transfers.
+4 months from notice/shelter transfer if municipality irrevocably transfers,
+4 months from notice if finder directly hands animal to shelter after notice.
 """
 
+from calendar import monthrange
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date
 from typing import Optional
 
 
@@ -14,7 +16,7 @@ class LegalDeadlineInfo:
     """Computed legal deadline information for a found animal intake."""
 
     deadline_at: Optional[date]
-    deadline_type: str  # "2m_notice" | "4m_transfer" | "unknown"
+    deadline_type: str  # "2m_notice" | "4m_transfer" | "4m_notice" | "unknown"
     days_left: Optional[int]
     deadline_state: str  # "running" | "expired" | "missing_data"
     label: str
@@ -34,9 +36,17 @@ def compute_legal_deadline(
         Deadline: 2 months from notice_published_at
         Requires: notice_published_at
 
-    Scenario B (4 months): finder_claims_ownership = False AND municipality_irrevocably_transferred = True
+    Scenario B (4 months, municipality): finder_claims_ownership = False AND
+        municipality_irrevocably_transferred = True
         Deadline: 4 months from later of (notice_published_at, shelter_received_at)
         Requires: either notice_published_at OR shelter_received_at
+
+    Scenario C (4 months, direct handover): finder_claims_ownership = False AND
+        notice_published_at is set AND municipality_irrevocably_transferred != True
+        Covers: finder originally kept animal (notice already published), then brought
+        it directly to shelter. The total legal period is still 4 months from original
+        publication — the shelter receives the animal mid-period.
+        Deadline: 4 months from notice_published_at
 
     Returns:
         LegalDeadlineInfo with computed deadline and state
@@ -108,35 +118,37 @@ def compute_legal_deadline(
             label_base="4 měsíce od převzetí",
         )
 
-    # Neither scenario applies - finder doesn't want and municipality hasn't transferred
+    # Scenario C: Finder directly handed animal to shelter after notice was already published.
+    # The finder originally kept the animal (notice published), then changed their mind.
+    # Czech law: total adoption period = 4 months from original publication date.
+    if finder_claims_ownership is False and notice_published_at is not None:
+        deadline_at = _add_months(notice_published_at, 4)
+        return _build_deadline_info(
+            deadline_at=deadline_at,
+            deadline_type="4m_notice",
+            label_base="4 měsíce od vyhlášení (přímé předání)",
+        )
+
+    # Neither scenario applies - finder doesn't want, municipality hasn't transferred,
+    # and no notice date is known
     return LegalDeadlineInfo(
         deadline_at=None,
         deadline_type="unknown",
         days_left=None,
         deadline_state="running",
-        label="Bez lhůty (nálezce nechce, obce nepřevedla)",
+        label="Bez lhůty (nálezce nechce, obec nepřevedla)",
         missing_fields=[],
     )
 
 
 def _add_months(d: date, months: int) -> date:
-    """Add months to a date, going to last day of target month if needed."""
-    try:
-        return d.replace(month=d.month + months)
-    except ValueError:
-        # Day too large for target month, go to last day of target month
-        if d.month == 12:
-            new_year = d.year + 1
-            new_month = 1
-        else:
-            new_year = d.year
-            new_month = d.month + 1
-
-        # Find last day of new month
-        from calendar import monthrange
-
-        last_day = monthrange(new_year, new_month)[1]
-        return date(new_year, new_month, last_day)
+    """Add N calendar months to a date, clamping to last day of target month if needed."""
+    # Shift month index to 0-based for arithmetic, then convert back
+    zero_based = d.month - 1 + months
+    target_year = d.year + zero_based // 12
+    target_month = zero_based % 12 + 1
+    last_day = monthrange(target_year, target_month)[1]
+    return date(target_year, target_month, min(d.day, last_day))
 
 
 def _build_deadline_info(

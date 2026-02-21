@@ -298,20 +298,22 @@ export default function AnimalsPage() {
               <><LayoutGrid className="h-4 w-4 mr-2" />{t('animals.view.grid')}</>
             )}
           </Button>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link href="/dashboard/animals/qr-sheet">
-                  <Button variant="outline" size="icon">
-                    <QrCode className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>QR sheet</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="hidden md:inline-flex">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href="/dashboard/animals/qr-sheet">
+                    <Button variant="outline" size="icon">
+                      <QrCode className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>QR sheet</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <Button className="gap-2" onClick={() => setCreateChoiceOpen(true)}>
             <Plus className="h-4 w-4" />
             {t('animals.createChoice.withIntake')}
@@ -377,14 +379,6 @@ export default function AnimalsPage() {
           >
             ❌ Vypršelo
           </Button>
-          <Button
-            variant={deadlineFilter === 'missing' ? 'default' : 'outline'}
-            size="sm"
-            className="h-8 text-xs px-2.5"
-            onClick={() => setDeadlineFilter(deadlineFilter === 'missing' ? 'all' : 'missing')}
-          >
-            ⚠️ Chybí data
-          </Button>
         </div>
 
         {/* Mobile: species filters on third row */}
@@ -420,14 +414,6 @@ export default function AnimalsPage() {
             onClick={() => setDeadlineFilter(deadlineFilter === 'expired' ? 'all' : 'expired')}
           >
             ❌ Vypršelo
-          </Button>
-          <Button
-            variant={deadlineFilter === 'missing' ? 'default' : 'outline'}
-            size="sm"
-            className="h-8 text-xs px-2.5"
-            onClick={() => setDeadlineFilter(deadlineFilter === 'missing' ? 'all' : 'missing')}
-          >
-            ⚠️ Chybí data
           </Button>
           {availableSpecies.length > 1 && availableSpecies.map((sp) => (
             <Button

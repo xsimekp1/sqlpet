@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ApiClient from '@/app/lib/api';
 import { useTranslations, useLocale } from 'next-intl';
@@ -17,16 +17,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, AlertTriangle, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Plus, Trash2, Flame } from 'lucide-react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { isTerminal } from '@/app/lib/constants';
 import { TimePresetsButtons } from '@/app/components/feeding/TimePresetsButtons';
 import { AmountDistribution } from '@/app/components/feeding/AmountDistribution';
 import { FeedingPreview } from '@/app/components/feeding/FeedingPreview';
+import { calcMER } from '@/app/lib/energy';
 
 interface FeedingPlanFormData {
   animal_id: string;
@@ -74,15 +74,63 @@ export default function NewFeedingPlanPage() {
   });
 
   const animals = (animalsData?.items || []).filter(
-    (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
+    (a: any) => !isTerminal(a.status) && a.current_intake_date !== null,
   );
   const rawFoods = Array.isArray(foodsData) ? foodsData : [];
   const foods = rawFoods.map((s: any) => s.item ?? s);
 
   const selectedAnimal = animals.find((a: any) => a.id === selectedAnimalId);
   const filteredFoods = foods.filter(
-    (f: any) => !f.allowed_species?.length || !selectedAnimal || f.allowed_species.includes(selectedAnimal.species)
+    (f: any) =>
+      !f.allowed_species?.length ||
+      !selectedAnimal ||
+      f.allowed_species.includes(selectedAnimal.species),
   );
+
+  // MER / dosage calculation
+  const merKcal: number | null = selectedAnimal
+    ? selectedAnimal.mer_kcal_per_day ??
+      (selectedAnimal.weight_current_kg
+        ? calcMER(
+            Number(selectedAnimal.weight_current_kg),
+            selectedAnimal.age_group,
+            selectedAnimal.altered_status,
+            selectedAnimal.is_pregnant ?? false,
+            selectedAnimal.is_lactating ?? false,
+            selectedAnimal.is_critical ?? false,
+            selectedAnimal.is_diabetic ?? false,
+            selectedAnimal.is_cancer ?? false,
+            selectedAnimal.species,
+          )
+        : null)
+    : null;
+
+  const selectedFood = foods.find((f: any) => f.id === selectedFoodId);
+  const kcalPer100g: number | null = selectedFood?.kcal_per_100g ?? null;
+
+  const gramsPerDay: number | null =
+    merKcal && kcalPer100g ? Math.round(merKcal / (kcalPer100g / 100)) : null;
+
+  const gramsPerMeal: number | null =
+    gramsPerDay && scheduleTimes.length > 0
+      ? Math.round(gramsPerDay / scheduleTimes.length)
+      : null;
+
+  const showCalcPanel = selectedAnimal != null && (merKcal != null || kcalPer100g != null);
+
+  const applyRecommendation = () => {
+    if (!gramsPerDay) return;
+    setValue('amount_g', gramsPerDay);
+    if (scheduleTimes.length > 0) {
+      const even = Math.round(gramsPerDay / scheduleTimes.length);
+      const newAmounts = scheduleTimes.map((_, i) =>
+        i === scheduleTimes.length - 1
+          ? gramsPerDay - even * (scheduleTimes.length - 1)
+          : even,
+      );
+      setAmounts(newAmounts);
+    }
+  };
 
   // Create plan mutation
   const createPlanMutation = useMutation({
@@ -150,11 +198,11 @@ export default function NewFeedingPlanPage() {
   };
 
   const removeScheduleTime = (time: string) => {
-    setScheduleTimes(scheduleTimes.filter(t => t !== time));
+    setScheduleTimes(scheduleTimes.filter((t) => t !== time));
   };
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-6xl pb-20">
       <div className="flex items-center gap-4">
         <Link href={`/${locale}/dashboard/feeding/plans`}>
           <Button variant="ghost" size="icon">
@@ -163,9 +211,7 @@ export default function NewFeedingPlanPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('createPlan')}</h1>
-          <p className="text-muted-foreground">
-            {t('createPlanDesc')}
-          </p>
+          <p className="text-muted-foreground">{t('createPlanDesc')}</p>
         </div>
       </div>
 
@@ -203,10 +249,7 @@ export default function NewFeedingPlanPage() {
             {/* Food Selection */}
             <div className="space-y-2">
               <Label htmlFor="food_id">{t('fields.food')}</Label>
-              <Select
-                value={selectedFoodId}
-                onValueChange={setSelectedFoodId}
-              >
+              <Select value={selectedFoodId} onValueChange={setSelectedFoodId}>
                 <SelectTrigger className="bg-white">
                   <SelectValue placeholder={t('selectFoodOptional')} />
                 </SelectTrigger>
@@ -276,12 +319,61 @@ export default function NewFeedingPlanPage() {
                 type="date"
                 {...register('end_date')}
               />
-              <p className="text-sm text-muted-foreground">
-                {t('endDateDesc')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('endDateDesc')}</p>
             </div>
           </CardContent>
         </Card>
+
+        {/* Dosage calculation panel — shown when animal is selected and has MER or food has kcal */}
+        {showCalcPanel && (
+          <Card className="border-orange-200 bg-orange-50/50 dark:border-orange-900 dark:bg-orange-950/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-start gap-3">
+                <Flame className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">
+                    Výpočet doporučené dávky
+                  </p>
+
+                  {merKcal && kcalPer100g ? (
+                    <>
+                      <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                        <span>Kalorická potřeba: <strong className="text-foreground">{merKcal} kcal/den</strong></span>
+                        <span>Krmivo: <strong className="text-foreground">{kcalPer100g} kcal/100g</strong></span>
+                      </div>
+                      <div className="text-sm">
+                        Doporučená denní dávka:{' '}
+                        <strong className="text-base">{gramsPerDay} g/den</strong>
+                        {gramsPerMeal && (
+                          <span className="text-muted-foreground ml-2">
+                            (při {scheduleTimes.length}× krmení ≈ {gramsPerMeal} g/dávku)
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="border-orange-300 hover:bg-orange-100 dark:border-orange-700 dark:hover:bg-orange-900/40"
+                        onClick={applyRecommendation}
+                      >
+                        ↗ Použít doporučení → {gramsPerDay} g
+                      </Button>
+                    </>
+                  ) : merKcal && !kcalPer100g ? (
+                    <p className="text-sm text-muted-foreground">
+                      Vyberte krmivo s kalorickou hodnotou pro výpočet dávky.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Zvíře nemá zadanou váhu — výpočet není možný.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Section B: Feeding Schedule with Presets */}
         <Card>
@@ -290,7 +382,7 @@ export default function NewFeedingPlanPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Quick preset buttons */}
-            <TimePresetsButtons onSelect={handlePresetSelect} />
+            <TimePresetsButtons onSelect={handlePresetSelect} scheduleTimes={scheduleTimes} />
 
             {/* Current times list */}
             {scheduleTimes.length > 0 && (
@@ -353,10 +445,7 @@ export default function NewFeedingPlanPage() {
               <CardTitle>Preview (Today / Tomorrow)</CardTitle>
             </CardHeader>
             <CardContent>
-              <FeedingPreview
-                scheduleTimes={scheduleTimes}
-                amounts={amounts}
-              />
+              <FeedingPreview scheduleTimes={scheduleTimes} amounts={amounts} />
             </CardContent>
           </Card>
         )}
@@ -376,19 +465,29 @@ export default function NewFeedingPlanPage() {
           </CardContent>
         </Card>
 
-        {/* Actions */}
-        <div className="flex gap-4 pt-4">
-          <Button
-            type="submit"
-            disabled={createPlanMutation.isPending}
-          >
-            {createPlanMutation.isPending ? t('creating') : t('actions.createPlan')}
-          </Button>
-          <Link href={`/${locale}/dashboard/feeding/plans`}>
-            <Button type="button" variant="outline">
-              {t('actions.cancel')}
+        {/* Sticky footer bar */}
+        <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t bg-background/95 backdrop-blur px-4 py-3 flex items-center justify-between gap-4">
+          <div className="text-sm text-muted-foreground truncate">
+            {selectedAnimal
+              ? `${selectedAnimal.name} · ${scheduleTimes.length > 0 ? `${scheduleTimes.length}× denně` : 'bez rozvrhu'}`
+              : 'Krmný plán'}
+            {watchedAmountG ? ` · ${watchedAmountG} g/den` : ''}
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Link href={`/${locale}/dashboard/feeding/plans`}>
+              <Button type="button" variant="outline">
+                {t('actions.cancel')}
+              </Button>
+            </Link>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={createPlanMutation.isPending}
+              className="gap-2"
+            >
+              {createPlanMutation.isPending ? t('creating') : t('actions.createPlan')}
             </Button>
-          </Link>
+          </div>
         </div>
       </form>
     </div>
