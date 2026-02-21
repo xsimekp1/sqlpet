@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
@@ -1769,78 +1769,103 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               <div className="relative pl-6">
                 <div className="absolute left-2.5 top-0 bottom-0 w-0.5 bg-border" />
 
-                {healthEvents.map((ev, i) => (
-                  <div key={i} className="relative mb-6">
-                    <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-blue-400 border-2 border-background" />
-                    <div className="pl-2">
-                      <p className="text-sm font-semibold">{ev.text}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {ev.date.toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Expected litter date – shown in timeline even if in the future */}
-                {animal.expected_litter_date && (
-                  <div className="relative mb-6">
-                    <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-pink-400 border-2 border-background" />
-                    <div className="pl-2">
-                      <p className="text-sm font-semibold text-pink-700 dark:text-pink-300">
-                        {t('timeline.expectedLitter')}
-                        {new Date(animal.expected_litter_date) > new Date() && ` ${t('pregnancy.future')}`}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(animal.expected_litter_date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {animal.current_intake_date && (
-                  <div className="relative mb-6">
-                    <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-background" />
-                    <div className="pl-2">
-                      <p className="text-sm font-semibold">{t('timeline.intake')}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(animal.current_intake_date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Kennel assignment history */}
-                {loadingKennelHistory ? (
-                  <div className="space-y-4">
+                {loadingKennelHistory && (
+                  <div className="space-y-4 mb-6">
                     <Skeleton className="h-12 w-full" />
                     <Skeleton className="h-12 w-full" />
                   </div>
-                ) : kennelHistory.map((entry, i) => (
-                  <div key={i} className="relative mb-6">
-                    <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-purple-400 border-2 border-background" />
-                    <div className="pl-2">
-                      <p className="text-sm font-semibold flex items-center gap-1">
-                        <Home className="h-3.5 w-3.5 text-purple-500 shrink-0" />
-                        {t('timeline.movedToKennel', { code: entry.kennel_code })}
-                        {!entry.released_at && <span className="text-xs text-purple-600 dark:text-purple-400 ml-1">{t('timeline.currentKennel')}</span>}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(entry.assigned_at).toLocaleDateString()}
-                        {entry.released_at && ` – ${new Date(entry.released_at).toLocaleDateString()}`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                )}
 
-                <div className="relative mb-6">
-                  <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-gray-300 border-2 border-background" />
-                  <div className="pl-2">
-                    <p className="text-sm font-semibold">{t('timeline.created')}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(animal.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
+                {(() => {
+                  type TlEvent = { key: string; date: Date; node: React.ReactNode }
+                  const events: TlEvent[] = []
+
+                  healthEvents.forEach((ev, i) => events.push({
+                    key: `health-${i}`,
+                    date: ev.date,
+                    node: (
+                      <>
+                        <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-blue-400 border-2 border-background" />
+                        <div className="pl-2">
+                          <p className="text-sm font-semibold">{ev.text}</p>
+                          <p className="text-xs text-muted-foreground">{ev.date.toLocaleDateString()}</p>
+                        </div>
+                      </>
+                    ),
+                  }))
+
+                  if (animal.expected_litter_date) events.push({
+                    key: 'litter',
+                    date: new Date(animal.expected_litter_date),
+                    node: (
+                      <>
+                        <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-pink-400 border-2 border-background" />
+                        <div className="pl-2">
+                          <p className="text-sm font-semibold text-pink-700 dark:text-pink-300">
+                            {t('timeline.expectedLitter')}
+                            {new Date(animal.expected_litter_date) > new Date() && ` ${t('pregnancy.future')}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{new Date(animal.expected_litter_date).toLocaleDateString()}</p>
+                        </div>
+                      </>
+                    ),
+                  })
+
+                  if (animal.current_intake_date) events.push({
+                    key: 'intake',
+                    date: new Date(animal.current_intake_date),
+                    node: (
+                      <>
+                        <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-background" />
+                        <div className="pl-2">
+                          <p className="text-sm font-semibold">{t('timeline.intake')}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(animal.current_intake_date).toLocaleDateString()}</p>
+                        </div>
+                      </>
+                    ),
+                  })
+
+                  kennelHistory.forEach((entry, i) => events.push({
+                    key: `kennel-${i}`,
+                    date: new Date(entry.assigned_at),
+                    node: (
+                      <>
+                        <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-purple-400 border-2 border-background" />
+                        <div className="pl-2">
+                          <p className="text-sm font-semibold flex items-center gap-1">
+                            <Home className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+                            {t('timeline.movedToKennel', { code: entry.kennel_code })}
+                            {!entry.released_at && <span className="text-xs text-purple-600 dark:text-purple-400 ml-1">{t('timeline.currentKennel')}</span>}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(entry.assigned_at).toLocaleDateString()}
+                            {entry.released_at && ` – ${new Date(entry.released_at).toLocaleDateString()}`}
+                          </p>
+                        </div>
+                      </>
+                    ),
+                  }))
+
+                  events.push({
+                    key: 'created',
+                    date: new Date(animal.created_at),
+                    node: (
+                      <>
+                        <div className="absolute -left-4 top-1 w-4 h-4 rounded-full bg-gray-300 border-2 border-background" />
+                        <div className="pl-2">
+                          <p className="text-sm font-semibold">{t('timeline.created')}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(animal.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </>
+                    ),
+                  })
+
+                  events.sort((a, b) => b.date.getTime() - a.date.getTime())
+
+                  return events.map(ev => (
+                    <div key={ev.key} className="relative mb-6">{ev.node}</div>
+                  ))
+                })()}
 
                 <p className="text-xs text-muted-foreground mt-2">
                   {/* TODO: M4 - load full event history from API */}

@@ -4,16 +4,81 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.app.models.animal import Animal
 from src.app.models.animal_identifier import AnimalIdentifier, IdentifierType
+from src.app.models.intake import Intake
 from src.app.models.organization import Organization
 from src.app.models.contact import Contact
 from src.app.models.user import User
 from src.app.models.document_template import DocumentTemplate, DocumentInstance, DocumentStatus
+from src.app.models.breed_i18n import BreedI18n
+
+
+SEX_LABELS: dict[str, dict[str, str]] = {
+    "cs": {"male": "samec", "female": "samice", "unknown": "neznámé"},
+    "en": {"male": "male", "female": "female", "unknown": "unknown"},
+}
+SPECIES_LABELS: dict[str, dict[str, str]] = {
+    "cs": {"dog": "pes", "cat": "kočka", "rodent": "hlodavec", "bird": "pták", "other": "jiný"},
+    "en": {"dog": "dog", "cat": "cat", "rodent": "rodent", "bird": "bird", "other": "other"},
+}
+ALTERED_LABELS: dict[str, dict[str, str]] = {
+    "cs": {"neutered": "kastrován", "spayed": "kastrována", "intact": "ne", "unknown": "neznámé"},
+    "en": {"neutered": "neutered", "spayed": "spayed", "intact": "intact", "unknown": "unknown"},
+}
+
+OUTCOME_LABELS: dict[str, dict[str, str]] = {
+    "cs": {
+        "adopted": "adopce",
+        "returned_to_owner": "vráceno majiteli",
+        "deceased": "uhynulo",
+        "euthanized": "utraceno",
+        "transferred": "přemístěno",
+        "escaped": "uprchlo",
+    },
+    "en": {
+        "adopted": "adoption",
+        "returned_to_owner": "returned to owner",
+        "deceased": "deceased",
+        "euthanized": "euthanized",
+        "transferred": "transferred",
+        "escaped": "escaped",
+    },
+}
+
+INTAKE_REASON_LABELS: dict[str, dict[str, str]] = {
+    "cs": {
+        "found": "nalezeno",
+        "surrender": "vzdání se",
+        "return": "vrácená adopce",
+        "official": "úřední",
+        "transfer": "přemístění",
+        "birth": "narozeno v útulku",
+        "other": "jiné",
+    },
+    "en": {
+        "found": "found",
+        "surrender": "surrender",
+        "return": "adoption return",
+        "official": "official",
+        "transfer": "transfer",
+        "birth": "born in shelter",
+        "other": "other",
+    },
+}
+
+IN_SHELTER_LABEL: dict[str, str] = {"cs": "v útulku", "en": "in shelter"}
+
+A4_STYLE = (
+    '<style>'
+    '@page{size:A4 portrait;margin:15mm 20mm;}'
+    '@media print{body{margin:0;}}'
+    '</style>'
+)
 
 
 class DocumentService:
@@ -30,6 +95,7 @@ class DocumentService:
         created_by_user_id: UUID,
         manual_fields: dict[str, Any] | None = None,
         donor_contact_id: UUID | None = None,
+        locale: str = "cs",
     ) -> str:
         """
         Render a document template with data from DB and manual fields.
@@ -46,7 +112,7 @@ class DocumentService:
             Rendered HTML with placeholders replaced
         """
         # Fetch all required data
-        animal = await self._get_animal_data(animal_id, organization_id)
+        animal = await self._get_animal_data(animal_id, organization_id, locale=locale)
         org = await self._get_organization_data(organization_id)
         user = await self._get_user_data(created_by_user_id)
         donor = None
@@ -59,9 +125,9 @@ class DocumentService:
         # Render template with placeholders
         rendered_html = self._replace_placeholders(template.content_html, context)
 
-        return rendered_html
+        return A4_STYLE + rendered_html
 
-    async def _get_animal_data(self, animal_id: UUID, organization_id: UUID) -> dict[str, Any]:
+    async def _get_animal_data(self, animal_id: UUID, organization_id: UUID, locale: str = "cs") -> dict[str, Any]:
         """Fetch animal data with related entities."""
         query = (
             select(Animal)
@@ -84,17 +150,21 @@ class DocumentService:
                 microchip = identifier.value
                 break
 
-        # Get primary breed name
+        # Get primary breed name (locale-aware via BreedI18n)
         breed_name = ""
         if animal.animal_breeds:
-            # Get the first breed or the one with highest percentage
             primary_breed = max(
                 animal.animal_breeds,
                 key=lambda ab: ab.percent if ab.percent else 0,
                 default=None
             )
             if primary_breed and hasattr(primary_breed, 'breed') and primary_breed.breed:
-                breed_name = primary_breed.breed.name if hasattr(primary_breed.breed, 'name') else ""
+                i18n_q = select(BreedI18n).where(
+                    BreedI18n.breed_id == primary_breed.breed.id,
+                    BreedI18n.locale == locale,
+                )
+                i18n_row = (await self.db.execute(i18n_q)).scalar_one_or_none()
+                breed_name = i18n_row.name if i18n_row else primary_breed.breed.name
 
         # Calculate age from birth_date_estimated
         age_str = ""
@@ -120,36 +190,26 @@ class DocumentService:
             else:
                 age_str = f"{years} let"
 
-        # Translate sex
-        sex_map = {
-            "male": "pes",
-            "female": "fena",
-            "unknown": "neznámé"
-        }
-        sex_str = sex_map.get(animal.sex, animal.sex)
+        # Translate sex (locale-aware)
+        sex_str = SEX_LABELS.get(locale, SEX_LABELS["cs"]).get(
+            str(animal.sex.value) if hasattr(animal.sex, 'value') else str(animal.sex),
+            str(animal.sex.value) if hasattr(animal.sex, 'value') else str(animal.sex),
+        )
 
-        # Translate species
-        species_map = {
-            "dog": "pes",
-            "cat": "kočka",
-        }
-        species_str = species_map.get(animal.species, animal.species)
+        # Translate species (locale-aware)
+        species_str = SPECIES_LABELS.get(locale, SPECIES_LABELS["cs"]).get(
+            str(animal.species.value) if hasattr(animal.species, 'value') else str(animal.species),
+            str(animal.species.value) if hasattr(animal.species, 'value') else str(animal.species),
+        )
 
         # Format birth date
         birth_date_str = ""
         if animal.birth_date_estimated:
             birth_date_str = animal.birth_date_estimated.strftime("%d.%m.%Y")
 
-        # Translate altered status
-        altered_map = {
-            "altered": "ano",
-            "intact": "ne",
-            "unknown": "neznámé",
-        }
-        altered_str = altered_map.get(
-            str(animal.altered_status.value) if animal.altered_status else "unknown",
-            "neznámé"
-        )
+        # Translate altered status (locale-aware)
+        altered_key = str(animal.altered_status.value) if animal.altered_status else "unknown"
+        altered_str = ALTERED_LABELS.get(locale, ALTERED_LABELS["cs"]).get(altered_key, altered_key)
 
         return {
             "name": animal.name or "",
@@ -307,6 +367,109 @@ class DocumentService:
 
         return value
 
+    async def _get_org_intakes_data(
+        self,
+        organization_id: UUID,
+        year: int,
+        locale: str = "cs",
+    ) -> list[dict[str, Any]]:
+        """Fetch intakes for the given year (excluding hotel stays)."""
+        query = (
+            select(Intake)
+            .options(selectinload(Intake.animal))
+            .where(
+                Intake.organization_id == organization_id,
+                Intake.animal_id != None,  # noqa: E711
+                Intake.reason != "hotel",
+                Intake.deleted_at == None,  # noqa: E711
+                extract("year", Intake.intake_date) == year,
+            )
+            .order_by(Intake.intake_date.asc())
+        )
+        result = await self.db.execute(query)
+        intakes = result.scalars().all()
+
+        outcome_map = OUTCOME_LABELS.get(locale, OUTCOME_LABELS["cs"])
+        reason_map = INTAKE_REASON_LABELS.get(locale, INTAKE_REASON_LABELS["cs"])
+        in_shelter = IN_SHELTER_LABEL.get(locale, IN_SHELTER_LABEL["cs"])
+
+        rows = []
+        for intake in intakes:
+            animal = intake.animal
+            if not animal:
+                continue
+
+            # Outcome date: prefer intake.actual_outcome_date, fallback animal.outcome_date
+            outcome_date = intake.actual_outcome_date or getattr(animal, "outcome_date", None)
+            outcome_date_str = outcome_date.strftime("%d.%m.%Y") if outcome_date else ""
+
+            # Outcome type from animal.status
+            status_val = str(animal.status.value) if hasattr(animal.status, "value") else str(animal.status)
+            outcome_label = outcome_map.get(status_val, in_shelter) if outcome_date else in_shelter
+
+            # Intake reason
+            reason_val = str(intake.reason.value) if hasattr(intake.reason, "value") else str(intake.reason)
+            reason_label = reason_map.get(reason_val, reason_val)
+
+            rows.append({
+                "name": animal.name or "",
+                "public_code": animal.public_code or "",
+                "species": SPECIES_LABELS.get(locale, SPECIES_LABELS["cs"]).get(
+                    str(animal.species.value) if hasattr(animal.species, "value") else str(animal.species), ""
+                ),
+                "intake_date": intake.intake_date.strftime("%d.%m.%Y") if intake.intake_date else "",
+                "intake_reason": reason_label,
+                "outcome_date": outcome_date_str,
+                "outcome_type": outcome_label,
+            })
+
+        return rows
+
+    async def render_org_template(
+        self,
+        template: DocumentTemplate,
+        organization_id: UUID,
+        created_by_user_id: UUID,
+        year: int,
+        locale: str = "cs",
+    ) -> str:
+        """Render an org-level template (not tied to a specific animal)."""
+        org = await self._get_organization_data(organization_id)
+        user = await self._get_user_data(created_by_user_id)
+        intakes = await self._get_org_intakes_data(organization_id, year, locale)
+
+        # Build rows HTML
+        rows_html = ""
+        for i, row in enumerate(intakes, start=1):
+            rows_html += (
+                f'<tr>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:center;">{i}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["name"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["public_code"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["species"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:center;">{row["intake_date"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["intake_reason"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:center;">{row["outcome_date"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["outcome_type"]}</td>'
+                f'</tr>'
+            )
+
+        context = {
+            "org": org,
+            "user": user,
+            "report": {
+                "year": str(year),
+                "generated_at": datetime.now().strftime("%d.%m.%Y %H:%M"),
+                "total": str(len(intakes)),
+            },
+            "data": {
+                "rows_html": rows_html,
+            },
+        }
+
+        rendered_html = self._replace_placeholders(template.content_html, context)
+        return A4_STYLE + rendered_html
+
     async def create_document_instance(
         self,
         template_id: UUID,
@@ -316,6 +479,7 @@ class DocumentService:
         manual_fields: dict[str, Any] | None = None,
         donor_contact_id: UUID | None = None,
         status: DocumentStatus = DocumentStatus.FINAL,
+        locale: str = "cs",
     ) -> DocumentInstance:
         """
         Create a new document instance from a template.
@@ -355,6 +519,7 @@ class DocumentService:
             created_by_user_id=created_by_user_id,
             manual_fields=manual_fields,
             donor_contact_id=donor_contact_id,
+            locale=locale,
         )
 
         # Create document instance
@@ -365,7 +530,7 @@ class DocumentService:
             created_by_user_id=created_by_user_id,
             manual_fields=manual_fields or {},
             rendered_html=rendered_html,
-            status=status,
+            status=status.value if hasattr(status, 'value') else status,
         )
 
         self.db.add(doc_instance)

@@ -11,7 +11,7 @@ from src.app.models.document_template import DocumentTemplate
 from src.app.core.config import settings
 
 
-TEMPLATE_HTML = """<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; font-size: 13px; line-height: 1.5;">
+TEMPLATE_HTML = """<div style="font-family: Arial, sans-serif; width: 210mm; max-width: 210mm; box-sizing: border-box; margin: 0 auto; padding: 20px; font-size: 13px; line-height: 1.5;">
 
 <h1 style="text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">Smlouva o vzdání se zvířete</h1>
 <p style="text-align: center; font-size: 13px; margin-bottom: 4px;">(předání zvířete do péče útulku)</p>

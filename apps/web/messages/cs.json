@@ -4,7 +4,19 @@
   },
   "reports": {
     "animalCountTitle": "Počet zvířat v útulku (posledních 90 dní)",
-    "animalCountDesc": "Denní stav — počet zvířat s aktivním pobytem (od příjmu do výdeje)"
+    "animalCountDesc": "Denní stav — počet zvířat s aktivním pobytem (od příjmu do výdeje)",
+    "orgDocuments": "Úřední dokumenty",
+    "orgDocumentsDesc": "Generování výkazů a přehledů pro úřady",
+    "selectTemplate": "Šablona",
+    "selectYear": "Rok",
+    "generatePreview": "Náhled",
+    "generating": "Generuji...",
+    "previewTitle": "Náhled dokumentu",
+    "print": "Tisk",
+    "close": "Zavřít",
+    "templates": {
+      "annual_intake_report": "Výpis přijatých zvířat (roční)"
+    }
   },
   "login": {
     "title": "Přihlášení",

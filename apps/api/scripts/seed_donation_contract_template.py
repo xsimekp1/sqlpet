@@ -1,7 +1,8 @@
-"""Seed script for Darovací smlouva (Donation Contract) template.
+"""Seed script for Darovací smlouva / Adopční smlouva (Donation/Adoption Contract) template.
 
-This adds the first document template to the database.
-Run with: python scripts/seed_donation_contract_template.py
+This adds the 'donation_contract_dog' document template to the database.
+Run locally:   python scripts/seed_donation_contract_template.py
+Run on Railway: railway run python scripts/seed_donation_contract_template.py
 """
 import asyncio
 from sqlalchemy import select
@@ -10,139 +11,237 @@ from src.app.models.document_template import DocumentTemplate
 from src.app.core.config import settings
 
 
-TEMPLATE_HTML = """<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-<h1 style="text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 5px;">DAROVACÍ SMLOUVA NA PSA</h1>
-<p style="text-align: center; font-size: 12px; margin-bottom: 30px;">uzavřená podle § 2055 a násl. zákona č. 89/2012 Sb, občanský zákoník</p>
+TEMPLATE_HTML = """<div style="font-family: Arial, sans-serif; width: 210mm; max-width: 210mm; box-sizing: border-box; margin: 0 auto; padding: 20px; font-size: 13px; line-height: 1.5;">
 
-<h2 style="font-size: 14px; font-weight: bold; margin-top: 25px; margin-bottom: 10px;">Smluvní strany</h2>
+<h1 style="text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">Darovací smlouva</h1>
+<p style="text-align: center; font-size: 13px; margin-bottom: 4px;">(adopční smlouva)</p>
+<p style="text-align: center; font-size: 11px; color: #555; margin-bottom: 30px;">uzavřená podle § 2055 a násl. zákona č. 89/2012 Sb., občanský zákoník</p>
 
-<p style="margin-bottom: 5px;"><strong>pan/paní:</strong> {{donor.full_name}}</p>
-<p style="margin-bottom: 5px;"><strong>datum narození:</strong> {{donor.birth_date}}</p>
-<p style="margin-bottom: 5px;"><strong>bytem:</strong> {{donor.address_line1}}</p>
-<p style="margin-bottom: 5px;">{{donor.address_line2}}</p>
-<p style="margin-bottom: 5px;"><strong>Telefon:</strong> {{donor.phone}}</p>
-<p style="margin-bottom: 15px;"><strong>PSČ:</strong> {{donor.zip}}</p>
-<p style="margin-bottom: 20px; font-style: italic;">dále jen „dárce"</p>
+<!-- ===== Čl. I – Smluvní strany ===== -->
+<h2 style="font-size: 14px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Čl. I. SMLUVNÍ STRANY</h2>
 
-<p style="margin-bottom: 5px;"><strong>{{org.name}}</strong></p>
-<p style="margin-bottom: 5px;">{{org.subtitle}}</p>
-<p style="margin-bottom: 5px;">{{org.representative}}</p>
-<p style="margin-bottom: 5px;">{{org.address_line1}}</p>
-<p style="margin-bottom: 5px;">{{org.address_line2}}</p>
-<p style="margin-bottom: 15px;"><strong>Tel:</strong> {{org.phone}}</p>
-<p style="margin-bottom: 30px; font-style: italic;">dále jen „obdarovaný"</p>
+<p style="margin-bottom: 4px;"><strong>Předávající (dárce):</strong></p>
+<p style="margin-bottom: 2px;">{{org.name}}</p>
+<p style="margin-bottom: 2px;">{{org.subtitle}}</p>
+<p style="margin-bottom: 2px;">zastoupená: {{org.representative}}</p>
+<p style="margin-bottom: 2px;">{{org.address_line1}}</p>
+<p style="margin-bottom: 2px;">{{org.address_line2}}</p>
+<p style="margin-bottom: 14px;">Tel.: {{org.phone}}</p>
+<p style="margin-bottom: 20px; font-style: italic;">(dále jen „Předávající")</p>
 
-<p style="margin-bottom: 30px;"><strong>V {{doc.place}} dne {{doc.date}}</strong></p>
+<p style="margin-bottom: 4px;"><strong>Obdarovaný (Osvojitel):</strong></p>
+<p style="margin-bottom: 2px;">{{donor.full_name}}</p>
+<p style="margin-bottom: 2px;">datum narození: {{donor.birth_date}}</p>
+<p style="margin-bottom: 2px;">bytem: {{donor.address_line1}}</p>
+<p style="margin-bottom: 2px;">{{donor.address_line2}}</p>
+<p style="margin-bottom: 2px;">PSČ: {{donor.zip}}</p>
+<p style="margin-bottom: 14px;">Tel.: {{donor.phone}}</p>
+<p style="margin-bottom: 20px; font-style: italic;">(dále jen „Obdarovaný")</p>
 
-<h2 style="font-size: 14px; font-weight: bold; margin-top: 25px; margin-bottom: 10px;">Obsah smlouvy</h2>
+<!-- ===== Čl. II – Předmět smlouvy ===== -->
+<h2 style="font-size: 14px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Čl. II. PŘEDMĚT SMLOUVY</h2>
 
-<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">Preambule: Účel smlouvy</h3>
-<p style="text-align: justify; margin-bottom: 15px;">
-Účelem této darovací smlouvy je bezplatný převod vlastnického práva ke psu
-charakterizovanému níže v této smlouvě (viz čl. 1) dárcem na obdarovaného a přijetí
-uvedeného daru obdarovaným od dárce s cílem zajistit tak uvedenému psu další život
-v řádných podmínkách odpovídajících jeho potřebám a právním předpisům.
+<p style="margin-bottom: 10px; text-align: justify;">
+  Předmětem Smlouvy je závazek Předávajícího bezplatně převést do vlastnictví Obdarovaného níže
+  specifikované zvíře (dále jen „Zvíře") a závazek Obdarovaného Zvíře přijmout za podmínek
+  uvedených v této Smlouvě, které se zavazuje dodržovat.
 </p>
 
-<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">Článek 1: Charakteristika psa a jeho identifikační znaky</h3>
-<p style="margin-bottom: 5px;"><strong>Jméno:</strong> {{animal.name}}</p>
-<p style="margin-bottom: 5px;"><strong>Plemeno:</strong> {{animal.breed}}</p>
-<p style="margin-bottom: 5px;"><strong>Pohlaví:</strong> {{animal.sex}}</p>
-<p style="margin-bottom: 5px;"><strong>Stáří:</strong> {{animal.age}}</p>
-<p style="margin-bottom: 5px;"><strong>Barva:</strong> {{animal.color}}</p>
-<p style="margin-bottom: 5px;"><strong>Čip:</strong> {{animal.microchip}}</p>
-<p style="margin-bottom: 5px;"><strong>Váha:</strong> {{animal.weight_kg}} kg</p>
-<p style="margin-bottom: 15px;"><strong>Případné další vhodné údaje:</strong> {{doc.other_notes}}</p>
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px;">
+  <tr>
+    <td style="border: 1px solid #000; padding: 6px; width: 50%;"><strong>Druh zvířete:</strong> pes</td>
+    <td style="border: 1px solid #000; padding: 6px; width: 50%;"><strong>Jméno:</strong> {{animal.name}}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Pohlaví:</strong> {{animal.sex}}</td>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Přibližný datum narození:</strong> {{animal.age}}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Plemeno:</strong> {{animal.breed}}</td>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Barva a typ srsti:</strong> {{animal.color}}</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Číslo mikročipu:</strong> {{animal.microchip}}</td>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Váha:</strong> {{animal.weight_kg}} kg</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Kastrace:</strong> &#9744; ano &nbsp; &#9744; ne &nbsp; &#9744; nezjištěno</td>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Pas / průkaz původu:</strong> &nbsp;</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Vakcinace – datum:</strong> &nbsp;</td>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Antiparazitika – datum:</strong> &nbsp;</td>
+  </tr>
+</table>
 
-<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">Prohlášení dárce</h3>
-<ul style="margin-bottom: 15px;">
-<li style="margin-bottom: 10px; text-align: justify;">
-Dárce prohlašuje, že je výhradním vlastníkem psa/kočky, že psa/kočku řádně nabyl do
-svého vlastnictví v souladu s příslušnými ustanoveními zákona č. 89/2012 Sb., občanský
-zákoník, a že je jakožto výhradní vlastník oprávněn s tímto předmětem daru nakládat, zejm.
-jej převést do vlastnictví jiného.
-</li>
-<li style="margin-bottom: 10px; text-align: justify;">
-Dárce dále prohlašuje, že pes, který je předmětem daru dle této smlouvy, byl jakožto
-ztracené zvíře, u něhož je zjevné, že mělo vlastníka (avšak z okolností nebylo možno
-poznat, komu by mělo být vráceno) a jakožto zvíře zjevně určené k zájmovému chovu,
-nalezen dne {{doc.found_date}} na ulici {{doc.found_street}} na území
-{{doc.found_city}} v čase {{doc.found_time}}, vedený v evidenci nalezených psů
-{{doc.found_registry}}.
-</li>
+<p style="margin-bottom: 4px;"><strong>Zdravotní stav:</strong> {{doc.health_state}}</p>
+<p style="margin-bottom: 4px;"><strong>Povaha a specifické projevy chování:</strong> {{doc.temperament}}</p>
+<p style="margin-bottom: 4px;"><strong>Jiné důležité informace:</strong> {{doc.other_important}}</p>
+<p style="margin-bottom: 14px;"><strong>Předané dokumenty:</strong> {{doc.other_notes}}</p>
+
+<!-- ===== Čl. III – Povinnosti Obdarovaného ===== -->
+<h2 style="font-size: 14px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Čl. III. POVINNOSTI A ZÁVAZKY OBDAROVANÉHO</h2>
+
+<p style="margin-bottom: 8px; text-align: justify;">
+  1. Obdarovaný se zavazuje neprodleně po převzetí Zvíře přihlásit v místě bydliště na příslušném
+  úřadu, pravidelně hradit poplatky z držení psa a zajistit evidenci čipu do 7 dnů od podpisu
+  Smlouvy na své jméno v Národním registru chovatelů zvířat (narodniregistr.cz). Zajistí Zvíře
+  proti útěku a odcizení.
+</p>
+
+<p style="margin-bottom: 4px; text-align: justify;">2. Obdarovaný je povinen zajistit Zvířeti odpovídající životní podmínky, zejména:</p>
+<ul style="margin-bottom: 10px; padding-left: 20px; text-align: justify;">
+  <li style="margin-bottom: 4px;">Zvíře nebude trvale ani dočasně drženo na řetězu, v kotci, v uzavřené místnosti bez světla nebo bez možnosti výběhu.</li>
+  <li style="margin-bottom: 4px;">Zvíře bude mít dostatečnou a pravidelnou možnost pohybu a vycházek odpovídající jeho potřebám. Obdarovaný neumožní Zvířeti pohyb na veřejném prostranství bez dozoru.</li>
+  <li style="margin-bottom: 4px;">Zvíře bude krmeno nejméně jednou denně dostatečným množstvím vhodné potravy a bude mít neustálý přístup k čisté pitné vodě.</li>
+  <li style="margin-bottom: 4px;">Zvíři bude zajištěna odborná veterinární péče, všechna potřebná očkování dle zákona a pravidelné odčervení.</li>
 </ul>
 
-<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">Článek 2: Ujednání o darování psa</h3>
-<p style="text-align: justify; margin-bottom: 15px;">
-Dárce touto smlouvou bezplatně převádí vlastnické právo ke psu, jehož identifikační znaky a
-charakteristika jsou uvedeny v článku 1 této darovací smlouvy, na obdarovaného a
-obdarovaný tento dar přijímá.
+<p style="margin-bottom: 6px; text-align: justify;">
+  3. V případě převzetí nekastrovaného Zvířete je Obdarovaný povinen zajistit kastraci na vlastní
+  náklady. U samic přibližně okolo prvního hárání (cca 7. měsíc věku), u samců po dovršení
+  8. měsíce. Do kastrace zajistí, aby se Zvíře za žádných okolností dále nemnožilo.
+  Obdarovaný je povinen zaslat lékařskou zprávu potvrzující provedení kastrace (včetně čísla
+  čipu) a fotografii Zvířete s operační ránou.
+</p>
+<p style="margin-bottom: 14px;">
+  Adoptované Zvíře bude vykastrováno v době od: ………………………… nejpozději do: …………………………
 </p>
 
-<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">Článek 3: Očkovací průkaz a zdravotní stav psa</h3>
-<p style="text-align: justify; margin-bottom: 10px;">
-<strong>Odst. 1:</strong> Při předání psa byl vydán očkovací průkaz. Pes byl očkován proti vzteklině a jiným
-infekčním chorobám, podrobnosti obsahuje očkovací průkaz. Pes je odčerven.
-</p>
-<p style="text-align: justify; margin-bottom: 5px;">
-<strong>Odst. 2:</strong> Dárce před podpisem této darovací smlouvy obdarovaným upozornil obdarovaného na:
-</p>
-<ul style="margin-bottom: 15px;">
-<li><strong>tento zdravotní stav psa:</strong> {{doc.health_state}}</li>
-<li><strong>povaha psa:</strong> {{doc.temperament}}</li>
-<li><strong>jiné důležité údaje:</strong> {{doc.other_important}}</li>
-</ul>
-
-<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">Článek 5: Předání psa</h3>
-<p style="text-align: justify; margin-bottom: 10px;">
-Vlastnictví k předmětu daru přechází na obdarovaného okamžikem, kdy je na základě této
-darovací smlouvy předmět daru (výše uvedený pes) předán dárcem obdarovanému a
-obdarovaným od dárce převzat. Tímto okamžikem přecházejí na obdarovaného i veškerá
-práva s darem spojená, veškeré užitky, nebezpečí a povinnosti. Smluvní strany potvrzují, že
-k předání a převzetí psa, který je předmětem daru dle této smlouvy, došlo.
-</p>
-<p style="margin-bottom: 15px;">
-<strong>Místo:</strong> {{doc.handover_place}} <strong>v čase:</strong> {{doc.handover_time}} <strong>dne:</strong> {{doc.handover_date}}
+<p style="margin-bottom: 8px; text-align: justify;">
+  4. Obdarovaný se zavazuje nepoužívat vůči Zvířeti tresty, které mohou být trýznivé nebo
+  poškozovat jeho fyzický či psychický stav, a dodržovat zákon č. 246/1992 Sb., o ochraně
+  zvířat proti týrání, a všechny příslušné právní předpisy.
 </p>
 
-<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">Článek 6: Zpracování osobních údajů</h3>
-<p style="text-align: justify; margin-bottom: 15px;">
-Obdarovaný souhlasí se zpracováním osobních údajů pro účely související s předmětem této
-smlouvy.
+<p style="margin-bottom: 8px; text-align: justify;">
+  5. Obdarovaný je povinen neprodleně informovat Předávajícího o: změně bydliště, zranění nebo
+  závažné změně zdravotního stavu Zvířete, ztrátě nebo úhynu Zvířete, a o nemožnosti nadále
+  Zvíře chovat.
 </p>
 
-<h3 style="font-size: 13px; font-weight: bold; margin-top: 20px; margin-bottom: 10px;">Článek 7: Ostatní ustanovení</h3>
-<p style="text-align: justify; margin-bottom: 10px;">
-<strong>a)</strong> každý je povinen zabezpečit zvířeti v zájmovém chovu přiměřené podmínky pro
-zachování jeho fyziologických funkcí a zajištění jeho biologických potřeb tak, aby
-nedocházelo k bolesti, utrpení nebo poškození zdraví zvířete, a učinit opatření proti úniku
-zvířat.
-</p>
-<p style="text-align: justify; margin-bottom: 30px;">
-<strong>b)</strong> každý, kdo chová zvíře v zájmovém chovu nebo se ujal toulavého, případně opuštěného
-zvířete, odpovídá za jeho zdraví a dobrý stav; za splnění této povinnosti se považuje i
-oznámení místa nálezu obci nebo předání toulavého, případně opuštěného zvířete do
-útulku.
+<p style="margin-bottom: 8px; text-align: justify;">
+  6. Obdarovaný se zavazuje umožnit Předávajícímu a jím pověřeným osobám provádění kontrol
+  Zvířete, a to kdykoliv i bez předchozího upozornění. Pověřená osoba se prokáže originálem
+  nebo fotokopií této Smlouvy.
 </p>
 
-<div style="display: flex; justify-content: space-between; margin-top: 50px;">
-<div style="text-align: center;">
-<p style="margin-bottom: 40px;"><strong>Obdarovaný:</strong></p>
-<p>……………………………………………</p>
-</div>
-<div style="text-align: center;">
-<p style="margin-bottom: 40px;"><strong>Za dárce:</strong></p>
-<p>……………………………………………</p>
-</div>
+<p style="margin-bottom: 8px; text-align: justify;">
+  7. Ke změně držitele Zvířete je nutný písemný souhlas Předávajícího, na jehož základě bude
+  sepsána nová smlouva s novým držitelem. V případě nespokojenosti nového držitele bude
+  Zvíře vráceno Předávajícímu, nikoli třetí osobě. Pokud Obdarovaný nebude nadále schopen se
+  o Zvíře starat, je povinen kontaktovat Předávajícího a Zvíře po domluvě vrátit.
+</p>
+
+<p style="margin-bottom: 8px; text-align: justify;">
+  8. Obdarovaný se zavazuje zasílat fotografie Zvířete přibližně každých 6 měsíců na e-mail
+  Předávajícího (poprvé nejpozději do 7 dnů od adopce) a poskytnout fotodokumentaci kdykoli
+  na vyžádání.
+</p>
+
+<!-- ===== Čl. IV – Prohlášení Obdarovaného ===== -->
+<h2 style="font-size: 14px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Čl. IV. PROHLÁŠENÍ OBDAROVANÉHO</h2>
+
+<p style="margin-bottom: 8px; text-align: justify;">
+  1. Obdarovaný prohlašuje, že si Zvíře řádně prohlédl, seznámil se s jeho zdravotním stavem a
+  přijímá jej bez výhrad. Je si vědom, že Předávající nezná komplexní historii Zvířete a
+  neodpovídá za jeho temperament, zdraví, mentální dispozice ani výcvik.
+</p>
+<p style="margin-bottom: 8px; text-align: justify;">
+  2. Bude-li Obdarovaný požadovat vydání Zvířete před uplynutím karanténní doby a zjištěním
+  zdravotního stavu, přechází odpovědnost za případná zdravotní rizika na Obdarovaného dnem
+  předání Zvířete. Obdarovaný na sebe přebírá veškerou odpovědnost za chov a péči o Zvíře
+  a odpovídá za škody způsobené Zvířetem ode dne předání.
+</p>
+<p style="margin-bottom: 8px; text-align: justify;">
+  3. Obdarovaný zároveň se Zvířetem přebírá: &nbsp; &#9744; Očkovací průkaz &nbsp; &#9744; Pas &nbsp; &#9744; Průkaz původu
+</p>
+<p style="margin-bottom: 14px; text-align: justify;">
+  4. Obdarovaný souhlasí se zveřejněním fotografií a informací o Zvířeti na webu a sociálních sítích Předávajícího: &nbsp; &#9744; ANO &nbsp; &#9744; NE
+</p>
+
+<!-- ===== Čl. V – Práva Předávajícího a pokuty ===== -->
+<h2 style="font-size: 14px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Čl. V. PRÁVA PŘEDÁVAJÍCÍHO A SMLUVNÍ POKUTY</h2>
+
+<p style="margin-bottom: 8px; text-align: justify;">
+  1. Předávající je oprávněn odstoupit od Smlouvy v případě porušení jakékoliv povinnosti
+  Obdarovaného dle čl. III. Smlouvy. Odstoupení je účinné okamžikem doručení Obdarovanému.
+  Obdarovaný je povinen neprodleně Zvíře předat Předávajícímu. Nemá nárok na náhradu nákladů
+  vynaložených v době péče o Zvíře ani na vrácení adopčního poplatku. Zvíře bude odebráno
+  i v případě, že nebude možné s Obdarovaným navázat kontakt.
+</p>
+<p style="margin-bottom: 8px; text-align: justify;">
+  2. V případě hrubého porušení závazků dle čl. III. odst. 2, 3, 4, 5 je Obdarovaný povinen
+  uhradit Předávajícímu smluvní pokutu ve výši <strong>25 000 Kč</strong> (slovy: dvacet pět tisíc korun
+  českých), splatnou do 3 pracovních dnů ode dne zjištění porušení. Vedle smluvní pokuty
+  je Obdarovaný povinen uhradit Předávajícímu vzniklou škodu a náklady na veterinární péči
+  a dopravu Zvířete.
+</p>
+<p style="margin-bottom: 14px; text-align: justify;">
+  3. V případě jiného porušení závazků dle čl. III. je Předávající oprávněn uložit Obdarovanému
+  smluvní pokutu <strong>5 000 Kč</strong> (slovy: pět tisíc korun českých), splatnou do 3 pracovních dnů
+  ode dne zjištění porušení.
+</p>
+
+<!-- ===== Čl. VI – Předání Zvířete ===== -->
+<h2 style="font-size: 14px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Čl. VI. PŘEDÁNÍ ZVÍŘETE</h2>
+
+<p style="margin-bottom: 8px; text-align: justify;">
+  Vlastnictví ke Zvířeti přechází na Obdarovaného okamžikem předání. Tímto okamžikem přecházejí
+  na Obdarovaného veškerá práva, užitky, nebezpečí a povinnosti spojené se Zvířetem.
+  Smluvní strany potvrzují, že k předání a převzetí Zvířete došlo:
+</p>
+<p style="margin-bottom: 4px;"><strong>Místo předání:</strong> {{doc.handover_place}}</p>
+<p style="margin-bottom: 4px;"><strong>Datum předání:</strong> {{doc.handover_date}}</p>
+<p style="margin-bottom: 14px;"><strong>Čas předání:</strong> {{doc.handover_time}}</p>
+
+<!-- ===== Čl. VII – GDPR ===== -->
+<h2 style="font-size: 14px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Čl. VII. ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ</h2>
+
+<p style="margin-bottom: 8px; text-align: justify;">
+  Předávající zpracovává osobní údaje Obdarovaného uvedené v záhlaví Smlouvy za účelem realizace
+  Smlouvy a výkonu právních nároků. Právním základem je nezbytnost zpracování pro splnění
+  smlouvy. Osobní údaje budou uchovávány po dobu stanovenou příslušnými předpisy a dále
+  po dobu 4 let od smrti Zvířete. Obdarovaný má právo na přístup k osobním údajům, jejich
+  opravu nebo výmaz, omezení zpracování, právo vznést námitku a právo podat stížnost
+  u Úřadu pro ochranu osobních údajů. Poskytnutí osobních údajů je podmínkou uzavření Smlouvy.
+</p>
+<p style="margin-bottom: 4px;">Souhlasím se zasíláním novinek a zpráv z útulku: &nbsp; &#9744; ANO &nbsp; &#9744; NE</p>
+<p style="margin-bottom: 14px;">Souhlasím s pořízením a zveřejněním mé fotografie na webu a sociálních sítích Předávajícího: &nbsp; &#9744; ANO &nbsp; &#9744; NE</p>
+
+<!-- ===== Čl. VIII – Závěrečná ustanovení ===== -->
+<h2 style="font-size: 14px; font-weight: bold; margin-top: 24px; margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Čl. VIII. ZÁVĚREČNÁ USTANOVENÍ</h2>
+
+<p style="margin-bottom: 4px; text-align: justify;">1. Smlouva nabývá platnosti a účinnosti dnem podpisu oběma smluvními stranami.</p>
+<p style="margin-bottom: 4px; text-align: justify;">2. Jakékoliv změny Smlouvy je možné činit výslovně ve formě písemných, chronologicky číslovaných dodatků.</p>
+<p style="margin-bottom: 4px; text-align: justify;">3. Jestliže jakékoliv ustanovení Smlouvy je nebo se stane neplatným, nemá to vliv na zbývající ustanovení.</p>
+<p style="margin-bottom: 4px; text-align: justify;">4. Obdarovaný souhlasí s úhradou veškerých soudních nákladů vzniklých v souvislosti s vymáháním podmínek Smlouvy.</p>
+<p style="margin-bottom: 4px; text-align: justify;">5. Účastníci prohlašují, že Smlouvu řádně přečetli, pochopili její znění a plně s ním souhlasí. Smlouva nebyla sjednána v tísni ani za nápadně nevýhodných podmínek.</p>
+<p style="margin-bottom: 20px; text-align: justify;">6. Smlouva je sepsána ve 2 vyhotoveních; každá smluvní strana obdrží po jednom.</p>
+
+<p style="margin-top: 30px;"><strong>V {{doc.place}} dne {{doc.date}}</strong></p>
+
+<!-- Podpisy -->
+<div style="display: flex; justify-content: space-between; margin-top: 60px;">
+  <div style="text-align: center; width: 44%;">
+    <p style="margin-bottom: 40px; height: 1px; border-top: 1px solid #000;"></p>
+    <p style="margin-bottom: 2px;"><strong>Předávající</strong></p>
+    <p style="margin-bottom: 0;">{{org.name}}</p>
+    <p style="margin-bottom: 0; font-size: 11px;">{{org.representative}}</p>
+  </div>
+  <div style="text-align: center; width: 44%;">
+    <p style="margin-bottom: 40px; height: 1px; border-top: 1px solid #000;"></p>
+    <p style="margin-bottom: 2px;"><strong>Obdarovaný (Osvojitel)</strong></p>
+    <p style="margin-bottom: 0;">{{donor.full_name}}</p>
+  </div>
 </div>
 
 </div>"""
 
 
 async def seed_template():
-    """Add Darovací smlouva template to database."""
+    """Add / update Darovací smlouva (adopční) template in database."""
     async with AsyncSessionLocal() as db:
-        # Check if template already exists
         query = select(DocumentTemplate).where(
             DocumentTemplate.code == "donation_contract_dog"
         )
@@ -150,17 +249,23 @@ async def seed_template():
         existing = result.scalar_one_or_none()
 
         if existing:
-            print(f"✓ Template 'donation_contract_dog' already exists (ID: {existing.id})")
+            # Update content so re-running the script refreshes the template
+            existing.content_html = TEMPLATE_HTML
+            existing.name = "Darovací smlouva – pes (adopční)"
+            existing.description = (
+                "Darovací / adopční smlouva – převod psa z útulku na nového majitele."
+            )
+            await db.commit()
+            print(f"✓ Updated template 'donation_contract_dog' (ID: {existing.id})")
             return
 
-        # Create new template (global, not org-specific)
         template = DocumentTemplate(
-            organization_id=None,  # Global template
+            organization_id=None,  # global template
             code="donation_contract_dog",
-            name="Darovací smlouva na psa",
+            name="Darovací smlouva – pes (adopční)",
             language="cs",
             content_html=TEMPLATE_HTML,
-            description="Smlouva o bezplatném převodu vlastnického práva ke psu od dárce na organizaci",
+            description="Darovací / adopční smlouva – převod psa z útulku na nového majitele.",
             is_active=True,
         )
 
@@ -175,6 +280,6 @@ async def seed_template():
 
 
 if __name__ == "__main__":
-    print("Seeding Darovací smlouva template...")
+    print("Seeding Darovací smlouva (adopční) template...")
     asyncio.run(seed_template())
     print("Done!")

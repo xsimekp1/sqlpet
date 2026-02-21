@@ -22,6 +22,7 @@ from src.app.schemas.document import (
     DocumentInstanceResponse,
     DocumentInstanceListResponse,
     DocumentPreviewResponse,
+    OrgDocumentPreviewRequest,
 )
 
 router = APIRouter()
@@ -171,6 +172,49 @@ async def get_template(
     return DocumentTemplateResponse.model_validate(template)
 
 
+# --- Org-level Documents (not tied to a specific animal) ---
+
+
+@router.post("/org-documents/preview", response_model=DocumentPreviewResponse)
+async def preview_org_document(
+    data: OrgDocumentPreviewRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    x_organization_id: Annotated[str, Header()],
+):
+    """Render an org-level document template preview (no animal, no saving)."""
+    org_id = UUID(x_organization_id)
+
+    template_query = select(DocumentTemplate).where(
+        DocumentTemplate.code == data.template_code,
+        (DocumentTemplate.organization_id == org_id) | (DocumentTemplate.organization_id == None),  # noqa: E711
+        DocumentTemplate.is_active == True,  # noqa: E712
+    )
+    result = await db.execute(template_query)
+    template = result.scalar_one_or_none()
+    if not template:
+        raise HTTPException(status_code=404, detail=f"Template '{data.template_code}' not found")
+
+    document_service = DocumentService(db)
+    try:
+        rendered_html = await document_service.render_org_template(
+            template=template,
+            organization_id=org_id,
+            created_by_user_id=current_user.id,
+            year=data.year,
+            locale=data.locale,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return DocumentPreviewResponse(
+        document_id=None,
+        rendered_html=rendered_html,
+        preview_url=None,
+        pdf_url=None,
+    )
+
+
 # --- Document Instances (for animals) ---
 
 
@@ -235,6 +279,7 @@ async def preview_animal_document(
             created_by_user_id=current_user.id,
             manual_fields=data.manual_fields,
             donor_contact_id=data.donor_contact_id,
+            locale=data.locale,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -304,6 +349,7 @@ async def create_animal_document(
             manual_fields=data.manual_fields,
             donor_contact_id=data.donor_contact_id,
             status=data.status,
+            locale=data.locale,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -105,7 +105,7 @@ class DocumentInstance(Base):
 
     # Status
     status = Column(
-        SQLEnum(DocumentStatus, name="document_status_enum"),
+        SQLEnum(DocumentStatus, name="document_status_enum", values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,
         default=DocumentStatus.FINAL
     )

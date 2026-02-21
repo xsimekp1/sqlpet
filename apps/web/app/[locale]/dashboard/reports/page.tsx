@@ -1,10 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { BarChart3, TrendingUp, FileText, PieChart, Clock, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import ApiClient from '@/app/lib/api';
 import { toast } from 'sonner';
 
@@ -106,11 +121,21 @@ function DailyCountChart({ data }: { data: { date: string; count: number }[] }) 
   );
 }
 
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2, CURRENT_YEAR - 3];
+
 export default function ReportsPage() {
   const t = useTranslations();
 
   const [dailyData, setDailyData] = useState<{ date: string; count: number }[]>([]);
   const [loadingChart, setLoadingChart] = useState(true);
+
+  // Org documents state
+  const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
+  const [selectedTemplate, setSelectedTemplate] = useState('annual_intake_report');
+  const [generatingDoc, setGeneratingDoc] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     ApiClient.getAnimalDailyCount(90)
@@ -118,6 +143,18 @@ export default function ReportsPage() {
       .catch(() => toast.error('Nepodařilo se načíst statistiky'))
       .finally(() => setLoadingChart(false));
   }, []);
+
+  async function handleGeneratePreview() {
+    setGeneratingDoc(true);
+    try {
+      const result = await ApiClient.previewOrgDocument(selectedTemplate, selectedYear);
+      setPreviewHtml(result.rendered_html);
+    } catch {
+      toast.error('Nepodařilo se vygenerovat dokument');
+    } finally {
+      setGeneratingDoc(false);
+    }
+  }
 
 const plannedReports = [
     { icon: PieChart, title: 'Příjmy a výdeje', desc: 'Statistiky příjmů (intake) vs adopcí/výdejů' },
@@ -155,6 +192,82 @@ const plannedReports = [
           )}
 </CardContent>
       </Card>
+
+      {/* ── Org documents ── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            {t('reports.orgDocuments')}
+          </CardTitle>
+          <CardDescription>{t('reports.orgDocumentsDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-muted-foreground">{t('reports.selectTemplate')}</label>
+              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                <SelectTrigger className="w-64 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="annual_intake_report">
+                    {t('reports.templates.annual_intake_report')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-muted-foreground">{t('reports.selectYear')}</label>
+              <Select
+                value={String(selectedYear)}
+                onValueChange={(v) => setSelectedYear(Number(v))}
+              >
+                <SelectTrigger className="w-28 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEAR_OPTIONS.map((y) => (
+                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleGeneratePreview} disabled={generatingDoc}>
+              {generatingDoc ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('reports.generating')}
+                </>
+              ) : (
+                t('reports.generatePreview')
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Org document preview dialog ── */}
+      {previewHtml && (
+        <Dialog open onOpenChange={() => setPreviewHtml(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{t('reports.previewTitle')}</DialogTitle>
+            </DialogHeader>
+            <iframe
+              ref={iframeRef}
+              srcDoc={previewHtml}
+              className="w-full rounded-lg border"
+              style={{ height: '70vh' }}
+              title="Náhled dokumentu"
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => iframeRef.current?.contentWindow?.print()}>{t('reports.print')}</Button>
+              <Button onClick={() => setPreviewHtml(null)}>{t('reports.close')}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* ── Planned reports placeholder ── */}
       <Card className="border-dashed">

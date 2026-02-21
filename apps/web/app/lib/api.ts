@@ -1908,6 +1908,14 @@ class ApiClient {
     }
   }
 
+  static async previewOrgDocument(
+    templateCode: string,
+    year: number,
+    locale: string = 'cs',
+  ): Promise<{ document_id: string | null; rendered_html: string }> {
+    return this.post('/org-documents/preview', { template_code: templateCode, year, locale });
+  }
+
   static async getExpiringVaccinations(days: number = 14): Promise<{
     total_vaccinations: number;
     expiring_within_14_days: number;

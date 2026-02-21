@@ -26,6 +26,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft, Package, XCircle, Printer } from 'lucide-react'
+import { useUIStore } from '@/app/stores/uiStore'
+import { formatCurrency } from '@/app/lib/utils'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { useToast } from '@/hooks/use-toast'
@@ -33,6 +35,7 @@ import { Progress } from '@/components/ui/progress'
 
 export default function PurchaseOrderDetailPage() {
   const t = useTranslations('purchases')
+  const { currency } = useUIStore()
   const router = useRouter()
   const params = useParams()
   const { toast } = useToast()
@@ -294,7 +297,7 @@ export default function PurchaseOrderDetailPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    {item.unit_price ? `$${Number(item.unit_price).toFixed(2)}` : '-'}
+                    {item.unit_price ? formatCurrency(item.unit_price, currency) : '-'}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

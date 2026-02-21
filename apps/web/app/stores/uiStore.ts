@@ -47,6 +47,9 @@ interface UIState {
   // Preferences
   weightUnit: 'kg' | 'lbs'
   setWeightUnit: (unit: 'kg' | 'lbs') => void
+
+  currency: 'CZK' | 'EUR'
+  setCurrency: (currency: 'CZK' | 'EUR') => void
 }
 
 function migrateWidgets(widgets: unknown): WidgetConfig[] {
@@ -81,6 +84,9 @@ export const useUIStore = create<UIState>()(
 
       weightUnit: 'kg',
       setWeightUnit: (unit) => set({ weightUnit: unit }),
+
+      currency: 'CZK',
+      setCurrency: (currency) => set({ currency }),
     }),
     {
       name: 'pawshelter-ui-storage',
@@ -88,6 +94,7 @@ export const useUIStore = create<UIState>()(
         sidebarCollapsed: state.sidebarCollapsed,
         dashboardWidgets: state.dashboardWidgets,
         weightUnit: state.weightUnit,
+        currency: state.currency,
       }),
       merge: (persisted: unknown, current) => {
         const persistedState = persisted as { dashboardWidgets?: unknown } | undefined

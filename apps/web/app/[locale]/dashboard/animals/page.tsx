@@ -615,7 +615,7 @@ export default function AnimalsPage() {
                   {selectMode && <th className="w-10 px-3 py-3"></th>}
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground w-12"></th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.name')}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.species.label')}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">{t('animals.species.label')}</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.breed')}</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t('animals.age')}</th>
                   <th className="px-4 py-3 font-medium text-muted-foreground w-28" title={t('animals.health.title')}>{t('animals.health.title')}</th>
@@ -663,8 +663,8 @@ export default function AnimalsPage() {
                         )}
                       </p>
                     </td>
-                    <td className="px-4 py-3 capitalize">
-                      {animal.species}
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      {tSpecies(animal.species)}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {animal.breeds && animal.breeds.length > 0

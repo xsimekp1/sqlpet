@@ -15,6 +15,7 @@ import {
   Users,
   Shield,
   Palette,
+  Coins,
 } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -88,7 +89,7 @@ const SPECIES_VALUES = ['dog', 'cat', 'rodent', 'bird', 'other'] as const;
 export default function SettingsPage() {
   const t = useTranslations('settings');
   const locale = useLocale();
-  const { weightUnit, setWeightUnit } = useUIStore();
+  const { weightUnit, setWeightUnit, currency, setCurrency } = useUIStore();
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
 
@@ -575,6 +576,33 @@ export default function SettingsPage() {
                       onClick={() => setWeightUnit('lbs')}
                     >
                       {t('lbs')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Currency selector */}
+              <div className="flex items-start gap-4">
+                <div className="p-2 rounded-lg bg-muted">
+                  <Coins className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{t('currency')}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{t('currencyDesc')}</p>
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      variant={currency === 'CZK' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setCurrency('CZK')}
+                    >
+                      Kč CZK
+                    </Button>
+                    <Button
+                      variant={currency === 'EUR' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setCurrency('EUR')}
+                    >
+                      € EUR
                     </Button>
                   </div>
                 </div>

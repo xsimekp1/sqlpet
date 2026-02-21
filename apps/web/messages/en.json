@@ -4,7 +4,19 @@
   },
   "reports": {
     "animalCountTitle": "Animal count in shelter (last 90 days)",
-    "animalCountDesc": "Daily count — animals with active stay (from intake to outcome)"
+    "animalCountDesc": "Daily count — animals with active stay (from intake to outcome)",
+    "orgDocuments": "Official Documents",
+    "orgDocumentsDesc": "Generate reports and summaries for authorities",
+    "selectTemplate": "Template",
+    "selectYear": "Year",
+    "generatePreview": "Preview",
+    "generating": "Generating...",
+    "previewTitle": "Document Preview",
+    "print": "Print",
+    "close": "Close",
+    "templates": {
+      "annual_intake_report": "Annual Intake Report"
+    }
   },
   "login": {
     "title": "Sign in",

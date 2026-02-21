@@ -63,6 +63,7 @@ class DocumentInstanceCreate(BaseModel):
     donor_contact_id: UUID | None = None
     manual_fields: dict = Field(default_factory=dict)
     status: DocumentStatus = DocumentStatus.FINAL
+    locale: str = "cs"
 
     model_config = {"use_enum_values": True}
 
@@ -101,3 +102,10 @@ class DocumentPreviewResponse(BaseModel):
     rendered_html: str
     preview_url: str | None = None
     pdf_url: str | None = None
+
+
+class OrgDocumentPreviewRequest(BaseModel):
+    """Schema for org-level (non-animal) document preview."""
+    template_code: str
+    year: int
+    locale: str = "cs"

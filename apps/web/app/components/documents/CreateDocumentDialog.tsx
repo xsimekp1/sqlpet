@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import ApiClient from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,7 @@ export default function CreateDocumentDialog({
   onDocumentCreated,
 }: CreateDocumentDialogProps) {
   const t = useTranslations('animals.documents');
+  const locale = useLocale();
 
   // Form state
   const [templateCode, setTemplateCode] = useState('donation_contract_dog');
@@ -92,6 +93,7 @@ export default function CreateDocumentDialog({
       const result = await ApiClient.post(`/animals/${animalId}/documents/preview`, {
         template_code: templateCode,
         manual_fields: manualFields,
+        locale,
       });
 
       setPreviewHtml(result.rendered_html);
@@ -128,6 +130,7 @@ export default function CreateDocumentDialog({
         template_code: templateCode,
         manual_fields: manualFields,
         status: 'final',
+        locale,
       });
 
       toast.success(t('documentCreated'));
@@ -149,10 +152,12 @@ export default function CreateDocumentDialog({
             <DialogDescription>{t('previewDescription')}</DialogDescription>
           </DialogHeader>
 
-          <div
-            className="border rounded-lg p-6 bg-white"
-            dangerouslySetInnerHTML={{ __html: previewHtml }}
-          />
+          <div className="border rounded-lg bg-white overflow-auto">
+            <div
+              style={{ width: '210mm', margin: '0 auto', padding: '15mm 20mm' }}
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          </div>
 
           <DialogFooter>
             <Button
