@@ -174,6 +174,79 @@ async def get_template(
 # --- Document Instances (for animals) ---
 
 
+@router.post("/animals/{animal_id}/documents/preview", response_model=DocumentPreviewResponse)
+async def preview_animal_document(
+    animal_id: UUID,
+    data: DocumentInstanceCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    x_organization_id: Annotated[str, Header()],
+):
+    """
+    Render a document template preview WITHOUT saving to database.
+
+    Use this for quick previews. The rendered HTML is returned but no
+    DocumentInstance is created.
+    """
+    org_id = UUID(x_organization_id)
+
+    animal_query = select(Animal).where(
+        Animal.id == animal_id,
+        Animal.organization_id == org_id,
+    )
+    animal_result = await db.execute(animal_query)
+    animal = animal_result.scalar_one_or_none()
+
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    # Resolve template
+    template_id = data.template_id
+    if not template_id and data.template_code:
+        template_query = select(DocumentTemplate).where(
+            DocumentTemplate.code == data.template_code,
+            (DocumentTemplate.organization_id == org_id) | (DocumentTemplate.organization_id == None),  # noqa: E711
+            DocumentTemplate.is_active == True,  # noqa: E712
+        )
+        template_result = await db.execute(template_query)
+        template = template_result.scalar_one_or_none()
+
+        if not template:
+            raise HTTPException(status_code=404, detail=f"Template '{data.template_code}' not found")
+
+        template_id = template.id
+
+    if not template_id:
+        raise HTTPException(status_code=400, detail="Either template_id or template_code must be provided")
+
+    # Fetch template object for rendering
+    tpl_query = select(DocumentTemplate).where(DocumentTemplate.id == template_id)
+    tpl_result = await db.execute(tpl_query)
+    tpl = tpl_result.scalar_one_or_none()
+    if not tpl:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    document_service = DocumentService(db)
+    try:
+        rendered_html = await document_service.render_template(
+            template=tpl,
+            animal_id=animal_id,
+            organization_id=org_id,
+            created_by_user_id=current_user.id,
+            manual_fields=data.manual_fields,
+            donor_contact_id=data.donor_contact_id,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return DocumentPreviewResponse(
+        document_id=None,
+        rendered_html=rendered_html,
+        preview_url=None,
+        pdf_url=None,
+    )
+
+
 @router.post("/animals/{animal_id}/documents", response_model=DocumentPreviewResponse, status_code=201)
 async def create_animal_document(
     animal_id: UUID,

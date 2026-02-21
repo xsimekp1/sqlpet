@@ -43,7 +43,7 @@ export default function CreateDocumentDialog({
   const t = useTranslations('animals.documents');
 
   // Form state
-  const [templateCode] = useState('donation_contract_dog'); // MVP: only one template
+  const [templateCode, setTemplateCode] = useState('donation_contract_dog');
   const [place, setPlace] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState('');
@@ -89,10 +89,9 @@ export default function CreateDocumentDialog({
         handover_time: handoverTime,
       };
 
-      const result = await ApiClient.post(`/animals/${animalId}/documents`, {
+      const result = await ApiClient.post(`/animals/${animalId}/documents/preview`, {
         template_code: templateCode,
         manual_fields: manualFields,
-        status: 'draft', // Preview as draft
       });
 
       setPreviewHtml(result.rendered_html);
@@ -194,16 +193,19 @@ export default function CreateDocumentDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Template Selection - MVP: fixed to donation contract */}
+          {/* Template Selection */}
           <div className="space-y-2">
             <Label>{t('template')}</Label>
-            <Select value={templateCode} disabled>
+            <Select value={templateCode} onValueChange={setTemplateCode}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="donation_contract_dog">
                   {t('templates.donationContract')}
+                </SelectItem>
+                <SelectItem value="surrender_contract_dog">
+                  {t('templates.surrenderContract')}
                 </SelectItem>
               </SelectContent>
             </Select>

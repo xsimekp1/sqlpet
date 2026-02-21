@@ -978,7 +978,8 @@
       "createDescription": "Create donation contract for {name}",
       "template": "Document Type",
       "templates": {
-        "donationContract": "Dog Donation Contract"
+        "donationContract": "Dog Donation Contract",
+        "surrenderContract": "Animal Surrender Contract"
       },
       "place": "Place",
       "placePlaceholder": "e.g. Prague",

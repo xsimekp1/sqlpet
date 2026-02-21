@@ -97,7 +97,7 @@ class DocumentInstanceListResponse(BaseModel):
 
 class DocumentPreviewResponse(BaseModel):
     """Schema for document preview."""
-    document_id: UUID
+    document_id: UUID | None = None  # None for dry-run previews (not saved to DB)
     rendered_html: str
     preview_url: str | None = None
     pdf_url: str | None = None

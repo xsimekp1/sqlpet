@@ -578,6 +578,8 @@
     "weightUnitDesc": "Vyberte jednotku pro zobrazení hmotnosti zvířat v celé aplikaci",
     "kg": "Kilogramy (kg)",
     "lbs": "Libry (lbs)",
+    "currency": "Měna",
+    "currencyDesc": "Měna pro zobrazení cen v aplikaci",
     "defaultImages": {
       "uploadTitle": "Nahrát nový výchozí obrázek",
       "species": "Druh zvířete",
@@ -884,7 +886,8 @@
       "createDescription": "Vytvořit darovací smlouvu pro {name}",
       "template": "Typ dokumentu",
       "templates": {
-        "donationContract": "Darovací smlouva na psa"
+        "donationContract": "Darovací smlouva na psa",
+        "surrenderContract": "Smlouva o vzdání se zvířete"
       },
       "place": "Místo",
       "placePlaceholder": "např. Praha",
