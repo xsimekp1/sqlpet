@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select, text, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -606,6 +606,31 @@ async def get_weight_history(
 class BirthRequest(BaseModel):
     litter_count: int = Field(..., ge=1, le=20)
     birth_date: date | None = None  # defaults to today
+    collar_colors: list[str | None] | None = None  # Optional collar colors for each offspring
+    naming_scheme: str = "number"  # "number", "letter", or "color"
+
+    @field_validator('collar_colors')
+    @classmethod
+    def validate_collar_colors(cls, v, info):
+        if v is None:
+            return v
+        litter_count = info.data.get('litter_count')
+        if litter_count and len(v) != litter_count:
+            raise ValueError(f'collar_colors length ({len(v)}) must equal litter_count ({litter_count})')
+
+        valid_colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', None, 'none']
+        for color in v:
+            if color not in valid_colors:
+                raise ValueError(f'Invalid collar color: {color}. Must be one of {valid_colors}')
+        return v
+
+    @field_validator('naming_scheme')
+    @classmethod
+    def validate_naming_scheme(cls, v):
+        valid_schemes = ['number', 'letter', 'color']
+        if v not in valid_schemes:
+            raise ValueError(f'Invalid naming_scheme: {v}. Must be one of {valid_schemes}')
+        return v
 
 
 @router.post(
@@ -658,11 +683,42 @@ async def register_birth(
     created = []
     for i in range(data.litter_count):
         public_code = await svc._generate_public_code(organization_id)
+
+        # Get collar color for this offspring
+        collar_color = None
+        if data.collar_colors and i < len(data.collar_colors):
+            color = data.collar_colors[i]
+            collar_color = color if color and color != 'none' else None
+
+        # Generate name based on naming scheme
+        if data.naming_scheme == "letter":
+            # A, B, C, ... Z, AA, AB, ...
+            letter_index = i
+            letters = ""
+            while True:
+                letters = chr(65 + (letter_index % 26)) + letters
+                letter_index //= 26
+                if letter_index == 0:
+                    break
+                letter_index -= 1
+            offspring_name = f"{mother.name} – {letters}"
+        elif data.naming_scheme == "color" and collar_color:
+            # Use color name in Czech (map to i18n keys)
+            color_names_cs = {
+                'red': 'červený', 'blue': 'modrý', 'green': 'zelený', 'yellow': 'žlutý',
+                'orange': 'oranžový', 'purple': 'fialový', 'pink': 'růžový', 'brown': 'hnědý'
+            }
+            color_name = color_names_cs.get(collar_color, collar_color)
+            offspring_name = f"{mother.name} – {color_name}"
+        else:
+            # Default: number (1, 2, 3, ...)
+            offspring_name = f"{mother.name} – mládě {i + 1}"
+
         offspring = Animal(
             id=uuid.uuid4(),
             organization_id=organization_id,
             public_code=public_code,
-            name=f"{mother.name} – mládě {i + 1}",
+            name=offspring_name,
             species=mother.species,
             sex="unknown",
             status=AnimalStatus.INTAKE,
@@ -674,6 +730,7 @@ async def register_birth(
             is_dewormed=False,
             is_aggressive=False,
             is_pregnant=False,
+            collar_color=collar_color,
         )
         db.add(offspring)
         await db.flush()
@@ -705,7 +762,7 @@ async def register_birth(
                     kennel_id=current_kennel_id,
                     start_at=datetime.now(timezone.utc),
                     reason="Narozeno",
-                    moved_by_user_id=current_user.id,
+                    moved_by=current_user.id,
                 )
             )
 
