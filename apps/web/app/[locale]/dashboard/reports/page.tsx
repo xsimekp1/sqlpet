@@ -1,18 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { BarChart3, TrendingUp, FileText, PieChart, Clock, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -22,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import ApiClient from '@/app/lib/api';
 import { toast } from 'sonner';
+// ApiClient imported for chart data only — document preview navigates to /reports/preview
 
 // ── Simple SVG line chart for daily animal count ────────────────────────────
 function DailyCountChart({ data }: { data: { date: string; count: number }[] }) {
@@ -126,6 +121,7 @@ const YEAR_OPTIONS = [CURRENT_YEAR, CURRENT_YEAR - 1, CURRENT_YEAR - 2, CURRENT_
 
 export default function ReportsPage() {
   const t = useTranslations();
+  const router = useRouter();
 
   const [dailyData, setDailyData] = useState<{ date: string; count: number }[]>([]);
   const [loadingChart, setLoadingChart] = useState(true);
@@ -133,9 +129,6 @@ export default function ReportsPage() {
   // Org documents state
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
   const [selectedTemplate, setSelectedTemplate] = useState('annual_intake_report');
-  const [generatingDoc, setGeneratingDoc] = useState(false);
-  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     ApiClient.getAnimalDailyCount(90)
@@ -144,16 +137,8 @@ export default function ReportsPage() {
       .finally(() => setLoadingChart(false));
   }, []);
 
-  async function handleGeneratePreview() {
-    setGeneratingDoc(true);
-    try {
-      const result = await ApiClient.previewOrgDocument(selectedTemplate, selectedYear);
-      setPreviewHtml(result.rendered_html);
-    } catch {
-      toast.error('Nepodařilo se vygenerovat dokument');
-    } finally {
-      setGeneratingDoc(false);
-    }
+  function handleGeneratePreview() {
+    router.push(`/dashboard/reports/preview?template=${selectedTemplate}&year=${selectedYear}`);
   }
 
 const plannedReports = [
@@ -233,41 +218,12 @@ const plannedReports = [
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleGeneratePreview} disabled={generatingDoc}>
-              {generatingDoc ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('reports.generating')}
-                </>
-              ) : (
-                t('reports.generatePreview')
-              )}
+            <Button onClick={handleGeneratePreview}>
+              {t('reports.generatePreview')}
             </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* ── Org document preview dialog ── */}
-      {previewHtml && (
-        <Dialog open onOpenChange={() => setPreviewHtml(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{t('reports.previewTitle')}</DialogTitle>
-            </DialogHeader>
-            <iframe
-              ref={iframeRef}
-              srcDoc={previewHtml}
-              className="w-full rounded-lg border"
-              style={{ height: '70vh' }}
-              title="Náhled dokumentu"
-            />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => iframeRef.current?.contentWindow?.print()}>{t('reports.print')}</Button>
-              <Button onClick={() => setPreviewHtml(null)}>{t('reports.close')}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* ── Planned reports placeholder ── */}
       <Card className="border-dashed">
