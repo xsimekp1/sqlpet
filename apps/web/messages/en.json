@@ -671,6 +671,8 @@
     "weightUnitDesc": "Choose the unit used to display animal weights throughout the app",
     "kg": "Kilograms (kg)",
     "lbs": "Pounds (lbs)",
+    "currency": "Currency",
+    "currencyDesc": "Currency used for displaying prices in the app",
     "defaultImages": {
       "uploadTitle": "Upload New Default Image",
       "species": "Species",
@@ -847,7 +849,10 @@
       "weightError": "Failed to save weight",
       "weightFirstMeasurement": "Add the first measurement",
       "energyNeeds": "Energy needs",
-      "merUpdated": "Energy requirement updated: {value} kcal/day"
+      "merUpdated": "Energy requirement updated: {value} kcal/day",
+      "markIntact": "Mark as intact",
+      "markAltered": "Mark as altered",
+      "toggleAltered": "Toggle altered status"
     },
     "colors": {
       "black": "Black",

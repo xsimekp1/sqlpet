@@ -58,6 +58,7 @@ from src.app.models.registered_shelter import RegisteredShelter
 from src.app.models.user_shortcut import UserKeyboardShortcut
 from src.app.models.incident import AnimalIncident
 from src.app.models.purchase_order import PurchaseOrder, PurchaseOrderItem
+from src.app.models.animal_passport import AnimalPassport, AnimalPassportDocument
 from src.app.models.document_template import DocumentTemplate, DocumentInstance, DocumentStatus
 
 __all__ = [
@@ -125,6 +126,8 @@ __all__ = [
     "AnimalIncident",
     "PurchaseOrder",
     "PurchaseOrderItem",
+    "AnimalPassport",
+    "AnimalPassportDocument",
     "DocumentTemplate",
     "DocumentInstance",
     "DocumentStatus",

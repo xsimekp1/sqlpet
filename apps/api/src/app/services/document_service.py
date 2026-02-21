@@ -135,14 +135,34 @@ class DocumentService:
         }
         species_str = species_map.get(animal.species, animal.species)
 
+        # Format birth date
+        birth_date_str = ""
+        if animal.birth_date_estimated:
+            birth_date_str = animal.birth_date_estimated.strftime("%d.%m.%Y")
+
+        # Translate altered status
+        altered_map = {
+            "altered": "ano",
+            "intact": "ne",
+            "unknown": "neznámé",
+        }
+        altered_str = altered_map.get(
+            str(animal.altered_status.value) if animal.altered_status else "unknown",
+            "neznámé"
+        )
+
         return {
             "name": animal.name or "",
             "species": species_str,
             "breed": breed_name,
             "sex": sex_str,
             "age": age_str,
+            "birth_date": birth_date_str,
             "color": animal.color or "",
             "microchip": microchip or "",
+            "altered": altered_str,
+            "passport_number": "",  # TODO: read from AnimalPassport when loaded
+            "last_vaccination_date": "",  # TODO: read from AnimalVaccination when loaded
             "weight_kg": str(animal.weight_current_kg) if animal.weight_current_kg else "",
             "description": animal.description or "",
             "behavior_notes": animal.behavior_notes or "",
@@ -157,15 +177,18 @@ class DocumentService:
         if not org:
             raise ValueError(f"Organization {organization_id} not found")
 
+        # Use getattr for fields not yet on the model (future org-settings expansion)
+        address = org.address or ""
         return {
             "name": org.name or "",
-            "subtitle": org.subtitle or "",
-            "representative": org.representative or "",
-            "address_line1": org.address_line1 or "",
-            "address_line2": org.address_line2 or "",
-            "phone": org.phone or "",
-            "email": org.email or "",
-            "city": org.city or "",
+            "subtitle": getattr(org, "subtitle", None) or "",
+            "representative": getattr(org, "representative", None) or "",
+            "address_line1": getattr(org, "address_line1", None) or address,
+            "address_line2": getattr(org, "address_line2", None) or "",
+            "phone": getattr(org, "phone", None) or "",
+            "email": getattr(org, "email", None) or "",
+            "city": getattr(org, "city", None) or "",
+            "registration_number": org.registration_number or "",
         }
 
     async def _get_user_data(self, user_id: UUID) -> dict[str, Any]:
@@ -200,17 +223,20 @@ class DocumentService:
 
         # Format birth date
         birth_date_str = ""
-        if contact.birth_date:
-            birth_date_str = contact.birth_date.strftime("%d.%m.%Y")
+        raw_birth_date = getattr(contact, "birth_date", None)
+        if raw_birth_date:
+            birth_date_str = raw_birth_date.strftime("%d.%m.%Y")
 
+        address = contact.address or ""
         return {
-            "full_name": contact.full_name or "",
+            "full_name": getattr(contact, "full_name", None) or contact.name or "",
             "birth_date": birth_date_str,
-            "address_line1": contact.address_line1 or "",
-            "address_line2": contact.address_line2 or "",
+            "address": address,
+            "address_line1": getattr(contact, "address_line1", None) or address,
+            "address_line2": getattr(contact, "address_line2", None) or "",
             "phone": contact.phone or "",
             "email": contact.email or "",
-            "zip": contact.zip or "",
+            "zip": getattr(contact, "zip", None) or "",
         }
 
     def _build_context(
@@ -227,11 +253,17 @@ class DocumentService:
         if isinstance(doc_date, (date, datetime)):
             doc_date = doc_date.strftime("%d.%m.%Y")
 
+        # manual namespace: all manual_fields accessible as {{manual.key}}
+        manual_ns = {k: v for k, v in manual_fields.items()}
+
         context = {
             "animal": animal,
             "org": org,
             "user": user,
             "donor": donor or {},
+            # {{person.*}} = alias for donor/contact (used in surrender contracts)
+            "person": donor or {},
+            "manual": manual_ns,
             "doc": {
                 "place": manual_fields.get("place", ""),
                 "date": doc_date,
