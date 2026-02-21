@@ -66,7 +66,7 @@ class DocumentService:
         query = (
             select(Animal)
             .options(
-                selectinload(Animal.breeds),
+                selectinload(Animal.animal_breeds),
                 selectinload(Animal.identifiers),
             )
             .where(Animal.id == animal_id, Animal.organization_id == organization_id)
@@ -86,15 +86,15 @@ class DocumentService:
 
         # Get primary breed name
         breed_name = ""
-        if animal.breeds:
+        if animal.animal_breeds:
             # Get the first breed or the one with highest percentage
             primary_breed = max(
-                animal.breeds,
+                animal.animal_breeds,
                 key=lambda ab: ab.percent if ab.percent else 0,
                 default=None
             )
-            if primary_breed:
-                breed_name = primary_breed.breed_name
+            if primary_breed and hasattr(primary_breed, 'breed') and primary_breed.breed:
+                breed_name = primary_breed.breed.name if hasattr(primary_breed.breed, 'name') else ""
 
         # Calculate age from birth_date_estimated
         age_str = ""
