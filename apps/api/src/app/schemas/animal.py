@@ -147,6 +147,14 @@ class AnimalResponse(AnimalCreate):
     legal_deadline_state: str | None = None
     legal_deadline_label: str | None = None
 
+    # Website publication tracking (for found animals)
+    website_published_at: date | None = None
+    website_deadline_at: date | None = None
+    website_days_left: int | None = None  # Computed: days until deadline
+    website_deadline_state: str | None = (
+        None  # "waiting" | "expired" | "not_published"
+    )
+
     # Intake legal fields
     notice_published_at: date | None = None
     finder_claims_ownership: bool | None = None

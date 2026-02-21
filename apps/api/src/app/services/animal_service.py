@@ -539,6 +539,26 @@ class AnimalService:
         # Log return event when status changes from escaped to something else
         old_status = before.get("status")
         if old_status == "escaped" and new_status and new_status != "escaped":
+            # Special handling: If animal has active website deadline, force status back to waiting_adoption
+            if animal.website_published_at and animal.website_deadline_at:
+                if not animal.website_deadline_expired():
+                    # Override user's choice - animal must stay in waiting_adoption
+                    animal.status = "waiting_adoption"
+                    new_status = "waiting_adoption"
+
+                    # Log that we overrode the status
+                    await self.audit.log_action(
+                        organization_id=organization_id,
+                        actor_user_id=actor_id,
+                        action="auto_restore_waiting_adoption",
+                        entity_type="animal",
+                        entity_id=animal.id,
+                        before={"intended_status": update_data.get("status")},
+                        after={"actual_status": "waiting_adoption", "reason": "website_deadline_not_expired"},
+                        ip=ip,
+                        user_agent=user_agent,
+                    )
+
             await self.audit.log_action(
                 organization_id=organization_id,
                 actor_user_id=actor_id,

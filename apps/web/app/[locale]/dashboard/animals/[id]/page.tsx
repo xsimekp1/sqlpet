@@ -9,7 +9,7 @@ import {
   CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors,
   ChevronLeft, ChevronRight, Baby, Scale, Accessibility, Home, Camera,
   PersonStanding, LogIn, CheckCheck, FileText, Upload, X, ExternalLink,
-  QrCode,
+  QrCode, Globe, UserCheck, Clock, Edit2, Info,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -66,7 +66,7 @@ import PassportTab from '@/app/components/animals/PassportTab';
 // 'escaped' is intentionally excluded — use the Escape button to record an escape incident
 const STATUSES = [
   'available', 'reserved', 'adopted', 'fostered', 'transferred',
-  'deceased', 'quarantine', 'intake', 'hold',
+  'deceased', 'quarantine', 'intake', 'hold', 'waiting_adoption',
 ] as const;
 
 const getStatusColor = (status: string) => {
@@ -80,6 +80,7 @@ const getStatusColor = (status: string) => {
     case 'deceased':    return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     case 'escaped':     return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
     case 'quarantine':  return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+    case 'waiting_adoption': return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
     default:            return 'bg-gray-100 text-gray-800';
   }
 };
@@ -193,6 +194,23 @@ export default function AnimalDetailPage() {
     municipality_irrevocably_transferred: '' as '' | 'true' | 'false',
   });
   const [savingLegalDeadline, setSavingLegalDeadline] = useState(false);
+
+  // Website publication
+  const [publishing, setPublishing] = useState(false);
+  const [editingWebsiteDeadline, setEditingWebsiteDeadline] = useState(false);
+  const [websiteDeadlineForm, setWebsiteDeadlineForm] = useState({
+    published_at: '',
+    deadline_at: '',
+  });
+  const [savingWebsiteDeadline, setSavingWebsiteDeadline] = useState(false);
+
+  // Return to original owner
+  const [returnToOwnerDialogOpen, setReturnToOwnerDialogOpen] = useState(false);
+  const [returnToOwnerForm, setReturnToOwnerForm] = useState({
+    return_date: '',
+    notes: '',
+  });
+  const [savingReturnToOwner, setSavingReturnToOwner] = useState(false);
 
   // Superadmin: delete stay
   const [deletingStay, setDeletingStay] = useState(false);
@@ -818,6 +836,87 @@ if (photoInputRef.current) photoInputRef.current.value = '';
     }
   };
 
+  const handlePublishToWebsite = async () => {
+    if (!animal) return;
+
+    // Confirm dialog
+    const deadline = new Date();
+    deadline.setMonth(deadline.getMonth() + 4);
+    const confirmed = window.confirm(
+      `Opravdu chcete vystavit ${animal.name} na web? Běžet začne 4měsíční čekací lhůta (do ${deadline.toLocaleDateString('cs-CZ')}).`
+    );
+
+    if (!confirmed) return;
+
+    setPublishing(true);
+    try {
+      const updated = await ApiClient.publishAnimalToWebsite(animal.id);
+      setAnimal(updated);
+      toast.success(
+        `Zvíře vystaveno na webu. Lhůta vyprší ${new Date(updated.website_deadline_at!).toLocaleDateString('cs-CZ')}.`
+      );
+    } catch (err: any) {
+      toast.error(err?.message || 'Chyba při vystavení na web');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleReturnToOriginalOwner = async () => {
+    if (!animal || !activeIntakeId) return;
+
+    setSavingReturnToOwner(true);
+    try {
+      // Close the intake with outcome "returned_to_owner"
+      await ApiClient.closeIntake(activeIntakeId, {
+        outcome: 'returned_to_owner',
+        notes: returnToOwnerForm.notes || 'Návrat k původnímu majiteli během čekací lhůty',
+      });
+
+      // Refresh animal data (status should now be "returned_to_owner")
+      const updated = await ApiClient.getAnimal(animal.id);
+      setAnimal(updated);
+      setActiveIntakeId(null);
+
+      toast.success(`${animal.name} bylo úspěšně vráceno původnímu majiteli.`);
+      setReturnToOwnerDialogOpen(false);
+      setReturnToOwnerForm({ return_date: '', notes: '' });
+    } catch (err: any) {
+      toast.error(err?.message || 'Chyba při vracení zvířete');
+    } finally {
+      setSavingReturnToOwner(false);
+    }
+  };
+
+  const handleSaveWebsiteDeadline = async () => {
+    if (!animal) return;
+
+    setSavingWebsiteDeadline(true);
+    try {
+      const updated = await ApiClient.updateAnimal(animal.id, {
+        website_published_at: websiteDeadlineForm.published_at || null,
+        website_deadline_at: websiteDeadlineForm.deadline_at || null,
+      } as any);
+      setAnimal(updated);
+      toast.success('Data čekací lhůty aktualizována');
+      setEditingWebsiteDeadline(false);
+    } catch (err: any) {
+      toast.error(err?.message || 'Chyba při ukládání');
+    } finally {
+      setSavingWebsiteDeadline(false);
+    }
+  };
+
+  const startEditWebsiteDeadline = () => {
+    if (animal) {
+      setWebsiteDeadlineForm({
+        published_at: animal.website_published_at || '',
+        deadline_at: animal.website_deadline_at || '',
+      });
+    }
+    setEditingWebsiteDeadline(true);
+  };
+
   const startEditIntakeDate = () => {
     if (animal) {
       setIntakeDateInput(animal.intake_date ? animal.intake_date.split('T')[0] : (animal.current_intake_date ? animal.current_intake_date.split('T')[0] : ''));
@@ -1198,6 +1297,32 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               >
                 <Baby className="h-4 w-4 mr-2" />
                 {t('birth')}
+              </Button>
+            )}
+            {/* Publish to Website (only for found animals in intake/quarantine) */}
+            {activeIntakeReason === 'found' &&
+             !animal.website_published_at &&
+             ['intake', 'quarantine'].includes(animal.status) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePublishToWebsite()}
+                disabled={publishing}
+              >
+                <Globe className="h-4 w-4 mr-2" />
+                Vystaveno na webu
+              </Button>
+            )}
+            {/* Special action for animals in waiting_adoption - Return to Original Owner */}
+            {animal.status === 'waiting_adoption' && activeIntakeId && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setReturnToOwnerDialogOpen(true)}
+                className="border-green-600 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-300"
+              >
+                <UserCheck className="h-4 w-4 mr-2" />
+                Návrat k původnímu majiteli
               </Button>
             )}
             <Button
@@ -2231,6 +2356,48 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               </>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Return to Original Owner Dialog */}
+      <Dialog open={returnToOwnerDialogOpen} onOpenChange={setReturnToOwnerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Návrat k původnímu majiteli</DialogTitle>
+            <DialogDescription>
+              {animal?.name} bude vráceno původnímu majiteli. Intake bude ukončen.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <p className="text-sm text-blue-800 dark:text-blue-300">
+                  Toto zvíře je ve čekací lhůtě. Ukončení intake jako &apos;návrat k majiteli&apos; je během této lhůty povoleno.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Poznámky (volitelné)</label>
+              <Textarea
+                value={returnToOwnerForm.notes}
+                onChange={(e) => setReturnToOwnerForm({ ...returnToOwnerForm, notes: e.target.value })}
+                placeholder="Např. jak majitel prokázal vlastnictví..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReturnToOwnerDialogOpen(false)}>
+              Zrušit
+            </Button>
+            <Button onClick={handleReturnToOriginalOwner} className="bg-green-600 hover:bg-green-700" disabled={savingReturnToOwner}>
+              {savingReturnToOwner ? 'Ukládání...' : 'Potvrdit návrat'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

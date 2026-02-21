@@ -110,7 +110,7 @@ export interface Animal {
   collar_removed_at: string | null;
   estimated_age_years: number | null;
   current_intake_date: string | null;
-  status: 'intake' | 'available' | 'reserved' | 'adopted' | 'fostered' | 'returned' | 'deceased' | 'transferred' | 'hold' | 'quarantine' | 'returned_to_owner' | 'euthanized' | 'escaped';
+  status: 'intake' | 'available' | 'reserved' | 'adopted' | 'fostered' | 'returned' | 'deceased' | 'transferred' | 'hold' | 'quarantine' | 'returned_to_owner' | 'euthanized' | 'escaped' | 'waiting_adoption';
   primary_photo_url: string | null;
   thumbnail_url: string | null;
   default_image_url: string | null;
@@ -147,7 +147,13 @@ export interface Animal {
   legal_deadline_days_left?: number | null;
   legal_deadline_state?: string | null;
   legal_deadline_label?: string | null;
-  
+
+  // Website publication tracking (for found animals)
+  website_published_at?: string | null;
+  website_deadline_at?: string | null;
+  website_days_left?: number | null;
+  website_deadline_state?: string | null; // "waiting" | "expired" | "not_published"
+
   // Intake legal fields
   notice_published_at?: string | null;
   finder_claims_ownership?: boolean | null;
@@ -979,6 +985,23 @@ class ApiClient {
     }
   }
 
+  static async publishAnimalToWebsite(id: string): Promise<Animal> {
+    try {
+      const response = await axios.post(
+        `${API_URL}/animals/${id}/publish-to-website`,
+        {},
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to publish animal to website');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
   static async deleteStay(stayId: string): Promise<void> {
     try {
       await axios.delete(`${API_URL}/stays/${stayId}`, { headers: this.getAuthHeaders() });
@@ -1444,7 +1467,7 @@ class ApiClient {
 
   static async closeIntake(
     intakeId: string,
-    data: { outcome: 'adopted' | 'deceased' | 'lost' | 'hotel_end'; notes?: string },
+    data: { outcome: 'adopted' | 'deceased' | 'lost' | 'hotel_end' | 'returned_to_owner'; notes?: string },
   ): Promise<any> {
     return this.post(`/intakes/${intakeId}/close`, data);
   }

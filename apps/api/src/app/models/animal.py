@@ -52,6 +52,7 @@ class AnimalStatus(str, enum.Enum):
     ESCAPED = "escaped"
     HOTEL = "hotel"
     WITH_OWNER = "with_owner"
+    WAITING_ADOPTION = "waiting_adoption"  # Found animal in 4-month waiting period
 
 
 class AlteredStatus(str, enum.Enum):
@@ -193,6 +194,15 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         DateTime, nullable=True
     )
 
+    # Website publication tracking (for found animals)
+    website_published_at: Mapped[date | None] = mapped_column(Date, nullable=True)
+    website_deadline_at: Mapped[date | None] = mapped_column(
+        Date, nullable=True
+    )  # Computed: published_at + 4 months
+    website_published_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+
     # Relationships
     animal_breeds = relationship(
         "AnimalBreed",
@@ -232,3 +242,11 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         uselist=False,
         lazy="noload",
     )
+
+    def website_deadline_expired(self) -> bool:
+        """Check if website publication deadline has passed."""
+        if not self.website_deadline_at:
+            return False
+        from datetime import date
+
+        return date.today() > self.website_deadline_at

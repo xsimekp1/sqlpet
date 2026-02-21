@@ -465,6 +465,7 @@ class IntakeOutcome(str, enum.Enum):
     DECEASED = "deceased"
     LOST = "lost"
     HOTEL_END = "hotel_end"
+    RETURNED_TO_OWNER = "returned_to_owner"  # Original owner reclaimed during waiting period
 
 
 class IntakeClose(BaseModel):
@@ -477,6 +478,7 @@ _OUTCOME_STATUS_MAP = {
     IntakeOutcome.DECEASED: AnimalStatus.DECEASED,
     IntakeOutcome.LOST: AnimalStatus.ESCAPED,
     IntakeOutcome.HOTEL_END: AnimalStatus.WITH_OWNER,
+    IntakeOutcome.RETURNED_TO_OWNER: AnimalStatus.RETURNED_TO_OWNER,
 }
 
 
@@ -515,7 +517,35 @@ async def close_intake(
     )
     animal = animal_result.scalar_one_or_none()
     if animal:
+        # Special handling for animals in waiting_adoption
+        if animal.status == AnimalStatus.WAITING_ADOPTION:
+            # Only allowed outcome during waiting period is returned_to_owner
+            if data.outcome != IntakeOutcome.RETURNED_TO_OWNER:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Animal is in waiting period. Only 'returned_to_owner' outcome is allowed during this period.",
+                )
+
         animal.status = _OUTCOME_STATUS_MAP[data.outcome]  # type: ignore
+
+        # Log audit event for returned_to_owner during waiting period
+        if data.outcome == IntakeOutcome.RETURNED_TO_OWNER and animal.status == AnimalStatus.WAITING_ADOPTION:
+            from src.app.services.audit_service import AuditService
+
+            audit_service = AuditService(db)
+            await audit_service.log_event(
+                organization_id=organization_id,
+                entity_type="intake",
+                entity_id=intake.id,
+                action="close_intake_return_to_owner",
+                user_id=current_user.id,
+                before_value={"status": "waiting_adoption"},
+                after_value={
+                    "outcome_type": "returned_to_owner",
+                    "status": "returned_to_owner",
+                    "reason": "original_owner_reclaimed_during_waiting_period",
+                },
+            )
 
     if data.notes:
         intake.notes = (intake.notes or "") + f"\n[Close] {data.notes}"

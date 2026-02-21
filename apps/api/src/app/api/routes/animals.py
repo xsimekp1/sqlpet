@@ -141,6 +141,26 @@ async def _build_animal_response(
         resp.legal_deadline_state = deadline_info.deadline_state
         resp.legal_deadline_label = deadline_info.label
 
+    # Compute website deadline state (if animal is published)
+    resp.website_published_at = animal.website_published_at
+    resp.website_deadline_at = animal.website_deadline_at
+
+    if animal.website_published_at and animal.website_deadline_at:
+        from datetime import date
+
+        today = date.today()
+        days_left = (animal.website_deadline_at - today).days
+
+        resp.website_days_left = days_left
+
+        if days_left < 0:
+            resp.website_deadline_state = "expired"
+        else:
+            resp.website_deadline_state = "waiting"
+    else:
+        resp.website_days_left = None
+        resp.website_deadline_state = "not_published"
+
     # Generate thumbnail URL from primary_photo_url
     if animal.primary_photo_url:
         resp.thumbnail_url = animal.primary_photo_url.replace(
@@ -1100,4 +1120,93 @@ async def mark_animal_walked(
     await db.commit()
     await db.refresh(animal)
 
+    return await _build_animal_response(animal, db)
+
+
+@router.post("/{animal_id}/publish-to-website", response_model=AnimalResponse)
+async def publish_animal_to_website(
+    animal_id: uuid.UUID,
+    current_user: User = Depends(require_permission("animals.write")),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Mark a found animal as published on the website.
+
+    This triggers the 4-month waiting period before the animal can be adopted.
+    Only for animals with intake_reason='found' and status in ['intake', 'quarantine'].
+    """
+    from src.app.models.animal import AnimalStatus
+    from src.app.models.intake import Intake, IntakeReason
+    from sqlalchemy.orm import selectinload
+    from dateutil.relativedelta import relativedelta
+
+    # Fetch animal with intake
+    result = await db.execute(
+        select(Animal)
+        .options(selectinload(Animal.intakes))
+        .where(Animal.id == animal_id, Animal.organization_id == organization_id)
+    )
+    animal = result.scalar_one_or_none()
+
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal not found")
+
+    # Verify it's a found animal
+    active_intake = next(
+        (
+            i
+            for i in animal.intakes
+            if i.intake_date and not i.outcome_date and not i.deleted_at
+        ),
+        None,
+    )
+    if not active_intake or active_intake.reason != IntakeReason.FOUND:
+        raise HTTPException(
+            status_code=400,
+            detail="Only found animals can be published to website with waiting period",
+        )
+
+    # Verify current status allows publication
+    if animal.status not in [AnimalStatus.INTAKE, AnimalStatus.QUARANTINE]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot publish animal with status '{animal.status}'",
+        )
+
+    # Already published?
+    if animal.website_published_at:
+        raise HTTPException(status_code=400, detail="Animal already published to website")
+
+    # Set publication date and compute deadline (4 months)
+    today = date.today()
+    deadline = today + relativedelta(months=4)
+
+    animal.website_published_at = today
+    animal.website_deadline_at = deadline
+    animal.website_published_by_user_id = current_user.id
+    animal.status = AnimalStatus.WAITING_ADOPTION
+
+    await db.commit()
+    await db.refresh(animal)
+
+    # Log audit event
+    from src.app.services.audit_service import AuditService
+
+    audit_service = AuditService(db)
+    await audit_service.log_event(
+        organization_id=organization_id,
+        entity_type="animal",
+        entity_id=animal.id,
+        action="publish_to_website",
+        user_id=current_user.id,
+        before_value=None,
+        after_value={
+            "website_published_at": str(today),
+            "website_deadline_at": str(deadline),
+            "status": "waiting_adoption",
+        },
+    )
+
+    # Build response
     return await _build_animal_response(animal, db)
