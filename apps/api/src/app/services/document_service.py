@@ -200,12 +200,17 @@ class DocumentService:
         if not user:
             raise ValueError(f"User {user_id} not found")
 
-        full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+        full_name = (
+            getattr(user, "full_name", None)
+            or f"{getattr(user, 'first_name', None) or ''} {getattr(user, 'last_name', None) or ''}".strip()
+            or user.name
+            or ""
+        )
 
         return {
             "full_name": full_name,
-            "first_name": user.first_name or "",
-            "last_name": user.last_name or "",
+            "first_name": getattr(user, "first_name", None) or user.name or "",
+            "last_name": getattr(user, "last_name", None) or "",
             "email": user.email or "",
         }
 
