@@ -1344,12 +1344,18 @@ class ApiClient {
     return response.data;
   }
 
-  static async registerBirth(animalId: string, litter_count: number, birth_date?: string): Promise<{ created: number; offspring: { id: string; public_code: string; name: string }[] }> {
-    const body: Record<string, any> = { litter_count };
-    if (birth_date) body.birth_date = birth_date;
+  static async registerBirth(
+    animalId: string,
+    data: {
+      litter_count: number;
+      birth_date?: string;
+      naming_scheme?: 'number' | 'letter' | 'color';
+      collar_colors?: (string | null)[];
+    }
+  ): Promise<{ created: number; offspring: { id: string; public_code: string; name: string }[] }> {
     const response = await axios.post(
       `${API_URL}/animals/${animalId}/birth`,
-      body,
+      data,
       { headers: { ...this.getAuthHeaders(), 'Content-Type': 'application/json' } }
     );
     return response.data;

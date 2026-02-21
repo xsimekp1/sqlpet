@@ -248,7 +248,7 @@ class AnimalService:
         # Compute and save default image URL
         breed_ids = [entry.breed_id for entry in data.breeds] if data.breeds else None
         animal.default_image_url = await self._compute_default_image_url(
-            species=data.species,
+            species=data.species.value if hasattr(data.species, 'value') else data.species,
             breed_ids=breed_ids,
             color=data.color,
         )
@@ -496,7 +496,7 @@ class AnimalService:
                     else None
                 )
                 animal.default_image_url = await self._compute_default_image_url(
-                    species=animal.species,
+                    species=animal.species.value if hasattr(animal.species, 'value') else animal.species,
                     breed_ids=breed_ids,
                     color=animal.color,
                 )

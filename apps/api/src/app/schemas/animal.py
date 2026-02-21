@@ -84,6 +84,7 @@ class AnimalCreate(BaseModel):
     age_group: AgeGroup = "unknown"
     color: str | None = None
     coat: str | None = None
+    collar_color: str | None = None  # Litter identification collar color
     size_estimated: SizeEstimated = "unknown"
     weight_current_kg: Decimal | None = None
     mer_kcal_per_day: int | None = None
@@ -163,6 +164,7 @@ class AnimalUpdate(BaseModel):
     age_group: AgeGroup | None = None
     color: str | None = None
     coat: str | None = None
+    collar_color: str | None = None  # Litter identification collar color
     size_estimated: SizeEstimated | None = None
     weight_current_kg: Decimal | None = None
     mer_kcal_per_day: int | None = None

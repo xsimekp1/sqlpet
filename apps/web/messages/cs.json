@@ -1400,8 +1400,24 @@
   "birth": {
     "title": "Zaevidovat porod",
     "description": "Zaevidujete porod u {name}. Systém vytvoří zadaný počet mláďat stejného druhu a plemene, přidá je do jejího kotce a nastaví datum narození.",
+    "assignColorsDescription": "Přiřaďte barevné obojky pro rozlišení mláďat",
+    "offspringPreview": "Náhled narozených mláďat",
+    "noCollar": "Bez obojku",
+    "duplicateColorsWarning": "Mláďat je více než 8, barvy se opakují. Doporučujeme upravit ručně.",
+    "next": "Další",
+    "back": "Zpět",
+    "confirmBirth": "Potvrdit porod",
     "litterCount": "Počet mláďat",
     "birthDate": "Datum porodu (volitelné, výchozí: dnes)",
+    "namingScheme": "Způsob označení",
+    "namingSchemes": {
+      "number": "Čísla (1, 2, 3...)",
+      "numberDesc": "Mláďata budou pojmenována: Jméno matky – mládě 1, mládě 2, ...",
+      "letter": "Písmena (A, B, C...)",
+      "letterDesc": "Mláďata budou pojmenována: Jméno matky – A, B, C, ...",
+      "color": "Barevné obojky",
+      "colorDesc": "Mláďata budou pojmenována podle barvy obojku (červený, modrý, ...)"
+    },
     "motherLactating": "Matka kojí",
     "motherLactatingSet": "Matka nastavena jako kojící",
     "cancel": "Zrušit",
@@ -1412,7 +1428,17 @@
     "error": "Chyba při registraci porodu",
     "offspringOne": "mládě",
     "offspringFew": "mláďata",
-    "offspringMany": "mláďat"
+    "offspringMany": "mláďat",
+    "colors": {
+      "red": "Červený",
+      "blue": "Modrý",
+      "green": "Zelený",
+      "yellow": "Žlutý",
+      "orange": "Oranžový",
+      "purple": "Fialový",
+      "pink": "Růžový",
+      "brown": "Hnědý"
+    }
   },
   "mer": {
     "title": "Doporučení krmení (RER/MER)",

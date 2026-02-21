@@ -263,6 +263,22 @@ The spec defines 65+ tables across these domains: organizations/auth/RBAC, peopl
 
 Docker-compose currently has PostgreSQL only (missing Redis, MinIO, API/worker/web services).
 
+## Common Testing Mistakes
+
+**CRITICAL: Always include organization header in API tests!**
+
+Most API endpoints require the `x-organization-id` header for multi-tenant isolation. Use the `make_org_headers` helper:
+
+```python
+from tests.conftest import make_org_headers
+
+# In your test:
+headers = make_org_headers(auth_headers, org.id)
+response = await client.post("/animals", headers=headers, json={...})
+```
+
+Without this header, you'll get a 400 Bad Request error. This is the **most common mistake** when writing API tests.
+
 ## Key Conventions
 
 - All code and variable names in English

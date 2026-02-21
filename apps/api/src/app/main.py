@@ -44,6 +44,7 @@ from src.app.api.routes.chat import router as chat_router
 from src.app.api.routes.calendar import router as calendar_router
 from src.app.api.routes.animals_stats import router as animals_stats_router
 from src.app.api.routes.metrics import router as metrics_router
+from src.app.api.routes.documents import router as documents_router
 
 # Files router is now working properly after fixing import issues
 
@@ -484,3 +485,4 @@ app.include_router(chat_router)
 app.include_router(calendar_router)
 app.include_router(animals_stats_router)
 app.include_router(metrics_router)
+app.include_router(documents_router)

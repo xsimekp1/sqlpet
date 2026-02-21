@@ -235,3 +235,45 @@ async def test_org_with_write_permission(db_session: AsyncSession, test_user: Us
         await db_session.commit()
     except Exception:
         await db_session.rollback()
+
+
+@pytest.fixture()
+async def pregnant_cat(db_session: AsyncSession, test_org_with_write_permission):
+    """Create a pregnant cat for testing birth - returns (cat_dict, org)"""
+    from datetime import date, timedelta
+
+    org, membership, role = test_org_with_write_permission
+
+    # Create cat directly in database to avoid default image lookup issues
+    cat = Animal(
+        id=uuid.uuid4(),
+        organization_id=org.id,
+        public_code="TEST-CAT-001",
+        name="Pregnant Cat",
+        species="cat",
+        sex="female",
+        status="intake",
+        altered_status="unknown",
+        age_group="adult",
+        is_pregnant=True,
+        expected_litter_date=date.today() + timedelta(days=7),
+        public_visibility=False,
+        featured=False,
+        is_dewormed=False,
+        is_aggressive=False,
+    )
+    db_session.add(cat)
+    await db_session.commit()
+    await db_session.refresh(cat)
+
+    # Return cat dict and org
+    cat_dict = {
+        "id": str(cat.id),
+        "name": cat.name,
+        "species": cat.species,
+        "sex": cat.sex,
+        "status": cat.status,
+        "is_pregnant": cat.is_pregnant,
+        "expected_litter_date": str(cat.expected_litter_date) if cat.expected_litter_date else None,
+    }
+    return cat_dict, org

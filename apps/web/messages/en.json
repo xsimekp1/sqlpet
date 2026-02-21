@@ -537,8 +537,24 @@
   "birth": {
     "title": "Register Birth",
     "description": "You are registering a birth for {name}. The system will create the specified number of offspring of the same species and breed, add them to her kennel and set the birth date.",
+    "assignColorsDescription": "Assign colored collars to identify offspring",
+    "offspringPreview": "Offspring preview",
+    "noCollar": "No collar",
+    "duplicateColorsWarning": "More than 8 offspring, colors will repeat. Consider customizing manually.",
+    "next": "Next",
+    "back": "Back",
+    "confirmBirth": "Confirm Birth",
     "litterCount": "Number of offspring",
     "birthDate": "Birth date (optional, default: today)",
+    "namingScheme": "Identification method",
+    "namingSchemes": {
+      "number": "Numbers (1, 2, 3...)",
+      "numberDesc": "Offspring will be named: Mother's name – offspring 1, offspring 2, ...",
+      "letter": "Letters (A, B, C...)",
+      "letterDesc": "Offspring will be named: Mother's name – A, B, C, ...",
+      "color": "Colored collars",
+      "colorDesc": "Offspring will be named by collar color (red, blue, ...)"
+    },
     "motherLactating": "Mother is lactating",
     "motherLactatingSet": "Mother set as lactating",
     "cancel": "Cancel",
@@ -549,7 +565,17 @@
     "error": "Error registering birth",
     "offspringOne": "offspring",
     "offspringFew": "offspring",
-    "offspringMany": "offspring"
+    "offspringMany": "offspring",
+    "colors": {
+      "red": "Red",
+      "blue": "Blue",
+      "green": "Green",
+      "yellow": "Yellow",
+      "orange": "Orange",
+      "purple": "Purple",
+      "pink": "Pink",
+      "brown": "Brown"
+    }
   },
   "mer": {
     "title": "Feeding recommendation (RER/MER)",
