@@ -91,7 +91,15 @@ class DefaultAnimalImage(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "default_animal_images"
 
     species: Species = Column(
-        Enum(Species, name="species_enum"), nullable=False, index=True
+        Enum(
+            Species,
+            name="species_enum",
+            create_constraint=False,
+            native_enum=False,
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        nullable=False,
+        index=True,
     )  # 'dog', 'cat', 'rodent', 'bird'
     breed_id: str = Column(
         UUID(as_uuid=True),
