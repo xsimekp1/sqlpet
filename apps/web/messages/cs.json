@@ -1459,6 +1459,7 @@
       "created": "Vytvořeno",
       "addLot": "Přidat šarži",
       "noLotsFound": "Žádné šarže nenalezeny. Přidejte šarži pro sledování zásob.",
+      "showEmptyLots": "Zobrazit prázdné loty",
       "vial": "lahvička",
       "ampule": "ampule",
       "lotsCreatedOnReceiving": "Šarže se vytvářejí automaticky při naskladnění",

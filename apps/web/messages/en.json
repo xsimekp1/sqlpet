@@ -1546,6 +1546,7 @@
       "created": "Created",
       "addLot": "Add Lot",
       "noLotsFound": "No lots found. Add a lot to track inventory.",
+      "showEmptyLots": "Show empty lots",
       "vial": "vial",
       "ampule": "ampule",
       "lots": "Lots",
