@@ -153,7 +153,7 @@ export default function TasksPage() {
             });
           }
         }
-      } else if (data.linked_inventory_item_id) {
+      } else if ((data as any)?.linked_inventory_item_id) {
         toast({ title: 'Úkol splněn', description: '1 ks vakcíny odečteno ze skladu.' });
         queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
       } else {
