@@ -297,3 +297,43 @@
 .animate-urgent-pulse {
   animation: urgent-pulse 3s ease-in-out infinite;
 }
+
+/* =============================================
+   PRINT STYLES
+   ============================================= */
+@media print {
+  /* Skryj navigaci a shell elementy */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Zruš flex/height/overflow omezení pro tisk */
+  .print-block {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Zruš padding na main contentu */
+  .print-no-padding {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Fix QR kódů — SVG musí tisknout barvy */
+  svg {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* Fix html/body — žádné ořezávání obsahu */
+  html, body {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* @page — zmenšit okraje pro víc QR kódů na stránku */
+  @page {
+    margin: 0.5cm;
+  }
+}

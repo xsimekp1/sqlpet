@@ -159,7 +159,7 @@ export function Sidebar() {
       {/* Mobile overlay backdrop */}
       {!sidebarCollapsed && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity no-print"
           onClick={toggleSidebar}
         />
       )}
@@ -172,6 +172,7 @@ export function Sidebar() {
           'flex flex-col border-r bg-card transition-all duration-300',
           // Mobile visibility
           'lg:flex',
+          'no-print',
           sidebarCollapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0',
           // Desktop width
           'w-64 lg:w-auto',

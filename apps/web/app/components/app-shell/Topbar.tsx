@@ -16,7 +16,7 @@ export function Topbar() {
   const { toggleSidebar } = useUIStore()
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 text-slate-200">
+    <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 text-slate-200 no-print">
       <div className="flex h-16 items-center justify-between px-4 gap-4">
         {/* Left: Menu toggle (mobile) + Org Switcher */}
         <div className="flex items-center gap-2">
