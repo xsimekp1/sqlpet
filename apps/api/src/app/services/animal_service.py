@@ -315,7 +315,7 @@ class AnimalService:
 
         if species:
             base = base.where(Animal.species == species)
-        if status:
+        if status and status != "all":
             base = base.where(Animal.status == status)
         if sex:
             base = base.where(Animal.sex == sex)

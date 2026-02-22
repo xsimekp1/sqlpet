@@ -865,7 +865,7 @@ class ApiClient {
     }
     try {
       const queryParams = new URLSearchParams();
-      if (params?.status) queryParams.append('status', params.status);
+      if (params?.status && params.status !== 'all') queryParams.append('status', params.status);
       if (params?.species) queryParams.append('species', params.species);
       if (params?.search) queryParams.append('search', params.search);
       if (params?.page_size) queryParams.append('page_size', String(params.page_size));
