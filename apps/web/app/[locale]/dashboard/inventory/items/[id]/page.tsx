@@ -254,6 +254,9 @@ export default function InventoryItemDetailPage() {
     );
   }
 
+  const TRACKS_LOTS = ['medication', 'vaccine', 'food'];
+  const tracksLots = TRACKS_LOTS.includes(item?.category ?? '');
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -430,14 +433,14 @@ export default function InventoryItemDetailPage() {
       )}
 
       {/* Tabs */}
-      <Tabs defaultValue="lots" className="space-y-4">
+      <Tabs defaultValue={tracksLots ? 'lots' : 'transactions'} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="lots">{t('lots')}</TabsTrigger>
+          {tracksLots && <TabsTrigger value="lots">{t('lots')}</TabsTrigger>}
           <TabsTrigger value="transactions">{t('transactions')}</TabsTrigger>
         </TabsList>
 
         {/* Lots Tab */}
-        <TabsContent value="lots" className="space-y-4">
+        {tracksLots && <TabsContent value="lots" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold">{t('lots')}</h2>
             <p className="text-sm text-muted-foreground">{t('messages.lotsCreatedOnReceiving')}</p>
@@ -508,7 +511,7 @@ export default function InventoryItemDetailPage() {
               </TableBody>
             </Table>
           </div>
-        </TabsContent>
+        </TabsContent>}
 
         {/* Transactions Tab */}
         <TabsContent value="transactions" className="space-y-4">

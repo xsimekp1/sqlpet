@@ -50,6 +50,9 @@ interface UIState {
 
   currency: 'CZK' | 'EUR'
   setCurrency: (currency: 'CZK' | 'EUR') => void
+
+  timeFormat: '24h' | '12h'
+  setTimeFormat: (format: '24h' | '12h') => void
 }
 
 function migrateWidgets(widgets: unknown): WidgetConfig[] {
@@ -87,6 +90,9 @@ export const useUIStore = create<UIState>()(
 
       currency: 'CZK',
       setCurrency: (currency) => set({ currency }),
+
+      timeFormat: '24h',
+      setTimeFormat: (format) => set({ timeFormat: format }),
     }),
     {
       name: 'pawshelter-ui-storage',
@@ -95,6 +101,7 @@ export const useUIStore = create<UIState>()(
         dashboardWidgets: state.dashboardWidgets,
         weightUnit: state.weightUnit,
         currency: state.currency,
+        timeFormat: state.timeFormat,
       }),
       merge: (persisted: unknown, current) => {
         const persistedState = persisted as { dashboardWidgets?: unknown } | undefined

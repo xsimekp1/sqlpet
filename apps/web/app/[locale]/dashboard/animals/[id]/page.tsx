@@ -54,7 +54,6 @@ import { getAnimalImageUrl } from '@/app/lib/utils';
 import { toast } from 'sonner';
 import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
 import BirthDialog from '@/app/components/animals/BirthDialog';
-import CreateDocumentDialog from '@/app/components/documents/CreateDocumentDialog';
 import { EditableAnimalName, EditableAnimalDetails, AssignKennelButton } from '@/app/components/animals';
 import { calcMER, calcRER, getMERFactor, getMERFactorLabel } from '@/app/lib/energy';
 import { useAuth } from '@/app/context/AuthContext';
@@ -152,7 +151,6 @@ export default function AnimalDetailPage() {
   const [loadingIntakes, setLoadingIntakes] = useState(false);
   const [medicalDialogOpen, setMedicalDialogOpen] = useState(false);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
-  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [togglingDewormed, setTogglingDewormed] = useState(false);
   const [togglingAggressive, setTogglingAggressive] = useState(false);
@@ -1734,7 +1732,9 @@ if (photoInputRef.current) photoInputRef.current.value = '';
             <CardContent>
               <MERCalculator
                 animalId={animalId}
-                weightKg={latestWeight ? Number(latestWeight.weight_kg) : null}
+                weightKg={latestWeight
+                  ? Number(latestWeight.weight_kg)
+                  : (animal.weight_current_kg ?? animal.weight_estimated_kg ?? null)}
                 alteredStatus={animal.altered_status}
               />
             </CardContent>
@@ -2021,7 +2021,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setDocumentDialogOpen(true)}
+                    onClick={() => router.push(`/dashboard/animals/${animal!.id}/documents/new`)}
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     {t('documents.createDocument')}
@@ -2208,20 +2208,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               { text: t('healthEvents.birthRegistered', { count }), date: new Date() },
               ...prev,
             ]);
-          }}
-        />
-      )}
-
-      {/* Create Document Dialog */}
-      {animal && (
-        <CreateDocumentDialog
-          animalId={animal.id}
-          animalName={animal.name}
-          open={documentDialogOpen}
-          onOpenChange={setDocumentDialogOpen}
-          onDocumentCreated={() => {
-            // Refresh documents list if needed
-            toast.success(t('documents.documentCreated'));
           }}
         />
       )}

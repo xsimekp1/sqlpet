@@ -22,6 +22,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, AlertTriangle, Package, AlertCircle, ShoppingCart } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { getUnitSymbol } from '@/app/lib/constants';
 import { AddToCartButton } from '@/app/components/inventory/AddToCartButton';
@@ -142,10 +148,10 @@ export default function InventoryPage() {
             onValueChange={(value) => setCategoryFilter(value as CategoryFilter)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Filter by category" />
+              <SelectValue placeholder={t('filterByCategory')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="all">{t('allCategories')}</SelectItem>
               <SelectItem value="medication">{t('categories.medication')}</SelectItem>
               <SelectItem value="vaccine">{t('categories.vaccine')}</SelectItem>
               <SelectItem value="food">{t('categories.food')}</SelectItem>
@@ -161,7 +167,7 @@ export default function InventoryPage() {
             onChange={(e) => setLowStockOnly(e.target.checked)}
             className="rounded border-gray-300"
           />
-          <span className="text-sm">{t('lowStock')} only</span>
+          <span className="text-sm">{t('lowStockOnly')}</span>
         </label>
         <Button
           variant="outline"
@@ -240,16 +246,25 @@ export default function InventoryPage() {
                       {formatQuantity(stock.total_quantity, stock.item.unit) || '0'}
                     </span>
                     {onTheWayMap.has(stock.item.id) && (
-                      <span className="ml-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
-                        +{formatQuantity(onTheWayMap.get(stock.item.id)!, stock.item.unit)}
-                      </span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 cursor-default">
+                              +{formatQuantity(onTheWayMap.get(stock.item.id)!, stock.item.unit)}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{t('onTheWay')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                   </TableCell>
                   <TableCell>{getUnitSymbol(stock.item.unit)}</TableCell>
                   <TableCell>
                     {['medication', 'vaccine', 'food'].includes(stock.item.category) ? (
                       <Badge variant="secondary">
-                        {stock.lots_count || 0} lot(s)
+                        {stock.lots_count || 0} {t('lots')}
                       </Badge>
                     ) : (
                       <span className="text-muted-foreground">-</span>

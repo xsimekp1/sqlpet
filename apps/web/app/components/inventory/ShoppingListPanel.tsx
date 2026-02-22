@@ -244,7 +244,7 @@ export function ShoppingListPanel() {
             <h2 className="text-lg font-semibold">{t('title')}</h2>
           </div>
           <Badge variant="secondary">
-            {items.length} {t('itemsCount', { count: items.length })}
+            {t('itemsCount', { count: items.length })}
           </Badge>
         </div>
 
@@ -331,7 +331,7 @@ export function ShoppingListPanel() {
                   {t('itemsSummary')}:
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {items.length} {t('itemsCount', { count: items.length })}
+                  {t('itemsCount', { count: items.length })}
                 </div>
               </div>
             </div>

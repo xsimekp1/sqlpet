@@ -412,3 +412,153 @@ class TestInventoryService:
                 feeding_log_id=uuid4(),
                 user_id=sample_user.id,
             )
+
+    @pytest.mark.asyncio
+    async def test_record_transaction_decimal_input_no_type_error(
+        self,
+        inventory_service,
+        mock_db,
+        mock_audit,
+        sample_org,
+        sample_item,
+        sample_lot,
+        sample_user,
+    ):
+        """Regression test: record_transaction must not raise TypeError when
+        quantity is Decimal and lot.quantity is also Decimal (Decimal + float mix).
+        Previously crashed with: unsupported operand type(s) for +: 'decimal.Decimal' + 'float'
+        """
+        # Arrange: item.quantity_current is Decimal (as returned by SQLAlchemy Numeric column)
+        sample_item.quantity_current = Decimal("100.00")
+        # lot.quantity is also Decimal
+        sample_lot.quantity = Decimal("100.00")
+
+        call_count = 0
+
+        async def mock_execute(query):
+            nonlocal call_count
+            call_count += 1
+            mock_result = MagicMock()
+            if call_count == 1:
+                mock_result.scalar_one_or_none.return_value = sample_item
+            else:
+                mock_result.scalar_one_or_none.return_value = sample_lot
+            return mock_result
+
+        mock_db.execute = AsyncMock(side_effect=mock_execute)
+
+        # Act: pass Decimal quantity (as ReceivePurchaseOrderItem schema sends it)
+        result = await inventory_service.record_transaction(
+            organization_id=sample_org.id,
+            item_id=sample_item.id,
+            lot_id=sample_lot.id,
+            reason=TransactionReason.PURCHASE,
+            quantity=Decimal("25.50"),  # Decimal from Pydantic schema
+            note="Received from PO-001",
+            user_id=sample_user.id,
+        )
+
+        # Assert no crash and correct result
+        assert result.direction == TransactionType.IN
+        assert result.note == "Received from PO-001"
+        # lot.quantity should have been updated: 100.00 + 25.50 = 125.50
+        assert abs(float(sample_lot.quantity) - 125.50) < 0.001
+
+    @pytest.mark.asyncio
+    async def test_record_transaction_sets_note(
+        self,
+        inventory_service,
+        mock_db,
+        mock_audit,
+        sample_org,
+        sample_item,
+        sample_user,
+    ):
+        """Test that the note field is persisted on the transaction record."""
+        sample_item.quantity_current = Decimal("50.00")
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = sample_item
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        result = await inventory_service.record_transaction(
+            organization_id=sample_org.id,
+            item_id=sample_item.id,
+            reason=TransactionReason.DONATION,
+            quantity=5.0,
+            note="Donated by local vet clinic",
+            user_id=sample_user.id,
+        )
+
+        assert result.note == "Donated by local vet clinic"
+
+    @pytest.mark.asyncio
+    async def test_record_transaction_note_none_by_default(
+        self,
+        inventory_service,
+        mock_db,
+        mock_audit,
+        sample_org,
+        sample_item,
+        sample_user,
+    ):
+        """Test that note defaults to None when not provided."""
+        sample_item.quantity_current = Decimal("50.00")
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = sample_item
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        result = await inventory_service.record_transaction(
+            organization_id=sample_org.id,
+            item_id=sample_item.id,
+            reason=TransactionReason.DONATION,
+            quantity=3.0,
+            user_id=sample_user.id,
+        )
+
+        assert result.note is None
+
+    @pytest.mark.asyncio
+    async def test_record_transaction_lot_quantity_updates_correctly_with_decimal(
+        self,
+        inventory_service,
+        mock_db,
+        mock_audit,
+        sample_org,
+        sample_item,
+        sample_lot,
+        sample_user,
+    ):
+        """Test lot quantity calculation is correct when lot.quantity is Decimal."""
+        sample_item.quantity_current = Decimal("20.00")
+        sample_lot.quantity = Decimal("20.00")
+
+        call_count = 0
+
+        async def mock_execute(query):
+            nonlocal call_count
+            call_count += 1
+            mock_result = MagicMock()
+            if call_count == 1:
+                mock_result.scalar_one_or_none.return_value = sample_item
+            else:
+                mock_result.scalar_one_or_none.return_value = sample_lot
+            return mock_result
+
+        mock_db.execute = AsyncMock(side_effect=mock_execute)
+
+        # Deduct 5 units (OUT/CONSUMPTION)
+        await inventory_service.record_transaction(
+            organization_id=sample_org.id,
+            item_id=sample_item.id,
+            lot_id=sample_lot.id,
+            reason=TransactionReason.CONSUMPTION,
+            quantity=5.0,
+            user_id=sample_user.id,
+        )
+
+        # lot.quantity should be 20 - 5 = 15
+        assert abs(float(sample_lot.quantity) - 15.0) < 0.001
+        # item.quantity_current should be 20 - 5 = 15
+        assert abs(float(sample_item.quantity_current) - 15.0) < 0.001

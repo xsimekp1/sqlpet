@@ -592,6 +592,10 @@
     "lbs": "Libry (lbs)",
     "currency": "Měna",
     "currencyDesc": "Měna pro zobrazení cen v aplikaci",
+    "timeFormat": "Formát času",
+    "timeFormatDesc": "Způsob zobrazení času v aplikaci",
+    "time24h": "24hodinový (0–23)",
+    "time12h": "12hodinový (AM/PM)",
     "defaultImages": {
       "uploadTitle": "Nahrát nový výchozí obrázek",
       "species": "Druh zvířete",
@@ -1302,6 +1306,9 @@
     "cancel": "Zrušit",
     "deleting": "Mažu...",
     "lowStock": "Nízké zásoby",
+    "allCategories": "Všechny kategorie",
+    "filterByCategory": "Filtrovat podle kategorie",
+    "lowStockOnly": "Nízké zásoby pouze",
     "createItem": "Vytvořit položku",
     "viewPurchases": "Zobrazit objednávky",
     "editItem": "Upravit položku",
@@ -1344,7 +1351,8 @@
       "reason": "Důvod",
       "kcalPer100g": "Kcal / 100 g",
       "pricePerUnit": "Cena za jednotku (Kč)",
-      "allowedSpecies": "Pro jaká zvířata"
+      "allowedSpecies": "Pro jaká zvířata",
+      "created": "Vytvořeno"
     },
     "actions": {
       "createItem": "Vytvořit položku",

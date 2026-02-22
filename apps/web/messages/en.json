@@ -685,6 +685,10 @@
     "lbs": "Pounds (lbs)",
     "currency": "Currency",
     "currencyDesc": "Currency used for displaying prices in the app",
+    "timeFormat": "Time Format",
+    "timeFormatDesc": "How time is displayed throughout the app",
+    "time24h": "24-hour (0–23)",
+    "time12h": "12-hour (AM/PM)",
     "defaultImages": {
       "uploadTitle": "Upload New Default Image",
       "species": "Species",
@@ -1389,6 +1393,9 @@
     "cancel": "Cancel",
     "deleting": "Deleting...",
     "lowStock": "Low Stock",
+    "allCategories": "All Categories",
+    "filterByCategory": "Filter by category",
+    "lowStockOnly": "Low Stock only",
     "createItem": "Create Item",
     "viewPurchases": "View Purchases",
     "editItem": "Edit Item",
@@ -1431,7 +1438,8 @@
       "reason": "Reason",
       "kcalPer100g": "Kcal / 100g",
       "pricePerUnit": "Price per unit",
-      "allowedSpecies": "For which animals"
+      "allowedSpecies": "For which animals",
+      "created": "Created"
     },
     "actions": {
       "createItem": "Create Item",

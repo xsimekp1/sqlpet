@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 import uuid
 
 from src.app.models.inventory_item import InventoryItem, InventoryCategory
@@ -224,7 +225,7 @@ class InventoryService:
         organization_id: uuid.UUID,
         item_id: uuid.UUID,
         reason: TransactionReason,
-        quantity: float,
+        quantity: float | Decimal,
         note: Optional[str] = None,
         lot_id: Optional[uuid.UUID] = None,
         related_entity_type: Optional[str] = None,
@@ -239,6 +240,9 @@ class InventoryService:
 
         Prevents negative stock.
         """
+        # Normalize quantity to float for consistent arithmetic with Numeric columns
+        quantity = float(quantity)
+
         # Validate reason -> direction mapping
         direction = REASON_TO_DIRECTION.get(reason)
         if not direction:
@@ -266,7 +270,7 @@ class InventoryService:
             raise ValueError(f"Inventory item not found: {item_id}")
 
         # Check for negative stock prevention
-        new_quantity = (item.quantity_current or 0) + quantity_delta
+        new_quantity = float(item.quantity_current or 0) + quantity_delta
         if new_quantity < 0:
             raise ValueError(
                 f"Cannot {reason.value}: stock would be negative. "
@@ -300,9 +304,9 @@ class InventoryService:
 
             if lot:
                 if direction == TransactionType.IN:
-                    lot.quantity = (lot.quantity or 0) + quantity
+                    lot.quantity = float(lot.quantity or 0) + quantity
                 elif direction == TransactionType.OUT:
-                    lot.quantity = max(0, (lot.quantity or 0) - abs(quantity))
+                    lot.quantity = max(0, float(lot.quantity or 0) - abs(quantity))
                 elif direction == TransactionType.ADJUST:
                     lot.quantity = quantity
 

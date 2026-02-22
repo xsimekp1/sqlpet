@@ -89,7 +89,7 @@ const SPECIES_VALUES = ['dog', 'cat', 'rodent', 'bird', 'other'] as const;
 export default function SettingsPage() {
   const t = useTranslations('settings');
   const locale = useLocale();
-  const { weightUnit, setWeightUnit, currency, setCurrency } = useUIStore();
+  const { weightUnit, setWeightUnit, currency, setCurrency, timeFormat, setTimeFormat } = useUIStore();
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
 
@@ -603,6 +603,33 @@ export default function SettingsPage() {
                       onClick={() => setCurrency('EUR')}
                     >
                       € EUR
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Time format selector */}
+              <div className="flex items-start gap-4">
+                <div className="p-2 rounded-lg bg-muted">
+                  <KeyRound className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{t('timeFormat')}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{t('timeFormatDesc')}</p>
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      variant={timeFormat === '24h' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeFormat('24h')}
+                    >
+                      {t('time24h')}
+                    </Button>
+                    <Button
+                      variant={timeFormat === '12h' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimeFormat('12h')}
+                    >
+                      {t('time12h')}
                     </Button>
                   </div>
                 </div>

@@ -6,6 +6,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function formatTime(date: Date | string, format: '24h' | '12h'): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (format === '12h') {
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+  return d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 export function formatCurrency(value: number | null | undefined, currency: 'CZK' | 'EUR'): string {
   if (value == null) return '—';
   const symbol = currency === 'EUR' ? '€' : 'Kč';
