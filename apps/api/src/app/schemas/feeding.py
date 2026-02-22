@@ -198,6 +198,15 @@ class CompleteFeedingTaskRequest(BaseModel):
     notes: Optional[str] = None
 
 
+class LotDeductionResponse(BaseModel):
+    lot_id: uuid.UUID
+    lot_number: Optional[str] = None
+    quantity_deducted: float
+    cost_per_unit: Optional[float] = None
+    lot_emptied: bool
+
+
 class CompleteFeedingTaskResponse(BaseModel):
     task: Dict[str, Any]
     feeding_log: FeedingLogResponse
+    deductions: List[LotDeductionResponse] = []

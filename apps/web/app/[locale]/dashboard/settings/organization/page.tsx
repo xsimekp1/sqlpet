@@ -8,7 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ApiClient from '@/app/lib/api';
+import { type DateFormatStyle } from '@/app/lib/dateFormat';
 
 interface OrganizationSettings {
   name: string;
@@ -27,6 +29,7 @@ export default function OrganizationSettingsPage() {
   const t = useTranslations('settings.organization');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dateFormat, setDateFormatState] = useState<DateFormatStyle>('eu');
   const [form, setForm] = useState<OrganizationSettings>({
     name: '',
     registration_number: '',
@@ -42,6 +45,8 @@ export default function OrganizationSettingsPage() {
 
   useEffect(() => {
     loadOrganization();
+    const saved = localStorage.getItem('dateFormat') as DateFormatStyle | null;
+    if (saved === 'eu' || saved === 'us') setDateFormatState(saved);
   }, []);
 
   const loadOrganization = async () => {
@@ -241,6 +246,34 @@ export default function OrganizationSettingsPage() {
                 onChange={(e) => set('capacity_birds', e.target.value)}
               />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('display')}</CardTitle>
+          <CardDescription>{t('displayDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="date-format">{t('dateFormat')}</Label>
+            <Select
+              value={dateFormat}
+              onValueChange={(value: DateFormatStyle) => {
+                setDateFormatState(value);
+                localStorage.setItem('dateFormat', value);
+              }}
+            >
+              <SelectTrigger id="date-format" className="w-64">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="eu">EU — DD.MM.YYYY</SelectItem>
+                <SelectItem value="us">US — MM/DD/YYYY</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{t('dateFormatHint')}</p>
           </div>
         </CardContent>
       </Card>

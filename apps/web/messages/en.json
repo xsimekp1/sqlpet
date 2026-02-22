@@ -676,7 +676,11 @@
       "save": "Save",
       "saved": "Settings saved",
       "saveError": "Error saving",
-      "loadError": "Error loading"
+      "loadError": "Error loading",
+      "display": "Display",
+      "displayDesc": "Date format and display settings",
+      "dateFormat": "Date Format",
+      "dateFormatHint": "Applies organization-wide, stored locally"
     },
     "preferences": "Preferences",
     "weightUnit": "Weight Unit",
@@ -1240,6 +1244,7 @@
     "foods": "Foods",
     "createPlan": "Create Feeding Plan",
     "editPlan": "Edit Feeding Plan",
+    "editPlanDesc": "Edit the feeding plan parameters for this animal",
     "createFood": "Create Food",
     "editFood": "Edit Food",
     "noPlan": "No active feeding plan",
@@ -1446,7 +1451,9 @@
       "kcalPer100g": "Kcal / 100g",
       "pricePerUnit": "Price per unit",
       "allowedSpecies": "For which animals",
-      "created": "Created"
+      "created": "Created",
+      "notes": "Description / notes",
+      "notesPlaceholder": "Product description, storage instructions, notes…"
     },
     "actions": {
       "createItem": "Create Item",
@@ -1454,7 +1461,8 @@
       "addLot": "Add Lot",
       "recordTransaction": "Record Transaction",
       "viewHistory": "View History",
-      "viewDetails": "View Details"
+      "viewDetails": "View Details",
+      "save": "Save"
     },
     "units": {
       "can": "Can",
@@ -1538,8 +1546,11 @@
       "viewDetails": "Details",
       "showingItems": "Showing {count} items",
       "outOfStock": "Out of stock",
-      "lotsCreatedOnReceiving": "Lots are created automatically when receiving stock"
-    }
+      "lotsCreatedOnReceiving": "Lots are created automatically when receiving stock",
+      "saving": "Saving…"
+    },
+    "dailyConsumption": "Daily consumption",
+    "activePlans": "active feeding plans"
   },
   "colors": {
     "black": "Black",

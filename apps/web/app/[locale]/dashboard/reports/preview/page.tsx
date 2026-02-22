@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Printer, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ApiClient from '@/app/lib/api';
@@ -14,6 +14,7 @@ export default function ReportPreviewPage() {
   const template = searchParams.get('template') ?? 'annual_intake_report';
   const year = Number(searchParams.get('year') ?? new Date().getFullYear());
 
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [html, setHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,13 +26,7 @@ export default function ReportPreviewPage() {
   }, [template, year]);
 
   function handlePrint() {
-    if (!html) return;
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    win.print();
+    iframeRef.current?.contentWindow?.print();
   }
 
   return (
@@ -62,6 +57,7 @@ export default function ReportPreviewPage() {
         )}
         {html && (
           <iframe
+            ref={iframeRef}
             srcDoc={html}
             scrolling="no"
             style={{

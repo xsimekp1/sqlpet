@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useShoppingListStore } from '@/app/stores/shoppingListStore'
 import { useTranslations } from 'next-intl'
@@ -54,6 +54,14 @@ export function ShoppingListPanel() {
 
   const [showCreatePOModal, setShowCreatePOModal] = useState(false)
   const [isCreatingPO, setIsCreatingPO] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const handleCopyToClipboard = async () => {
     const text = items
@@ -277,7 +285,7 @@ export function ShoppingListPanel() {
       {items.length > 0 && renderDesktopPanel()}
 
       {/* Mobile: Bottom sheet - only on small screens */}
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <Sheet open={isOpen && isMobile} onOpenChange={setIsOpen}>
         <SheetContent side="bottom" className="h-[70vh] flex flex-col lg:hidden">
           {renderMobileSheetContent()}
         </SheetContent>

@@ -1287,7 +1287,17 @@ class ApiClient {
     }
   }
 
-  static async completeFeedingTask(taskId: string, notes?: string): Promise<any> {
+  static async completeFeedingTask(taskId: string, notes?: string): Promise<{
+    task: any;
+    feeding_log: any;
+    deductions: Array<{
+      lot_id: string;
+      lot_number: string | null;
+      quantity_deducted: number;
+      cost_per_unit: number | null;
+      lot_emptied: boolean;
+    }>;
+  }> {
     try {
       const response = await axios.post(
         `${API_URL}/feeding/tasks/${taskId}/complete`,
@@ -1302,6 +1312,13 @@ class ApiClient {
       }
       throw new Error('An unexpected error occurred');
     }
+  }
+
+  static async getFeedingLogTransactions(feedingLogId: string): Promise<any[]> {
+    return ApiClient.get('/inventory/transactions', {
+      related_entity_type: 'feeding_log',
+      related_entity_id: feedingLogId,
+    });
   }
 
   static async updateTask(id: string, data: Partial<CreateTaskRequest>): Promise<Task> {
@@ -1520,6 +1537,17 @@ class ApiClient {
     formData.append('file', file);
     const response = await axios.post<{ file_url: string; thumbnail_url: string }>(
       `${API_URL}/files/animal/${animalId}/upload-primary-photo`,
+      formData,
+      { headers: { ...this.getAuthHeaders() } }
+    );
+    return response.data;
+  }
+
+  static async uploadInventoryItemPhoto(itemId: string, file: File): Promise<{ image_url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post<{ image_url: string }>(
+      `${API_URL}/files/inventory/${itemId}/upload-photo`,
       formData,
       { headers: { ...this.getAuthHeaders() } }
     );

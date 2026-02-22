@@ -583,7 +583,11 @@
       "save": "Uložit",
       "saved": "Nastavení uloženo",
       "saveError": "Chyba při ukládání",
-      "loadError": "Chyba při načítání"
+      "loadError": "Chyba při načítání",
+      "display": "Zobrazení",
+      "displayDesc": "Nastavení formátů a zobrazení dat",
+      "dateFormat": "Formát data",
+      "dateFormatHint": "Platí pro celou organizaci, ukládá se lokálně"
     },
     "preferences": "Předvolby",
     "weightUnit": "Jednotka hmotnosti",
@@ -1148,6 +1152,7 @@
     "foods": "Krmiva",
     "createPlan": "Vytvořit plán krmení",
     "editPlan": "Upravit plán krmení",
+    "editPlanDesc": "Upravte parametry krmného plánu pro toto zvíře",
     "createFood": "Vytvořit krmivo",
     "editFood": "Upravit krmivo",
     "noPlan": "Žádný aktivní plán krmení",
@@ -1359,11 +1364,14 @@
       "kcalPer100g": "Kcal / 100 g",
       "pricePerUnit": "Cena za jednotku (Kč)",
       "allowedSpecies": "Pro jaká zvířata",
-      "created": "Vytvořeno"
+      "created": "Vytvořeno",
+      "notes": "Popis / poznámky",
+      "notesPlaceholder": "Popis produktu, skladovací instrukce, poznámky…"
     },
     "actions": {
       "createItem": "Vytvořit položku",
       "editItem": "Upravit položku",
+      "save": "Uložit",
       "addLot": "Přidat šarži",
       "recordTransaction": "Zaznamenat transakci",
       "viewHistory": "Zobrazit historii",
@@ -1447,8 +1455,11 @@
       "noLotsFound": "Žádné šarže nenalezeny. Přidejte šarži pro sledování zásob.",
       "vial": "lahvička",
       "ampule": "ampule",
-      "lotsCreatedOnReceiving": "Šarže se vytvářejí automaticky při naskladnění"
-    }
+      "lotsCreatedOnReceiving": "Šarže se vytvářejí automaticky při naskladnění",
+      "saving": "Ukládám…"
+    },
+    "dailyConsumption": "Denní spotřeba",
+    "activePlans": "aktivních krmných plánů"
   },
   "colors": {
     "black": "Černá",

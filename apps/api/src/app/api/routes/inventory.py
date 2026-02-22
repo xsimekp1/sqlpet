@@ -376,6 +376,8 @@ async def create_inventory_transaction(
 @router.get("/transactions", response_model=List[InventoryTransactionResponse])
 async def list_inventory_transactions(
     item_id: Optional[uuid.UUID] = Query(None, description="Filter by item"),
+    related_entity_type: Optional[str] = Query(None, description="Filter by related entity type"),
+    related_entity_id: Optional[uuid.UUID] = Query(None, description="Filter by related entity ID"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
     current_user: User = Depends(require_permission("inventory.read")),
@@ -390,6 +392,8 @@ async def list_inventory_transactions(
         item_id=item_id,
         page=page,
         page_size=page_size,
+        related_entity_type=related_entity_type,
+        related_entity_id=related_entity_id,
     )
     return transactions
 

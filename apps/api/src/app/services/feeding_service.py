@@ -247,7 +247,7 @@ class FeedingService:
                     try:
                         task = await task_service.create_task(
                             organization_id=organization_id,
-                            created_by_id=plan.organization_id,  # System-generated
+                            created_by_id=None,  # System-generated feeding task
                             title=f"Feed {plan.animal_id} at {scheduled_time}",
                             description=f"Scheduled feeding at {scheduled_time}. Amount: {amount_g}g" if amount_g else f"Scheduled feeding at {scheduled_time}",
                             task_type=TaskType.FEEDING,
@@ -313,8 +313,8 @@ class FeedingService:
         amount_text: Optional[str] = None,
         notes: Optional[str] = None,
         auto_deduct_inventory: bool = True,
-    ) -> FeedingLog:
-        """Log that an animal was fed."""
+    ) -> Dict[str, Any]:
+        """Log that an animal was fed. Returns dict with feeding_log and deductions."""
         feeding_log = FeedingLog(
             id=uuid.uuid4(),
             organization_id=organization_id,
@@ -328,7 +328,7 @@ class FeedingService:
         await self.db.flush()
 
         # Auto-deduct from inventory if enabled
-        inventory_transaction = None
+        deductions = []
         if auto_deduct_inventory:
             # Get active feeding plan for this animal
             plans = await self.get_active_plans_for_animal(animal_id, organization_id)
@@ -341,12 +341,12 @@ class FeedingService:
                 food = food_result.scalar_one_or_none()
 
                 if food and plan.amount_g:
-                    # Deduct from inventory
+                    # Deduct from inventory (multi-lot FIFO)
                     from src.app.services.inventory_service import InventoryService
                     inv_service = InventoryService(self.db)
 
                     try:
-                        inventory_transaction = await inv_service.deduct_for_feeding(
+                        deductions = await inv_service.deduct_for_feeding(
                             organization_id=organization_id,
                             food_name=food.name,
                             amount_g=plan.amount_g,
@@ -366,11 +366,11 @@ class FeedingService:
             after={
                 "animal_id": str(animal_id),
                 "fed_at": str(feeding_log.fed_at),
-                "inventory_deducted": inventory_transaction is not None,
+                "inventory_deducted": len(deductions) > 0,
             },
         )
 
-        return feeding_log
+        return {"feeding_log": feeding_log, "deductions": deductions}
 
     async def generate_feeding_tasks_for_schedule(
         self,
@@ -485,13 +485,19 @@ class FeedingService:
             raise ValueError("Task does not have animal_id")
 
         # Log feeding
-        feeding_log = await self.log_feeding(
+        log_result = await self.log_feeding(
             organization_id=organization_id,
             animal_id=uuid.UUID(animal_id) if isinstance(animal_id, str) else animal_id,
             fed_by_user_id=completed_by_user_id,
             notes=notes,
             auto_deduct_inventory=True,
         )
+        feeding_log = log_result["feeding_log"]
+        deductions = log_result.get("deductions", [])
+
+        # Persist feeding_log_id into task metadata for later retrieval
+        task.task_metadata = {**(task.task_metadata or {}), "feeding_log_id": str(feeding_log.id)}
+        await self.db.flush()
 
         # Mark task as completed
         from src.app.services.task_service import TaskService
@@ -506,6 +512,7 @@ class FeedingService:
         return {
             "task": completed_task,
             "feeding_log": feeding_log,
+            "deductions": deductions,
         }
 
     async def get_feeding_history(

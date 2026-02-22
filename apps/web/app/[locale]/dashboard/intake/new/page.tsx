@@ -452,7 +452,7 @@ const handleSubmit = async () => {
       </Card>
 
       {/* Navigation */}
-      <div className="flex justify-between">
+      <div className="flex justify-between sticky bottom-4 bg-background pt-2 border-t">
         <Button
           variant="outline"
           onClick={() => setStep(s => s - 1)}

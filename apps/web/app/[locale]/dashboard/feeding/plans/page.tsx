@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, CheckCircle2, XCircle, AlertCircle, Calendar } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDate } from '@/app/lib/dateFormat';
 import Link from 'next/link';
 
 type ActiveFilter = 'all' | 'active' | 'inactive';
@@ -210,14 +210,14 @@ export default function FeedingPlansPage() {
                   <TableCell>
                     <div className="flex items-center gap-1 text-sm">
                       <Calendar className="h-3 w-3" />
-                      {format(new Date(plan.start_date), 'MMM d, yyyy')}
+                      {formatDate(plan.start_date)}
                     </div>
                   </TableCell>
                   <TableCell>
                     {plan.end_date ? (
                       <div className="flex items-center gap-1 text-sm">
                         <Calendar className="h-3 w-3" />
-                        {format(new Date(plan.end_date), 'MMM d, yyyy')}
+                        {formatDate(plan.end_date)}
                       </div>
                     ) : (
                       <span className="text-muted-foreground">Ongoing</span>

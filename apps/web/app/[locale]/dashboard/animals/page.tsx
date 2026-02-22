@@ -517,19 +517,30 @@ export default function AnimalsPage() {
                       )}
                     </div>
                     {/* Age + Sex in ONE circle - desktop only */}
-                    <div className={cn(
-                      "hidden md:flex absolute top-1 right-1 w-8 h-8 rounded-full items-center justify-center text-xs font-bold",
-                      animal.sex === 'male' ? "bg-blue-600 text-white" : 
-                      animal.sex === 'female' ? "bg-pink-600 text-white" : 
-                      "bg-gray-500 text-white"
-                    )}>
-                      {animal.estimated_age_years != null 
-                        ? `${animal.estimated_age_years}` 
-                        : animal.age_group === 'baby' ? 'B' :
-                          animal.age_group === 'young' ? 'Y' :
-                          animal.age_group === 'adult' ? 'A' :
-                          animal.age_group === 'senior' ? 'S' : '?'}
-                    </div>
+                    {(animal.estimated_age_years == null && !animal.age_group) ? (
+                      /* Unknown age: quarter-circle peeking from top-right corner, no text */
+                      <div className={cn(
+                        "hidden md:block absolute top-0 right-0 w-8 h-8 rounded-bl-full",
+                        animal.sex === 'male' ? "bg-blue-600" :
+                        animal.sex === 'female' ? "bg-pink-600" :
+                        "bg-gray-500"
+                      )} />
+                    ) : (
+                      /* Known age/group: slightly smaller circle, slightly bigger text */
+                      <div className={cn(
+                        "hidden md:flex absolute top-1 right-1 w-7 h-7 rounded-full items-center justify-center text-sm font-bold",
+                        animal.sex === 'male' ? "bg-blue-600 text-white" :
+                        animal.sex === 'female' ? "bg-pink-600 text-white" :
+                        "bg-gray-500 text-white"
+                      )}>
+                        {animal.estimated_age_years != null
+                          ? `${animal.estimated_age_years}`
+                          : animal.age_group === 'baby' ? 'B' :
+                            animal.age_group === 'young' ? 'Y' :
+                            animal.age_group === 'adult' ? 'A' :
+                            animal.age_group === 'senior' ? 'S' : null}
+                      </div>
+                    )}
                   </div>
                   {/* Mobile: just name without sex icon */}
                   <div className="md:hidden absolute bottom-1 left-1 right-1 flex items-end">

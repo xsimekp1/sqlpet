@@ -69,6 +69,8 @@ export default function TasksPage() {
   const [editType, setEditType] = useState('');
   const [editPriority, setEditPriority] = useState('');
   const [editDueAt, setEditDueAt] = useState('');
+  const [feedingDeductions, setFeedingDeductions] = useState<any[]>([]);
+  const [feedingDeductionsLoading, setFeedingDeductionsLoading] = useState(false);
 
   const openEditDialog = (task: Task) => {
     setEditTask(task);
@@ -81,6 +83,14 @@ export default function TasksPage() {
         ? format(new Date(task.due_at), "yyyy-MM-dd'T'HH:mm")
         : ''
     );
+    setFeedingDeductions([]);
+    if (task.type === 'feeding' && task.status === 'completed' && task.task_metadata?.feeding_log_id) {
+      setFeedingDeductionsLoading(true);
+      ApiClient.getFeedingLogTransactions(task.task_metadata.feeding_log_id)
+        .then((txns) => setFeedingDeductions(txns))
+        .catch(() => setFeedingDeductions([]))
+        .finally(() => setFeedingDeductionsLoading(false));
+    }
   };
 
   // Update filters when URL params change
@@ -135,6 +145,14 @@ export default function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       if (variables.isFeedingTask) {
         toast({ title: 'Krmný úkol splněn', description: 'Záznam krmení a odečet skladu provedeny.' });
+        for (const d of (data as any)?.deductions ?? []) {
+          if (d.lot_emptied) {
+            toast({
+              title: `Šarže ${d.lot_number ?? 'bez čísla'} spotřebována`,
+              description: 'Zásoby šarže vyčerpány při krmení.',
+            });
+          }
+        }
       } else if (data.linked_inventory_item_id) {
         toast({ title: 'Úkol splněn', description: '1 ks vakcíny odečteno ze skladu.' });
         queryClient.invalidateQueries({ queryKey: ['inventory-items'] });
@@ -611,6 +629,39 @@ export default function TasksPage() {
               <label className="text-sm font-medium">Stav</label>
               <div className="pt-1">{editTask && getStatusBadge(editTask.status)}</div>
             </div>
+            {editTask?.type === 'feeding' && editTask.status === 'completed' && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Spotřeba zásob</label>
+                {feedingDeductionsLoading ? (
+                  <p className="text-sm text-muted-foreground">Načítám...</p>
+                ) : feedingDeductions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Žádný odečet zásob</p>
+                ) : (
+                  <table className="w-full text-sm border rounded">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="text-left px-2 py-1">Šarže</th>
+                        <th className="text-right px-2 py-1">Množství</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {feedingDeductions.map((txn: any) => (
+                        <tr key={txn.id} className="border-b last:border-0">
+                          <td className="px-2 py-1 font-mono text-xs">
+                            {txn.lot_id ? txn.lot_id.slice(0, 8) + '…' : '—'}
+                          </td>
+                          <td className="px-2 py-1 text-right">
+                            {typeof txn.quantity === 'number'
+                              ? txn.quantity.toFixed(3) + ' kg'
+                              : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter className="flex-row justify-between gap-2 sm:justify-between">
             <Button

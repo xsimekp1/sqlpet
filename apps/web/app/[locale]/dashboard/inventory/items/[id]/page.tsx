@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
@@ -27,8 +27,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive, Pencil, ArrowDownToLine, ArrowUpFromLine, RotateCcw, Truck } from 'lucide-react';
-import { format } from 'date-fns';
+import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive, Pencil, ArrowDownToLine, ArrowUpFromLine, RotateCcw, Truck, Flame, Camera } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { formatDate } from '@/app/lib/dateFormat';
 import Link from 'next/link';
 import {
   Dialog,
@@ -79,6 +80,9 @@ export default function InventoryItemDetailPage() {
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [notesValue, setNotesValue] = useState<string>('');
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [addTransactionOpen, setAddTransactionOpen] = useState(false);
   const [transactionFormData, setTransactionFormData] = useState({
     reason: 'purchase' as 'opening_balance' | 'purchase' | 'donation' | 'consumption' | 'writeoff',
@@ -111,9 +115,19 @@ export default function InventoryItemDetailPage() {
     queryFn: () => ApiClient.get('/inventory/transactions', { item_id: itemId }),
   });
 
+  // Fetch active feeding plans for this food item (food only)
+  const { data: feedingPlansData } = useQuery({
+    queryKey: ['feeding-plans-by-food', itemId],
+    queryFn: () => ApiClient.get('/feeding/plans', { food_id: itemId, is_active: true }),
+    enabled: !!itemId && item?.category === 'food',
+  });
+
   const lots = Array.isArray(lotsData) ? lotsData : (lotsData?.items ?? []);
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.items ?? []);
   const totalQuantity = lots.reduce((sum: number, lot: any) => sum + (Number(lot.quantity) || 0), 0);
+
+  const activeFeedingPlans: any[] = feedingPlansData?.items ?? [];
+  const dailyConsumptionG = activeFeedingPlans.reduce((sum: number, p: any) => sum + (Number(p.amount_g) || 0), 0);
 
   const deleteItemMutation = useMutation({
     mutationFn: () => ApiClient.deleteInventoryItem(itemId),
@@ -134,6 +148,17 @@ export default function InventoryItemDetailPage() {
       toast({ title: t('messages.itemUpdated'), description: t('messages.itemUpdatedDesc') });
       queryClient.invalidateQueries({ queryKey: ['inventory-item', itemId] });
       setEditOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: t('messages.error'), description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const saveNotesMutation = useMutation({
+    mutationFn: (notes: string) => ApiClient.put(`/inventory/items/${itemId}`, { notes }),
+    onSuccess: () => {
+      toast({ title: t('messages.itemUpdated'), description: t('messages.itemUpdatedDesc') });
+      queryClient.invalidateQueries({ queryKey: ['inventory-item', itemId] });
     },
     onError: (error: Error) => {
       toast({ title: t('messages.error'), description: error.message, variant: 'destructive' });
@@ -198,6 +223,22 @@ export default function InventoryItemDetailPage() {
     addTransactionMutation.mutate(transactionFormData);
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoUploading(true);
+    try {
+      await ApiClient.uploadInventoryItemPhoto(itemId, file);
+      queryClient.invalidateQueries({ queryKey: ['inventory-item', itemId] });
+      toast({ title: t('messages.photoUploaded') });
+    } catch (err: any) {
+      toast({ title: t('messages.error'), description: err.message, variant: 'destructive' });
+    } finally {
+      setPhotoUploading(false);
+      if (photoInputRef.current) photoInputRef.current.value = '';
+    }
+  };
+
   const getCategoryBadge = (category: string) => {
     const colors: Record<string, string> = {
       medication: 'bg-red-100 text-red-800',
@@ -256,6 +297,11 @@ export default function InventoryItemDetailPage() {
 
   const TRACKS_LOTS = ['medication', 'vaccine', 'food'];
   const tracksLots = TRACKS_LOTS.includes(item?.category ?? '');
+
+  // Sync notesValue from item on first load
+  useEffect(() => {
+    if (item?.notes != null) setNotesValue(item.notes);
+  }, [item?.id]);
 
   return (
     <div className="space-y-6">
@@ -420,6 +466,20 @@ export default function InventoryItemDetailPage() {
             <div className="text-2xl font-bold">{item.kcal_per_100g} kcal / 100g</div>
           </div>
         )}
+        {item.category === 'food' && dailyConsumptionG > 0 && (
+          <div className="border rounded-lg p-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+              <Flame className="h-4 w-4" />
+              {t('dailyConsumption')}
+            </div>
+            <div className="text-2xl font-bold">
+              {Math.round(dailyConsumptionG).toLocaleString()} g / den
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {activeFeedingPlans.length} {t('activePlans')}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Allowed species (food only) */}
@@ -431,6 +491,29 @@ export default function InventoryItemDetailPage() {
           ))}
         </div>
       )}
+
+      {/* Notes / Description */}
+      <div className="border rounded-lg p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-muted-foreground">{t('fields.notes')}</label>
+          {notesValue !== (item?.notes ?? '') && (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => saveNotesMutation.mutate(notesValue)}
+              disabled={saveNotesMutation.isPending}
+            >
+              {saveNotesMutation.isPending ? t('messages.saving') : t('actions.save')}
+            </Button>
+          )}
+        </div>
+        <Textarea
+          value={notesValue}
+          onChange={(e) => setNotesValue(e.target.value)}
+          placeholder={t('fields.notesPlaceholder')}
+          className="resize-none min-h-[80px]"
+        />
+      </div>
 
       {/* Tabs */}
       <Tabs defaultValue={tracksLots ? 'lots' : 'transactions'} className="space-y-4">
@@ -481,7 +564,7 @@ export default function InventoryItemDetailPage() {
                         {lot.expires_at ? (
                           <div className="flex items-center gap-1 text-sm">
                             <Calendar className="h-3 w-3" />
-                            {format(new Date(lot.expires_at), 'MMM d, yyyy')}
+                            {formatDate(lot.expires_at)}
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>
@@ -491,7 +574,7 @@ export default function InventoryItemDetailPage() {
                         {lot.cost_per_unit != null ? `${lot.cost_per_unit} Kč` : '-'}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {format(new Date(lot.created_at), 'MMM d, yyyy')}
+                        {formatDate(lot.created_at)}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -637,7 +720,7 @@ export default function InventoryItemDetailPage() {
                         {tx.note || '-'}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {tx.created_at ? format(new Date(tx.created_at), 'MMM d, yyyy HH:mm') : '-'}
+                        {formatDate(tx.created_at, true)}
                       </TableCell>
                     </TableRow>
                   ))

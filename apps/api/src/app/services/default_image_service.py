@@ -185,16 +185,37 @@ class DefaultImageService:
                         parsed["breed"], parsed["species"]
                     )
 
-                # Upload to Supabase Storage
+                # Read file content once (needed for both full-res and thumbnail)
                 with open(file_path, "rb") as f:
-                    file_url, storage_path = await supabase_storage_service.upload_file(
-                        file_content=f,
-                        filename=file_path.name,
-                        content_type=f"image/{file_path.suffix[1:]}",  # Remove the dot
-                        organization_id="default",  # Special org for default images
-                        bucket=bucket,
-                        path_prefix="default-images",
-                    )
+                    file_content = f.read()
+
+                content_type = f"image/{file_path.suffix[1:]}"  # Remove the dot
+
+                # Upload full-res image
+                file_url, storage_path = await supabase_storage_service.upload_file(
+                    file_content=file_content,
+                    filename=file_path.name,
+                    content_type=content_type,
+                    organization_id="default",  # Special org for default images
+                    bucket=bucket,
+                    path_prefix="default-images",
+                )
+
+                # Generate and upload thumbnail
+                thumb_url = None
+                thumb_content = supabase_storage_service.generate_thumbnail(file_content)
+                if thumb_content:
+                    try:
+                        thumb_url, _ = await supabase_storage_service.upload_file(
+                            file_content=thumb_content,
+                            filename=file_path.name,
+                            content_type="image/jpeg",
+                            organization_id="default",
+                            bucket=bucket,
+                            path_prefix="thumbnails",
+                        )
+                    except Exception as thumb_err:
+                        print(f"  WARNING: thumbnail upload failed for {file_path.name}: {thumb_err}")
 
                 # Create DefaultAnimalImage record
                 default_image = DefaultAnimalImage(
@@ -203,6 +224,7 @@ class DefaultImageService:
                     color_pattern=parsed["color"],
                     storage_path=storage_path,
                     public_url=file_url,
+                    thumbnail_url=thumb_url,
                     filename_pattern=parsed["filename_pattern"],
                     is_active=True,
                     priority=10,  # Default priority
@@ -221,11 +243,13 @@ class DefaultImageService:
                         "breed_id": str(breed_id) if breed_id else None,
                         "file_url": file_url,
                         "storage_path": storage_path,
+                        "thumbnail_url": thumb_url,
                     }
                 )
 
+                thumb_status = "thumbnail OK" if thumb_url else "no thumbnail"
                 print(
-                    f"IMPORTED: {file_path.name} -> {parsed['species']} / {parsed['breed']} / {parsed['color']}"
+                    f"IMPORTED: {file_path.name} -> {parsed['species']} / {parsed['breed']} / {parsed['color']} ({thumb_status})"
                 )
 
             except Exception as e:

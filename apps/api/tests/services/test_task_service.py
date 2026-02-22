@@ -215,3 +215,27 @@ class TestTaskService:
                 organization_id=sample_task.organization_id,
                 completed_by_id=sample_user.id,
             )
+
+    @pytest.mark.asyncio
+    async def test_create_task_with_none_creator(
+        self, task_service, mock_db, mock_audit, sample_org
+    ):
+        """
+        Regression test: create_task must accept created_by_id=None.
+        System-generated tasks (e.g. feeding tasks) have no user creator.
+        Previously this caused a FK violation because organization_id was
+        incorrectly passed as created_by_id to the users FK column.
+        """
+        result = await task_service.create_task(
+            organization_id=sample_org.id,
+            created_by_id=None,  # System-generated — no user
+            title="Auto-generated feeding task",
+            task_type=TaskType.FEEDING,
+        )
+
+        assert result.title == "Auto-generated feeding task"
+        assert result.created_by_id is None
+        assert result.type == TaskType.FEEDING
+        assert result.status == TaskStatus.PENDING
+        mock_db.add.assert_called_once()
+        mock_db.flush.assert_called_once()

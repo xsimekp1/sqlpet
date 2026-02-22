@@ -17,7 +17,7 @@ class TaskService:
     async def create_task(
         self,
         organization_id: uuid.UUID,
-        created_by_id: uuid.UUID,
+        created_by_id: Optional[uuid.UUID],
         title: str,
         description: Optional[str] = None,
         task_type: TaskType = TaskType.GENERAL,

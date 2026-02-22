@@ -147,9 +147,10 @@ class TestFeedingService:
         )
 
         # Assert
-        assert result.animal_id == sample_animal.id
-        assert result.fed_by_user_id == sample_user.id
-        assert result.amount_text == "1 cup"
+        assert result["feeding_log"].animal_id == sample_animal.id
+        assert result["feeding_log"].fed_by_user_id == sample_user.id
+        assert result["feeding_log"].amount_text == "1 cup"
+        assert result["deductions"] == []
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
         mock_audit.log_action.assert_called_once()
@@ -192,10 +193,15 @@ class TestFeedingService:
         ) as MockInventoryService:
             mock_inv_service = AsyncMock()
             mock_inv_service.deduct_for_feeding = AsyncMock(
-                return_value={
-                    "item": MagicMock(name=sample_food.name),
+                return_value=[{
+                    "lot": MagicMock(),
+                    "lot_id": uuid4(),
+                    "lot_number": "LOT-001",
                     "quantity_deducted": 0.2,
-                }
+                    "cost_per_unit": None,
+                    "lot_emptied": False,
+                    "transaction": MagicMock(),
+                }]
             )
             MockInventoryService.return_value = mock_inv_service
 
@@ -209,7 +215,7 @@ class TestFeedingService:
             )
 
             # Assert
-            assert result.animal_id == sample_animal.id
+            assert result["feeding_log"].animal_id == sample_animal.id
             mock_inv_service.deduct_for_feeding.assert_called_once()
             call_args = mock_inv_service.deduct_for_feeding.call_args
             assert call_args[1]["food_name"] == sample_food.name
@@ -270,7 +276,7 @@ class TestFeedingService:
         mock_completed_task = MagicMock(status=TaskStatus.COMPLETED)
 
         with patch.object(feeding_service, "log_feeding") as mock_log_feeding:
-            mock_log_feeding.return_value = mock_feeding_log
+            mock_log_feeding.return_value = {"feeding_log": mock_feeding_log, "deductions": []}
 
             with patch("src.app.services.task_service.TaskService") as MockTaskService:
                 mock_task_svc = AsyncMock()
@@ -287,6 +293,7 @@ class TestFeedingService:
                 )
 
         assert result["feeding_log"] == mock_feeding_log
+        assert result["deductions"] == []
         mock_log_feeding.assert_called_once()
         call_args = mock_log_feeding.call_args
         assert call_args[1]["animal_id"] == uuid.UUID(str(sample_animal.id))
@@ -415,3 +422,78 @@ class TestFeedingService:
     # Tests for generate_feeding_tasks_for_schedule would require more complex mocking
     # due to model relationship loading issues. The core feeding functionality is
     # tested above - this is an edge case that can be tested separately.
+
+    @pytest.mark.asyncio
+    async def test_ensure_feeding_tasks_uses_none_as_creator(
+        self,
+        feeding_service,
+        mock_db,
+        mock_audit,
+        sample_org,
+        sample_feeding_plan,
+    ):
+        """
+        Regression test: ensure_feeding_tasks_window must pass created_by_id=None
+        to task_service.create_task(), NOT plan.organization_id.
+        Previously, plan.organization_id (an org UUID) was passed as created_by_id
+        (a FK to users table), causing a FK violation on production.
+        """
+        from datetime import datetime, timezone, timedelta
+        from unittest.mock import patch, AsyncMock, MagicMock, call
+
+        now = datetime.now(timezone.utc)
+        from_dt = now
+        to_dt = now + timedelta(hours=24)
+
+        # Mock: return one active plan, no existing tasks
+        call_count = 0
+
+        async def mock_execute(stmt):
+            nonlocal call_count
+            call_count += 1
+            result = MagicMock()
+            if call_count == 1:
+                # First call: list active plans
+                result.scalars.return_value.all.return_value = [sample_feeding_plan]
+            else:
+                # Subsequent calls: check existing tasks → none found
+                result.scalar_one_or_none.return_value = None
+            return result
+
+        mock_db.execute = AsyncMock(side_effect=mock_execute)
+        mock_db.flush = AsyncMock()
+
+        created_tasks = []
+
+        async def fake_create_task(**kwargs):
+            created_tasks.append(kwargs)
+            t = Task(
+                id=uuid4(),
+                organization_id=kwargs['organization_id'],
+                created_by_id=kwargs.get('created_by_id'),
+                title=kwargs['title'],
+                type=kwargs['task_type'],
+                status=TaskStatus.PENDING,
+            )
+            mock_db.add(t)
+            await mock_db.flush()
+            return t
+
+        with patch('src.app.services.task_service.TaskService') as MockTS:
+            mock_ts_instance = MagicMock()
+            mock_ts_instance.create_task = AsyncMock(side_effect=fake_create_task)
+            MockTS.return_value = mock_ts_instance
+
+            await feeding_service.ensure_feeding_tasks_window(
+                organization_id=sample_org.id,
+                from_dt=from_dt,
+                to_dt=to_dt,
+            )
+
+        # The critical assertion: created_by_id must be None, never the org UUID
+        for kwargs in created_tasks:
+            assert kwargs.get('created_by_id') is None, (
+                f"created_by_id should be None for system-generated feeding tasks, "
+                f"got {kwargs.get('created_by_id')!r}. "
+                f"Passing organization_id causes FK violation on users table."
+            )

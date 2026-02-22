@@ -26,6 +26,8 @@ class InventoryItemBase(BaseModel):
     food_type: Optional[str] = None  # dry, wet, canned, treats, raw, other
     shelf_life_days: Optional[int] = None  # shelf life after opening in days
     unit_weight_g: Optional[int] = None  # package weight in grams
+    notes: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class InventoryItemCreate(InventoryItemBase):
@@ -43,6 +45,8 @@ class InventoryItemUpdate(BaseModel):
     food_type: Optional[str] = None
     shelf_life_days: Optional[int] = None
     unit_weight_g: Optional[int] = None
+    notes: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class InventoryItemResponse(InventoryItemBase):

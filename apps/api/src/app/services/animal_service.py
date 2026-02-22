@@ -56,8 +56,8 @@ class AnimalService:
         species: str,
         breed_ids: list[uuid.UUID] | None,
         color: str | None,
-    ) -> str | None:
-        """Compute default image URL based on species, breed, and color."""
+    ) -> "DefaultAnimalImage | None":
+        """Compute default image based on species, breed, and color. Returns the full object."""
         from src.app.models.file import DefaultAnimalImage
         from sqlalchemy import or_
 
@@ -116,7 +116,7 @@ class AnimalService:
             result = await self.db.execute(q)
             img = result.scalar_one_or_none()
             if img:
-                return img.public_url
+                return img
 
         return None
 
@@ -248,13 +248,19 @@ class AnimalService:
                 self.db.add(ai)
             await self.db.flush()
 
-        # Compute and save default image URL
+        # Compute and save default image URL + thumbnail
         breed_ids = [entry.breed_id for entry in data.breeds] if data.breeds else None
-        animal.default_image_url = await self._compute_default_image_url(
+        default_img = await self._compute_default_image_url(
             species=(data.species.value if hasattr(data.species, 'value') else data.species).lower(),
             breed_ids=breed_ids,
             color=data.color,
         )
+        if default_img:
+            animal.default_image_url = default_img.public_url
+            animal.default_thumbnail_url = default_img.thumbnail_url
+        else:
+            animal.default_image_url = None
+            animal.default_thumbnail_url = None
         await self.db.flush()
 
         # Audit log
@@ -507,11 +513,13 @@ class AnimalService:
                     if animal.animal_breeds
                     else None
                 )
-                animal.default_image_url = await self._compute_default_image_url(
+                default_img = await self._compute_default_image_url(
                     species=(animal.species.value if hasattr(animal.species, 'value') else animal.species).lower(),
                     breed_ids=breed_ids,
                     color=animal.color,
                 )
+                animal.default_image_url = default_img.public_url if default_img else None
+                animal.default_thumbnail_url = default_img.thumbnail_url if default_img else None
                 await self.db.flush()
 
         after = _animal_to_dict(animal)

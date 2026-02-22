@@ -336,10 +336,10 @@ class InventoryService:
         amount_g: float,
         feeding_log_id: uuid.UUID,
         user_id: uuid.UUID,
-    ) -> Dict[str, Any]:
+    ) -> List[Dict[str, Any]]:
         """
-        Deduct inventory for feeding.
-        Uses FIFO (First In First Out) - deducts from lot with earliest expiry date.
+        Deduct inventory for feeding using FIFO across multiple lots.
+        Returns list of deduction dicts (one per lot used).
         """
         # Find inventory item matching food name (case-insensitive)
         item_stmt = select(InventoryItem).where(
@@ -355,7 +355,7 @@ class InventoryService:
         if not item:
             raise ValueError(f"No inventory item found for food: {food_name}")
 
-        # Find lot with stock (FIFO: earliest expiry first)
+        # Find all lots with stock (FIFO: earliest expiry first)
         lot_stmt = (
             select(InventoryLot)
             .where(
@@ -365,40 +365,44 @@ class InventoryService:
                 )
             )
             .order_by(InventoryLot.expires_at.asc().nullslast())
-            .limit(1)
         )
-        lot_result = await self.db.execute(lot_stmt)
-        lot = lot_result.scalar_one_or_none()
+        lots = (await self.db.execute(lot_stmt)).scalars().all()
 
-        if not lot:
+        if not lots:
             raise ValueError(f"No stock available for item: {item.name}")
 
         # Convert grams to item unit (assume kg for MVP)
-        quantity_to_deduct = amount_g / 1000.0  # g → kg
+        remaining = amount_g / 1000.0  # g → kg
+        deductions = []
 
-        if lot.quantity < quantity_to_deduct:
-            # Partial deduction - use all remaining in this lot
-            quantity_to_deduct = float(lot.quantity)
+        for lot in lots:
+            if remaining <= 0:
+                break
+            to_deduct = min(float(lot.quantity), remaining)
+            lot_emptied = (float(lot.quantity) - to_deduct) < 0.001  # practically 0
+            transaction = await self.record_transaction(
+                organization_id=organization_id,
+                item_id=item.id,
+                lot_id=lot.id,
+                reason=TransactionReason.CONSUMPTION,
+                quantity=to_deduct,
+                note=f"Fed animal (feeding_log #{feeding_log_id})",
+                related_entity_type="feeding_log",
+                related_entity_id=feeding_log_id,
+                user_id=user_id,
+            )
+            deductions.append({
+                "lot": lot,
+                "lot_id": lot.id,
+                "lot_number": lot.lot_number,
+                "quantity_deducted": to_deduct,
+                "cost_per_unit": float(lot.cost_per_unit) if lot.cost_per_unit is not None else None,
+                "lot_emptied": lot_emptied,
+                "transaction": transaction,
+            })
+            remaining -= to_deduct
 
-        # Record transaction
-        transaction = await self.record_transaction(
-            organization_id=organization_id,
-            item_id=item.id,
-            lot_id=lot.id,
-            reason=TransactionReason.CONSUMPTION,
-            quantity=quantity_to_deduct,
-            note=f"Fed animal (feeding_log #{feeding_log_id})",
-            related_entity_type="feeding_log",
-            related_entity_id=feeding_log_id,
-            user_id=user_id,
-        )
-
-        return {
-            "item": item,
-            "lot": lot,
-            "quantity_deducted": quantity_to_deduct,
-            "transaction": transaction,
-        }
+        return deductions
 
     async def get_items_with_stock(
         self,
@@ -454,16 +458,25 @@ class InventoryService:
         days: int = 90,
         page: int = 1,
         page_size: int = 50,
+        related_entity_type: Optional[str] = None,
+        related_entity_id: Optional[uuid.UUID] = None,
     ) -> List[InventoryTransaction]:
         """Get transaction history with pagination."""
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
-
         conditions = [
             InventoryTransaction.organization_id == organization_id,
-            InventoryTransaction.created_at >= cutoff_date,
         ]
+
+        # Skip date cutoff when filtering by a specific related entity
+        if related_entity_id is None:
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
+            conditions.append(InventoryTransaction.created_at >= cutoff_date)
+
         if item_id:
             conditions.append(InventoryTransaction.item_id == item_id)
+        if related_entity_type:
+            conditions.append(InventoryTransaction.related_entity_type == related_entity_type)
+        if related_entity_id:
+            conditions.append(InventoryTransaction.related_entity_id == related_entity_id)
 
         stmt = (
             select(InventoryTransaction)

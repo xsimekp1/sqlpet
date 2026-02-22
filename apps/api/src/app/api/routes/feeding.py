@@ -21,6 +21,7 @@ from src.app.schemas.feeding import (
     FeedingLogResponse,
     CompleteFeedingTaskRequest,
     CompleteFeedingTaskResponse,
+    LotDeductionResponse,
     MERCalculateRequest,
     MERCalculationResponse,
 )
@@ -121,6 +122,7 @@ async def get_feeding_plan(
 @router.get("/plans", response_model=FeedingPlanListResponse)
 async def list_feeding_plans(
     animal_id: Optional[uuid.UUID] = Query(None, description="Filter by animal"),
+    food_id: Optional[uuid.UUID] = Query(None, description="Filter by food item"),
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -133,6 +135,8 @@ async def list_feeding_plans(
     conditions = [FeedingPlan.organization_id == organization_id]
     if animal_id:
         conditions.append(FeedingPlan.animal_id == animal_id)
+    if food_id:
+        conditions.append(FeedingPlan.food_id == food_id)
     if is_active is not None:
         conditions.append(FeedingPlan.is_active == is_active)
 
@@ -216,7 +220,7 @@ async def log_feeding(
     """Log that an animal was fed (manual, outside task system)."""
     feeding_service = FeedingService(db)
 
-    feeding_log = await feeding_service.log_feeding(
+    result = await feeding_service.log_feeding(
         organization_id=organization_id,
         animal_id=log_data.animal_id,
         fed_by_user_id=current_user.id,
@@ -225,7 +229,7 @@ async def log_feeding(
         auto_deduct_inventory=log_data.auto_deduct_inventory,
     )
     await db.commit()
-    return feeding_log
+    return result["feeding_log"]
 
 
 @router.get("/logs", response_model=List[FeedingLogResponse])
@@ -296,6 +300,16 @@ async def complete_feeding_task(
         return CompleteFeedingTaskResponse(
             task=task_response.dict(),
             feeding_log=result["feeding_log"],
+            deductions=[
+                LotDeductionResponse(
+                    lot_id=d["lot_id"],
+                    lot_number=d["lot_number"],
+                    quantity_deducted=d["quantity_deducted"],
+                    cost_per_unit=d["cost_per_unit"],
+                    lot_emptied=d["lot_emptied"],
+                )
+                for d in result.get("deductions", [])
+            ],
         )
     except ValueError as e:
         raise HTTPException(

@@ -161,11 +161,14 @@ async def _build_animal_response(
         resp.website_days_left = None
         resp.website_deadline_state = "not_published"
 
-    # Generate thumbnail URL from primary_photo_url
+    # Generate thumbnail URL from primary_photo_url (user-uploaded photos)
     if animal.primary_photo_url:
         resp.thumbnail_url = animal.primary_photo_url.replace(
             "/animal-photos/", "/animal-thumbnails/"
         )
+    # Fallback: thumbnail from default image
+    elif animal.default_thumbnail_url:
+        resp.thumbnail_url = animal.default_thumbnail_url
 
     return resp
 

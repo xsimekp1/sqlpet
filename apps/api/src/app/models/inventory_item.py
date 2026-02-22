@@ -3,7 +3,7 @@
 import enum
 import uuid
 
-from sqlalchemy import String, Numeric, Enum, ForeignKey, Integer
+from sqlalchemy import String, Numeric, Enum, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -60,3 +60,5 @@ class InventoryItem(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     unit_weight_g: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )  # Package weight in grams
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_url: Mapped[str | None] = mapped_column(Text, nullable=True)

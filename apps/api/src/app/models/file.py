@@ -114,6 +114,7 @@ class DefaultAnimalImage(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # Storage info
     storage_path: str = Column(Text, nullable=False)  # Path in Supabase
     public_url: str = Column(Text, nullable=False)  # Public URL for display
+    thumbnail_url: str = Column(Text, nullable=True)  # Thumbnail URL (300x300)
 
     # Metadata
     filename_pattern: str = Column(

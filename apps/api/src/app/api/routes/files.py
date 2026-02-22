@@ -16,6 +16,7 @@ from src.app.models.user import User
 from src.app.models.file import File as FileModel, EntityFile, StorageProvider
 from src.app.models.animal import Animal
 from src.app.models.contact import Contact
+from src.app.models.inventory_item import InventoryItem
 from src.app.models.organization import Organization
 from src.app.services.file_upload_service import file_upload_service
 from src.app.services.supabase_storage_service import supabase_storage_service
@@ -265,6 +266,56 @@ async def upload_primary_animal_photo(
     }
 
 
+@router.post("/inventory/{item_id}/upload-photo")
+async def upload_inventory_item_photo(
+    item_id: str,
+    file: UploadFile = FastAPIFile(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Upload photo for an inventory item. Stores only thumbnail (300x300, quality 85)."""
+    from sqlalchemy import select, and_
+
+    result = await db.execute(
+        select(InventoryItem).where(
+            and_(
+                InventoryItem.id == UUID(item_id),
+                InventoryItem.organization_id == organization_id,
+            )
+        )
+    )
+    item = result.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=404, detail="Inventory item not found")
+
+    file_content, content_type = await file_upload_service.process_upload(
+        file=file,
+        organization_id=str(organization_id),
+        is_public=True,
+    )
+
+    # Generate thumbnail only (300x300, quality 85) — same as animal photos
+    thumbnail_bytes = supabase_storage_service.generate_thumbnail(file_content)
+    if not thumbnail_bytes:
+        thumbnail_bytes = file_content  # Fallback: use original if PIL unavailable
+
+    # Upload thumbnail to existing thumbnails bucket under inventory/ prefix
+    image_url, _ = await supabase_storage_service.upload_file(
+        file_content=thumbnail_bytes,
+        filename=file.filename or "photo.jpg",
+        content_type="image/jpeg",
+        organization_id=str(organization_id),
+        bucket=supabase_storage_service.thumbnails_bucket,
+        path_prefix="inventory",
+    )
+
+    item.image_url = image_url
+    await db.commit()
+
+    return {"image_url": image_url}
+
+
 @router.post("/contact/{contact_id}/upload-avatar")
 async def upload_contact_avatar(
     contact_id: str,
@@ -390,7 +441,7 @@ async def get_animal_documents(
             uploaded_by_user_id=str(f.uploaded_by_user_id)
             if f.uploaded_by_user_id
             else None,
-            uploaded_by_user_name=u.full_name if u else None,
+            uploaded_by_user_name=u.name if u else None,
             created_at=ef.created_at.isoformat() if ef.created_at else "",
         )
         for ef, f, u in rows
