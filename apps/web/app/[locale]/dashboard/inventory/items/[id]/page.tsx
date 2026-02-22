@@ -122,6 +122,11 @@ export default function InventoryItemDetailPage() {
     enabled: !!itemId && item?.category === 'food',
   });
 
+  // Must be before early returns to satisfy Rules of Hooks
+  useEffect(() => {
+    if (item?.notes != null) setNotesValue(item.notes);
+  }, [item?.id]);
+
   const lots = Array.isArray(lotsData) ? lotsData : (lotsData?.items ?? []);
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.items ?? []);
   const totalQuantity = lots.reduce((sum: number, lot: any) => sum + (Number(lot.quantity) || 0), 0);
@@ -297,11 +302,6 @@ export default function InventoryItemDetailPage() {
 
   const TRACKS_LOTS = ['medication', 'vaccine', 'food'];
   const tracksLots = TRACKS_LOTS.includes(item?.category ?? '');
-
-  // Sync notesValue from item on first load
-  useEffect(() => {
-    if (item?.notes != null) setNotesValue(item.notes);
-  }, [item?.id]);
 
   return (
     <div className="space-y-6">
