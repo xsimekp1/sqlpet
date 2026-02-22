@@ -19,7 +19,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className="flex h-screen flex-col print:block print:h-auto print-block">
       <div className="print:hidden no-print"><Topbar /></div>
       <div className="flex flex-1 overflow-hidden print:block print:overflow-visible print-block">
-        <div className="print:hidden no-print"><Sidebar /></div>
+        <div className="print:hidden no-print h-full"><Sidebar /></div>
         <main className="flex-1 overflow-y-auto p-6 print:overflow-visible print:p-0 print-no-padding">
           {children}
         </main>

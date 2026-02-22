@@ -169,7 +169,7 @@ export function Sidebar() {
         className={cn(
           // Mobile: fixed overlay, slide in from left
           'fixed lg:relative inset-y-0 left-0 z-50',
-          'flex flex-col border-r bg-card transition-all duration-300',
+          'flex flex-col h-full border-r bg-card transition-all duration-300',
           // Mobile visibility
           'lg:flex',
           'no-print',
