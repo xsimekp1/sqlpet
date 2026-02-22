@@ -1,0 +1,113 @@
+/**
+ * i18n message file integrity tests
+ *
+ * Verifies that both cs.json and en.json contain all required keys.
+ * Run: node --test tests/messages.test.js
+ */
+
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const messagesDir = resolve(__dirname, '../messages');
+
+const cs = JSON.parse(readFileSync(resolve(messagesDir, 'cs.json'), 'utf-8'));
+const en = JSON.parse(readFileSync(resolve(messagesDir, 'en.json'), 'utf-8'));
+
+/**
+ * Resolve a dot-separated path like "kennels.views.grid" in a nested object.
+ * Returns the value, or undefined if any segment is missing.
+ */
+function get(obj, path) {
+  return path.split('.').reduce((acc, key) => acc?.[key], obj);
+}
+
+// ─── kennels.views.* ──────────────────────────────────────────────────────────
+
+describe('kennels.views — required by kennels/page.tsx', () => {
+  const keys = ['grid', 'table', 'map', 'timeline'];
+
+  for (const key of keys) {
+    test(`cs.json has kennels.views.${key}`, () => {
+      const value = get(cs, `kennels.views.${key}`);
+      assert.ok(
+        typeof value === 'string' && value.length > 0,
+        `Expected non-empty string at kennels.views.${key} in cs.json, got: ${JSON.stringify(value)}`
+      );
+    });
+
+    test(`en.json has kennels.views.${key}`, () => {
+      const value = get(en, `kennels.views.${key}`);
+      assert.ok(
+        typeof value === 'string' && value.length > 0,
+        `Expected non-empty string at kennels.views.${key} in en.json, got: ${JSON.stringify(value)}`
+      );
+    });
+  }
+});
+
+// ─── kennels.view.* (legacy key, kept for backwards compat) ──────────────────
+
+describe('kennels.view — legacy key must remain intact', () => {
+  const keys = ['grid', 'table', 'map', 'timeline'];
+
+  for (const key of keys) {
+    test(`cs.json has kennels.view.${key}`, () => {
+      const value = get(cs, `kennels.view.${key}`);
+      assert.ok(
+        typeof value === 'string' && value.length > 0,
+        `Expected non-empty string at kennels.view.${key} in cs.json, got: ${JSON.stringify(value)}`
+      );
+    });
+
+    test(`en.json has kennels.view.${key}`, () => {
+      const value = get(en, `kennels.view.${key}`);
+      assert.ok(
+        typeof value === 'string' && value.length > 0,
+        `Expected non-empty string at kennels.view.${key} in en.json, got: ${JSON.stringify(value)}`
+      );
+    });
+  }
+});
+
+// ─── Parity check: cs and en must have matching keys ─────────────────────────
+
+describe('cs.json and en.json key parity for kennels namespace', () => {
+  /**
+   * Collect all leaf-key paths under a namespace object.
+   */
+  function collectPaths(obj, prefix = '') {
+    const paths = [];
+    for (const [key, value] of Object.entries(obj)) {
+      const path = prefix ? `${prefix}.${key}` : key;
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        paths.push(...collectPaths(value, path));
+      } else {
+        paths.push(path);
+      }
+    }
+    return paths.sort();
+  }
+
+  test('kennels namespace has identical leaf keys in cs.json and en.json', () => {
+    const csPaths = collectPaths(cs.kennels ?? {});
+    const enPaths = collectPaths(en.kennels ?? {});
+
+    const onlyInCs = csPaths.filter(p => !enPaths.includes(p));
+    const onlyInEn = enPaths.filter(p => !csPaths.includes(p));
+
+    assert.deepEqual(
+      onlyInCs,
+      [],
+      `Keys present in cs.json but missing in en.json:\n  ${onlyInCs.join('\n  ')}`
+    );
+    assert.deepEqual(
+      onlyInEn,
+      [],
+      `Keys present in en.json but missing in cs.json:\n  ${onlyInEn.join('\n  ')}`
+    );
+  });
+});
