@@ -395,6 +395,13 @@
     "view": {
       "table": "Table",
       "grid": "Grid",
+      "map": "Map",
+      "timeline": "Timeline"
+    },
+    "views": {
+      "grid": "Grid",
+      "table": "Table",
+      "map": "Map",
       "timeline": "Timeline"
     },
     "occupancy": {

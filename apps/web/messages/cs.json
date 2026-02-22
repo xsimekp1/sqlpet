@@ -393,6 +393,12 @@
       "map": "Mapa",
       "timeline": "Časová osa"
     },
+    "views": {
+      "grid": "Karty",
+      "table": "Tabulka",
+      "map": "Mapa",
+      "timeline": "Časová osa"
+    },
     "occupancy": {
       "empty": "Prázdný",
       "partial": "Částečně",
