@@ -958,8 +958,8 @@ if (photoInputRef.current) photoInputRef.current.value = '';
       <div className="space-y-6">
         {/* Header skeleton */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-          <div className="flex-shrink-0 flex flex-col items-center gap-2">
-            <Skeleton className="w-64 h-64 rounded-xl" />
+          <div className="flex-shrink-0 w-72 flex flex-col items-center gap-2">
+            <Skeleton className="w-72 h-72 rounded-xl" />
             <div className="flex items-center gap-3">
               <Skeleton className="w-10 h-10 rounded-full" />
               <Skeleton className="w-12 h-4" />
@@ -1038,7 +1038,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
 
         {/* Photo + nav arrows */}
-        <div className="flex-shrink-0 flex flex-col items-center gap-2">
+        <div className="flex-shrink-0 w-72 flex flex-col items-center gap-2">
           <div className="relative w-full max-w-xl aspect-square rounded-xl overflow-hidden bg-muted mx-auto group">
             <Image
               key={animal.id}
