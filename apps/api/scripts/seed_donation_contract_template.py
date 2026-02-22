@@ -54,7 +54,7 @@ TEMPLATE_HTML = """<div style="font-family: Arial, sans-serif; width: 210mm; max
   </tr>
   <tr>
     <td style="border: 1px solid #000; padding: 6px;"><strong>Pohlaví:</strong> {{animal.sex}}</td>
-    <td style="border: 1px solid #000; padding: 6px;"><strong>Přibližný datum narození:</strong> {{animal.age}}</td>
+    <td style="border: 1px solid #000; padding: 6px;"><strong>Přibližný datum narození:</strong> {{animal.birth_date}}</td>
   </tr>
   <tr>
     <td style="border: 1px solid #000; padding: 6px;"><strong>Plemeno:</strong> {{animal.breed}}</td>

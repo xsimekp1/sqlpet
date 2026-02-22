@@ -934,7 +934,7 @@ async def get_daily_animal_count(
     """Return daily animal count for the last N days. Single query with generate_series."""
     result = await db.execute(
         text("""
-            SELECT 
+            SELECT
                 d.day,
                 COUNT(DISTINCT a.id)::int as count
             FROM generate_series(
@@ -942,10 +942,11 @@ async def get_daily_animal_count(
                 CURRENT_DATE,
                 '1 day'::interval
             ) AS d(day)
-            INNER JOIN animals a ON a.organization_id = :org_id 
+            JOIN intakes i ON i.organization_id = :org_id
+                AND i.deleted_at IS NULL
+                AND i.intake_date <= d.day
+            JOIN animals a ON a.id = i.animal_id
                 AND a.deleted_at IS NULL
-                AND a.intake_date IS NOT NULL
-                AND a.intake_date <= d.day
                 AND (a.outcome_date IS NULL OR a.outcome_date > d.day)
             GROUP BY d.day
             ORDER BY d.day ASC

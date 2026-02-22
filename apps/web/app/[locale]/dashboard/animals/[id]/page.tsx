@@ -216,6 +216,8 @@ export default function AnimalDetailPage() {
 
   // Documents
   const [documents, setDocuments] = useState<any[]>([]);
+  const [generatedDocs, setGeneratedDocs] = useState<any[]>([]);
+  const [loadingGeneratedDocs, setLoadingGeneratedDocs] = useState(false);
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const documentInputRef = useRef<HTMLInputElement>(null);
   const [escapeDate, setEscapeDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -378,13 +380,20 @@ if (photoInputRef.current) photoInputRef.current.value = '';
     if (!animal?.id) return;
     const loadDocuments = async () => {
       setLoadingDocuments(true);
+      setLoadingGeneratedDocs(true);
       try {
-        const docs = await ApiClient.get(`/files/animal/${animal.id}/documents`);
-        setDocuments(docs || []);
+        const [uploadedDocs, genDocs] = await Promise.all([
+          ApiClient.get(`/files/animal/${animal.id}/documents`),
+          ApiClient.get(`/animals/${animal.id}/documents`),
+        ]);
+        setDocuments(uploadedDocs || []);
+        setGeneratedDocs((genDocs?.items) || []);
       } catch {
         setDocuments([]);
+        setGeneratedDocs([]);
       } finally {
         setLoadingDocuments(false);
+        setLoadingGeneratedDocs(false);
       }
     };
     loadDocuments();
@@ -1387,7 +1396,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           <TabsTrigger value="timeline">{t('tabs.timeline')}</TabsTrigger>
           <TabsTrigger value="feeding">{t('tabs.feeding')}</TabsTrigger>
           <TabsTrigger value="medical">{t('tabs.medical')}</TabsTrigger>
-          <TabsTrigger value="passport">Očkovací průkaz</TabsTrigger>
           {(animal.species === 'dog' || animal.species === 'cat') && (
             <TabsTrigger value="personality">{t('tabs.personality')}</TabsTrigger>
           )}
@@ -1959,10 +1967,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* ── Passport ── */}
-        <TabsContent value="passport">
           <PassportTab animalId={animal.id} />
         </TabsContent>
 
@@ -2042,19 +2046,79 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              {/* Generated documents section */}
+              {(loadingGeneratedDocs || generatedDocs.length > 0) && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold">{t('documents.generatedDocs')}</h3>
+                  {loadingGeneratedDocs ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-16 w-full" />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {generatedDocs.map((doc: any) => (
+                        <div key={doc.id} className="border rounded-lg p-3 flex flex-col gap-2">
+                          <div className="flex items-start gap-2">
+                            <FileText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm truncate">{doc.template_name || doc.template_code}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {doc.created_at && new Date(doc.created_at).toLocaleDateString('cs-CZ')}
+                                {doc.created_by_name && ` · ${doc.created_by_name}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => router.push(`/dashboard/animals/${animal!.id}/documents/${doc.id}`)}
+                            >
+                              {t('documents.view')}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-600"
+                              onClick={async () => {
+                                try {
+                                  await ApiClient.delete(`/documents/${doc.id}`);
+                                  setGeneratedDocs(prev => prev.filter(d => d.id !== doc.id));
+                                } catch {
+                                  toast.error(t('documents.deleteError') || 'Failed to delete');
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Divider between sections when both have content */}
+              {generatedDocs.length > 0 && documents.length > 0 && (
+                <div className="border-t" />
+              )}
+
+              {/* Uploaded files section */}
               {loadingDocuments ? (
                 <div className="space-y-3">
                   <Skeleton className="h-20 w-full" />
                   <Skeleton className="h-20 w-full" />
                 </div>
-              ) : documents.length === 0 ? (
+              ) : documents.length === 0 && generatedDocs.length === 0 && !loadingGeneratedDocs ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
                   <p>{t('documents.empty')}</p>
                   <p className="text-sm mt-1">{t('documents.emptyHint')}</p>
                 </div>
-              ) : (
+              ) : documents.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {documents.map((doc) => (
                     <div key={doc.id} className="border rounded-lg p-4 flex flex-col gap-2">
@@ -2096,7 +2160,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
             </CardContent>
           </Card>
         </TabsContent>

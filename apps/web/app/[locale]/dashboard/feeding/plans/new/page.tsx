@@ -26,7 +26,12 @@ import { isTerminal } from '@/app/lib/constants';
 import { TimePresetsButtons } from '@/app/components/feeding/TimePresetsButtons';
 import { AmountDistribution } from '@/app/components/feeding/AmountDistribution';
 import { FeedingPreview } from '@/app/components/feeding/FeedingPreview';
-import { calcMER } from '@/app/lib/energy';
+import { calcMER, snapToNice } from '@/app/lib/energy';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface FeedingPlanFormData {
   animal_id: string;
@@ -109,7 +114,7 @@ export default function NewFeedingPlanPage() {
   const kcalPer100g: number | null = selectedFood?.kcal_per_100g ?? null;
 
   const gramsPerDay: number | null =
-    merKcal && kcalPer100g ? Math.round(merKcal / (kcalPer100g / 100)) : null;
+    merKcal && kcalPer100g ? snapToNice(Math.round(merKcal / (kcalPer100g / 100))) : null;
 
   const gramsPerMeal: number | null =
     gramsPerDay && scheduleTimes.length > 0
@@ -279,7 +284,41 @@ export default function NewFeedingPlanPage() {
 
             {/* Amount */}
             <div className="space-y-2">
-              <Label htmlFor="amount_g">{t('fields.amountGrams')} *</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="amount_g">{t('fields.amountGrams')} *</Label>
+                {showCalcPanel && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-orange-500 hover:text-orange-700">
+                        <Flame className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 text-sm" align="start">
+                      <div className="space-y-2">
+                        <p className="font-semibold text-orange-800">Výpočet doporučené dávky</p>
+                        {merKcal && kcalPer100g ? (
+                          <>
+                            <div className="flex flex-col gap-1 text-muted-foreground">
+                              <span>Kalorická potřeba: <strong className="text-foreground">{merKcal} kcal/den</strong></span>
+                              <span>Krmivo: <strong className="text-foreground">{kcalPer100g} kcal/100g</strong></span>
+                            </div>
+                            <p>Doporučená denní dávka: <strong>{gramsPerDay} g/den</strong>
+                              {gramsPerMeal && <span className="text-muted-foreground ml-1">(≈ {gramsPerMeal} g/dávku)</span>}
+                            </p>
+                            <Button type="button" size="sm" variant="outline" className="w-full border-orange-300 hover:bg-orange-50" onClick={applyRecommendation}>
+                              ↗ Použít → {gramsPerDay} g
+                            </Button>
+                          </>
+                        ) : merKcal ? (
+                          <p className="text-muted-foreground">Vyberte krmivo s kcal hodnotou.</p>
+                        ) : (
+                          <p className="text-muted-foreground">Zvíře nemá zadanou váhu.</p>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
               <Input
                 className="bg-white"
                 id="amount_g"
@@ -287,6 +326,10 @@ export default function NewFeedingPlanPage() {
                 step="1"
                 placeholder="e.g. 200"
                 {...register('amount_g', { required: true })}
+                onBlur={(e) => {
+                  const v = parseFloat(e.target.value);
+                  if (!isNaN(v)) setValue('amount_g', Math.round(v));
+                }}
               />
             </div>
 
@@ -323,57 +366,6 @@ export default function NewFeedingPlanPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Dosage calculation panel — shown when animal is selected and has MER or food has kcal */}
-        {showCalcPanel && (
-          <Card className="border-orange-200 bg-orange-50/50 dark:border-orange-900 dark:bg-orange-950/20">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-start gap-3">
-                <Flame className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">
-                    Výpočet doporučené dávky
-                  </p>
-
-                  {merKcal && kcalPer100g ? (
-                    <>
-                      <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
-                        <span>Kalorická potřeba: <strong className="text-foreground">{merKcal} kcal/den</strong></span>
-                        <span>Krmivo: <strong className="text-foreground">{kcalPer100g} kcal/100g</strong></span>
-                      </div>
-                      <div className="text-sm">
-                        Doporučená denní dávka:{' '}
-                        <strong className="text-base">{gramsPerDay} g/den</strong>
-                        {gramsPerMeal && (
-                          <span className="text-muted-foreground ml-2">
-                            (při {scheduleTimes.length}× krmení ≈ {gramsPerMeal} g/dávku)
-                          </span>
-                        )}
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="border-orange-300 hover:bg-orange-100 dark:border-orange-700 dark:hover:bg-orange-900/40"
-                        onClick={applyRecommendation}
-                      >
-                        ↗ Použít doporučení → {gramsPerDay} g
-                      </Button>
-                    </>
-                  ) : merKcal && !kcalPer100g ? (
-                    <p className="text-sm text-muted-foreground">
-                      Vyberte krmivo s kalorickou hodnotou pro výpočet dávky.
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Zvíře nemá zadanou váhu — výpočet není možný.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Section B: Feeding Schedule with Presets */}
         <Card>

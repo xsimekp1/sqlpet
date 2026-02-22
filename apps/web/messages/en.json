@@ -922,7 +922,7 @@
       "overview": "Overview",
       "timeline": "Timeline",
       "feeding": "Feeding",
-      "medical": "Medical",
+      "medical": "Health / Passport",
       "documents": "Documents",
       "personality": "Personality"
     },
@@ -1032,7 +1032,14 @@
       "empty": "No documents",
       "emptyHint": "Upload your first document using the button above",
       "uploadedBy": "Uploaded by: {name}",
-      "open": "Open"
+      "open": "Open",
+      "generatedDocs": "Generated Documents",
+      "noGeneratedDocs": "No generated documents",
+      "view": "View",
+      "savedSuccess": "Document saved",
+      "backToAnimal": "Back to animal",
+      "deleteGenDoc": "Delete document",
+      "deleteError": "Failed to delete document"
     },
     "weight": {
       "estimated": "estimated weight",

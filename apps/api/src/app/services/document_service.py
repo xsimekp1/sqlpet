@@ -75,8 +75,8 @@ IN_SHELTER_LABEL: dict[str, str] = {"cs": "v útulku", "en": "in shelter"}
 
 A4_STYLE = (
     '<style>'
-    '@page{size:A4 portrait;margin:15mm 20mm;}'
-    '@media print{body{margin:0;}}'
+    '@page{size:A4 portrait;margin:0;}'
+    'body{margin:0;padding:15mm 20mm;box-sizing:border-box;}'
     '</style>'
 )
 
@@ -223,7 +223,7 @@ class DocumentService:
             "altered": altered_str,
             "passport_number": "",  # TODO: read from AnimalPassport when loaded
             "last_vaccination_date": "",  # TODO: read from AnimalVaccination when loaded
-            "weight_kg": str(animal.weight_current_kg) if animal.weight_current_kg else "",
+            "weight_kg": f"{float(animal.weight_current_kg):g}" if animal.weight_current_kg else "",
             "description": animal.description or "",
             "behavior_notes": animal.behavior_notes or "",
         }

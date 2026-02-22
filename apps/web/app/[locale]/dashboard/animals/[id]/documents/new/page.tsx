@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Eye, EyeOff, FileText, Loader2, Printer } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Eye, EyeOff, FileText, Loader2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function NewDocumentPage() {
@@ -48,6 +48,7 @@ export default function NewDocumentPage() {
 
   const [loading, setLoading] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [savedDocId, setSavedDocId] = useState<string | null>(null);
 
   useEffect(() => {
     ApiClient.getAnimal(animalId)
@@ -92,14 +93,14 @@ export default function NewDocumentPage() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      await ApiClient.post(`/animals/${animalId}/documents`, {
+      const result = await ApiClient.post(`/animals/${animalId}/documents`, {
         template_code: templateCode,
         manual_fields: buildManualFields(),
         status: 'final',
         locale,
       });
+      setSavedDocId(result?.document_id ?? result?.id ?? 'saved');
       toast.success(t('documentCreated'));
-      router.push(`/dashboard/animals/${animalId}`);
     } catch (err: any) {
       toast.error(err?.message || t('createError'));
     } finally {
@@ -149,6 +150,17 @@ export default function NewDocumentPage() {
           </>
         )}
       </div>
+
+      {/* Success banner */}
+      {savedDocId && (
+        <div className="flex items-center gap-3 px-4 py-2 bg-green-50 border-b border-green-200 text-green-800 text-sm shrink-0">
+          <CheckCircle className="h-4 w-4" />
+          {t('savedSuccess')}
+          <Button variant="link" size="sm" className="text-green-700 p-0 h-auto" onClick={() => router.push(`/dashboard/animals/${animalId}`)}>
+            {t('backToAnimal')}
+          </Button>
+        </div>
+      )}
 
       {/* Content */}
       {previewHtml ? (

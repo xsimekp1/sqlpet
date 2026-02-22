@@ -830,7 +830,7 @@
       "overview": "Přehled",
       "timeline": "Časová osa",
       "feeding": "Krmení",
-      "medical": "Zdraví",
+      "medical": "Zdraví / Průkaz",
       "documents": "Dokumenty",
       "personality": "Osobnost"
     },
@@ -940,7 +940,14 @@
       "empty": "Žádné dokumenty",
       "emptyHint": "Nahrajte první dokument pomocí tlačítka výše",
       "uploadedBy": "Nahrál: {name}",
-      "open": "Otevřít"
+      "open": "Otevřít",
+      "generatedDocs": "Vygenerované dokumenty",
+      "noGeneratedDocs": "Žádné vygenerované dokumenty",
+      "view": "Zobrazit",
+      "savedSuccess": "Dokument byl uložen",
+      "backToAnimal": "Zpět na kartu zvířete",
+      "deleteGenDoc": "Smazat dokument",
+      "deleteError": "Nepodařilo se smazat dokument"
     },
     "weight": {
       "estimated": "odhadovaná váha",

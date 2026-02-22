@@ -46,8 +46,8 @@ class PassportResponse(PassportBase):
 
     id: uuid.UUID
     animal_id: uuid.UUID
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     documents: list[PassportDocumentResponse] = Field(default_factory=list)
 
 

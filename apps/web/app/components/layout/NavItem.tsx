@@ -104,11 +104,6 @@ export function NavItem({
           S
         </span>
       )}
-      {!collapsed && shortcut && !isSuperadminOnly && (
-        <span className="ml-auto text-[10px] font-mono text-muted-foreground/40 tracking-tight shrink-0">
-          {formatShortcut(shortcut)}
-        </span>
-      )}
     </Link>
   )
 
@@ -127,7 +122,10 @@ export function NavItem({
     )
   }
 
-  if (shortcut && collapsed) {
+  {/* NOTE: Keyboard shortcuts are shown ONLY as tooltip on hover.
+      DO NOT render shortcut text inline inside the nav link — it clutters the sidebar.
+      The <kbd> shortcut lives in <TooltipContent> only. */}
+  if (shortcut) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>

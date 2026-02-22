@@ -15,6 +15,18 @@
  * Note: Only ONE health modifier is used at a time in Python!
  */
 
+/**
+ * Snap a gram value to a "nice" round number for feeding recommendations.
+ * ≤ 200g  → nearest 10g
+ * ≤ 300g  → nearest 20g
+ * > 300g  → nearest 50g
+ */
+export function snapToNice(grams: number): number {
+  if (grams <= 200) return Math.round(grams / 10) * 10;
+  if (grams <= 300) return Math.round(grams / 20) * 20;
+  return Math.round(grams / 50) * 50;
+}
+
 export function calcRER(weightKg: number): number {
   return Math.round(70 * Math.pow(weightKg, 0.75));
 }
