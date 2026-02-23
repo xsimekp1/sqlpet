@@ -318,9 +318,13 @@ async def get_contact_findings(
             status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
         )
 
-    q = select(Finding).where(
-        Finding.who_found_id == contact_id,
-        Finding.organization_id == organization_id,
+    q = (
+        select(Finding)
+        .where(
+            Finding.who_found_id == contact_id,
+            Finding.organization_id == organization_id,
+        )
+        .options(selectinload(Finding.animal), selectinload(Finding.who_found))
     )
 
     count_q = select(func.count()).select_from(q.subquery())
