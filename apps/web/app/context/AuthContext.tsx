@@ -19,7 +19,7 @@ interface AuthContextType {
   permissions: string[];
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, totpCode?: string) => Promise<void>;
   logout: () => Promise<void>;
   selectOrganization: (orgId: string) => Promise<void>;
   refreshUser: () => Promise<void>;
