@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, createContext, useContext } from 'react';
-import cs from '../locales/cs.json';
-import en from '../locales/en.json';
+import cs from './locales/cs.json';
+import en from './locales/en.json';
 
 export type Locale = 'cs' | 'en';
 
