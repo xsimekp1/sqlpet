@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, createContext, useContext } from 'react';
+import React, { useState, useCallback, useMemo, createContext, useContext } from 'react';
 import cs from '../locales/cs.json';
 import en from '../locales/en.json';
 
