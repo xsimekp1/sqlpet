@@ -1,4 +1,4 @@
-import { Flag, Zap, Package, Wifi, BarChart3 } from 'lucide-react';
+import { Flag, Zap, Package, Wifi, BarChart3, Smartphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const reasons = [
@@ -31,6 +31,13 @@ const reasons = [
     title: 'Reporty a tisky',
     description:
       'Smlouvy, předávací protokoly, QR kódy pro kotce i zvířata. E-podpis adopčních smluv přímo v systému.',
+  },
+  {
+    icon: Smartphone,
+    title: 'Mobilní aplikace',
+    description:
+      'Android app s většinou funkcí online platformy. Práce v terénu ještě nikdy nebyla jednodušší.',
+    soon: true,
   },
 ];
 
