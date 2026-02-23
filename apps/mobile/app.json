@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Petslog",
+    "slug": "petslog",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "petslog",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6B4EFF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sqlpet.petslog"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6B4EFF"
+      },
+      "package": "com.sqlpet.petslog"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "petslog-mobile"
+      }
+    }
+  }
+}
