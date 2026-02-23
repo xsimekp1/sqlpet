@@ -1558,7 +1558,8 @@
       "saving": "Saving…"
     },
     "dailyConsumption": "Daily consumption",
-    "activePlans": "active feeding plans"
+    "activePlans": "active feeding plans",
+    "feedingPlans": "Feeding plans"
   },
   "colors": {
     "black": "Black",

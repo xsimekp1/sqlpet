@@ -419,66 +419,83 @@ export default function InventoryItemDetailPage() {
         </Dialog>
       </div>
 
-      {/* Item Info Cards */}
-      <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-6">
-        <div className="border rounded-lg p-3">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5">
-            <Package className="h-3.5 w-3.5" />
+      {/* Item Info Cards - Compact */}
+      <div className="grid gap-2 md:grid-cols-6 lg:grid-cols-8">
+        <div className="border rounded-lg p-2">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+            <Package className="h-3 w-3" />
             {t('totalQuantity')}
           </div>
-          <div className="text-lg font-semibold">
+          <div className="text-base font-medium">
             {formatQuantity(totalQuantity, item.unit)} {item.unit || ''}
           </div>
         </div>
-        <div className="border rounded-lg p-3">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5">
-            <Package className="h-3.5 w-3.5" />
+        <div className="border rounded-lg p-2">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+            <Package className="h-3 w-3" />
             {t('activeLots')}
           </div>
-          <div className="text-lg font-semibold">
+          <div className="text-base font-medium">
             {lots.filter((lot: any) => lot.quantity > 0).length}
           </div>
         </div>
-        <div className="border rounded-lg p-3">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5">
-            <TrendingDown className="h-3.5 w-3.5" />
+        <div className="border rounded-lg p-2">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+            <TrendingDown className="h-3 w-3" />
             {t('reorderThreshold')}
           </div>
-          <div className="text-lg font-semibold">
-            {item.reorder_threshold !== null && item.reorder_threshold !== undefined ? item.reorder_threshold : '-'}
+          <div className="text-base font-medium">
+            {item.reorder_threshold !== null && item.reorder_threshold !== undefined ? item.reorder_threshold : '—'}
           </div>
         </div>
-        <div className="border rounded-lg p-3">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5">
-            <Receipt className="h-3.5 w-3.5" />
+        <div className="border rounded-lg p-2">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+            <Receipt className="h-3 w-3" />
             {t('fields.pricePerUnit')}
           </div>
-          <div className="text-lg font-semibold">
+          <div className="text-base font-medium">
             {item.price_per_unit != null
               ? `${item.price_per_unit} Kč`
-              : <span className="text-muted-foreground text-base">—</span>}
+              : <span className="text-muted-foreground text-sm">—</span>}
           </div>
         </div>
         {item.category === 'food' && item.kcal_per_100g && (
-          <div className="border rounded-lg p-3">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5">
-              <UtensilsCrossed className="h-3.5 w-3.5" />
+          <div className="border rounded-lg p-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+              <UtensilsCrossed className="h-3 w-3" />
               {t('fields.kcalPer100g')}
             </div>
-            <div className="text-lg font-semibold">{item.kcal_per_100g} kcal / 100g</div>
+            <div className="text-base font-medium">{item.kcal_per_100g} kcal</div>
           </div>
         )}
         {item.category === 'food' && dailyConsumptionG > 0 && (
-          <div className="border rounded-lg p-3">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5">
-              <Flame className="h-3.5 w-3.5" />
+          <div className="border rounded-lg p-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+              <Flame className="h-3 w-3" />
               {t('dailyConsumption')}
             </div>
-            <div className="text-lg font-semibold">
-              {Math.round(dailyConsumptionG).toLocaleString()} g / den
+            <div className="text-base font-medium">
+              {Math.round(dailyConsumptionG).toLocaleString()} g/den
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-muted-foreground mt-0.5">
               {activeFeedingPlans.length} {t('activePlans')}
+            </div>
+          </div>
+        )}
+        {/* Feeding Plans - Show which plans include this food item */}
+        {item.category === 'food' && activeFeedingPlans.length > 0 && (
+          <div className="border rounded-lg p-2 md:col-span-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+              <UtensilsCrossed className="h-3 w-3" />
+              {t('feedingPlans')}
+            </div>
+            <div className="text-xs space-y-0.5">
+              {activeFeedingPlans.slice(0, 3).map((plan: any) => (
+                <div key={plan.id} className="truncate font-medium">{plan.name}</div>
+              ))}
+              {activeFeedingPlans.length > 3 && (
+                <div className="text-muted-foreground">+{activeFeedingPlans.length - 3} dalších</div>
+              )}
             </div>
           </div>
         )}
@@ -493,29 +510,6 @@ export default function InventoryItemDetailPage() {
           ))}
         </div>
       )}
-
-      {/* Notes / Description */}
-      <div className="border rounded-lg p-4 space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-muted-foreground">{t('fields.notes')}</label>
-          {notesValue !== (item?.notes ?? '') && (
-            <Button
-              size="sm"
-              variant="default"
-              onClick={() => saveNotesMutation.mutate(notesValue)}
-              disabled={saveNotesMutation.isPending}
-            >
-              {saveNotesMutation.isPending ? t('messages.saving') : t('actions.save')}
-            </Button>
-          )}
-        </div>
-        <Textarea
-          value={notesValue}
-          onChange={(e) => setNotesValue(e.target.value)}
-          placeholder={t('fields.notesPlaceholder')}
-          className="resize-none min-h-[80px]"
-        />
-      </div>
 
       {/* Tabs */}
       <Tabs defaultValue={tracksLots ? 'lots' : 'transactions'} className="space-y-4">
@@ -743,6 +737,29 @@ export default function InventoryItemDetailPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Notes / Description - at the bottom */}
+      <div className="border rounded-lg p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-muted-foreground">{t('fields.notes')}</label>
+          {notesValue !== (item?.notes ?? '') && (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => saveNotesMutation.mutate(notesValue)}
+              disabled={saveNotesMutation.isPending}
+            >
+              {saveNotesMutation.isPending ? t('messages.saving') : t('actions.save')}
+            </Button>
+          )}
+        </div>
+        <Textarea
+          value={notesValue}
+          onChange={(e) => setNotesValue(e.target.value)}
+          placeholder={t('fields.notesPlaceholder')}
+          className="resize-none min-h-[80px]"
+        />
+      </div>
     </div>
   );
 }

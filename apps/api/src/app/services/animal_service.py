@@ -62,13 +62,14 @@ class AnimalService:
         from sqlalchemy import or_
 
         breed_id = breed_ids[0] if breed_ids else None
+        species_enum = Species(species)
 
         queries = []
         if breed_id and color:
             queries.append(
                 select(DefaultAnimalImage)
                 .where(
-                    DefaultAnimalImage.species == species,
+                    DefaultAnimalImage.species == species_enum,
                     DefaultAnimalImage.breed_id == breed_id,
                     DefaultAnimalImage.color_pattern == color,
                     DefaultAnimalImage.is_active == True,
@@ -80,7 +81,7 @@ class AnimalService:
             queries.append(
                 select(DefaultAnimalImage)
                 .where(
-                    DefaultAnimalImage.species == species,
+                    DefaultAnimalImage.species == species_enum,
                     DefaultAnimalImage.breed_id == breed_id,
                     DefaultAnimalImage.color_pattern.is_(None),
                     DefaultAnimalImage.is_active == True,
@@ -92,7 +93,7 @@ class AnimalService:
             queries.append(
                 select(DefaultAnimalImage)
                 .where(
-                    DefaultAnimalImage.species == species,
+                    DefaultAnimalImage.species == species_enum,
                     DefaultAnimalImage.breed_id.is_(None),
                     DefaultAnimalImage.color_pattern == color,
                     DefaultAnimalImage.is_active == True,
@@ -251,7 +252,9 @@ class AnimalService:
         # Compute and save default image URL + thumbnail
         breed_ids = [entry.breed_id for entry in data.breeds] if data.breeds else None
         default_img = await self._compute_default_image_url(
-            species=(data.species.value if hasattr(data.species, 'value') else data.species).lower(),
+            species=(
+                data.species.value if hasattr(data.species, "value") else data.species
+            ).lower(),
             breed_ids=breed_ids,
             color=data.color,
         )
@@ -514,12 +517,20 @@ class AnimalService:
                     else None
                 )
                 default_img = await self._compute_default_image_url(
-                    species=(animal.species.value if hasattr(animal.species, 'value') else animal.species).lower(),
+                    species=(
+                        animal.species.value
+                        if hasattr(animal.species, "value")
+                        else animal.species
+                    ).lower(),
                     breed_ids=breed_ids,
                     color=animal.color,
                 )
-                animal.default_image_url = default_img.public_url if default_img else None
-                animal.default_thumbnail_url = default_img.thumbnail_url if default_img else None
+                animal.default_image_url = (
+                    default_img.public_url if default_img else None
+                )
+                animal.default_thumbnail_url = (
+                    default_img.thumbnail_url if default_img else None
+                )
                 await self.db.flush()
 
         after = _animal_to_dict(animal)
@@ -574,7 +585,10 @@ class AnimalService:
                         entity_type="animal",
                         entity_id=animal.id,
                         before={"intended_status": update_data.get("status")},
-                        after={"actual_status": "waiting_adoption", "reason": "website_deadline_not_expired"},
+                        after={
+                            "actual_status": "waiting_adoption",
+                            "reason": "website_deadline_not_expired",
+                        },
                         ip=ip,
                         user_agent=user_agent,
                     )

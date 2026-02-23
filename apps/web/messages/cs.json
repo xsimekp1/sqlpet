@@ -1466,7 +1466,8 @@
       "saving": "Ukládám…"
     },
     "dailyConsumption": "Denní spotřeba",
-    "activePlans": "aktivních krmných plánů"
+    "activePlans": "aktivních krmných plánů",
+    "feedingPlans": "Krmné plány"
   },
   "colors": {
     "black": "Černá",

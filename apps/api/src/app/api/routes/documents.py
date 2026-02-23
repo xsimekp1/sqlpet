@@ -1,4 +1,5 @@
 """API routes for document templates and instances."""
+
 from typing import Annotated
 from uuid import UUID
 
@@ -49,7 +50,8 @@ async def list_templates(
 
     # Get total count
     count_query = select(func.count(DocumentTemplate.id)).where(
-        (DocumentTemplate.organization_id == org_id) | (DocumentTemplate.organization_id == None)  # noqa: E711
+        (DocumentTemplate.organization_id == org_id)
+        | (DocumentTemplate.organization_id == None)  # noqa: E711
     )
     total = await db.scalar(count_query) or 0
 
@@ -57,7 +59,8 @@ async def list_templates(
     query = (
         select(DocumentTemplate)
         .where(
-            (DocumentTemplate.organization_id == org_id) | (DocumentTemplate.organization_id == None)  # noqa: E711
+            (DocumentTemplate.organization_id == org_id)
+            | (DocumentTemplate.organization_id == None)  # noqa: E711
         )
         .order_by(DocumentTemplate.created_at.desc())
         .offset(skip)
@@ -72,7 +75,9 @@ async def list_templates(
     )
 
 
-@router.post("/document-templates", response_model=DocumentTemplateResponse, status_code=201)
+@router.post(
+    "/document-templates", response_model=DocumentTemplateResponse, status_code=201
+)
 async def create_template(
     data: DocumentTemplateCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -104,7 +109,9 @@ async def create_template(
     return DocumentTemplateResponse.model_validate(template)
 
 
-@router.put("/document-templates/{template_id}", response_model=DocumentTemplateResponse)
+@router.put(
+    "/document-templates/{template_id}", response_model=DocumentTemplateResponse
+)
 async def update_template(
     template_id: UUID,
     data: DocumentTemplateUpdate,
@@ -149,7 +156,9 @@ async def update_template(
     return DocumentTemplateResponse.model_validate(template)
 
 
-@router.get("/document-templates/{template_id}", response_model=DocumentTemplateResponse)
+@router.get(
+    "/document-templates/{template_id}", response_model=DocumentTemplateResponse
+)
 async def get_template(
     template_id: UUID,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -161,7 +170,8 @@ async def get_template(
 
     query = select(DocumentTemplate).where(
         DocumentTemplate.id == template_id,
-        (DocumentTemplate.organization_id == org_id) | (DocumentTemplate.organization_id == None),  # noqa: E711
+        (DocumentTemplate.organization_id == org_id)
+        | (DocumentTemplate.organization_id == None),  # noqa: E711
     )
     result = await db.execute(query)
     template = result.scalar_one_or_none()
@@ -187,13 +197,16 @@ async def preview_org_document(
 
     template_query = select(DocumentTemplate).where(
         DocumentTemplate.code == data.template_code,
-        (DocumentTemplate.organization_id == org_id) | (DocumentTemplate.organization_id == None),  # noqa: E711
+        (DocumentTemplate.organization_id == org_id)
+        | (DocumentTemplate.organization_id == None),  # noqa: E711
         DocumentTemplate.is_active == True,  # noqa: E712
     )
     result = await db.execute(template_query)
     template = result.scalar_one_or_none()
     if not template:
-        raise HTTPException(status_code=404, detail=f"Template '{data.template_code}' not found")
+        raise HTTPException(
+            status_code=404, detail=f"Template '{data.template_code}' not found"
+        )
 
     document_service = DocumentService(db)
     try:
@@ -218,7 +231,9 @@ async def preview_org_document(
 # --- Document Instances (for animals) ---
 
 
-@router.post("/animals/{animal_id}/documents/preview", response_model=DocumentPreviewResponse)
+@router.post(
+    "/animals/{animal_id}/documents/preview", response_model=DocumentPreviewResponse
+)
 async def preview_animal_document(
     animal_id: UUID,
     data: DocumentInstanceCreate,
@@ -249,19 +264,25 @@ async def preview_animal_document(
     if not template_id and data.template_code:
         template_query = select(DocumentTemplate).where(
             DocumentTemplate.code == data.template_code,
-            (DocumentTemplate.organization_id == org_id) | (DocumentTemplate.organization_id == None),  # noqa: E711
+            (DocumentTemplate.organization_id == org_id)
+            | (DocumentTemplate.organization_id == None),  # noqa: E711
             DocumentTemplate.is_active == True,  # noqa: E712
         )
         template_result = await db.execute(template_query)
         template = template_result.scalar_one_or_none()
 
         if not template:
-            raise HTTPException(status_code=404, detail=f"Template '{data.template_code}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"Template '{data.template_code}' not found"
+            )
 
         template_id = template.id
 
     if not template_id:
-        raise HTTPException(status_code=400, detail="Either template_id or template_code must be provided")
+        raise HTTPException(
+            status_code=400,
+            detail="Either template_id or template_code must be provided",
+        )
 
     # Fetch template object for rendering
     tpl_query = select(DocumentTemplate).where(DocumentTemplate.id == template_id)
@@ -292,7 +313,11 @@ async def preview_animal_document(
     )
 
 
-@router.post("/animals/{animal_id}/documents", response_model=DocumentPreviewResponse, status_code=201)
+@router.post(
+    "/animals/{animal_id}/documents",
+    response_model=DocumentInstanceResponse,
+    status_code=201,
+)
 async def create_animal_document(
     animal_id: UUID,
     data: DocumentInstanceCreate,
@@ -322,21 +347,38 @@ async def create_animal_document(
     # Get template by ID or code
     template_id = data.template_id
     if not template_id and data.template_code:
+        # First try org-specific template, then fall back to global
         template_query = select(DocumentTemplate).where(
             DocumentTemplate.code == data.template_code,
-            (DocumentTemplate.organization_id == org_id) | (DocumentTemplate.organization_id == None),  # noqa: E711
-            DocumentTemplate.is_active == True,  # noqa: E712
+            DocumentTemplate.organization_id == org_id,
+            DocumentTemplate.is_active == True,
         )
         template_result = await db.execute(template_query)
         template = template_result.scalar_one_or_none()
 
+        # If not found, try global template
         if not template:
-            raise HTTPException(status_code=404, detail=f"Template with code '{data.template_code}' not found")
+            template_query = select(DocumentTemplate).where(
+                DocumentTemplate.code == data.template_code,
+                DocumentTemplate.organization_id == None,
+                DocumentTemplate.is_active == True,
+            )
+            template_result = await db.execute(template_query)
+            template = template_result.scalar_one_or_none()
+
+        if not template:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Template with code '{data.template_code}' not found",
+            )
 
         template_id = template.id
 
     if not template_id:
-        raise HTTPException(status_code=400, detail="Either template_id or template_code must be provided")
+        raise HTTPException(
+            status_code=400,
+            detail="Either template_id or template_code must be provided",
+        )
 
     # Create document instance using service
     document_service = DocumentService(db)
@@ -354,16 +396,35 @@ async def create_animal_document(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    # Return preview response
-    return DocumentPreviewResponse(
-        document_id=doc_instance.id,
-        rendered_html=doc_instance.rendered_html or "",
-        preview_url=f"/documents/{doc_instance.id}/preview",
+    # Get template info for response
+    template_query = select(DocumentTemplate).where(DocumentTemplate.id == template_id)
+    template_result = await db.execute(template_query)
+    template = template_result.scalar_one_or_none()
+
+    # Return full response with template info
+    return DocumentInstanceResponse(
+        id=doc_instance.id,
+        organization_id=doc_instance.organization_id,
+        animal_id=doc_instance.animal_id,
+        template_id=doc_instance.template_id,
+        created_by_user_id=doc_instance.created_by_user_id,
+        manual_fields=doc_instance.manual_fields or {},
+        rendered_html=doc_instance.rendered_html,
+        pdf_storage_path=doc_instance.pdf_storage_path,
         pdf_url=doc_instance.pdf_url,
+        status=doc_instance.status,
+        created_at=doc_instance.created_at,
+        template_name=template.name if template else None,
+        template_code=template.code if template else None,
+        created_by_name=current_user.full_name
+        if hasattr(current_user, "full_name")
+        else None,
     )
 
 
-@router.get("/animals/{animal_id}/documents", response_model=DocumentInstanceListResponse)
+@router.get(
+    "/animals/{animal_id}/documents", response_model=DocumentInstanceListResponse
+)
 async def list_animal_documents(
     animal_id: UUID,
     db: Annotated[AsyncSession, Depends(get_db)],

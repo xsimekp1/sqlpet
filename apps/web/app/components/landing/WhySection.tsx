@@ -1,5 +1,6 @@
 import { Flag, Zap, Package, Wifi, BarChart3, Smartphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 const reasons = [
   {
@@ -64,6 +65,9 @@ export function WhySection() {
                     <Icon className="size-5 text-teal-600" />
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-2">{reason.title}</h3>
+                  {reason.soon && (
+                    <Badge variant="secondary" className="mb-2">Už brzy</Badge>
+                  )}
                   <p className="text-sm text-gray-500 leading-relaxed">{reason.description}</p>
                 </CardContent>
               </Card>

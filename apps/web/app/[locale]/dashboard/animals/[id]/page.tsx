@@ -235,6 +235,10 @@ export default function AnimalDetailPage() {
   const [animalIds, setAnimalIds] = useState<string[]>(
     () => queryClient.getQueryData<string[]>(['animalIds']) ?? []
   );
+  const [animalIdsLoaded, setAnimalIdsLoaded] = useState(
+    () => queryClient.getQueryData<string[]>(['animalIds']) !== undefined
+  );
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
   // Expected litter date
   const [litterDateInput, setLitterDateInput] = useState('');
@@ -323,6 +327,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
         queryClient.setQueryData(['animalIds'], idsData);
         setAnimal(data);
         setAnimalIds(idsData);
+        setAnimalIdsLoaded(true);
         setBehaviorNotes(data.behavior_notes ?? '');
         
         // Load additional data in background with loading states
@@ -373,7 +378,12 @@ if (photoInputRef.current) photoInputRef.current.value = '';
         staleTime: 30_000,
       });
     });
-}, [prevId, nextId, router, queryClient]);
+  }, [prevId, nextId, router, queryClient]);
+
+  // Clear navigating state when animal changes
+  useEffect(() => {
+    setNavigatingTo(null);
+  }, [animalId]);
 
   // Load documents when animal is loaded
   useEffect(() => {
@@ -1075,23 +1085,31 @@ if (photoInputRef.current) photoInputRef.current.value = '';
             <Button
               variant="nav"
               size="icon"
-              onClick={() => prevId && router.push(`/dashboard/animals/${prevId}`)}
-              disabled={!prevId}
+              onClick={() => { if (prevId) { setNavigatingTo(prevId); router.push(`/dashboard/animals/${prevId}`); }}}
+              disabled={!prevId || !animalIdsLoaded || !!navigatingTo}
               aria-label="Předchozí zvíře"
             >
-              <ChevronLeft className="h-5 w-5" />
+              {navigatingTo ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
+              )}
             </Button>
             <span className="text-xs text-muted-foreground">
-              {currentIdx >= 0 ? `${currentIdx + 1} / ${animalIds.length}` : ''}
+              {animalIdsLoaded ? `${currentIdx + 1} / ${animalIds.length}` : '...'}
             </span>
             <Button
               variant="nav"
               size="icon"
-              onClick={() => nextId && router.push(`/dashboard/animals/${nextId}`)}
-              disabled={!nextId}
+              onClick={() => { if (nextId) { setNavigatingTo(nextId); router.push(`/dashboard/animals/${nextId}`); }}}
+              disabled={!nextId || !animalIdsLoaded || !!navigatingTo}
               aria-label="Další zvíře"
             >
-              <ChevronRight className="h-5 w-5" />
+              {navigatingTo ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <ChevronRight className="h-5 w-5" />
+              )}
             </Button>
           </div>
         </div>
