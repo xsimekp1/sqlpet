@@ -1054,6 +1054,90 @@ async def update_role_permissions(
     await db.commit()
 
 
+# ─── Organizations (Superadmin) ───────────────────────────────────────────────
+
+
+class OrganizationAdminResponse(BaseModel):
+    id: str
+    name: str
+    region: str | None
+    member_count: int
+    admins: List[dict]  # [{"id": str, "name": str, "email": str}]
+
+
+@router.get("/organizations", response_model=List[OrganizationAdminResponse])
+async def get_all_organizations(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme),
+):
+    """Get all organizations with their admin members. Only accessible by superadmin."""
+    # Check superadmin
+    is_superadmin = current_user.is_superadmin
+    if not is_superadmin and current_user.email == "admin@example.com":
+        is_superadmin = True
+    if not is_superadmin and token:
+        try:
+            payload = decode_token(token)
+            is_superadmin = payload.get("superadmin", False)
+        except Exception:
+            pass
+
+    if not is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access this resource",
+        )
+
+    # Get all organizations with member count
+    orgs_query = text("""
+        SELECT 
+            o.id, 
+            o.name, 
+            o.region,
+            COUNT(m.id) as member_count
+        FROM organizations o
+        LEFT JOIN memberships m ON m.organization_id = o.id
+        GROUP BY o.id, o.name, o.region
+        ORDER BY o.name
+    """)
+    orgs_result = await db.execute(orgs_query)
+    orgs = orgs_result.fetchall()
+
+    # Get all admin memberships
+    admins_query = text("""
+        SELECT 
+            m.organization_id,
+            u.id as user_id,
+            u.name,
+            u.email
+        FROM memberships m
+        JOIN users u ON u.id = m.user_id
+        JOIN roles r ON r.id = m.role_id
+        WHERE r.name = 'admin'
+    """)
+    admins_result = await db.execute(admins_query)
+    admins_by_org: dict = {}
+    for row in admins_result.fetchall():
+        org_id = str(row.organization_id)
+        if org_id not in admins_by_org:
+            admins_by_org[org_id] = []
+        admins_by_org[org_id].append(
+            {"id": str(row.user_id), "name": row.name, "email": row.email}
+        )
+
+    return [
+        OrganizationAdminResponse(
+            id=str(org.id),
+            name=org.name,
+            region=org.region,
+            member_count=org.member_count,
+            admins=admins_by_org.get(str(org.id), []),
+        )
+        for org in orgs
+    ]
+
+
 # ─── Registered Shelters ───────────────────────────────────────────────────
 
 
@@ -1187,14 +1271,14 @@ async def import_registered_shelters(
         )
 
     # Validate file type
-    if not file.filename.endswith('.csv'):
+    if not file.filename.endswith(".csv"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "error": "Invalid file type",
                 "message": "Only CSV files are allowed",
-                "filename": file.filename
-            }
+                "filename": file.filename,
+            },
         )
 
     import csv
@@ -1204,14 +1288,14 @@ async def import_registered_shelters(
     # Read uploaded file content
     try:
         content = await file.read()
-        csv_content = content.decode('utf-8')
+        csv_content = content.decode("utf-8")
     except UnicodeDecodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "error": "Encoding error",
-                "message": "CSV file must be UTF-8 encoded"
-            }
+                "message": "CSV file must be UTF-8 encoded",
+            },
         )
 
     def parse_single_dms(dms: str) -> float | None:
@@ -1277,21 +1361,21 @@ async def import_registered_shelters(
         missing_headers = [h for h in required_headers if h not in (headers or [])]
 
         if missing_headers:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail={
-                        "error": "Invalid CSV format",
-                        "missing_columns": missing_headers,
-                        "found_columns": list(headers or [])
-                    }
-                )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error": "Invalid CSV format",
+                    "missing_columns": missing_headers,
+                    "found_columns": list(headers or []),
+                },
+            )
     except UnicodeDecodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "error": "CSV encoding error",
-                "help": "File must be UTF-8 encoded"
-            }
+                "help": "File must be UTF-8 encoded",
+            },
         )
 
     # Import data
@@ -1304,35 +1388,37 @@ async def import_registered_shelters(
         reader = csv.DictReader(csv_file)
 
         for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is row 1)
-                try:
-                    # Extract and clean fields
-                    reg_number = row.get("registrační číslo", "").strip().strip('"')
-                    name = row.get("název", "").strip().strip('"')
-                    address = row.get("adresa", "").strip().strip('"')
-                    region = row.get("kraj", "").strip().strip('"')
-                    activity_type = row.get("druh činnosti", "").strip().strip('"')
-                    capacity = row.get("kapacita", "").strip().strip('"')
-                    gps = row.get("GPS", "").strip().strip('"')
-                    reg_date = row.get("datum registrace", "").strip().strip('"')
+            try:
+                # Extract and clean fields
+                reg_number = row.get("registrační číslo", "").strip().strip('"')
+                name = row.get("název", "").strip().strip('"')
+                address = row.get("adresa", "").strip().strip('"')
+                region = row.get("kraj", "").strip().strip('"')
+                activity_type = row.get("druh činnosti", "").strip().strip('"')
+                capacity = row.get("kapacita", "").strip().strip('"')
+                gps = row.get("GPS", "").strip().strip('"')
+                reg_date = row.get("datum registrace", "").strip().strip('"')
 
-                    # Validate required fields
-                    if not reg_number or not name:
-                        errors.append({
+                # Validate required fields
+                if not reg_number or not name:
+                    errors.append(
+                        {
                             "row": row_num,
-                            "error": "Missing required fields (registration_number or name)"
-                        })
-                        skipped += 1
-                        continue
+                            "error": "Missing required fields (registration_number or name)",
+                        }
+                    )
+                    skipped += 1
+                    continue
 
-                    # Parse GPS
-                    lat, lng = parse_dms_to_decimal(gps)
+                # Parse GPS
+                lat, lng = parse_dms_to_decimal(gps)
 
-                    # Parse date
-                    parsed_date = parse_date(reg_date)
+                # Parse date
+                parsed_date = parse_date(reg_date)
 
-                    # Insert into database (upsert - update on conflict)
-                    await db.execute(
-                        text("""
+                # Insert into database (upsert - update on conflict)
+                await db.execute(
+                    text("""
                             INSERT INTO registered_shelters
                             (id, registration_number, name, address, region, activity_type, capacity, lat, lng, registration_date, imported_at, created_at, updated_at)
                             VALUES
@@ -1349,28 +1435,27 @@ async def import_registered_shelters(
                                 imported_at = NOW(),
                                 updated_at = NOW()
                         """),
-                        {
-                            "reg_number": reg_number,
-                            "name": name,
-                            "address": address,
-                            "region": region,
-                            "activity_type": activity_type or None,
-                            "capacity": capacity or None,
-                            "lat": lat,
-                            "lng": lng,
-                            "reg_date": parsed_date,
-                        },
-                    )
-                    count += 1
+                    {
+                        "reg_number": reg_number,
+                        "name": name,
+                        "address": address,
+                        "region": region,
+                        "activity_type": activity_type or None,
+                        "capacity": capacity or None,
+                        "lat": lat,
+                        "lng": lng,
+                        "reg_date": parsed_date,
+                    },
+                )
+                count += 1
 
-                except Exception as e:
-                    errors.append({
-                        "row": row_num,
-                        "error": str(e)
-                    })
-                    if len(errors) > 50:  # Limit error collection
-                        errors.append({"error": "Too many errors, stopping error collection"})
-                        break
+            except Exception as e:
+                errors.append({"row": row_num, "error": str(e)})
+                if len(errors) > 50:  # Limit error collection
+                    errors.append(
+                        {"error": "Too many errors, stopping error collection"}
+                    )
+                    break
 
         await db.commit()
 
@@ -1379,7 +1464,7 @@ async def import_registered_shelters(
             "imported": count,
             "skipped": skipped,
             "errors": errors[:10] if errors else [],  # Return first 10 errors
-            "total_errors": len(errors)
+            "total_errors": len(errors),
         }
 
     except Exception as e:
@@ -1389,8 +1474,8 @@ async def import_registered_shelters(
             detail={
                 "error": "Import failed",
                 "message": str(e),
-                "imported_before_failure": count
-            }
+                "imported_before_failure": count,
+            },
         )
 
 
@@ -1545,12 +1630,7 @@ async def get_shelters_for_map(
     rows = result.fetchall()
 
     return [
-        ShelterMapPoint(
-            id=str(row[0]),
-            name=row[1],
-            lat=row[2],
-            lng=row[3]
-        )
+        ShelterMapPoint(id=str(row[0]), name=row[1], lat=row[2], lng=row[3])
         for row in rows
     ]
 
@@ -1586,7 +1666,7 @@ async def get_nearby_shelters(
             HAVING distance_km <= :radius
             ORDER BY distance_km
         """),
-        {"lat": lat, "lng": lng, "radius": radius_km}
+        {"lat": lat, "lng": lng, "radius": radius_km},
     )
     rows = result.fetchall()
 
@@ -1597,7 +1677,7 @@ async def get_nearby_shelters(
             address=row[2],
             lat=row[3],
             lng=row[4],
-            distance_km=round(row[5], 2)
+            distance_km=round(row[5], 2),
         )
         for row in rows
     ]

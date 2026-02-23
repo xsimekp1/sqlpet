@@ -1768,6 +1768,17 @@ class ApiClient {
     return ApiClient.get('/admin/registered-shelters/regions');
   }
 
+  // Organizations (superadmin only)
+  static async getOrganizations(): Promise<{
+    id: string;
+    name: string;
+    region: string | null;
+    member_count: number;
+    admins: { id: string; name: string; email: string }[];
+  }[]> {
+    return ApiClient.get('/admin/organizations');
+  }
+
   static async importRegisteredShelters(file: File): Promise<{
     imported: number;
     skipped?: number;

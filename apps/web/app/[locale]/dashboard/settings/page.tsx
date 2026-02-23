@@ -16,6 +16,7 @@ import {
   Shield,
   Palette,
   Coins,
+  Building2,
 } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -134,6 +135,17 @@ export default function SettingsPage() {
   const [newColorForm, setNewColorForm] = useState({ code: '', cs: '', en: '' });
   const [creatingColor, setCreatingColor] = useState(false);
   const [deletingColor, setDeletingColor] = useState<string | null>(null);
+
+  // Organizations state (superadmin)
+  interface OrganizationAdmin {
+    id: string;
+    name: string;
+    region: string | null;
+    member_count: number;
+    admins: { id: string; name: string; email: string }[];
+  }
+  const [organizations, setOrganizations] = useState<OrganizationAdmin[]>([]);
+  const [isLoadingOrganizations, setIsLoadingOrganizations] = useState(false);
 
   // Members state
   interface MemberListItem { user_id: string; email: string; name: string; role_id?: string | null; role_name?: string | null; status: string }
@@ -375,6 +387,16 @@ export default function SettingsPage() {
     }
   }, []);
 
+  const loadOrganizations = useCallback(async () => {
+    setIsLoadingOrganizations(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/organizations`, { headers: getAuthHeaders() });
+      if (res.ok) setOrganizations(await res.json());
+    } catch { /* ignore */ } finally {
+      setIsLoadingOrganizations(false);
+    }
+  }, []);
+
   const loadMembers = useCallback(async () => {
     setIsLoadingMembers(true);
     try {
@@ -528,6 +550,7 @@ export default function SettingsPage() {
         if (v === 'breeds') loadBreedsAdmin();
         if (v === 'colors') loadColorsAdmin();
         if (v === 'members') loadMembers();
+        if (v === 'organizations') loadOrganizations();
       }}>
         <TabsList>
           <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
@@ -536,6 +559,10 @@ export default function SettingsPage() {
             <>
               <TabsTrigger value="breeds">{t('tabs.breeds')}</TabsTrigger>
               <TabsTrigger value="colors">{t('tabs.colors')}</TabsTrigger>
+              <TabsTrigger value="organizations">
+                <Building2 className="h-4 w-4 mr-1.5" />
+                Organizace
+              </TabsTrigger>
             </>
           )}
           <TabsTrigger value="members">
@@ -1147,6 +1174,54 @@ export default function SettingsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        </TabsContent>
+
+        {/* ── Organizations tab (superadmin) ── */}
+        <TabsContent value="organizations" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Všechny organizace
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingOrganizations ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : organizations.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Žádné organizace</p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {organizations.map((org) => (
+                    <div key={org.id} className="py-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{org.name}</p>
+                          <p className="text-xs text-muted-foreground">{org.region || '—'} • {org.member_count} členů</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">Admini:</p>
+                          {org.admins.length > 0 ? (
+                            <div className="text-sm">
+                              {org.admins.map((admin) => (
+                                <div key={admin.id} className="text-xs">
+                                  {admin.name || admin.email}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ── Members tab ── */}
