@@ -55,114 +55,108 @@ export default function ChangelogPage() {
           </div>
 
           {/* Week 14-20.2. */}
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
               <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 14. – 20. února 2026</span>
             </h2>
-            <ul className="space-y-3">
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🎨 Nová landing page</span>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-6 space-y-4">
+              <div>
+                <span className="font-semibold text-white">🎨 Nová landing page</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Krásná vstupní stránka s galerií našich zvířátek a přehledem funkcí
+                  Vstupní stránka s galerií zvířat a přehledem funkcí.
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">📄 Šablony dokumentů</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">📄 Šablony dokumentů</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Vytvářejte dokumenty ze šablon – adopční smlouvy, protokoly
+                  Vytvářejte dokumenty ze šablon – adopční smlouvy, protokoly.
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🏷️ QR kódy</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🏷️ QR kódy</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Nově odkazují na veřejné profily zvířat – skvělé pro návštěvy
+                  Odkazují na veřejné profily zvířat – skvělé pro návštěvy.
                 </p>
-              </li>
-            </ul>
+              </div>
+            </div>
           </section>
 
           {/* Week 7-13.2. */}
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
               <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 7. – 13. února 2026</span>
             </h2>
-            <ul className="space-y-3">
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🔍 Chytré vyhledávání</span>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-6 space-y-4">
+              <div>
+                <span className="font-semibold text-white">🔍 Chytré vyhledávání</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Hledejte zvířata, lidi, úkoly i funkce – najde i synonyma jako „pes" nebo „pesák"
+                  Hledejte zvířata, lidi, úkoly i funkce – najde i synonyma jako „pes" nebo „pesák".
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🛒 Nákupní objednávky</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🛒 Nákupní objednávky</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Kompletní systém objednávek a sledování dodávek do skladu
+                  Kompletní systém objednávek a sledování dodávek do skladu.
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🔒 GDPR</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🔒 GDPR</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Logy přihlášení, export dat, automatické generování DPA smlouvy
+                  Logy přihlášení, export dat, automatické generování DPA smlouvy.
                 </p>
-              </li>
-            </ul>
+              </div>
+            </div>
           </section>
 
           {/* Starší novinky */}
-          <section className="mb-10">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
               <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 Starší novinky</span>
             </h2>
-            <ul className="space-y-3">
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">💉 Očkovací průkazy</span>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-6 space-y-4">
+              <div>
+                <span className="font-semibold text-white">💉 Očkovací průkazy</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Sledování vakcinací s upozorněním na končící platnost
+                  Sledování vakcinací s upozorněním na končící platnost.
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">⚖️ Legální lhůty</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">⚖️ Legální lhůty</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Automatické výpočty lhůt pro nalezená zvířata (2 a 4 měsíce)
+                  Automatické výpočty lhůt pro nalezená zvířata (2 a 4 měsíce).
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🗺️ Mapa nálezů</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🗺️ Mapa nálezů</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Interaktivní mapa nalezených zvířat s pokročilými filtry
+                  Interaktivní mapa nalezených zvířat s pokročilými filtry.
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🏨 Hotel</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🏨 Hotel</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Rezervace a přehled psů v hotelovém pobytu
+                  Rezervace a přehled psů v hotelovém pobytu.
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">💬 Chat</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">💬 Chat</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Interní messaging pro komunikaci v týmu útulku
+                  Interní messaging pro komunikaci v týmu útulku.
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🎀 Barevné obojky</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🎀 Barevné obojky</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Sledování barvy obojku – skvělé pro velké útulky
+                  Sledování barvy obojku – skvělé pro velké útulky.
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🎨 Témata</span>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🎨 Témata</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  3 barevná schémata: Teal Shelter, Berry Rescue, Safari
+                  3 barevná schémata: Teal Shelter, Berry Rescue, Safari.
                 </p>
-              </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🥚 Easter Egg</span>
-                <p className="text-teal-100 text-sm mt-1">
-                  Překvapení pro ty, kteří objeví všechny funkce 😉🐕
-                </p>
-              </li>
-            </ul>
+              </div>
+            </div>
           </section>
 
           {/* Footer note */}
