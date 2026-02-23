@@ -96,17 +96,17 @@ const categories: FeatureCategory[] = [
     screenshot: '/images/features/verejne-profily.png',
   },
   {
-    title: 'Foster péče',
+    title: 'Dočasná péče',
     emoji: '🤝',
     items: [
-      { text: 'Správa foster rodin' },
+      { text: 'Správa pěstounských rodin' },
       { text: 'Rezervace a timeline obsazenosti' },
-      { text: 'Převod foster → adopce' },
+      { text: 'Převod dočasná → adopce' },
     ],
     screenshot: '/images/features/foster.png',
   },
   {
-    title: 'Nálezy a mapy',
+    title: 'Nálezy',
     emoji: '🗺️',
     items: [
       { text: 'Evidence nálezů s GPS lokací na mapě' },

@@ -6,7 +6,7 @@ const reasons = [
     icon: Flag,
     title: 'Česky a pro ČR',
     description:
-      'Pokrývá českou evidenci nálezů, KVS hlášení a smlouvy v češtině. Navrženo přesně pro legislativní prostředí ČR.',
+      'Pokrývá českou evidenci nálezů, KVS hlášení a smlouvy. Navrženo přesně pro legislativní prostředí ČR.',
   },
   {
     icon: Zap,
@@ -16,7 +16,7 @@ const reasons = [
   },
   {
     icon: Package,
-    title: 'Sklad s lotem',
+    title: 'Sklad se šaržemi',
     description:
       'Šarže, expirace, nákupní seznam a low-stock upozornění. Nikdy více nevyprší léky bez varování.',
   },
