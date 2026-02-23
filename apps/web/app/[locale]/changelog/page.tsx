@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 
 export default function ChangelogPage() {
   return (
-    <div className="min-h-screen bg-teal-900 bg-gradient-to-br from-teal-800 via-teal-600 to-teal-500">
+    <div className="min-h-screen bg-gradient-to-br from-teal-800 via-teal-600 to-teal-500 [&>*]:bg-transparent">
       {/* Decorative blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5" />
@@ -29,7 +29,7 @@ export default function ChangelogPage() {
               />
             </Link>
             <Link href="/cs">
-              <Button variant="outline" className="border-white/60 text-white hover:bg-white/10">
+              <Button variant="outline" className="border-white/60 text-white hover:bg-white/10 bg-transparent">
                 Zpět na úvod
               </Button>
             </Link>
@@ -37,7 +37,7 @@ export default function ChangelogPage() {
         </header>
 
         {/* Content */}
-        <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16">
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16 bg-transparent">
           <div className="text-center mb-12">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
               🐾 Petslog Changelog
