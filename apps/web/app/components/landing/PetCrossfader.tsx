@@ -15,40 +15,30 @@ const images = [
   '/animals/dog_poodle_white.png',
 ];
 
-function PetImage({ 
-  src, 
-  delay, 
-  className = '' 
-}: { 
-  src: string; 
-  delay: number; 
-  className?: string;
-}) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), delay);
-    return () => clearTimeout(timer);
-  }, [delay]);
-
-  if (!isVisible) return null;
-
+function ImageFrame({ src, isActive }: { src: string; isActive: boolean }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.5 }}
-      className={className}
-    >
-      <Image
-        src={src}
-        alt="Zvíře v útulku"
-        width={200}
-        height={200}
-        style={{ objectFit: 'contain' }}
-      />
-    </motion.div>
+    <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 shadow-2xl flex items-center justify-center w-[220px] h-[220px]">
+      <AnimatePresence mode="wait">
+        {isActive && (
+          <motion.div
+            key={src}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <Image
+              src={src}
+              alt="Zvíře v útulku"
+              width={200}
+              height={200}
+              priority
+              style={{ objectFit: 'contain' }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -67,41 +57,17 @@ export function PetCrossfader() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center gap-2 md:gap-4 w-full max-w-2xl mx-auto">
+    <div className="flex items-center justify-center gap-4">
       {/* Mobile: single image */}
-      <div className="md:hidden w-[180px] h-[180px]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={indices[0]}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="w-full h-full flex items-center justify-center"
-          >
-            <Image
-              src={images[indices[0]]}
-              alt="Zvíře v útulku"
-              width={160}
-              height={160}
-              priority
-              style={{ objectFit: 'contain' }}
-            />
-          </motion.div>
-        </AnimatePresence>
+      <div className="md:hidden">
+        <ImageFrame src={images[indices[0]]} isActive={true} />
       </div>
 
-      {/* Desktop: 3 images with staggered animations */}
-      <div className="hidden md:flex items-center justify-center gap-2 w-full max-w-2xl">
-        <div className="w-[180px] h-[180px] flex items-center justify-center">
-          <PetImage src={images[indices[0]]} delay={0} />
-        </div>
-        <div className="w-[180px] h-[180px] flex items-center justify-center -mt-8">
-          <PetImage src={images[indices[1]]} delay={200} />
-        </div>
-        <div className="w-[180px] h-[180px] flex items-center justify-center -mt-16">
-          <PetImage src={images[indices[2]]} delay={400} />
-        </div>
+      {/* Desktop: 3 images in a row with same frame */}
+      <div className="hidden md:flex items-center justify-center gap-4">
+        <ImageFrame src={images[indices[0]]} isActive={true} />
+        <ImageFrame src={images[indices[1]]} isActive={true} />
+        <ImageFrame src={images[indices[2]]} isActive={true} />
       </div>
     </div>
   );
