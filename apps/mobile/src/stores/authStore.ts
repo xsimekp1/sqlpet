@@ -4,6 +4,31 @@ import { authApi } from '../lib/api';
 import { STORAGE_KEYS } from '../constants/config';
 import type { User, MembershipInfo, CurrentUserResponse, TokenResponse } from '../types/auth';
 
+const isWeb = typeof window !== 'undefined' && !window.__REACT_NATIVE_PLATFORM__;
+
+async function getItem(key: string): Promise<string | null> {
+  if (isWeb) {
+    return localStorage.getItem(key);
+  }
+  return SecureStore.getItemAsync(key);
+}
+
+async function setItem(key: string, value: string): Promise<void> {
+  if (isWeb) {
+    localStorage.setItem(key, value);
+  } else {
+    await SecureStore.setItemAsync(key, value);
+  }
+}
+
+async function deleteItem(key: string): Promise<void> {
+  if (isWeb) {
+    localStorage.removeItem(key);
+  } else {
+    await SecureStore.deleteItemAsync(key);
+  }
+}
+
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -29,7 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   hydrate: async () => {
     try {
-      const accessToken = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
+      const accessToken = await getItem(STORAGE_KEYS.ACCESS_TOKEN);
       if (!accessToken) {
         set({ isLoading: false, isAuthenticated: false });
         return;
@@ -44,8 +69,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         selectedOrganizationId: response.memberships[0]?.organization_id || null,
       });
     } catch (error) {
-      await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
-      await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+      await deleteItem(STORAGE_KEYS.ACCESS_TOKEN);
+      await deleteItem(STORAGE_KEYS.REFRESH_TOKEN);
       set({ isLoading: false, isAuthenticated: false });
     }
   },
@@ -55,8 +80,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const tokens: TokenResponse = await authApi.login({ email, password });
 
-      await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, tokens.access_token);
-      await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, tokens.refresh_token);
+      await setItem(STORAGE_KEYS.ACCESS_TOKEN, tokens.access_token);
+      await setItem(STORAGE_KEYS.REFRESH_TOKEN, tokens.refresh_token);
 
       const userResponse: CurrentUserResponse = await authApi.getMe();
 
@@ -80,8 +105,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       // Ignore logout errors
     } finally {
-      await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
-      await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+      await deleteItem(STORAGE_KEYS.ACCESS_TOKEN);
+      await deleteItem(STORAGE_KEYS.REFRESH_TOKEN);
       set({
         isAuthenticated: false,
         user: null,
@@ -97,11 +122,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!user) return;
 
     try {
-      const response = await authApi.refresh(
-        (await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN)) || ''
-      );
-      await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, response.access_token);
-      await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, response.refresh_token);
+      const refreshToken = await getItem(STORAGE_KEYS.REFRESH_TOKEN);
+      const response = await authApi.refresh(refreshToken || '');
+      await setItem(STORAGE_KEYS.ACCESS_TOKEN, response.access_token);
+      await setItem(STORAGE_KEYS.REFRESH_TOKEN, response.refresh_token);
 
       set({ selectedOrganizationId: orgId });
     } catch (error) {
