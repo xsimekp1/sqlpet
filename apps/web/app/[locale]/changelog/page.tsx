@@ -6,9 +6,15 @@ import { Button } from '@/components/ui/button';
 
 export default function ChangelogPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-800 via-teal-600 to-teal-500 [&>*]:bg-transparent">
+    <main 
+      className="min-h-screen"
+      style={{ 
+        background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%)',
+        minHeight: '100vh'
+      }}
+    >
       {/* Decorative blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ background: 'transparent' }}>
         <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5" />
         <div className="absolute top-1/3 -left-24 w-64 h-64 rounded-full bg-white/5" />
         <div className="absolute -bottom-32 right-1/4 w-80 h-80 rounded-full bg-white/5" />
@@ -178,6 +184,6 @@ export default function ChangelogPage() {
           </div>
         </main>
       </div>
-    </div>
+    </main>
   );
 }
