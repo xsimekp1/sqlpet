@@ -10,7 +10,7 @@ const columns = [
     links: [
       { label: 'Funkce', href: '#features' },
       { label: 'Ceník', href: '#pricing' },
-      { label: 'Changelog', href: '#' },
+      { label: 'Changelog', href: '/cs/changelog' },
     ],
   },
   {
