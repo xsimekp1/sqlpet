@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
+import ApiClient from '@/app/lib/api';
 
 const formSchema = z.object({
   email: z
@@ -33,6 +34,7 @@ const formSchema = z.object({
     .min(1, { message: 'login.emailRequired' })
     .email({ message: 'login.emailInvalid' }),
   password: z.string().min(1, { message: 'login.passwordRequired' }),
+  totpCode: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -41,19 +43,34 @@ export default function LoginPage() {
   const t = useTranslations();
   const { login } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [requires2FA, setRequires2FA] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
       password: '',
+      totpCode: '',
     },
   });
 
   const onSubmit = async (data: FormValues) => {
     setIsLoggingIn(true);
     try {
-      await login(data.email, data.password);
+      if (requires2FA) {
+        await login(data.email, data.password, data.totpCode);
+      } else {
+        try {
+          await login(data.email, data.password);
+        } catch (error: any) {
+          if (error.message === '2FA_REQUIRED') {
+            setRequires2FA(true);
+            setIsLoggingIn(false);
+            return;
+          }
+          throw error;
+        }
+      }
     } catch (error) {
       setIsLoggingIn(false);
       const errorMessage = error instanceof Error ? error.message : t('login.error');
@@ -141,14 +158,49 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
+                {requires2FA && (
+                  <FormField
+                    control={form.control}
+                    name="totpCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>2FA kód</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="text"
+                            placeholder="000000"
+                            autoComplete="one-time-code"
+                            maxLength={6}
+                            className="font-mono text-center tracking-widest"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 {form.formState.errors.root && (
                   <div className="text-sm text-red-500">
                     {form.formState.errors.root.message}
                   </div>
                 )}
                 <Button type="submit" className="w-full">
-                  {t('login.submit')}
+                  {requires2FA ? 'Přihlásit se' : t('login.submit')}
                 </Button>
+                {requires2FA && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => {
+                      setRequires2FA(false);
+                      form.setValue('totpCode', '');
+                    }}
+                  >
+                    Zpět k heslu
+                  </Button>
+                )}
               </form>
             </Form>
           </CardContent>

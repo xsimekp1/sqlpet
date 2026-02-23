@@ -20,6 +20,7 @@ export interface User {
   phone: string | null;
   is_superadmin: boolean;
   locale: string;
+  totp_enabled: boolean;
   permissions?: string[];
 }
 
@@ -550,20 +551,28 @@ class ApiClient {
     }
   }
 
-  static async login(email: string, password: string): Promise<LoginResponse> {
+  static async login(email: string, password: string, totpCode?: string): Promise<LoginResponse> {
     try {
-      const response = await axios.post<LoginResponse>(
+      const response = await axios.post<LoginResponse | { require_2fa: boolean; message: string }>(
         `${API_URL}/auth/login`,
-        { email, password },
+        { email, password, totp_code: totpCode },
         { headers: { 'Content-Type': 'application/json' } }
       );
-      return response.data;
+      
+      if ('require_2fa' in response.data && response.data.require_2fa) {
+        throw new Error('2FA_REQUIRED');
+      }
+      
+      return response.data as LoginResponse;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError<ApiError>;
+        if (axiosError.response?.status === 401 && axiosError.response?.data?.detail === 'Invalid 2FA code') {
+          throw new Error('Invalid 2FA code');
+        }
         throw new Error(axiosError.response?.data?.detail || 'Login failed');
       }
-      throw new Error('An unexpected error occurred');
+      throw error;
     }
   }
 

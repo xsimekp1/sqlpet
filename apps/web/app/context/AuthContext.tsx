@@ -114,9 +114,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /**
    * Login with email and password
    */
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, totpCode?: string) => {
     try {
-      const response = await ApiClient.login(email, password);
+      const response = await ApiClient.login(email, password, totpCode);
 
       // Store tokens
       localStorage.setItem('token', response.access_token);

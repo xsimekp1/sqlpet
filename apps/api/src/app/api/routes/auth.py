@@ -25,8 +25,14 @@ from src.app.schemas.auth import (
     UserResponse,
     CurrentUserResponse,
     MembershipInfo,
+    TwoFactorSetupResponse,
+    TwoFactorVerifyRequest,
+    TwoFactorDisableRequest,
+    BackupCodesResponse,
 )
 from src.app.services.auth_service import AuthService
+from src.app.services.two_factor_service import TwoFactorService
+from src.app.core.security import hash_password, verify_password
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +57,10 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest, http_request: Request, db: AsyncSession = Depends(get_db)):
+@router.post("/login")
+async def login(
+    request: LoginRequest, http_request: Request, db: AsyncSession = Depends(get_db)
+):
     ip = http_request.client.host if http_request.client else None
     user_agent = http_request.headers.get("user-agent")
 
@@ -76,7 +84,9 @@ async def login(request: LoginRequest, http_request: Request, db: AsyncSession =
                 failure_reason=None,
             )
         else:
-            failure_reason = "user_not_found" if existing_user is None else "wrong_password"
+            failure_reason = (
+                "user_not_found" if existing_user is None else "wrong_password"
+            )
             log = LoginLog(
                 id=uuid.uuid4(),
                 user_id=existing_user.id if existing_user else None,
@@ -96,6 +106,22 @@ async def login(request: LoginRequest, http_request: Request, db: AsyncSession =
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
+
+    # Check if 2FA is required
+    if user.totp_enabled:
+        if not request.totp_code:
+            return {
+                "require_2fa": True,
+                "message": "Please provide your 2FA code",
+            }
+
+        two_fa_svc = TwoFactorService(db)
+        if not two_fa_svc.verify_code(user.totp_secret or "", request.totp_code):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid 2FA code",
+            )
+
     access_token = create_access_token(
         {"sub": str(user.id), "superadmin": user.is_superadmin}
     )
@@ -285,3 +311,76 @@ async def get_my_permissions(
         permissions = list(all_perms_result.scalars().all())
 
     return {"permissions": permissions}
+
+
+@router.post("/2fa/setup", response_model=TwoFactorSetupResponse)
+async def setup_2fa(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Initiate 2FA setup - returns QR code for authenticator app."""
+    svc = TwoFactorService(db)
+    try:
+        secret, qr_code, provisioning_uri = await svc.initiate_setup(current_user)
+        await db.commit()
+        return TwoFactorSetupResponse(
+            secret=secret,
+            qr_code=qr_code,
+            provisioning_uri=provisioning_uri,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/2fa/verify")
+async def verify_2fa(
+    request: TwoFactorVerifyRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Verify 2FA code and enable 2FA."""
+    svc = TwoFactorService(db)
+    success = await svc.verify_and_enable(current_user, request.code)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification code",
+        )
+    await db.commit()
+    return {"message": "2FA enabled successfully"}
+
+
+@router.post("/2fa/disable")
+async def disable_2fa(
+    request: TwoFactorDisableRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Disable 2FA for current user."""
+    svc = TwoFactorService(db)
+    try:
+        success = await svc.disable(current_user, request.code)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid verification code",
+            )
+        await db.commit()
+        return {"message": "2FA disabled successfully"}
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/2fa/backup-codes", response_model=BackupCodesResponse)
+async def regenerate_backup_codes(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Regenerate backup codes for 2FA."""
+    svc = TwoFactorService(db)
+    try:
+        codes = await svc.regenerate_backup_codes(current_user)
+        await db.commit()
+        return BackupCodesResponse(codes=codes)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

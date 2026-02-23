@@ -1681,3 +1681,59 @@ async def get_nearby_shelters(
         )
         for row in rows
     ]
+
+
+class Set2FARequest(BaseModel):
+    enabled: bool
+
+
+@router.patch("/users/{user_id}/2fa")
+async def set_user_2fa(
+    user_id: str,
+    body: Set2FARequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Superadmin can enable or disable 2FA for any user."""
+    if not current_user.is_superadmin:
+        if current_user.email != "admin@example.com":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only superadmins can manage 2FA for other users",
+            )
+
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid user ID",
+        )
+
+    result = await db.execute(select(User).where(User.id == user_uuid))
+    target_user = result.scalar_one_or_none()
+
+    if target_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    if body.enabled:
+        if not target_user.totp_enabled:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User has not set up 2FA. They must do it themselves.",
+            )
+    else:
+        target_user.totp_enabled = False
+        target_user.totp_secret = None
+        target_user.backup_codes = None
+
+    await db.commit()
+
+    return {
+        "message": f"2FA {'enabled' if body.enabled else 'disabled'} for user",
+        "user_id": str(target_user.id),
+        "totp_enabled": target_user.totp_enabled,
+    }

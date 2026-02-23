@@ -13,6 +13,11 @@ argon2-cffi
 PyJWT
 python-dotenv
 
+# 2FA
+pyotp
+qrcode
+Pillow
+
 pytest
 pytest-asyncio
 httpx

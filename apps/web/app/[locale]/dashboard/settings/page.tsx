@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TwoFASection } from '@/app/components/dashboard/TwoFASection';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -554,6 +555,7 @@ export default function SettingsPage() {
       }}>
         <TabsList>
           <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
+          <TabsTrigger value="security">🔒 2FA</TabsTrigger>
           <TabsTrigger value="defaultImages">{t('tabs.defaultImages')}</TabsTrigger>
           {user?.is_superadmin && (
             <>
@@ -701,6 +703,20 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── Security / 2FA tab ── */}
+        <TabsContent value="security">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                🔒 Dvoufaktorová autentifikace
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <TwoFASection user={user} />
             </CardContent>
           </Card>
         </TabsContent>

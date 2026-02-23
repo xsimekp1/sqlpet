@@ -14,6 +14,7 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+    totp_code: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -33,6 +34,7 @@ class UserResponse(BaseModel):
     name: str
     phone: str | None
     is_superadmin: bool
+    totp_enabled: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -51,3 +53,25 @@ class MembershipInfo(BaseModel):
 class CurrentUserResponse(BaseModel):
     user: UserResponse
     memberships: list[MembershipInfo]
+
+
+class TwoFactorSetupResponse(BaseModel):
+    secret: str
+    qr_code: str
+    provisioning_uri: str
+
+
+class TwoFactorVerifyRequest(BaseModel):
+    code: str = Field(..., min_length=6, max_length=6)
+
+
+class TwoFactorSetupRequest(BaseModel):
+    code: str = Field(..., min_length=6, max_length=6)
+
+
+class TwoFactorDisableRequest(BaseModel):
+    code: str | None = Field(None, min_length=6, max_length=6)
+
+
+class BackupCodesResponse(BaseModel):
+    codes: list[str]
