@@ -175,16 +175,17 @@ export function FeaturesSection() {
                     ))}
                   </ul>
                   
-                  <div className="relative aspect-video lg:aspect-square bg-white/5 rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center">
+                  <div className="relative bg-white/5 rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center overflow-hidden">
                     {cat.screenshot ? (
                       <Image
                         src={cat.screenshot}
                         alt={cat.title}
-                        fill
-                        className="object-cover rounded-xl"
+                        width={800}
+                        height={450}
+                        className="w-full h-auto rounded-xl"
                       />
                     ) : (
-                      <span className="text-teal-300/50 text-sm">
+                      <span className="text-teal-300/50 text-sm py-8">
                         Screenshot – {cat.title}
                       </span>
                     )}
