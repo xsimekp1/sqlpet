@@ -2,13 +2,8 @@
   "name": "sqlpet",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
   "scripts": {
-    "mobile:dev": "pnpm --filter mobile dev",
-    "mobile:ios": "pnpm --filter mobile ios",
-    "mobile:build:ios": "pnpm --filter mobile build:ios",
-    "web:dev": "pnpm --filter web dev"
+    "mobile:dev": "cd apps/mobile && npm run dev",
+    "web:dev": "cd apps/web && npm run dev"
   }
 }
