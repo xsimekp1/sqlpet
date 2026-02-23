@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "PawShelter"
+    "name": "PetsLog"
   },
   "reports": {
     "animalCountTitle": "Animal count in shelter (last 90 days)",
