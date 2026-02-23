@@ -24,9 +24,7 @@
       },
       "package": "com.sqlpet.petslog"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
+    "web": {},
     "plugins": [
       "expo-router",
       "expo-secure-store"
