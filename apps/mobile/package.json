@@ -12,7 +12,6 @@
     "prebuild": "expo prebuild"
   },
   "dependencies": {
-    "@sqlpet/i18n": "*",
     "expo": "~52.0.0",
     "expo-router": "~4.0.0",
     "expo-secure-store": "~14.0.0",

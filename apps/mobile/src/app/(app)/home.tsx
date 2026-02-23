@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } fr
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../stores/authStore';
 import { useQuery } from '@tanstack/react-query';
-import { useTranslations } from '@sqlpet/i18n';
+import { useTranslations } from '../../src/i18n';
 import api from '../../lib/api';
 
 export default function HomeScreen() {

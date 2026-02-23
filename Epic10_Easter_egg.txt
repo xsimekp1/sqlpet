@@ -1,0 +1,212 @@
+EPIC: Easter Egg – „Uhodni psí plemeno“ (Neon Quiz)
+Cíl
+
+Přidat do aplikace skrytý easter egg: po kliknutí na mikro tlačítko (téměř neviditelné) se otevře modal s mini soutěží ve stylu televizního kvízu. Kvíz zobrazí 10 náhodných psích plemen, u každé otázky nabídne 3 možnosti, z nichž 1 je správně. Uživatel tipuje, okamžitě dostane feedback (správná/špatná) s neon barvami. Na konci se ukáže skóre.
+
+UX / UI požadavky
+1) Umístění „secret button“
+
+Zatím neurčeno — připrav implementaci tak, aby se tlačítko dalo snadno přemístit.
+
+Varianta pro MVP:
+
+vytvořit komponentu <EasterEggTrigger />, kterou lze vložit kamkoli (Header, Footer, Settings).
+
+Tlačítko:
+
+extrémně malé (např. 10×10 px), nízká opacity (např. 0.15), bez textu
+
+při hover může decentně změnit opacity, ale pořád „schované“
+
+přístupné i klávesnicí (tab index) – ale pořád vizuálně nenápadné
+
+Po kliknutí otevře modal.
+
+2) Modal: Neon TV Quiz styl (mimo design systém)
+
+Vizuál záměrně „cirkus“:
+
+tmavé pozadí (černá/temně fialová)
+
+neon akcenty (cyan/magenta/lime)
+
+glowy border / text-shadow
+
+animace: krátký „pulse“ při zobrazení otázky a při vyhodnocení odpovědi
+
+Obsah:
+
+Nadpis: „Uhodni plemeno!“
+
+Ukazatel postupu: Otázka 3/10
+
+Skóre průběžně malé v rohu: Skóre: 2
+
+Hlavní karta s otázkou:
+
+text „Jaké je to plemeno?“
+
+pod tím název plemene jako “hidden answer” (NEZOBRAZOVAT), pouze interně
+
+volby: 3 velká tlačítka
+
+3) Chování odpovědí (TV styl)
+
+Po kliknutí na jednu možnost:
+
+zamknout volby (disable), aby nešlo kliknout znovu
+
+okamžitě vyhodnotit:
+
+pokud správně:
+
+kliknuté tlačítko se rozsvítí neon zeleně
+
+krátká animace „WIN“ (pulse / glow)
+
+pokud špatně:
+
+kliknuté tlačítko se rozsvítí neon červeně
+
+zároveň správná odpověď se rozsvítí neon zeleně
+
+po vyhodnocení zobrazit tlačítko „Další“ (nebo auto-advance po ~1.2s, ale raději „Další“ pro kontrolu)
+
+Po 10 otázkách:
+
+obrazovka výsledku: Máš 7/10!
+
+CTA: „Hrát znovu“ (reset), „Zavřít“
+
+Data / logika
+Zdroj plemen
+
+Použít lokální seznam psích plemen (bez API).
+
+Základ: minimálně seznam (může být delší), ze kterého se náhodně vybírá.
+
+Pravidla výběru:
+
+vygeneruj 10 unikátních správných plemen (bez opakování)
+
+pro každou otázku:
+
+správná odpověď = vybrané plemeno
+
+2 špatné odpovědi = náhodně z jiných plemen, nesmí se opakovat v té otázce
+
+zamíchat pořadí 3 možností
+
+Stav
+
+isOpen modal
+
+questions[] (10 položek)
+
+currentIndex
+
+selectedOption
+
+isCorrect
+
+score
+
+locked (po odpovědi)
+
+phase: quiz | result
+
+Persist?
+
+MVP: nic neukládat, jen lokálně v paměti.
+
+Volitelné: uložit best score do localStorage (nice-to-have, není nutné).
+
+Implementační požadavky (kód)
+
+Frontend: Next.js / React v apps/web
+
+UI:
+
+Modal může být Radix/shadcn dialog, ale styl si přepiš custom (neon)
+
+Tlačítka: použij normální <button> nebo shadcn Button ale s custom neon classes
+
+Složky:
+
+apps/web/app/components/easter-egg/BreedQuizModal.tsx
+
+apps/web/app/components/easter-egg/EasterEggTrigger.tsx
+
+apps/web/app/components/easter-egg/breeds.ts (seznam plemen psů)
+
+Integrace:
+
+dočasně vložit trigger třeba do Headeru (např. vedle ikon) nebo do Settings stránky (dole v rohu)
+
+ale komponenta musí být snadno přemístitelná
+
+Styling (konkrétní “neon” návrh)
+
+Použij čistě Tailwind classy + pár helper class (inline) bez zásahu do globálního theme.
+
+Pozadí modalu:
+
+gradient: from-[#05010a] via-[#0b0220] to-[#02010a]
+
+Neon barvy:
+
+neon green: #39FF14
+
+neon red: #FF3131
+
+neon cyan: #00E5FF
+
+neon magenta: #FF00E5
+
+neon yellow: #FFE600
+
+Button base (odpovědi):
+
+tmavý podklad: bg-[#0b0b12]
+
+border: border border-[#2a2a38]
+
+glow on hover: hover:shadow-[0_0_18px_rgba(0,229,255,0.35)] hover:border-[#00E5FF]
+
+Correct state:
+
+bg-[#071a0a] border-[#39FF14] text-[#caffc0] shadow-[0_0_22px_rgba(57,255,20,0.55)]
+
+Wrong state:
+
+bg-[#1a0707] border-[#FF3131] text-[#ffd0d0] shadow-[0_0_22px_rgba(255,49,49,0.55)]
+
+Correct highlight when user answered wrong:
+
+i u jiné volby než kliknuté rozsvítit correct state
+
+Akceptační kritéria
+
+Existuje drobné „secret“ tlačítko, které otevře modal.
+
+Modal spustí kvíz o 10 otázkách, každá má 3 možnosti (1 správně).
+
+Po kliknutí se volby zamknou, barvy se okamžitě změní:
+
+správně = zelená
+
+špatně = červená + správná odpověď zeleně
+
+Uživatel projde 10 otázek a dostane výsledné skóre.
+
+„Hrát znovu“ vygeneruje nový set náhodných otázek.
+
+Žádné API, žádné ukládání do DB, čistě frontend.
+
+Nice-to-have (pokud zbyde čas)
+
+krátké zvukové efekty (správně/špatně) – volitelné, default OFF
+
+keyboard support: 1/2/3 jako volby
+
+“best score” do localStorage

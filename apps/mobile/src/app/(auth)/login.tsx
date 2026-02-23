@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../stores/authStore';
-import { useTranslations } from '@sqlpet/i18n';
+import { useTranslations } from '../../src/i18n';
 
 export default function LoginScreen() {
   const router = useRouter();
