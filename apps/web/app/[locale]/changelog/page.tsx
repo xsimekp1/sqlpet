@@ -54,6 +54,34 @@ export default function ChangelogPage() {
             </p>
           </div>
 
+          {/* Week 21-23.2. */}
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 21. – 23. února 2026</span>
+            </h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-6 space-y-4">
+              <div>
+                <span className="font-semibold text-white">🔑 Dvoufaktorová autentifikace (2FA)</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Volitelná 2FA pomocí Google Authenticator. Záložní kódy pro případ ztráty telefonu. 
+                  Superadmin může spravovat 2FA pro ostatní uživatele.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🛠️ Stránka Funkce</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Přehled všech funkcí systému na samostatné stránce – včetně screenshotů.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🔒 GDPR a bezpečnost</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Data v EU cloudu, info o šifrování a GDPR na nové sekci landing page.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Week 14-20.2. */}
           <section className="mb-12">
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">

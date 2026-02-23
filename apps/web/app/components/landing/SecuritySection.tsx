@@ -38,15 +38,18 @@ export function SecuritySection() {
 
           <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
             <div className="text-2xl mb-3">🔐</div>
-            <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              Šifrování
-              <Badge variant="outline" className="text-xs py-0 px-1.5 border-amber-300 text-amber-600 bg-amber-50">
-                Brzy
-              </Badge>
-            </h3>
+            <h3 className="font-semibold text-gray-900 mb-2">Šifrování</h3>
             <p className="text-sm text-gray-600">
-              Data jsou šifrována jak při přenosu (TLS), tak na disku (AES-256). 
-              Přístup k datům je chráněn dvoufaktorovou autentifikací.
+              Data jsou šifrována jak při přenosu (TLS), tak na disku (AES-256).
+            </p>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+            <div className="text-2xl mb-3">🔑</div>
+            <h3 className="font-semibold text-gray-900 mb-2">Dvoufaktorová autentifikace</h3>
+            <p className="text-sm text-gray-600">
+              Volitelná 2FA pomocí Google Authenticator nebo podobných aplikací. 
+              Záložní kódy pro případ ztráty telefonu.
             </p>
           </div>
 
