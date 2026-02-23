@@ -9,11 +9,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Tech Stack
 
 - **Backend:** Python FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, Argon2 (auth), PyJWT
-- **Frontend (planned):** Next.js 14+ (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Query
+- **Frontend Web:** Next.js 14+ (App Router), TypeScript, Tailwind, shadcn/ui, TanStack Query, Zustand
+- **Frontend Mobile:** Expo (React Native), TypeScript, expo-router, Zustand, TanStack Query
 - **Worker (planned):** Celery + Celery Beat, Redis broker
 - **Database:** PostgreSQL 16+, full-text search + pg_trgm
 - **Storage:** S3-compatible (MinIO in dev)
 - **Infrastructure:** Docker Compose
+
+## IMPORTANT: Feature Development
+
+**When adding new features, always implement for BOTH web AND mobile:**
+
+1. **Backend first** - API endpoints in `/apps/api`
+2. **Shared code** - Types, i18n keys, API clients should be shared
+3. **Web implementation** - Add to `/apps/web`
+4. **Mobile implementation** - Add to `/apps/mobile**
+
+**CRITICAL: When adding ANY feature, always ask the user if it should be implemented for:**
+- Web only
+- Mobile only  
+- Both platforms
+
+If both, implement consistently in both apps. Don't assume - always clarify!
+
+**Key shared components:**
+- i18n translations: Use `@sqlpet/i18n` package or keep translations in sync
+- API client: Share HTTP client logic between web and mobile
+- Types: Share TypeScript interfaces when possible
 
 ## Repository Structure
 
@@ -21,15 +43,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 /apps/api/          → FastAPI backend (Python)
   src/app/
     main.py         → FastAPI app entry point
-    api/routes/     → Route modules (currently: health.py)
+    api/routes/     → Route modules
     core/config.py  → pydantic-settings based config
     db/session.py   → SQLAlchemy engine & session factory
-/apps/web/          → Next.js frontend (planned)
-/apps/worker/       → Celery worker (planned)
-/packages/shared/   → Shared types, i18n keys (planned)
-/infra/             → docker-compose.yml (currently PostgreSQL only)
-/docs/              → Product docs, ADRs (planned)
-/seed/              → Seed data scripts (planned)
+/apps/web/          → Next.js frontend (TypeScript)
+/apps/mobile/       → Expo React Native app (TypeScript)
+/packages/i18n/     → Shared i18n translations (cs, en)
+/infra/             → docker-compose.yml (PostgreSQL)
+/seed/              → Seed data scripts
 ```
 
 ## Commands
