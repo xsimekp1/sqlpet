@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy import func, join, literal_column, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.app.api.dependencies.auth import (
     get_current_organization_id,
@@ -98,7 +99,11 @@ async def list_findings(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(Finding).where(Finding.organization_id == organization_id)
+    q = (
+        select(Finding)
+        .where(Finding.organization_id == organization_id)
+        .options(selectinload(Finding.animal), selectinload(Finding.who_found))
+    )
 
     if animal_id:
         q = q.where(Finding.animal_id == animal_id)
@@ -226,10 +231,12 @@ async def get_finding(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(Finding).where(
+        select(Finding)
+        .where(
             Finding.id == finding_id,
             Finding.organization_id == organization_id,
         )
+        .options(selectinload(Finding.animal), selectinload(Finding.who_found))
     )
     finding = result.scalar_one_or_none()
     if not finding:
