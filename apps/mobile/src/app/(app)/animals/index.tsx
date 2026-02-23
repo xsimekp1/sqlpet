@@ -72,9 +72,9 @@ function AnimalCard({ animal }: { animal: AnimalListItem }) {
           sexOutline ? { borderWidth: 2, borderColor: sexOutline } : null,
         ]}
       >
-        {animal.default_image_url ? (
+        {(animal.thumbnail_url ?? animal.primary_photo_url ?? animal.default_image_url) ? (
           <Image
-            source={{ uri: animal.default_image_url }}
+            source={{ uri: (animal.thumbnail_url ?? animal.primary_photo_url ?? animal.default_image_url)! }}
             style={styles.photo}
             resizeMode="cover"
           />
@@ -109,6 +109,7 @@ function AnimalCard({ animal }: { animal: AnimalListItem }) {
 }
 
 export default function AnimalsScreen() {
+  const router = useRouter();
   const { selectedOrganizationId } = useAuthStore();
 
   const { data, isLoading, isError, refetch, isRefetching } = useQuery({

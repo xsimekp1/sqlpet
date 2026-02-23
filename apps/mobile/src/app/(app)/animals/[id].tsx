@@ -9,10 +9,51 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useAuthStore } from '../../../stores/authStore';
 import api from '../../../lib/api';
 import type { Animal, AnimalStatus, AnimalSex, AnimalSpecies } from '../../../types/animals';
+
+const COLOR_LABELS: Record<string, string> = {
+  black:          'Černá',
+  white:          'Bílá',
+  brown:          'Hnědá',
+  golden:         'Zlatá',
+  grey:           'Šedá',
+  gray:           'Šedá',
+  tan:            'Světle hnědá',
+  fawn:           'Plavá',
+  blue:           'Modrá',
+  'black-tan-white': 'Trikolora',
+  black_tan_white:   'Trikolora',
+  'black-white':  'Černobílá',
+  black_white:    'Černobílá',
+  'blue-tan':     'Modroohnivá',
+  blue_tan:       'Modroohnivá',
+  red:            'Rezavá',
+  cream:          'Krémová',
+  brindle:        'Pruhovaná',
+  orange:         'Oranžová',
+  tabby:          'Tygrovitý',
+};
+
+function formatIntakeDate(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  const d = date.getDate();
+  const m = date.getMonth() + 1;
+  const y = date.getFullYear();
+  const dateLabel = `${d}. ${m}. ${y}`;
+  if (diffDays < 60) {
+    const label = diffDays === 1 ? 'den' : diffDays < 5 ? 'dny' : 'dní';
+    return `${dateLabel} (${diffDays} ${label})`;
+  }
+  const months = Math.round(diffDays / 30);
+  const label = months === 1 ? 'měsíc' : months < 5 ? 'měsíce' : 'měsíců';
+  return `${dateLabel} (${months} ${label})`;
+}
 
 const STATUS_CONFIG: Record<AnimalStatus, { bg: string; text: string; label: string }> = {
   available:          { bg: '#DCFCE7', text: '#166534', label: 'K adopci' },
@@ -238,9 +279,9 @@ export default function AnimalDetailScreen() {
             {animal.public_code && (
               <InfoRow label="Kód" value={`#${animal.public_code}`} />
             )}
-            <InfoRow label="Barva" value={animal.color} />
+            <InfoRow label="Barva" value={animal.color ? (COLOR_LABELS[animal.color] ?? animal.color) : null} />
             <InfoRow label="Srst" value={animal.coat} />
-            <InfoRow label="Velikost" value={animal.size_estimated} />
+            <InfoRow label="V útulku od" value={formatIntakeDate(animal.current_intake_date)} />
             {animal.description && (
               <View style={styles.descriptionContainer}>
                 <Text style={styles.infoLabel}>Popis</Text>
@@ -287,10 +328,25 @@ export default function AnimalDetailScreen() {
         {animal.current_kennel_name && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Umístění</Text>
-            <View style={styles.card}>
-              <InfoRow label="Box" value={animal.current_kennel_name} />
-              <InfoRow label="Kód boxu" value={animal.current_kennel_code} />
-            </View>
+            <TouchableOpacity
+              style={styles.card}
+              activeOpacity={animal.current_kennel_id ? 0.75 : 1}
+              onPress={() => {
+                if (animal.current_kennel_id) {
+                  router.push(`/kennels/${animal.current_kennel_id}`);
+                }
+              }}
+            >
+              <View style={styles.kennelLinkRow}>
+                <View style={styles.kennelLinkInfo}>
+                  <InfoRow label="Box" value={animal.current_kennel_name} />
+                  <InfoRow label="Kód boxu" value={animal.current_kennel_code} />
+                </View>
+                {animal.current_kennel_id && (
+                  <ChevronRight size={18} color="#9CA3AF" />
+                )}
+              </View>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -535,5 +591,12 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 40,
+  },
+  kennelLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  kennelLinkInfo: {
+    flex: 1,
   },
 });

@@ -90,6 +90,7 @@ export const authApi = {
   login: async (data: LoginRequest): Promise<TokenResponse> => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Login failed');
@@ -99,6 +100,7 @@ export const authApi = {
   refresh: async (refreshToken: string): Promise<TokenResponse> => {
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
     if (!response.ok) throw new Error('Refresh failed');
@@ -116,35 +118,67 @@ export const authApi = {
   },
 };
 
+export interface BreedOption {
+  id: string;
+  name: string;
+  species: string;
+}
+
+export interface BreedColorImage {
+  color: string;
+  image_url: string;
+}
+
 const api = {
-  get: async <T>(url: string): Promise<T> => {
-    const response = await fetchWithAuth(url);
+  get: async <T>(url: string, headers?: Record<string, string>): Promise<T> => {
+    const response = await fetchWithAuth(url, headers ? { headers } : {});
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
     return response.json();
   },
 
-  post: async <T>(url: string, data?: unknown): Promise<T> => {
+  post: async <T>(url: string, data?: unknown, headers?: Record<string, string>): Promise<T> => {
     const response = await fetchWithAuth(url, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
+      headers,
     });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
     return response.json();
   },
 
-  put: async <T>(url: string, data?: unknown): Promise<T> => {
+  put: async <T>(url: string, data?: unknown, headers?: Record<string, string>): Promise<T> => {
     const response = await fetchWithAuth(url, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
+      headers,
     });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
     return response.json();
   },
 
-  delete: async <T>(url: string): Promise<T> => {
-    const response = await fetchWithAuth(url, { method: 'DELETE' });
+  delete: async <T>(url: string, headers?: Record<string, string>): Promise<T> => {
+    const response = await fetchWithAuth(url, { method: 'DELETE', headers });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
     return response.json();
+  },
+
+  getBreeds: async (species: string, orgId: string): Promise<BreedOption[]> => {
+    const response = await fetchWithAuth(`/breeds?species=${species}&page_size=200`, {
+      headers: { 'x-organization-id': orgId },
+    });
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    const data = await response.json();
+    // API may return paginated { items: [...] } or plain array
+    return Array.isArray(data) ? data : (data.items ?? []);
+  },
+
+  getBreedColorImages: async (breedId: string, orgId: string): Promise<BreedColorImage[]> => {
+    const response = await fetchWithAuth(`/breeds/${breedId}/color-images`, {
+      headers: { 'x-organization-id': orgId },
+    });
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.items ?? []);
   },
 };
 

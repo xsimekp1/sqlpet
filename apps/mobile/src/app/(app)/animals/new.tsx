@@ -8,20 +8,22 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Image,
 } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../../stores/authStore';
 import api from '../../../lib/api';
 import type { Animal, AnimalSpecies, AnimalSex } from '../../../types/animals';
+import type { BreedOption, BreedColorImage } from '../../../lib/api';
 
 const SPECIES_OPTIONS: { value: AnimalSpecies; label: string; emoji: string }[] = [
-  { value: 'dog',    label: 'Pes',    emoji: '🐕' },
-  { value: 'cat',    label: 'Kočka',  emoji: '🐈' },
+  { value: 'dog',    label: 'Pes',      emoji: '🐕' },
+  { value: 'cat',    label: 'Kočka',    emoji: '🐈' },
   { value: 'rodent', label: 'Hlodavec', emoji: '🐹' },
-  { value: 'bird',   label: 'Pták',   emoji: '🐦' },
-  { value: 'other',  label: 'Jiné',   emoji: '🐾' },
+  { value: 'bird',   label: 'Pták',     emoji: '🐦' },
+  { value: 'other',  label: 'Jiné',     emoji: '🐾' },
 ];
 
 const SEX_OPTIONS: { value: AnimalSex; label: string }[] = [
@@ -29,6 +31,29 @@ const SEX_OPTIONS: { value: AnimalSex; label: string }[] = [
   { value: 'female',  label: 'Samice' },
   { value: 'unknown', label: 'Neznámé' },
 ];
+
+const COLOR_LABELS: Record<string, string> = {
+  black:           'Černá',
+  white:           'Bílá',
+  brown:           'Hnědá',
+  golden:          'Zlatá',
+  grey:            'Šedá',
+  gray:            'Šedá',
+  tan:             'Světle hnědá',
+  fawn:            'Plavá',
+  blue:            'Modrá',
+  'black-tan-white': 'Trikolora',
+  black_tan_white: 'Trikolora',
+  'black-white':   'Černobílá',
+  black_white:     'Černobílá',
+  'blue-tan':      'Modroohnivá',
+  blue_tan:        'Modroohnivá',
+  red:             'Rezavá',
+  cream:           'Krémová',
+  brindle:         'Pruhovaná',
+  orange:          'Oranžová',
+  tabby:           'Tygrovitý',
+};
 
 export default function NewAnimalScreen() {
   const router = useRouter();
@@ -38,18 +63,57 @@ export default function NewAnimalScreen() {
   const [name, setName] = useState('');
   const [species, setSpecies] = useState<AnimalSpecies | null>(null);
   const [sex, setSex] = useState<AnimalSex | null>(null);
+  const [selectedBreedId, setSelectedBreedId] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch breeds when species is selected
+  const { data: breeds, isFetching: isLoadingBreeds } = useQuery<BreedOption[]>({
+    queryKey: ['breeds', species, selectedOrganizationId],
+    queryFn: () => api.getBreeds(species!, selectedOrganizationId!),
+    enabled: !!species && !!selectedOrganizationId,
+  });
+
+  // Fetch color images when breed is selected
+  const { data: colorImages, isFetching: isLoadingColors } = useQuery<BreedColorImage[]>({
+    queryKey: ['breed-colors', selectedBreedId, selectedOrganizationId],
+    queryFn: () => api.getBreedColorImages(selectedBreedId!, selectedOrganizationId!),
+    enabled: !!selectedBreedId && !!selectedOrganizationId,
+  });
+
+  const previewImageUrl = colorImages?.find((ci) => ci.color === selectedColor)?.image_url ?? null;
+  const selectedBreedName = breeds?.find((b) => b.id === selectedBreedId)?.name ?? null;
+
   const canSubmit = name.trim().length > 0 && species !== null && sex !== null;
+
+  const handleSpeciesChange = (newSpecies: AnimalSpecies) => {
+    setSpecies(newSpecies);
+    setSelectedBreedId(null);
+    setSelectedColor(null);
+  };
+
+  const handleBreedChange = (breedId: string) => {
+    setSelectedBreedId(breedId);
+    setSelectedColor(null);
+  };
 
   const handleSubmit = async () => {
     if (!canSubmit || !selectedOrganizationId) return;
 
     setIsSubmitting(true);
     try {
+      const body: Record<string, unknown> = {
+        name: name.trim(),
+        species,
+        sex,
+        status: 'registered',
+      };
+      if (selectedBreedId) body.breed_id = selectedBreedId;
+      if (selectedColor) body.color = selectedColor;
+
       const newAnimal = await api.post<Animal>(
         '/animals',
-        { name: name.trim(), species, sex, status: 'registered' },
+        body,
         { 'x-organization-id': selectedOrganizationId }
       );
       queryClient.invalidateQueries({ queryKey: ['animals'] });
@@ -73,6 +137,20 @@ export default function NewAnimalScreen() {
       </View>
 
       <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
+        {/* Preview image */}
+        {previewImageUrl && (
+          <View style={styles.previewContainer}>
+            <Image
+              source={{ uri: previewImageUrl }}
+              style={styles.previewImage}
+              resizeMode="cover"
+            />
+            <Text style={styles.previewCaption}>
+              {selectedBreedName ?? ''}{selectedColor ? ` · ${COLOR_LABELS[selectedColor] ?? selectedColor}` : ''}
+            </Text>
+          </View>
+        )}
+
         {/* Name */}
         <Text style={styles.label}>Jméno *</Text>
         <TextInput
@@ -92,7 +170,7 @@ export default function NewAnimalScreen() {
             <TouchableOpacity
               key={opt.value}
               style={[styles.optionButton, species === opt.value && styles.optionButtonActive]}
-              onPress={() => setSpecies(opt.value)}
+              onPress={() => handleSpeciesChange(opt.value)}
               activeOpacity={0.75}
             >
               <Text style={styles.optionEmoji}>{opt.emoji}</Text>
@@ -119,6 +197,82 @@ export default function NewAnimalScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Breeds — shown after species selection */}
+        {species && (
+          <>
+            <Text style={styles.label}>
+              Plemeno{' '}
+              {isLoadingBreeds && <ActivityIndicator size="small" color="#6B4EFF" />}
+            </Text>
+            {breeds && breeds.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chipsRow}
+              >
+                {breeds.map((breed) => (
+                  <TouchableOpacity
+                    key={breed.id}
+                    style={[
+                      styles.chip,
+                      selectedBreedId === breed.id && styles.chipActive,
+                    ]}
+                    onPress={() => handleBreedChange(breed.id)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[
+                      styles.chipLabel,
+                      selectedBreedId === breed.id && styles.chipLabelActive,
+                    ]}>
+                      {breed.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : !isLoadingBreeds ? (
+              <Text style={styles.emptyHint}>Žádná plemena pro tento druh</Text>
+            ) : null}
+          </>
+        )}
+
+        {/* Colors — shown after breed selection */}
+        {selectedBreedId && (
+          <>
+            <Text style={styles.label}>
+              Barva{' '}
+              {isLoadingColors && <ActivityIndicator size="small" color="#6B4EFF" />}
+            </Text>
+            {colorImages && colorImages.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chipsRow}
+              >
+                {colorImages.map((ci) => (
+                  <TouchableOpacity
+                    key={ci.color}
+                    style={[
+                      styles.chip,
+                      selectedColor === ci.color && styles.chipActive,
+                    ]}
+                    onPress={() => setSelectedColor(ci.color)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[
+                      styles.chipLabel,
+                      selectedColor === ci.color && styles.chipLabelActive,
+                    ]}>
+                      {COLOR_LABELS[ci.color] ?? ci.color}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : !isLoadingColors ? (
+              <Text style={styles.emptyHint}>Žádné barvy pro toto plemeno</Text>
+            ) : null}
+          </>
+        )}
 
         <Text style={styles.hint}>* Povinná pole. Ostatní údaje lze doplnit v detailu.</Text>
       </ScrollView>
@@ -182,6 +336,23 @@ const styles = StyleSheet.create({
   formContent: {
     padding: 20,
     paddingBottom: 40,
+  },
+  previewContainer: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 16,
+    backgroundColor: '#EDE9FE',
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+  },
+  previewCaption: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    paddingVertical: 8,
+    fontWeight: '500',
   },
   label: {
     fontSize: 13,
@@ -248,6 +419,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#374151',
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingBottom: 4,
+  },
+  chip: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  chipActive: {
+    borderColor: '#6B4EFF',
+    backgroundColor: '#EDE9FE',
+  },
+  chipLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  chipLabelActive: {
+    color: '#6B4EFF',
+  },
+  emptyHint: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    fontStyle: 'italic',
   },
   hint: {
     marginTop: 24,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Animated,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../stores/authStore';
@@ -21,16 +23,75 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // Animation values — mirrors the web login animation
+  const logoScale = useRef(new Animated.Value(1)).current;
+  const logoTranslateY = useRef(new Animated.Value(0)).current;
+  const formOpacity = useRef(new Animated.Value(1)).current;
+  const formTranslateY = useRef(new Animated.Value(0)).current;
+
+  const animateIn = () => {
+    Animated.parallel([
+      Animated.timing(logoScale, {
+        toValue: 1.35,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoTranslateY, {
+        toValue: 80,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formOpacity, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formTranslateY, {
+        toValue: 12,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const animateOut = () => {
+    Animated.parallel([
+      Animated.timing(logoScale, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoTranslateY, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formOpacity, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formTranslateY, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert(t('common.error'), t('login.emailRequired'));
       return;
     }
 
+    animateIn();
+
     try {
       await login(email.trim(), password);
       router.replace('/(app)/home');
     } catch (err: any) {
+      animateOut();
       Alert.alert(t('login.title'), err.message || t('login.error'));
     }
   };
@@ -41,13 +102,36 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>🐾</Text>
-          <Text style={styles.title}>{t('app.name')}</Text>
-          <Text style={styles.subtitle}>ÚtulekOS</Text>
-        </View>
+        {/* Logo — animates to center on login */}
+        <Animated.View
+          style={[
+            styles.logoContainer,
+            {
+              transform: [
+                { scale: logoScale },
+                { translateY: logoTranslateY },
+              ],
+            },
+          ]}
+        >
+          <Image
+            source={require('../../../assets/petslog.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </Animated.View>
 
-        <View style={styles.form}>
+        {/* Form — fades out on login */}
+        <Animated.View
+          style={[
+            styles.form,
+            {
+              opacity: formOpacity,
+              transform: [{ translateY: formTranslateY }],
+            },
+          ]}
+          pointerEvents={isLoading ? 'none' : 'box-none'}
+        >
           <View style={styles.inputGroup}>
             <Text style={styles.label}>{t('login.email')}</Text>
             <TextInput
@@ -99,7 +183,7 @@ export default function LoginScreen() {
               <Text style={styles.buttonText}>{t('login.submit')}</Text>
             )}
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         <Text style={styles.version}>v1.0.0</Text>
       </View>
@@ -119,21 +203,11 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 40,
   },
-  logoText: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1A1A2E',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+  logo: {
+    width: 320,
+    height: 120,
   },
   form: {
     width: '100%',
