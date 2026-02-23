@@ -78,11 +78,9 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.25, ease: 'easeOut' }}
-          className="mt-16 mx-auto max-w-xs"
+          className="mt-16 mx-auto max-w-2xl"
         >
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 shadow-2xl flex items-center justify-center">
-            <PetCrossfader />
-          </div>
+          <PetCrossfader />
         </motion.div>
       </div>
 

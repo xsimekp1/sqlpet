@@ -15,44 +15,57 @@ const images = [
   '/animals/dog_poodle_white.png',
 ];
 
-function ImageFrame({ src, isActive }: { src: string; isActive: boolean }) {
+function ImageFrame({ 
+  src, 
+  delay 
+}: { 
+  src: string; 
+  delay: number;
+}) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), delay);
+    return () => clearTimeout(timer);
+  }, [delay]);
+
+  if (!isVisible) {
+    return (
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 shadow-2xl flex items-center justify-center w-[220px] h-[220px]" />
+    );
+  }
+
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 shadow-2xl flex items-center justify-center w-[220px] h-[220px]">
       <AnimatePresence mode="wait">
-        {isActive && (
-          <motion.div
-            key={src}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Image
-              src={src}
-              alt="Zvíře v útulku"
-              width={200}
-              height={200}
-              priority
-              style={{ objectFit: 'contain' }}
-            />
-          </motion.div>
-        )}
+        <motion.div
+          key={src}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <Image
+            src={src}
+            alt="Zvíře v útulku"
+            width={200}
+            height={200}
+            priority
+            style={{ objectFit: 'contain' }}
+          />
+        </motion.div>
       </AnimatePresence>
     </div>
   );
 }
 
 export function PetCrossfader() {
-  const [indices, setIndices] = useState([0, 1, 2]);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setIndices(prev => [
-        (prev[0] + 1) % images.length,
-        (prev[1] + 1) % images.length,
-        (prev[2] + 1) % images.length,
-      ]);
-    }, 2500);
+      setIndex(prev => (prev + 1) % images.length);
+    }, 3000);
     return () => clearInterval(timer);
   }, []);
 
@@ -60,14 +73,14 @@ export function PetCrossfader() {
     <div className="flex items-center justify-center gap-4">
       {/* Mobile: single image */}
       <div className="md:hidden">
-        <ImageFrame src={images[indices[0]]} isActive={true} />
+        <ImageFrame src={images[index]} delay={0} />
       </div>
 
-      {/* Desktop: 3 images in a row with same frame */}
+      {/* Desktop: 3 images in a row, staggered changes */}
       <div className="hidden md:flex items-center justify-center gap-4">
-        <ImageFrame src={images[indices[0]]} isActive={true} />
-        <ImageFrame src={images[indices[1]]} isActive={true} />
-        <ImageFrame src={images[indices[2]]} isActive={true} />
+        <ImageFrame src={images[index]} delay={0} />
+        <ImageFrame src={images[(index + 1) % images.length]} delay={800} />
+        <ImageFrame src={images[(index + 2) % images.length]} delay={1600} />
       </div>
     </div>
   );
