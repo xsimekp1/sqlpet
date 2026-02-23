@@ -23,7 +23,7 @@ const faqs = [
   },
   {
     q: 'Kde jsou data uložena?',
-    a: 'Na bezpečném cloudu (PostgreSQL na Railway.app). Data jsou vaše — kdykoliv je exportujete. Neprodáváme je třetím stranám.',
+    a: 'Data jsou uložena v cloudu v EU (AWS/Google Cloud region Frankfurt). Díky tomu splňujeme GDPR bez nutnosti speciálních smluv — ukládáte-li osobní data občanů EU, cloud v EU je sám o sobě dostatečný z právního hlediska.',
   },
   {
     q: 'Lze data exportovat?',
