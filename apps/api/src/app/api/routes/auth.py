@@ -1,5 +1,6 @@
+import logging
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +16,7 @@ from src.app.models.user import User
 from src.app.models.organization import Organization
 from src.app.models.role import Role
 from src.app.models.membership import Membership, MembershipStatus
+from src.app.models.login_log import LoginLog
 from src.app.schemas.auth import (
     RegisterRequest,
     LoginRequest,
@@ -25,6 +27,8 @@ from src.app.schemas.auth import (
     MembershipInfo,
 )
 from src.app.services.auth_service import AuthService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -48,9 +52,45 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(request: LoginRequest, http_request: Request, db: AsyncSession = Depends(get_db)):
+    ip = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+
+    # Look up user by email to determine failure reason for login log
+    result = await db.execute(select(User).where(User.email == request.email))
+    existing_user = result.scalar_one_or_none()
+
     svc = AuthService(db)
     user = await svc.authenticate_user(request.email, request.password)
+
+    # Write login log (non-blocking — never break login flow on log failure)
+    try:
+        if user is not None:
+            log = LoginLog(
+                id=uuid.uuid4(),
+                user_id=user.id,
+                email=request.email,
+                ip=ip,
+                user_agent=user_agent,
+                success=True,
+                failure_reason=None,
+            )
+        else:
+            failure_reason = "user_not_found" if existing_user is None else "wrong_password"
+            log = LoginLog(
+                id=uuid.uuid4(),
+                user_id=existing_user.id if existing_user else None,
+                email=request.email,
+                ip=ip,
+                user_agent=user_agent,
+                success=False,
+                failure_reason=failure_reason,
+            )
+        db.add(log)
+        await db.flush()
+    except Exception as e:
+        logger.warning(f"Failed to write login log: {e}")
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

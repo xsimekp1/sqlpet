@@ -60,6 +60,7 @@ from src.app.models.incident import AnimalIncident
 from src.app.models.purchase_order import PurchaseOrder, PurchaseOrderItem
 from src.app.models.animal_passport import AnimalPassport, AnimalPassportDocument
 from src.app.models.document_template import DocumentTemplate, DocumentInstance, DocumentStatus
+from src.app.models.login_log import LoginLog
 
 __all__ = [
     "Base",
@@ -131,4 +132,5 @@ __all__ = [
     "DocumentTemplate",
     "DocumentInstance",
     "DocumentStatus",
+    "LoginLog",
 ]
