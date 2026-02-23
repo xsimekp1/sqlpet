@@ -4,12 +4,12 @@
     "slug": "petslog",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./apps/mobile/assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "petslog",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./apps/mobile/assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#6B4EFF"
     },
@@ -19,7 +19,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./apps/mobile/assets/adaptive-icon.png",
         "backgroundColor": "#6B4EFF"
       },
       "package": "com.sqlpet.petslog"
