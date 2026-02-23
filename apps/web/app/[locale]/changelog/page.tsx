@@ -6,11 +6,16 @@ import { Button } from '@/components/ui/button';
 
 export default function ChangelogPage() {
   return (
-    <main 
-      className="min-h-screen"
+    <div 
       style={{ 
         background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%)',
-        minHeight: '100vh'
+        minHeight: '100vh',
+        width: '100%',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
       }}
     >
       {/* Decorative blobs */}
@@ -20,7 +25,7 @@ export default function ChangelogPage() {
         <div className="absolute -bottom-32 right-1/4 w-80 h-80 rounded-full bg-white/5" />
       </div>
 
-      <div className="relative z-10">
+      <div className="relative z-10" style={{ position: 'relative', zIndex: 10 }}>
         {/* Header */}
         <header className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex items-center justify-between">
@@ -43,7 +48,7 @@ export default function ChangelogPage() {
         </header>
 
         {/* Content */}
-        <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-16 bg-transparent">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-16" style={{ background: 'transparent' }}>
           <div className="text-center mb-12">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
               🐾 Petslog Changelog
@@ -182,8 +187,8 @@ export default function ChangelogPage() {
               Changelog vychází každý pátek večer 🚀
             </p>
           </div>
-        </main>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
