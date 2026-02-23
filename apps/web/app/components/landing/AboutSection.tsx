@@ -22,7 +22,7 @@ export function AboutSection() {
               </p>
               <p>
                 Jsme malý tým z Česka. Budujeme to, co bychom tehdy sami
-                potřebovali.
+                potřebovali. Vede nás Pavel.
               </p>
             </div>
           </div>
