@@ -15,38 +15,41 @@ const images = [
   '/animals/dog_poodle_white.png',
 ];
 
-function ImageFrame({ 
-  src, 
-  delay 
+function StaggeredImage({ 
+  changeInterval,
+  offset,
 }: { 
-  src: string; 
-  delay: number;
+  changeInterval: number;
+  offset: number;
 }) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [index, setIndex] = useState(offset % images.length);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), delay);
-    return () => clearTimeout(timer);
-  }, [delay]);
+    const initialDelay = setTimeout(() => setIsReady(true), offset);
+    return () => clearTimeout(initialDelay);
+  }, [offset]);
 
-  if (!isVisible) {
-    return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 shadow-2xl flex items-center justify-center w-[220px] h-[220px]" />
-    );
-  }
+  useEffect(() => {
+    if (!isReady) return;
+    const timer = setInterval(() => {
+      setIndex(prev => (prev + 1) % images.length);
+    }, changeInterval);
+    return () => clearInterval(timer);
+  }, [changeInterval, isReady]);
 
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 shadow-2xl flex items-center justify-center w-[220px] h-[220px]">
       <AnimatePresence mode="wait">
         <motion.div
-          key={src}
+          key={index}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
         >
           <Image
-            src={src}
+            src={images[index]}
             alt="Zvíře v útulku"
             width={200}
             height={200}
@@ -60,27 +63,18 @@ function ImageFrame({
 }
 
 export function PetCrossfader() {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex(prev => (prev + 1) % images.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <div className="flex items-center justify-center gap-4">
       {/* Mobile: single image */}
       <div className="md:hidden">
-        <ImageFrame src={images[index]} delay={0} />
+        <StaggeredImage changeInterval={3000} offset={0} />
       </div>
 
       {/* Desktop: 3 images in a row, staggered changes */}
       <div className="hidden md:flex items-center justify-center gap-4">
-        <ImageFrame src={images[index]} delay={0} />
-        <ImageFrame src={images[(index + 1) % images.length]} delay={800} />
-        <ImageFrame src={images[(index + 2) % images.length]} delay={1600} />
+        <StaggeredImage changeInterval={3000} offset={0} />
+        <StaggeredImage changeInterval={3000} offset={1} />
+        <StaggeredImage changeInterval={3000} offset={2} />
       </div>
     </div>
   );
