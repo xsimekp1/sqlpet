@@ -60,6 +60,7 @@ export function WeatherWidget() {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [showDay, setShowDay] = useState(true)
+  const [isAnimating, setIsAnimating] = useState(false)
 
   const orgId = selectedOrg?.id || 'default'
   const fallbackLat = 50.0875
@@ -72,8 +73,12 @@ export function WeatherWidget() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setShowDay(prev => !prev)
-    }, 3000)
+      setIsAnimating(true)
+      setTimeout(() => {
+        setShowDay(prev => !prev)
+        setIsAnimating(false)
+      }, 400)
+    }, 5000)
     return () => clearInterval(interval)
   }, [])
 
@@ -184,7 +189,11 @@ export function WeatherWidget() {
           <div className="w-10 h-4 bg-slate-600 rounded" />
         </div>
       ) : (
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 transition-all duration-400 ease-in-out ${
+          isAnimating 
+            ? '-translate-y-2 opacity-0' 
+            : 'translate-y-0 opacity-100'
+        }`}>
           <div className="relative">
             <Icon className="w-5 h-5 text-yellow-400" />
             <div className="absolute -bottom-1 -right-1">
