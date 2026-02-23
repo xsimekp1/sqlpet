@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
 export default function ChangelogPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-800 via-teal-600 to-teal-500">
+    <div className="min-h-screen bg-teal-900 bg-gradient-to-br from-teal-800 via-teal-600 to-teal-500">
       {/* Decorative blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5" />
@@ -18,7 +19,14 @@ export default function ChangelogPage() {
         <header className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex items-center justify-between">
             <Link href="/cs" className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-white">🐾 Petslog</span>
+              <Image
+                src="/petslog.png"
+                alt="Petslog"
+                width={140}
+                height={93}
+                className="drop-shadow-md"
+                priority
+              />
             </Link>
             <Link href="/cs">
               <Button variant="outline" className="border-white/60 text-white hover:bg-white/10">
