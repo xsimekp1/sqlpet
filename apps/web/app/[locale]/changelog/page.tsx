@@ -7,15 +7,11 @@ import { Button } from '@/components/ui/button';
 export default function ChangelogPage() {
   return (
     <div 
+      className="changelog-page"
       style={{ 
         background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%)',
         minHeight: '100vh',
         width: '100%',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0
       }}
     >
       {/* Decorative blobs */}
@@ -58,10 +54,10 @@ export default function ChangelogPage() {
             </p>
           </div>
 
-          {/* Week 20.2. */}
+          {/* Week 14-20.2. */}
           <section className="mb-10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 20. února 2026</span>
+              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 14. – 20. února 2026</span>
             </h2>
             <ul className="space-y-3">
               <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
@@ -71,9 +67,9 @@ export default function ChangelogPage() {
                 </p>
               </li>
               <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">📱 Lepší mobilní menu</span>
+                <span className="font-semibold text-white block">📄 Šablony dokumentů</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Přehledný hamburger s překryvem, odstraněna spodní navigace
+                  Vytvářejte dokumenty ze šablon – adopční smlouvy, protokoly
                 </p>
               </li>
               <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
@@ -82,25 +78,19 @@ export default function ChangelogPage() {
                   Nově odkazují na veřejné profily zvířat – skvělé pro návštěvy
                 </p>
               </li>
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">🏢 Správa organizací</span>
-                <p className="text-teal-100 text-sm mt-1">
-                  Superadmin může spravovat všechny útulky na jednom místě
-                </p>
-              </li>
             </ul>
           </section>
 
-          {/* Week 13.2. */}
+          {/* Week 7-13.2. */}
           <section className="mb-10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 13. února 2026</span>
+              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 7. – 13. února 2026</span>
             </h2>
             <ul className="space-y-3">
               <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
                 <span className="font-semibold text-white block">🔍 Chytré vyhledávání</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Hledá i synonyma – např. „pes" najde i „pesáka"
+                  Hledejte zvířata, lidi, úkoly i funkce – najde i synonyma jako „pes" nebo „pesák"
                 </p>
               </li>
               <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
@@ -124,12 +114,6 @@ export default function ChangelogPage() {
               <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 Starší novinky</span>
             </h2>
             <ul className="space-y-3">
-              <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-                <span className="font-semibold text-white block">📄 Šablony dokumentů</span>
-                <p className="text-teal-100 text-sm mt-1">
-                  Vytvářejte dokumenty ze šablon – adopční smlouvy, protokoly
-                </p>
-              </li>
               <li className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
                 <span className="font-semibold text-white block">💉 Očkovací průkazy</span>
                 <p className="text-teal-100 text-sm mt-1">

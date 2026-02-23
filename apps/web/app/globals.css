@@ -273,13 +273,22 @@
   }
   
   /* Apply theme gradient to main content area */
-  [data-theme="teal"] main {
+  [data-theme="teal"] main:not(.changelog) {
     background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
     min-height: 100vh;
   }
   [data-theme="berry"] main {
     background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
     min-height: 100vh;
+  }
+
+  /* Changelog page - full gradient */
+  .changelog main {
+    background: transparent !important;
+    min-height: auto;
+  }
+  .changelog-page {
+    background: linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%) !important;
   }
 
   /* Subtle card elevation on light gray background */
