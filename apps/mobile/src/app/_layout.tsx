@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -17,15 +17,22 @@ const queryClient = new QueryClient({
 function RootLayoutContent() {
   const { isAuthenticated, isLoading, hydrate } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
     hydrate();
   }, []);
 
-  if (!mounted || isLoading) {
-    return null;
-  }
+  useEffect(() => {
+    if (mounted && !isLoading) {
+      if (isAuthenticated) {
+        router.replace('/(app)/home');
+      } else {
+        router.replace('/(auth)/login');
+      }
+    }
+  }, [mounted, isLoading, isAuthenticated]);
 
   return (
     <>
@@ -35,13 +42,7 @@ function RootLayoutContent() {
           headerShown: false,
           animation: 'fade',
         }}
-      >
-        {!isAuthenticated ? (
-          <Stack.Screen name="(auth)/login" />
-        ) : (
-          <Stack.Screen name="(app)/home" />
-        )}
-      </Stack>
+      />
     </>
   );
 }
