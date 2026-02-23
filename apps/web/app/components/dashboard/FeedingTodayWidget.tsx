@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { ApiClient } from '@/app/lib/api'
+import ApiClient from '@/app/lib/api'
 import { useOrganizationStore } from '@/app/stores/organizationStore'
 
 interface FeedingTodayWidgetProps {
@@ -22,32 +22,18 @@ export function FeedingTodayWidget({ editMode, onRemove, dragHandleProps }: Feed
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0]
 
-  // Fetch pending feeding tasks for today
-  const { data: pendingTasks } = useQuery({
-    queryKey: ['tasks', 'feeding-pending', selectedOrg?.id, today],
-    queryFn: () =>
-      ApiClient.getTasks({
-        type: 'feeding',
-        status: 'pending',
-        due_date: today,
-      }),
+  // Fetch today's feeding tasks - this endpoint auto-generates tasks if they don't exist
+  const { data: feedingData, isLoading } = useQuery({
+    queryKey: ['feeding', 'today', selectedOrg?.id],
+    queryFn: () => ApiClient.getTodaysFeedingTasks(),
     enabled: !!selectedOrg?.id,
   })
 
-  // Fetch completed feeding tasks for today
-  const { data: completedTasks } = useQuery({
-    queryKey: ['tasks', 'feeding-completed', selectedOrg?.id, today],
-    queryFn: () =>
-      ApiClient.getTasks({
-        type: 'feeding',
-        status: 'completed',
-        due_date: today,
-      }),
-    enabled: !!selectedOrg?.id,
-  })
+  const pendingTasks = feedingData?.tasks?.filter((t: any) => t.status === 'pending') || []
+  const completedTasks = feedingData?.tasks?.filter((t: any) => t.status === 'completed') || []
 
-  const animalsPending = pendingTasks?.items?.length || 0
-  const completed = completedTasks?.items?.length || 0
+  const animalsPending = pendingTasks.length
+  const completed = completedTasks.length
   const total = animalsPending + completed
 
   const progressPercentage = total > 0 ? (completed / total) * 100 : 0

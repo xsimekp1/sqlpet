@@ -73,7 +73,7 @@ class FeedingService:
         plan_id: uuid.UUID,
         organization_id: uuid.UUID,
         user_id: uuid.UUID,
-        **updates
+        **updates,
     ) -> FeedingPlan:
         """Update a feeding plan."""
         stmt = select(FeedingPlan).where(
@@ -107,7 +107,11 @@ class FeedingService:
             )
 
             # If schedule changed, delete future pending tasks and regenerate
-            if 'schedule_json' in updates or 'start_date' in updates or 'end_date' in updates:
+            if (
+                "schedule_json" in updates
+                or "start_date" in updates
+                or "end_date" in updates
+            ):
                 await self._delete_future_pending_tasks(plan_id, organization_id)
 
                 from_dt = datetime.now(timezone.utc)
@@ -126,7 +130,7 @@ class FeedingService:
             and_(
                 Task.organization_id == organization_id,
                 Task.type == TaskType.FEEDING,
-                Task.task_metadata['feeding_plan_id'].astext == str(plan_id),
+                Task.task_metadata["feeding_plan_id"].astext == str(plan_id),
                 Task.status == TaskStatus.PENDING,
                 Task.due_at > datetime.now(timezone.utc),
             )
@@ -163,6 +167,7 @@ class FeedingService:
         3. Return created tasks
         """
         from src.app.services.task_service import TaskService
+
         task_service = TaskService(self.db)
 
         tasks_created = []
@@ -231,7 +236,8 @@ class FeedingService:
                             Task.organization_id == organization_id,
                             Task.type == TaskType.FEEDING,
                             Task.related_entity_id == plan.animal_id,
-                            Task.task_metadata['feeding_plan_id'].astext == str(plan.id),
+                            Task.task_metadata["feeding_plan_id"].astext
+                            == str(plan.id),
                             Task.due_at == due_at,
                             Task.deleted_at.is_(None),
                         )
@@ -249,7 +255,9 @@ class FeedingService:
                             organization_id=organization_id,
                             created_by_id=None,  # System-generated feeding task
                             title=f"Feed {plan.animal_id} at {scheduled_time}",
-                            description=f"Scheduled feeding at {scheduled_time}. Amount: {amount_g}g" if amount_g else f"Scheduled feeding at {scheduled_time}",
+                            description=f"Scheduled feeding at {scheduled_time}. Amount: {amount_g}g"
+                            if amount_g
+                            else f"Scheduled feeding at {scheduled_time}",
                             task_type=TaskType.FEEDING,
                             due_at=due_at,
                             task_metadata={
@@ -343,6 +351,7 @@ class FeedingService:
                 if food and plan.amount_g:
                     # Deduct from inventory (multi-lot FIFO)
                     from src.app.services.inventory_service import InventoryService
+
                     inv_service = InventoryService(self.db)
 
                     try:
@@ -376,12 +385,14 @@ class FeedingService:
         self,
         organization_id: uuid.UUID,
         current_time: datetime,
+        days_ahead: int = 2,
     ) -> List[Task]:
         """
         Generate feeding tasks for all active feeding plans.
-        Called manually via API endpoint (MVP - no Celery Beat).
+        Generates tasks for today + days_ahead (default 2 days).
         """
         from src.app.services.task_service import TaskService
+
         task_service = TaskService(self.db)
 
         tasks_created = []
@@ -392,7 +403,7 @@ class FeedingService:
             and_(
                 FeedingPlan.organization_id == organization_id,
                 FeedingPlan.is_active == True,
-                FeedingPlan.start_date <= today,
+                FeedingPlan.start_date <= today + timedelta(days=days_ahead),
                 (FeedingPlan.end_date.is_(None)) | (FeedingPlan.end_date >= today),
                 FeedingPlan.schedule_json.isnot(None),
             )
@@ -400,51 +411,65 @@ class FeedingService:
         result = await self.db.execute(stmt)
         plans = result.scalars().all()
 
-        for plan in plans:
-            if not plan.schedule_json:
-                continue
+        # Generate tasks for each day from today to today + days_ahead
+        for day_offset in range(days_ahead + 1):
+            target_date = today + timedelta(days=day_offset)
 
-            # Check if schedule has times array
-            schedule_times = plan.schedule_json.get("times", [])
-            if not schedule_times:
-                continue
-
-            for scheduled_time in schedule_times:
-                # Check if task already exists for this animal + time + date
-                existing_task_stmt = select(Task).where(
-                    and_(
-                        Task.organization_id == organization_id,
-                        Task.type == TaskType.FEEDING,
-                        Task.related_entity_type == "animal",
-                        Task.related_entity_id == plan.animal_id,
-                        func.date(Task.due_at) == today,
-                        Task.status != TaskStatus.CANCELLED,
-                    )
-                )
-                existing_result = await self.db.execute(existing_task_stmt)
-                existing_task = existing_result.scalar_one_or_none()
-
-                if existing_task:
-                    # Task already exists, skip
+            for plan in plans:
+                if not plan.schedule_json:
                     continue
 
-                # Create feeding task
-                task = await task_service.create_task(
-                    organization_id=organization_id,
-                    created_by_id=plan.organization_id,  # System-generated
-                    title=f"Feed animal (Plan #{plan.id})",
-                    description=f"Scheduled feeding at {scheduled_time}. Amount: {plan.amount_text or f'{plan.amount_g}g'}",
-                    task_type=TaskType.FEEDING,
-                    due_at=datetime.combine(today, datetime.strptime(scheduled_time, "%H:%M").time()),
-                    task_metadata={
-                        "feeding_plan_id": str(plan.id),
-                        "animal_id": str(plan.animal_id),
-                        "scheduled_time": scheduled_time,
-                    },
-                    related_entity_type="animal",
-                    related_entity_id=plan.animal_id,
-                )
-                tasks_created.append(task)
+                # Check if plan is active on target date
+                if plan.start_date > target_date:
+                    continue
+                if plan.end_date and plan.end_date < target_date:
+                    continue
+
+                # Check if schedule has times array
+                schedule_times = plan.schedule_json.get("times", [])
+                if not schedule_times:
+                    continue
+
+                for scheduled_time in schedule_times:
+                    # Check if task already exists for this animal + time + date
+                    existing_task_stmt = select(Task).where(
+                        and_(
+                            Task.organization_id == organization_id,
+                            Task.type == TaskType.FEEDING,
+                            Task.related_entity_type == "animal",
+                            Task.related_entity_id == plan.animal_id,
+                            func.date(Task.due_at) == target_date,
+                            Task.task_metadata["scheduled_time"].astext
+                            == scheduled_time,
+                            Task.status != TaskStatus.CANCELLED,
+                        )
+                    )
+                    existing_result = await self.db.execute(existing_task_stmt)
+                    existing_task = existing_result.scalar_one_or_none()
+
+                    if existing_task:
+                        continue
+
+                    # Create feeding task
+                    task = await task_service.create_task(
+                        organization_id=organization_id,
+                        created_by_id=None,  # System-generated
+                        title=f"Feed {plan.animal_name or 'animal'}",
+                        description=f"Scheduled feeding at {scheduled_time}. Amount: {plan.amount_text or f'{plan.amount_g}g'}",
+                        task_type=TaskType.FEEDING,
+                        due_at=datetime.combine(
+                            target_date,
+                            datetime.strptime(scheduled_time, "%H:%M").time(),
+                        ),
+                        task_metadata={
+                            "feeding_plan_id": str(plan.id),
+                            "animal_id": str(plan.animal_id),
+                            "scheduled_time": scheduled_time,
+                        },
+                        related_entity_type="animal",
+                        related_entity_id=plan.animal_id,
+                    )
+                    tasks_created.append(task)
 
         return tasks_created
 
@@ -496,11 +521,15 @@ class FeedingService:
         deductions = log_result.get("deductions", [])
 
         # Persist feeding_log_id into task metadata for later retrieval
-        task.task_metadata = {**(task.task_metadata or {}), "feeding_log_id": str(feeding_log.id)}
+        task.task_metadata = {
+            **(task.task_metadata or {}),
+            "feeding_log_id": str(feeding_log.id),
+        }
         await self.db.flush()
 
         # Mark task as completed
         from src.app.services.task_service import TaskService
+
         task_service = TaskService(self.db)
         completed_task = await task_service.complete_task(
             task_id=task_id,
@@ -523,6 +552,7 @@ class FeedingService:
     ) -> List[FeedingLog]:
         """Get feeding history for an animal."""
         from datetime import timedelta
+
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
 
         stmt = (

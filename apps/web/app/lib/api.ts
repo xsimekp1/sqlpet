@@ -1246,6 +1246,33 @@ class ApiClient {
     }
   }
 
+  static async getTodaysFeedingTasks(): Promise<{
+    tasks: Array<{
+      id: string;
+      title: string;
+      description: string | null;
+      status: string;
+      due_at: string | null;
+      task_metadata: Record<string, any>;
+      related_entity_id: string | null;
+    }>;
+    generated: boolean;
+  }> {
+    try {
+      const response = await axios.get(
+        `${API_URL}/feeding/today`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch feeding tasks');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
   static async getTask(id: string): Promise<Task> {
     try {
       const response = await axios.get<Task>(

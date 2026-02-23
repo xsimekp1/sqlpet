@@ -421,7 +421,9 @@ async def generate_feeding_tasks(
 # Epic 8 - Rolling window task generation
 @router.post("/tasks/ensure-window", status_code=status.HTTP_201_CREATED)
 async def ensure_feeding_tasks_window(
-    hours_ahead: int = Query(48, ge=1, le=168, description="Hours ahead to generate tasks for"),
+    hours_ahead: int = Query(
+        48, ge=1, le=168, description="Hours ahead to generate tasks for"
+    ),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
@@ -443,4 +445,65 @@ async def ensure_feeding_tasks_window(
         "tasks_created": len(tasks),
         "window_from": from_dt.isoformat(),
         "window_to": to_dt.isoformat(),
+    }
+
+
+# Auto-generate tasks + get today's feeding tasks
+@router.get("/today")
+async def get_todays_feeding_tasks(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """
+    Get today's feeding tasks. Automatically generates tasks if they don't exist.
+    Combines task generation (for next 48h) with returning today's tasks.
+    """
+    feeding_service = FeedingService(db)
+
+    # Auto-generate tasks for next 48 hours (idempotent - won't create duplicates)
+    await feeding_service.ensure_feeding_tasks_window(
+        organization_id,
+        datetime.now(timezone.utc),
+        datetime.now(timezone.utc) + timedelta(hours=48),
+    )
+    await db.commit()
+
+    # Return today's feeding tasks
+    from sqlalchemy import select, and_
+    from src.app.models.task import Task, TaskStatus, TaskType
+
+    today = datetime.now().date()
+    stmt = select(Task).where(
+        and_(
+            Task.organization_id == organization_id,
+            Task.type == TaskType.FEEDING,
+            Task.status != TaskStatus.CANCELLED,
+        )
+    )
+    result = await db.execute(stmt)
+    all_tasks = result.scalars().all()
+
+    # Filter to today's tasks
+    todays_tasks = [t for t in all_tasks if t.due_at and t.due_at.date() == today]
+
+    # Sort by due time
+    todays_tasks.sort(key=lambda t: t.due_at or datetime.max)
+
+    return {
+        "tasks": [
+            {
+                "id": str(t.id),
+                "title": t.title,
+                "description": t.description,
+                "status": t.status.value,
+                "due_at": t.due_at.isoformat() if t.due_at else None,
+                "task_metadata": t.task_metadata,
+                "related_entity_id": str(t.related_entity_id)
+                if t.related_entity_id
+                else None,
+            }
+            for t in todays_tasks
+        ],
+        "generated": True,
     }
