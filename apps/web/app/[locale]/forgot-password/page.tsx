@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,6 +50,8 @@ type ResetFormValues = z.infer<typeof resetSchema>;
 export default function ForgotPasswordPage() {
   const t = useTranslations();
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   
@@ -87,7 +89,7 @@ export default function ForgotPasswordPage() {
         new_password: data.newPassword,
       });
       toast.success(t('forgotPassword.resetSuccess'));
-      router.push(`/${router.locale}/login`);
+      router.push(`/${locale}/login`);
     } catch (error) {
       toast.error(t('forgotPassword.resetError'));
     } finally {
@@ -128,7 +130,7 @@ export default function ForgotPasswordPage() {
               <div className="text-center space-y-4">
                 <div className="text-green-600 text-lg">✓</div>
                 <p>{t('forgotPassword.emailSent')}</p>
-                <Link href={`/${router.locale}/login`}>
+                <Link href={`/${locale}/login`}>
                   <Button variant="outline" className="w-full">
                     {t('register.loginLink')}
                   </Button>
@@ -192,7 +194,7 @@ export default function ForgotPasswordPage() {
             )}
             
             <div className="mt-4 text-center text-sm">
-              <Link href={`/${router.locale}/login`} className="text-primary hover:underline">
+              <Link href={`/${locale}/login`} className="text-primary hover:underline">
                 {t('forgotPassword.backToLogin')}
               </Link>
             </div>

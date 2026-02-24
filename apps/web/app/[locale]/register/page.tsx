@@ -244,7 +244,7 @@ export default function RegisterPage() {
             
             <div className="mt-4 text-center text-sm">
               {t('register.hasAccount')}{' '}
-              <Link href={`/${router.locale}/login`} className="text-primary hover:underline">
+              <Link href={`/${locale}/login`} className="text-primary hover:underline">
                 {t('register.loginLink')}
               </Link>
             </div>
