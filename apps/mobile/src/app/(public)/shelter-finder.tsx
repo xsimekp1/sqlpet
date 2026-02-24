@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
+import Constants from 'expo-constants';
 import { useQuery } from '@tanstack/react-query';
 import MapView, { Marker, Callout, type MapViewProps } from 'react-native-maps';
 import { MapPin, ChevronLeft } from 'lucide-react-native';
@@ -32,6 +33,11 @@ interface NearbyShelter {
 }
 
 const RADIUS_KM = 50;
+
+// react-native-maps is only available in custom dev builds (expo-dev-client).
+// In Expo Go (executionEnvironment === 'storeClient') the native module is not
+// registered and attempting to render MapView causes an unrecoverable crash.
+const MAP_AVAILABLE = Constants.executionEnvironment !== 'storeClient';
 
 const PIN_COLORS = ['#22C55E', '#F97316', '#EF4444'];
 
@@ -197,46 +203,54 @@ export default function ShelterFinderScreen() {
             <>
               {/* Map with top 3 nearest shelters */}
               {location && (
-                <MapErrorBoundary>
-                  <View style={styles.mapContainer}>
-                    <Text style={styles.mapLabel}>{t('shelterFinder.mapNearestThree')}</Text>
-                    <MapView
-                      ref={mapRef}
-                      style={styles.map}
-                      initialRegion={{
-                        latitude: location.lat,
-                        longitude: location.lng,
-                        latitudeDelta: 0.5,
-                        longitudeDelta: 0.5,
-                      }}
-                      showsUserLocation
-                      showsMyLocationButton={false}
-                    >
-                      {topThree.map((shelter, index) => (
-                        <Marker
-                          key={shelter.id}
-                          coordinate={{ latitude: shelter.lat, longitude: shelter.lng }}
-                          pinColor={PIN_COLORS[index]}
-                        >
-                          <Callout>
-                            <View style={styles.callout}>
-                              <Text style={styles.calloutName}>{shelter.name}</Text>
-                              <Text style={styles.calloutDist}>
-                                {t('shelterFinder.distance').replace(
-                                  '{km}',
-                                  String(shelter.distance_km)
-                                )}
-                              </Text>
-                              <Text style={styles.calloutHint}>
-                                {t('shelterFinder.tapForDetails')}
-                              </Text>
-                            </View>
-                          </Callout>
-                        </Marker>
-                      ))}
-                    </MapView>
+                MAP_AVAILABLE ? (
+                  <MapErrorBoundary>
+                    <View style={styles.mapContainer}>
+                      <Text style={styles.mapLabel}>{t('shelterFinder.mapNearestThree')}</Text>
+                      <MapView
+                        ref={mapRef}
+                        style={styles.map}
+                        initialRegion={{
+                          latitude: location.lat,
+                          longitude: location.lng,
+                          latitudeDelta: 0.5,
+                          longitudeDelta: 0.5,
+                        }}
+                        showsUserLocation
+                        showsMyLocationButton={false}
+                      >
+                        {topThree.map((shelter, index) => (
+                          <Marker
+                            key={shelter.id}
+                            coordinate={{ latitude: shelter.lat, longitude: shelter.lng }}
+                            pinColor={PIN_COLORS[index]}
+                          >
+                            <Callout>
+                              <View style={styles.callout}>
+                                <Text style={styles.calloutName}>{shelter.name}</Text>
+                                <Text style={styles.calloutDist}>
+                                  {t('shelterFinder.distance').replace(
+                                    '{km}',
+                                    String(shelter.distance_km)
+                                  )}
+                                </Text>
+                                <Text style={styles.calloutHint}>
+                                  {t('shelterFinder.tapForDetails')}
+                                </Text>
+                              </View>
+                            </Callout>
+                          </Marker>
+                        ))}
+                      </MapView>
+                    </View>
+                  </MapErrorBoundary>
+                ) : (
+                  <View style={styles.mapUnavailable}>
+                    <Text style={styles.mapUnavailableText}>
+                      🗺️ {t('shelterFinder.mapUnavailable')}
+                    </Text>
                   </View>
-                </MapErrorBoundary>
+                )
               )}
 
               {/* Full list */}
@@ -419,6 +433,18 @@ const styles = StyleSheet.create({
   },
   map: {
     height: 260,
+  },
+  mapUnavailable: {
+    height: 260,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3F4F6',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  mapUnavailableText: {
+    color: '#9CA3AF',
+    fontSize: 14,
   },
   callout: {
     minWidth: 160,

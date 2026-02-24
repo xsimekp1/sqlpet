@@ -1907,6 +1907,7 @@
     "distance": "{km} km",
     "back": "Back",
     "mapNearestThree": "3 nearest shelters",
-    "tapForDetails": "Tap for details"
+    "tapForDetails": "Tap for details",
+    "mapUnavailable": "Map not available in Expo Go"
   }
 }

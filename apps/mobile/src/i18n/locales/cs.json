@@ -1930,6 +1930,7 @@
     "distance": "{km} km",
     "back": "Zpět",
     "mapNearestThree": "3 nejbližší útulky",
-    "tapForDetails": "Klepněte pro detail"
+    "tapForDetails": "Klepněte pro detail",
+    "mapUnavailable": "Mapa není dostupná v Expo Go"
   }
 }
