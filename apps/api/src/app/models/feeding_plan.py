@@ -5,7 +5,7 @@ from datetime import date
 
 from sqlalchemy import String, Text, Integer, Date, Boolean, Numeric, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
 
@@ -39,3 +39,5 @@ class FeedingPlan(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     mer_calculation: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    animal = relationship("Animal")

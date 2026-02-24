@@ -2,6 +2,7 @@
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, delete
+from sqlalchemy.orm import selectinload
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date, timezone, timedelta
 import uuid
@@ -399,14 +400,18 @@ class FeedingService:
         today = current_time.date()
 
         # Get all active feeding plans with schedules
-        stmt = select(FeedingPlan).where(
-            and_(
-                FeedingPlan.organization_id == organization_id,
-                FeedingPlan.is_active == True,
-                FeedingPlan.start_date <= today + timedelta(days=days_ahead),
-                (FeedingPlan.end_date.is_(None)) | (FeedingPlan.end_date >= today),
-                FeedingPlan.schedule_json.isnot(None),
+        stmt = (
+            select(FeedingPlan)
+            .where(
+                and_(
+                    FeedingPlan.organization_id == organization_id,
+                    FeedingPlan.is_active == True,
+                    FeedingPlan.start_date <= today + timedelta(days=days_ahead),
+                    (FeedingPlan.end_date.is_(None)) | (FeedingPlan.end_date >= today),
+                    FeedingPlan.schedule_json.isnot(None),
+                )
             )
+            .options(selectinload(FeedingPlan.animal))
         )
         result = await self.db.execute(stmt)
         plans = result.scalars().all()
@@ -451,10 +456,11 @@ class FeedingService:
                         continue
 
                     # Create feeding task
+                    animal_name = plan.animal.name if plan.animal else "zvíře"
                     task = await task_service.create_task(
                         organization_id=organization_id,
                         created_by_id=None,  # System-generated
-                        title=f"Feed {plan.animal_name or 'animal'}",
+                        title=f"Nakrmit {animal_name}",
                         description=f"Scheduled feeding at {scheduled_time}. Amount: {plan.amount_text or f'{plan.amount_g}g'}",
                         task_type=TaskType.FEEDING,
                         due_at=datetime.combine(
