@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { CheckSquare, Package, Users, UtensilsCrossed, ChevronRight } from 'lucide-react-native';
+import { CheckSquare, Package, Users, UtensilsCrossed, Hotel, ChevronRight } from 'lucide-react-native';
 
 const MENU_ITEMS = [
   {
@@ -34,6 +34,14 @@ const MENU_ITEMS = [
     route: '/feeding',
     color: '#D97706',
     bg: '#FEF3C7',
+  },
+  {
+    label: 'Hotel',
+    description: 'Hotelové rezervace zvířat',
+    icon: Hotel,
+    route: '/hotel',
+    color: '#7C3AED',
+    bg: '#EDE9FE',
   },
 ] as const;
 

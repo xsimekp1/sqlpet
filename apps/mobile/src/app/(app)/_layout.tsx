@@ -70,6 +70,7 @@ export default function AppLayout() {
       <Tabs.Screen name="inventory" options={{ href: null }} />
       <Tabs.Screen name="people"    options={{ href: null }} />
       <Tabs.Screen name="feeding"   options={{ href: null }} />
+      <Tabs.Screen name="hotel"     options={{ href: null }} />
     </Tabs>
   );
 }
