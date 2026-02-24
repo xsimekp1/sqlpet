@@ -40,8 +40,8 @@ export function HeroSection() {
 
           <p className="text-lg sm:text-xl text-teal-100 max-w-2xl mx-auto mb-10 leading-relaxed">
             Petslog pokrývá českou legislativu a dává vám vše v jednom —
-            zvířata, kotce, krmení, zdravotní péče, sklad i adopce.
-            Navrženo pro každodenní provoz reálných útulků v ČR.
+            zvířata, kotce, krmení, zdravotní péči, sklad i adopce.
+            Od papírování k modernímu útulku.
           </p>
 
           {/* CTAs */}
@@ -49,17 +49,17 @@ export function HeroSection() {
             <Button
               size="lg"
               className="bg-white text-teal-700 hover:bg-teal-50 font-semibold px-8 shadow-lg"
-              onClick={() => openModal('free')}
+              onClick={() => openModal('demo')}
             >
-              Vyzkoušet zdarma
+              Domluvit ukázku
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="border-white/60 text-white hover:bg-white/10 font-semibold px-8"
-              onClick={() => openModal('demo')}
+              onClick={() => openModal('free')}
             >
-              Domluvit ukázku
+              Začít zdarma
             </Button>
           </div>
 
@@ -69,7 +69,7 @@ export function HeroSection() {
             <span className="hidden sm:block text-teal-400">·</span>
             <span className="flex items-center gap-1.5">☁️ Bezpečný cloud</span>
             <span className="hidden sm:block text-teal-400">·</span>
-            <span className="flex items-center gap-1.5">📱 Funguje i offline</span>
+            <span className="flex items-center gap-1.5">📱 Android app v přípravě</span>
           </div>
         </motion.div>
 

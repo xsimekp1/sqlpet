@@ -14,6 +14,10 @@ const faqs = [
     a: 'Ano. Evidence nálezů, KVS hlášení, zákonné lhůty (deadliny 2 a 4 měsíce), smlouvy — vše navrženo dle platné české legislativy pro útulky.',
   },
   {
+    q: 'Bude i mobilní aplikace?',
+    a: 'Ano, pracujeme na Android verzi, která bude k dispozici brzy. iOS verze bude následovat.',
+  },
+  {
     q: 'Je Petslog vhodný pro malé útulky?',
     a: 'Ano. Free tier zvládne útulky do 10 aktivních svěřenců — vhodné i pro obec s menším záchytným místem nebo stájí. PRO plán neomezuje počet zvířat.',
   },
@@ -31,7 +35,7 @@ const faqs = [
   },
   {
     q: 'Jak začít?',
-    a: 'Klikněte na "Vyzkoušet zdarma", vyplňte email a profil útulku. Do 24 hodin vás zkontaktujeme a nastavíme přístup.',
+    a: 'Klikněte na "Domluvit ukázku", vyplňte email. Ozveme se vám a vše probereme.',
   },
 ];
 

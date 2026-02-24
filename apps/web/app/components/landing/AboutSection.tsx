@@ -12,13 +12,15 @@ export function AboutSection() {
             <div className="space-y-5 text-gray-600 leading-relaxed">
               <p>
                 Jednoho večera jsme našli kočku v lese. Zraněnou, vystrašenou.
-                Zkusili jsme ji najít přes útulky — žádná evidence online, žádný
-                systém. Jen telefonáty a štěstí.
+                Snažili jsme se ji předat do útulku, ale narazili jsme na to,
+                co zná asi každý, kdo s útulky pracuje: žádná evidence online,
+                žádný systém. Jen telefonáty a naděje, že to někdo zvedne.
               </p>
               <p>
-                Proto vznikl Petslog. Věříme, že každý útulek — ať malý obecní
-                nebo velká organizace — si zaslouží nástroj, který šetří čas a
-                zlepšuje péči. Aby se na ta zvířata nezapomnělo.
+                Ten večer jsme se stali &quot;kočičími lidmi&quot;. A z toho vznikl
+                Petslog. Věříme, že každý útulek, ať už malý obecní nebo velká
+                organizace, si zaslouží nástroj, který šetří čas a zlepšuje péči.
+                Aby se na ta zvířata nezapomnělo.
               </p>
               <p>
                 Jsme malý tým z Česka. Budujeme to, co bychom tehdy sami

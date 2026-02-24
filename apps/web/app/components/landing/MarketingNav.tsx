@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -35,13 +36,14 @@ export function MarketingNav({ locale }: MarketingNavProps) {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href={`/${locale}`} className="flex items-center gap-2">
-              <span
-                className={`text-xl font-bold tracking-tight transition-colors ${
-                  scrolled ? 'text-teal-700' : 'text-white'
-                }`}
-              >
-                🐾 Petslog
-              </span>
+              <Image
+                src="/petslog.png"
+                alt="Petslog"
+                width={100}
+                height={33}
+                className="h-8 w-auto"
+                priority
+              />
             </Link>
 
             {/* Desktop nav */}
@@ -66,7 +68,7 @@ export function MarketingNav({ locale }: MarketingNavProps) {
                     : 'bg-white text-teal-700 hover:bg-teal-50'
                 }
               >
-                Vyzkoušet zdarma
+                Domluvit ukázku
               </Button>
             </div>
 
@@ -87,7 +89,13 @@ export function MarketingNav({ locale }: MarketingNavProps) {
               </SheetTrigger>
               <SheetContent side="right" className="w-64">
                 <div className="flex flex-col gap-3 mt-8">
-                  <p className="text-lg font-bold text-teal-700 px-2">🐾 Petslog</p>
+                  <Image
+                    src="/petslog.png"
+                    alt="Petslog"
+                    width={100}
+                    height={33}
+                    className="h-8 w-auto"
+                  />
                   <Link href={`/${locale}/login`} onClick={() => setMobileOpen(false)}>
                     <Button variant="ghost" className="w-full justify-start">
                       Přihlásit se
@@ -100,7 +108,7 @@ export function MarketingNav({ locale }: MarketingNavProps) {
                       setModalOpen(true);
                     }}
                   >
-                    Vyzkoušet zdarma
+                    Domluvit ukázku
                   </Button>
                 </div>
               </SheetContent>

@@ -31,9 +31,9 @@ const freePlan = {
 
 const proPlan = {
   name: 'PRO',
-  price: 'od 399 Kč',
-  period: 'měsíc',
-  tagline: 'Neomezený počet svěřenců',
+  price: 'Spojte se',
+  period: '',
+  tagline: 'Pro útulky 10+ svěřenců',
   included: [
     'Vše z plánu FREE',
     'Tiskové šablony (PDF/print)',
@@ -44,7 +44,7 @@ const proPlan = {
     'Pokročilé role & oprávnění',
   ],
   excluded: [] as string[],
-  cta: 'Začít PRO',
+  cta: 'Domluvit ukázku',
   ctaInterest: 'demo' as const,
   highlight: true,
 };
@@ -137,8 +137,8 @@ export function PricingSection() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-8 max-w-lg mx-auto">
-          Toto je první verze ceníku. Ceny se mohou upravit před oficiálním spuštěním.
-          Registrovaní beta uživatelé získají zvýhodněné podmínky.
+          Hledáme útulky, které nám pomohou systém otestovat v reálném provozu.
+          Zavolejte nebo napište, domluvíme se.
         </p>
       </div>
 
