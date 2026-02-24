@@ -66,7 +66,6 @@ class AuthService:
                 id=uuid.uuid4(),
                 name=organization_name,
                 slug=org_slug,
-                is_active=True,
             )
             self.db.add(organization)
             await self.db.flush()
