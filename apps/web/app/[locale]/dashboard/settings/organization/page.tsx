@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import ApiClient, { type OrgSettings } from '@/app/lib/api';
+import ApiClient, { type OrgSettings, type LegalRuleConfig } from '@/app/lib/api';
 import { type DateFormatStyle } from '@/app/lib/dateFormat';
 
 interface OrganizationSettings {
@@ -109,13 +109,13 @@ export default function OrganizationSettingsPage() {
           profile: legalProfile,
           rules: {
             finder_keeps: {
-              ...(current.legal?.rules?.finder_keeps || { start: 'announced', fallback_start: 'found', cz_later_of_announced_received: false }),
+              ...(current.legal?.rules?.finder_keeps || { start: 'announced' as const, fallback_start: 'found' as const, cz_later_of_announced_received: false }),
               days: parseInt(finderKeepsDays),
-            },
+            } satisfies LegalRuleConfig,
             custody: {
-              ...(current.legal?.rules?.custody || { start: 'received', fallback_start: 'found', cz_later_of_announced_received: legalProfile === 'CZ' }),
+              ...(current.legal?.rules?.custody || { start: 'received' as const, fallback_start: 'found' as const, cz_later_of_announced_received: legalProfile === 'CZ' }),
               days: parseInt(custodyDays),
-            },
+            } satisfies LegalRuleConfig,
           },
         },
       });

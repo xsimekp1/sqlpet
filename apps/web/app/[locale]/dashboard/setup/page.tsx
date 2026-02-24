@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Progress } from '@/components/ui/progress';
-import ApiClient, { type OrgSettings } from '@/app/lib/api';
+import ApiClient, { type OrgSettings, type LegalRuleConfig } from '@/app/lib/api';
 import { useAuth } from '@/app/context/AuthContext';
 
 const TOTAL_STEPS = 4;
@@ -21,17 +21,19 @@ const TOTAL_STEPS = 4;
 type StepKey = 'basic' | 'units' | 'legal' | 'summary';
 const STEPS: StepKey[] = ['basic', 'units', 'legal', 'summary'];
 
-const CZ_LEGAL_DEFAULTS = {
+type LegalDefaults = { finder_keeps: LegalRuleConfig; custody: LegalRuleConfig };
+
+const CZ_LEGAL_DEFAULTS: LegalDefaults = {
   finder_keeps: { start: 'announced', fallback_start: 'found', days: 60, cz_later_of_announced_received: false },
   custody: { start: 'received', fallback_start: 'found', days: 120, cz_later_of_announced_received: true },
 };
 
-const SK_LEGAL_DEFAULTS = {
+const SK_LEGAL_DEFAULTS: LegalDefaults = {
   finder_keeps: { start: 'announced', fallback_start: 'found', days: 60, cz_later_of_announced_received: false },
   custody: { start: 'received', fallback_start: 'found', days: 90, cz_later_of_announced_received: false },
 };
 
-const OTHER_LEGAL_DEFAULTS = {
+const OTHER_LEGAL_DEFAULTS: LegalDefaults = {
   finder_keeps: { start: 'announced', fallback_start: 'found', days: 60, cz_later_of_announced_received: false },
   custody: { start: 'received', fallback_start: 'found', days: 90, cz_later_of_announced_received: false },
 };
