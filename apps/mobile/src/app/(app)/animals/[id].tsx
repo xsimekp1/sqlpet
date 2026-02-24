@@ -204,14 +204,18 @@ export default function AnimalDetailScreen() {
 
   const status = STATUS_CONFIG[animal.status] ?? STATUS_CONFIG.registered;
   const emoji = SPECIES_EMOJI[animal.species] ?? '🐾';
-  // Skip relative paths (e.g. /animals/dog-default.png) — they only resolve in the web app's
-  // Next.js public folder. On mobile we fall back to the bundled asset instead.
-  const absUrl = (url: string | null | undefined) =>
-    url && (url.startsWith('http://') || url.startsWith('https://')) ? url : null;
+  // Resolve photo URL: absolute URLs pass through, relative paths get the Vercel base prepended
+  // (static breed/color images live in the Next.js public folder on Vercel).
+  const resolveUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return `https://sqlpet.vercel.app${url}`;
+    return null;
+  };
   const photoUrl =
-    absUrl(animal.thumbnail_url) ??
-    absUrl(animal.primary_photo_url) ??
-    absUrl(animal.default_image_url);
+    resolveUrl(animal.thumbnail_url) ??
+    resolveUrl(animal.primary_photo_url) ??
+    resolveUrl(animal.default_image_url);
   const defaultImg = SPECIES_DEFAULT[animal.species] ?? null;
 
   const ageLabel = (() => {

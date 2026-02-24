@@ -65,13 +65,17 @@ function AnimalCard({ animal }: { animal: AnimalListItem }) {
   const status = STATUS_CONFIG[animal.status] ?? STATUS_CONFIG.registered;
   const emoji = SPECIES_EMOJI[animal.species] ?? '🐾';
   const sexOutline = SEX_OUTLINE[animal.sex];
-  // Skip relative paths — only absolute http(s) URLs work on mobile.
-  const absUrl = (url: string | null | undefined) =>
-    url && (url.startsWith('http://') || url.startsWith('https://')) ? url : null;
+  // Resolve photo URL: absolute URLs pass through, relative paths get the Vercel base prepended.
+  const resolveUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return `https://sqlpet.vercel.app${url}`;
+    return null;
+  };
   const uri =
-    absUrl(animal.thumbnail_url) ??
-    absUrl(animal.primary_photo_url) ??
-    absUrl(animal.default_image_url) ??
+    resolveUrl(animal.thumbnail_url) ??
+    resolveUrl(animal.primary_photo_url) ??
+    resolveUrl(animal.default_image_url) ??
     null;
 
   return (
