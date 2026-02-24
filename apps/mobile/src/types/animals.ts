@@ -63,6 +63,7 @@ export interface AnimalsListResponse {
 // Full animal detail returned by GET /animals/{id}
 export interface Animal extends AnimalListItem {
   organization_id: string;
+  color_display_name?: string | null;
   birth_date_estimated: string | null;
   age_group: string | null;
   coat: string | null;

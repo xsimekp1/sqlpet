@@ -121,6 +121,7 @@ export default function AnimalDetailScreen() {
   const queryClient = useQueryClient();
 
   const [kennelModalVisible, setKennelModalVisible] = useState(false);
+  const [heroImgError, setHeroImgError] = useState(false);
 
   const { data: animal, isLoading, isError, refetch } = useQuery({
     queryKey: ['animal', id, selectedOrganizationId],
@@ -203,7 +204,14 @@ export default function AnimalDetailScreen() {
 
   const status = STATUS_CONFIG[animal.status] ?? STATUS_CONFIG.registered;
   const emoji = SPECIES_EMOJI[animal.species] ?? '🐾';
-  const photoUrl = animal.thumbnail_url ?? animal.primary_photo_url ?? animal.default_image_url;
+  // Skip relative paths (e.g. /animals/dog-default.png) — they only resolve in the web app's
+  // Next.js public folder. On mobile we fall back to the bundled asset instead.
+  const absUrl = (url: string | null | undefined) =>
+    url && (url.startsWith('http://') || url.startsWith('https://')) ? url : null;
+  const photoUrl =
+    absUrl(animal.thumbnail_url) ??
+    absUrl(animal.primary_photo_url) ??
+    absUrl(animal.default_image_url);
   const defaultImg = SPECIES_DEFAULT[animal.species] ?? null;
 
   const ageLabel = (() => {
@@ -227,8 +235,13 @@ export default function AnimalDetailScreen() {
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Photo hero */}
         <View style={styles.heroContainer}>
-          {photoUrl ? (
-            <Image source={{ uri: photoUrl }} style={styles.heroPhoto} resizeMode="cover" />
+          {photoUrl && !heroImgError ? (
+            <Image
+              source={{ uri: photoUrl }}
+              style={styles.heroPhoto}
+              resizeMode="cover"
+              onError={() => setHeroImgError(true)}
+            />
           ) : defaultImg ? (
             <Image source={defaultImg} style={styles.heroPhoto} resizeMode="cover" />
           ) : (
@@ -319,7 +332,7 @@ export default function AnimalDetailScreen() {
             {animal.public_code && (
               <InfoRow label="Kód" value={`#${animal.public_code}`} />
             )}
-            <InfoRow label="Barva" value={animal.color ? (COLOR_LABELS[animal.color] ?? animal.color) : null} />
+            <InfoRow label="Barva" value={animal.color_display_name ?? (animal.color ? (COLOR_LABELS[animal.color] ?? animal.color) : null)} />
             <InfoRow label="Srst" value={animal.coat} />
             <InfoRow label="V útulku od" value={formatIntakeDate(animal.current_intake_date)} />
             {animal.description && (
@@ -380,7 +393,6 @@ export default function AnimalDetailScreen() {
               <View style={styles.kennelLinkRow}>
                 <View style={styles.kennelLinkInfo}>
                   <InfoRow label="Box" value={animal.current_kennel_name} />
-                  <InfoRow label="Kód boxu" value={animal.current_kennel_code} />
                 </View>
                 {animal.current_kennel_id && (
                   <ChevronRight size={18} color="#9CA3AF" />

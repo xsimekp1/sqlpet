@@ -72,6 +72,19 @@ async def _build_animal_response(
     resp.breeds = breeds
     resp.identifiers = identifiers
 
+    # Překlad barvy z color_i18n
+    if animal.color:
+        color_i18n_result = await db.execute(
+            text(
+                "SELECT name FROM color_i18n"
+                " WHERE code = :code AND locale = 'cs' AND organization_id IS NULL"
+                " LIMIT 1"
+            ),
+            {"code": animal.color},
+        )
+        color_name = color_i18n_result.scalar_one_or_none()
+        resp.color_display_name = color_name
+
     # default_image_url is now stored in DB - use it directly
     # (no query needed)
 

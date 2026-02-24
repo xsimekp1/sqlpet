@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../stores/authStore';
@@ -60,9 +61,18 @@ const SEX_OUTLINE: Record<AnimalSex, string | null> = {
 
 function AnimalCard({ animal }: { animal: AnimalListItem }) {
   const router = useRouter();
+  const [imgError, setImgError] = useState(false);
   const status = STATUS_CONFIG[animal.status] ?? STATUS_CONFIG.registered;
   const emoji = SPECIES_EMOJI[animal.species] ?? '🐾';
   const sexOutline = SEX_OUTLINE[animal.sex];
+  // Skip relative paths — only absolute http(s) URLs work on mobile.
+  const absUrl = (url: string | null | undefined) =>
+    url && (url.startsWith('http://') || url.startsWith('https://')) ? url : null;
+  const uri =
+    absUrl(animal.thumbnail_url) ??
+    absUrl(animal.primary_photo_url) ??
+    absUrl(animal.default_image_url) ??
+    null;
 
   return (
     <TouchableOpacity
@@ -77,11 +87,12 @@ function AnimalCard({ animal }: { animal: AnimalListItem }) {
           sexOutline ? { borderWidth: 2, borderColor: sexOutline } : null,
         ]}
       >
-        {(animal.thumbnail_url ?? animal.primary_photo_url ?? animal.default_image_url) ? (
+        {uri && !imgError ? (
           <Image
-            source={{ uri: (animal.thumbnail_url ?? animal.primary_photo_url ?? animal.default_image_url)! }}
+            source={{ uri }}
             style={styles.photo}
             resizeMode="cover"
+            onError={() => setImgError(true)}
           />
         ) : SPECIES_DEFAULT[animal.species] ? (
           <Image source={SPECIES_DEFAULT[animal.species]} style={styles.photo} resizeMode="cover" />

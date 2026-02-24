@@ -136,6 +136,7 @@ class AnimalCreate(BaseModel):
 
 class AnimalResponse(AnimalCreate):
     organization_id: uuid.UUID
+    color_display_name: str | None = None  # Translated color name from color_i18n
     current_intake_date: date | None = None
     current_intake_reason: str | None = None
     breeds: list[AnimalBreedResponse] = []
