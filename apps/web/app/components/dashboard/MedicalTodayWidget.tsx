@@ -5,6 +5,9 @@ import { WidgetCard } from './WidgetCard'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { useQuery } from '@tanstack/react-query'
+import ApiClient from '@/app/lib/api'
+import { useOrganizationStore } from '@/app/stores/organizationStore'
 
 interface MedicalTodayWidgetProps {
   editMode?: boolean
@@ -14,10 +17,30 @@ interface MedicalTodayWidgetProps {
 
 export function MedicalTodayWidget({ editMode, onRemove, dragHandleProps }: MedicalTodayWidgetProps) {
   const t = useTranslations('dashboard')
+  const { selectedOrg } = useOrganizationStore()
 
-  // TODO: Fetch real data from API in M3+
-  const medicationsDue = 3
-  const overdue = 1
+  const today = new Date().toISOString().split('T')[0]
+  const now = new Date()
+
+  // Fetch pending medical tasks for today
+  const { data: pendingData } = useQuery({
+    queryKey: ['tasks', 'medical', 'pending', selectedOrg?.id, today],
+    queryFn: () => ApiClient.getTasks({
+      type: 'medical',
+      status: 'pending',
+      due_date: today,
+    }),
+    enabled: !!selectedOrg?.id,
+  })
+
+  const medicationsDue = pendingData?.total || pendingData?.items?.length || 0
+
+  // Calculate overdue (tasks with due_at in the past)
+  const overdue = pendingData?.items?.filter((task: any) => {
+    if (!task.due_at) return false
+    const dueDate = new Date(task.due_at)
+    return dueDate < now
+  }).length || 0
 
   return (
     <WidgetCard
