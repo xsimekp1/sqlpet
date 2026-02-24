@@ -9,6 +9,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MedicalTodayWidget } from './MedicalTodayWidget'
 import { FeedingTodayWidget } from './FeedingTodayWidget'
+import { FoodConsumptionWidget } from './FoodConsumptionWidget'
 import { TasksWidget } from './TasksWidget'
 import { ShelterStatsWidget } from './ShelterStatsWidget'
 import { OccupancyWidget } from './OccupancyWidget'
@@ -21,6 +22,7 @@ import VaccinationsExpiringWidget from './VaccinationsExpiringWidget'
 const ALL_WIDGETS: { id: string; size: WidgetSize }[] = [
   { id: 'medical-today', size: 'large' },
   { id: 'feeding-today', size: 'large' },
+  { id: 'food-consumption', size: 'small' },
   { id: 'tasks', size: 'small' },
   { id: 'shelter-stats', size: 'large' },
   { id: 'occupancy', size: 'large' },
@@ -34,6 +36,7 @@ const ALL_WIDGETS: { id: string; size: WidgetSize }[] = [
 const widgetLabels: Record<string, string> = {
   'medical-today': 'medicalToday',
   'feeding-today': 'feedingToday',
+  'food-consumption': 'foodConsumption',
   'tasks': 'tasks',
   'shelter-stats': 'shelterStats',
   'occupancy': 'occupancy',
@@ -48,6 +51,7 @@ const widgetLabels: Record<string, string> = {
 const widgetComponents = {
   'medical-today': MedicalTodayWidget,
   'feeding-today': FeedingTodayWidget,
+  'food-consumption': FoodConsumptionWidget,
   'tasks': TasksWidget,
   'shelter-stats': ShelterStatsWidget,
   'occupancy': OccupancyWidget,

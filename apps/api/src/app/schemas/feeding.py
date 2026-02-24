@@ -80,7 +80,7 @@ class FeedingPlanBase(BaseModel):
 class FeedingPlanCreate(FeedingPlanBase):
     mer_calculation: Optional[Dict[str, Any]] = None  # MER snapshot at plan creation
 
-    @field_validator('schedule_json')
+    @field_validator("schedule_json")
     @classmethod
     def validate_schedule_json(cls, v, info):
         """Validate schedule_json structure and amounts array."""
@@ -88,26 +88,30 @@ class FeedingPlanCreate(FeedingPlanBase):
             return v
 
         # Check if times array exists
-        times = v.get('times', [])
+        times = v.get("times", [])
         if not times:
             return v
 
         # Check if amounts array exists
-        amounts = v.get('amounts', [])
+        amounts = v.get("amounts", [])
         if not amounts:
             return v
 
         # Validate amounts length matches times length
         if len(amounts) != len(times):
-            raise ValueError(f'amounts array length ({len(amounts)}) must match times array length ({len(times)})')
+            raise ValueError(
+                f"amounts array length ({len(amounts)}) must match times array length ({len(times)})"
+            )
 
         # Get amount_g from validation info (if available)
-        amount_g = info.data.get('amount_g')
+        amount_g = info.data.get("amount_g")
         if amount_g is not None:
             # Validate sum of amounts approximately equals amount_g (allow 1g rounding tolerance)
             total_amount = sum(amounts)
             if abs(total_amount - amount_g) > 1:
-                raise ValueError(f'Sum of amounts ({total_amount}g) must equal daily amount ({amount_g}g) ±1g')
+                raise ValueError(
+                    f"Sum of amounts ({total_amount}g) must equal daily amount ({amount_g}g) ±1g"
+                )
 
         return v
 
@@ -122,7 +126,7 @@ class FeedingPlanUpdate(BaseModel):
     notes: Optional[str] = None
     is_active: Optional[bool] = None
 
-    @field_validator('schedule_json')
+    @field_validator("schedule_json")
     @classmethod
     def validate_schedule_json(cls, v, info):
         """Validate schedule_json structure and amounts array."""
@@ -130,26 +134,30 @@ class FeedingPlanUpdate(BaseModel):
             return v
 
         # Check if times array exists
-        times = v.get('times', [])
+        times = v.get("times", [])
         if not times:
             return v
 
         # Check if amounts array exists
-        amounts = v.get('amounts', [])
+        amounts = v.get("amounts", [])
         if not amounts:
             return v
 
         # Validate amounts length matches times length
         if len(amounts) != len(times):
-            raise ValueError(f'amounts array length ({len(amounts)}) must match times array length ({len(times)})')
+            raise ValueError(
+                f"amounts array length ({len(amounts)}) must match times array length ({len(times)})"
+            )
 
         # Get amount_g from validation info (if available)
-        amount_g = info.data.get('amount_g')
+        amount_g = info.data.get("amount_g")
         if amount_g is not None:
             # Validate sum of amounts approximately equals amount_g (allow 1g rounding tolerance)
             total_amount = sum(amounts)
             if abs(total_amount - amount_g) > 1:
-                raise ValueError(f'Sum of amounts ({total_amount}g) must equal daily amount ({amount_g}g) ±1g')
+                raise ValueError(
+                    f"Sum of amounts ({total_amount}g) must equal daily amount ({amount_g}g) ±1g"
+                )
 
         return v
 
@@ -210,3 +218,15 @@ class CompleteFeedingTaskResponse(BaseModel):
     task: Dict[str, Any]
     feeding_log: FeedingLogResponse
     deductions: List[LotDeductionResponse] = []
+
+
+# Food consumption for dashboard widget
+class FoodConsumptionResponse(BaseModel):
+    food_name: str
+    brand: Optional[str] = None
+    food_type: str
+    total_grams: float
+    animal_count: int
+
+    class Config:
+        from_attributes = True

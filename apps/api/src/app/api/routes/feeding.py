@@ -507,3 +507,58 @@ async def get_todays_feeding_tasks(
         ],
         "generated": True,
     }
+
+
+# Get today's food consumption summary (for dashboard widget)
+@router.get("/consumption/today")
+async def get_todays_food_consumption(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """
+    Get today's food consumption by food type.
+    Returns aggregated consumption for all active feeding plans.
+    """
+    from sqlalchemy import select, func, and_
+    from src.app.models.food import Food
+    from src.app.models.feeding_plan import FeedingPlan
+    from src.app.schemas.feeding import FoodConsumptionResponse
+
+    today = datetime.now().date()
+
+    stmt = (
+        select(
+            Food.name.label("food_name"),
+            Food.brand,
+            Food.type,
+            func.coalesce(func.sum(FeedingPlan.amount_g), 0).label("total_grams"),
+            func.count(func.distinct(FeedingPlan.animal_id)).label("animal_count"),
+        )
+        .join(Food, FeedingPlan.food_id == Food.id)
+        .where(
+            and_(
+                FeedingPlan.organization_id == organization_id,
+                FeedingPlan.is_active == True,
+                FeedingPlan.start_date <= today,
+                (FeedingPlan.end_date.is_(None)) | (FeedingPlan.end_date >= today),
+                FeedingPlan.food_id.isnot(None),
+            )
+        )
+        .group_by(Food.id, Food.name, Food.brand, Food.type)
+        .order_by(func.coalesce(func.sum(FeedingPlan.amount_g), 0).desc())
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    return [
+        FoodConsumptionResponse(
+            food_name=row.food_name,
+            brand=row.brand,
+            food_type=row.type.value if hasattr(row.type, "value") else str(row.type),
+            total_grams=float(row.total_grams) if row.total_grams else 0,
+            animal_count=int(row.animal_count) if row.animal_count else 0,
+        )
+        for row in rows
+    ]

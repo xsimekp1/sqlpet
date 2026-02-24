@@ -11,6 +11,7 @@ export interface WidgetConfig {
 const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: 'medical-today', size: 'large' },
   { id: 'feeding-today', size: 'large' },
+  { id: 'food-consumption', size: 'small' },
   { id: 'tasks', size: 'small' },
   { id: 'shelter-stats', size: 'large' },
   { id: 'occupancy', size: 'large' },
