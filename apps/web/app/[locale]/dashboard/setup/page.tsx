@@ -51,8 +51,19 @@ export default function SetupPage() {
   const router = useRouter();
   const params = useParams();
   const locale = (params?.locale as string) || 'cs';
-  const { setOnboardingCompleted, permissions } = useAuth();
-  const isAdmin = permissions.includes('organizations.manage');
+  const { setOnboardingCompleted, permissions, isLoading, selectedOrg } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+      </div>
+    );
+  }
+
+  // permissions may be [] for one render cycle after login (React batching race).
+  // selectedOrg.role is always set before navigation and is a reliable fallback.
+  const isAdmin = permissions.includes('org.manage') || selectedOrg?.role?.toLowerCase() === 'admin';
 
   if (!isAdmin) {
     return (

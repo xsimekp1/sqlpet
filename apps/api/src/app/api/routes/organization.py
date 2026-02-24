@@ -110,11 +110,11 @@ async def get_organization_settings(
 @router.put("/settings", response_model=OrgSettings)
 async def update_organization_settings(
     data: OrgSettings,
-    current_user: User = Depends(require_permission("organizations.manage")),
+    current_user: User = Depends(require_permission("org.manage")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Validate and persist org settings JSONB. Requires organizations.manage permission."""
+    """Validate and persist org settings JSONB. Requires org.manage permission."""
     org = await db.get(Organization, organization_id)
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -140,7 +140,7 @@ async def update_organization_settings(
 
 @router.post("/onboarding/complete", status_code=204)
 async def complete_onboarding(
-    current_user: User = Depends(require_permission("organizations.manage")),
+    current_user: User = Depends(require_permission("org.manage")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
