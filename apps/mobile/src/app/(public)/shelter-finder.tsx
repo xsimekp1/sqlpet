@@ -13,7 +13,8 @@ import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 import { useQuery } from '@tanstack/react-query';
-import MapView, { Marker, Callout, type MapViewProps } from 'react-native-maps';
+// type-only import — erased at runtime, no module-level side effects
+import type MapViewType from 'react-native-maps';
 import { MapPin, ChevronLeft } from 'lucide-react-native';
 import { useTranslations } from '../../i18n';
 import { publicApi } from '../../lib/api';
@@ -39,6 +40,25 @@ const RADIUS_KM = 50;
 // registered and attempting to render MapView causes an unrecoverable crash.
 const MAP_AVAILABLE = Constants.executionEnvironment !== 'storeClient';
 
+// Conditional require — only runs in custom dev builds where the native module
+// is actually registered. Static import is intentionally avoided: in Expo Go
+// even importing (without rendering) triggers native registration side effects
+// that corrupt findNodeHandle and crash both the app and LogBox.
+let MapView: typeof MapViewType | null = null;
+let Marker: React.ComponentType<any> | null = null;
+let Callout: React.ComponentType<any> | null = null;
+
+if (MAP_AVAILABLE) {
+  try {
+    const maps = require('react-native-maps');
+    MapView = maps.default;
+    Marker = maps.Marker;
+    Callout = maps.Callout;
+  } catch {
+    // Silently fail — render fallback instead
+  }
+}
+
 const PIN_COLORS = ['#22C55E', '#F97316', '#EF4444'];
 
 export default function ShelterFinderScreen() {
@@ -48,7 +68,7 @@ export default function ShelterFinderScreen() {
   const [species, setSpecies] = useState<Species | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<InstanceType<typeof MapViewType>>(null);
 
   const handleSelectSpecies = async (s: Species) => {
     setSpecies(s);
@@ -203,7 +223,7 @@ export default function ShelterFinderScreen() {
             <>
               {/* Map with top 3 nearest shelters */}
               {location && (
-                MAP_AVAILABLE ? (
+                MAP_AVAILABLE && MapView ? (
                   <MapErrorBoundary>
                     <View style={styles.mapContainer}>
                       <Text style={styles.mapLabel}>{t('shelterFinder.mapNearestThree')}</Text>
