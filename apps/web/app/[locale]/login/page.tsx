@@ -162,6 +162,11 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
+                <div className="flex justify-end">
+                  <Link href={`/${locale}/forgot-password`} className="text-sm text-primary hover:underline">
+                    {t('login.forgotPassword')}
+                  </Link>
+                </div>
                 {requires2FA && (
                   <FormField
                     control={form.control}

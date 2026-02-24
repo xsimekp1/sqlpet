@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,6 +49,8 @@ type FormValues = z.infer<typeof formSchema>;
 export default function RegisterPage() {
   const t = useTranslations();
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
   const [isRegistering, setIsRegistering] = useState(false);
 
   const form = useForm<FormValues>({
@@ -78,7 +80,7 @@ export default function RegisterPage() {
         description: t('register.successDesc'),
       });
       
-      router.push(`/${router.locale}/login`);
+      router.push(`/${locale}/login`);
     } catch (error: any) {
       setIsRegistering(false);
       

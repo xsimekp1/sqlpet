@@ -32,7 +32,8 @@
     "nameRequired": "Name is required",
     "orgNameRequired": "Shelter name is required",
     "noAccount": "Don't have an account?",
-    "registerLink": "Register new shelter"
+    "registerLink": "Register new shelter",
+    "forgotPassword": "Forgot password?"
   },
   "register": {
     "title": "Register Shelter",
@@ -58,6 +59,18 @@
     "error": "Registration failed",
     "emailExists": "This email is already registered"
   },
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "subtitle": "Enter your email and we'll send you a password reset link.",
+    "submitButton": "Send Link",
+    "emailSent": "Password reset link has been sent to your email.",
+    "backToLogin": "Back to login",
+    "resetTitle": "New Password",
+    "resetSubtitle": "Enter your new password.",
+    "resetButton": "Change Password",
+    "resetSuccess": "Password has been changed successfully.",
+    "resetError": "Failed to change password. Link may be invalid or expired."
+  },
   "selectOrg": {
     "title": "Select Organization",
     "noMemberships": "You are not a member of any organization",
@@ -65,7 +78,8 @@
     "select": "Select"
   },
   "errors": {
-    "noPermission": "You do not have permission for this action"
+    "noPermission": "You don't have permission for this action",
+    "generic": "An error occurred. Please try again."
   },
   "dashboard": {
     "title": "Dashboard",

@@ -9,19 +9,16 @@ const testimonials = [
   {
     avatar: '👤',
     name: 'Reference přidáme brzy',
-    role: 'Vedoucí útulku',
     text: 'Testujeme s prvními útulky. Vaše zpětná vazba nám pomáhá budovat lepší systém.',
   },
   {
     avatar: '👤',
     name: 'Reference přidáme brzy',
-    role: 'Veterinář',
     text: 'Zapojte se do beta programu a jako první získejte přístup ke všem funkcím.',
   },
   {
     avatar: '👤',
     name: 'Reference přidáme brzy',
-    role: 'Dobrovolník',
     text: 'Beta uživatelé pomáhají formovat produkt a získají zvýhodněné podmínky.',
   },
 ];
@@ -50,10 +47,7 @@ export function SocialProofSection() {
                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">
                     {t.avatar}
                   </div>
-                  <div>
-                    <div className="font-medium text-sm text-white/90">{t.name}</div>
-                    <div className="text-xs text-teal-300">{t.role}</div>
-                  </div>
+                  <div className="font-medium text-sm text-white/90">{t.name}</div>
                 </div>
                 <p className="text-sm text-teal-100 leading-relaxed italic">
                   &ldquo;{t.text}&rdquo;

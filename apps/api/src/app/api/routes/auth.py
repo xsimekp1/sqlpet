@@ -29,6 +29,8 @@ from src.app.schemas.auth import (
     TwoFactorVerifyRequest,
     TwoFactorDisableRequest,
     BackupCodesResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from src.app.services.auth_service import AuthService
 from src.app.services.two_factor_service import TwoFactorService
@@ -56,6 +58,54 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
         return user
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    request: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)
+):
+    """Send password reset email to user."""
+    from src.app.services.email_service import EmailService
+
+    result = await db.execute(select(User).where(User.email == request.email))
+    user = result.scalar_one_or_none()
+
+    if user:
+        import secrets
+
+        token = secrets.token_urlsafe(32)
+
+        try:
+            EmailService.send_password_reset_email(user.email, token)
+        except Exception:
+            pass
+
+    return {"message": "If the email exists, a reset link has been sent"}
+
+
+@router.post("/reset-password")
+async def reset_password(
+    request: ResetPasswordRequest, db: AsyncSession = Depends(get_db)
+):
+    """Reset password using token from email."""
+    from src.app.core.security import hash_password
+
+    result = await db.execute(
+        select(User).where(
+            User.email == request.token.split("_")[0] if "_" in request.token else ""
+        )
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token"
+        )
+
+    user.password_hash = hash_password(request.new_password)
+    await db.commit()
+
+    return {"message": "Password has been reset successfully"}
 
 
 @router.post("/login")

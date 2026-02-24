@@ -32,7 +32,8 @@
     "nameRequired": "Jméno je povinné",
     "orgNameRequired": "Název útulku je povinný",
     "noAccount": "Nemáte účet?",
-    "registerLink": "Registrovat nový útulek"
+    "registerLink": "Registrovat nový útulek",
+    "forgotPassword": "Zapomenuté heslo?"
   },
   "register": {
     "title": "Registrovat útulek",
@@ -58,6 +59,18 @@
     "error": "Registrace se nezdařila",
     "emailExists": "Tento e-mail je již registrovaný"
   },
+  "forgotPassword": {
+    "title": "Zapomenuté heslo",
+    "subtitle": "Zadejte svůj e-mail a my vám pošleme odkaz na obnovení hesla.",
+    "submitButton": "Odeslat odkaz",
+    "emailSent": "Odkaz na obnovení hesla byl odeslán na váš e-mail.",
+    "backToLogin": "Zpět na přihlášení",
+    "resetTitle": "Nové heslo",
+    "resetSubtitle": "Zadejte nové heslo.",
+    "resetButton": "Změnit heslo",
+    "resetSuccess": "Heslo bylo úspěšně změněno.",
+    "resetError": "Nepodařilo se změnit heslo. Odkaz může být neplatný nebo expirovaný."
+  },
   "selectOrg": {
     "title": "Vyberte organizaci",
     "noMemberships": "Nejste členem žádné organizace",
@@ -65,7 +78,8 @@
     "select": "Vybrat"
   },
   "errors": {
-    "noPermission": "Nemáte oprávnění k této akci"
+    "noPermission": "Nemáte oprávnění k této akci",
+    "generic": "Došlo k chybě. Zkuste to znovu."
   },
   "dashboard": {
     "title": "Dashboard",
