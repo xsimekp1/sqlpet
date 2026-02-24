@@ -71,7 +71,7 @@ class AuthService:
             await self.db.flush()
 
             admin_role_result = await self.db.execute(
-                select(Role).where(Role.is_template == True)
+                select(Role).where(Role.is_template == True).limit(1)
             )
             admin_role = admin_role_result.scalar_one_or_none()
 
