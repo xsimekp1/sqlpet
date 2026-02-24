@@ -82,7 +82,8 @@ export default function NewAnimalScreen() {
   });
 
   const previewImageUrl = colorImages?.find((ci) => ci.color === selectedColor)?.image_url ?? null;
-  const selectedBreedName = breeds?.find((b) => b.id === selectedBreedId)?.name ?? null;
+  const selectedBreedName = breeds?.find((b) => b.id === selectedBreedId)?.display_name
+    ?? breeds?.find((b) => b.id === selectedBreedId)?.name ?? null;
 
   const canSubmit = name.trim().length > 0 && species !== null && sex !== null;
 
@@ -225,7 +226,7 @@ export default function NewAnimalScreen() {
                       styles.chipLabel,
                       selectedBreedId === breed.id && styles.chipLabelActive,
                     ]}>
-                      {breed.name}
+                      {breed.display_name || breed.name}
                     </Text>
                   </TouchableOpacity>
                 ))}

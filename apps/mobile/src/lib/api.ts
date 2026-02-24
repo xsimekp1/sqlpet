@@ -122,6 +122,7 @@ export interface BreedOption {
   id: string;
   name: string;
   species: string;
+  display_name?: string | null;
 }
 
 export interface BreedColorImage {
@@ -163,7 +164,7 @@ const api = {
   },
 
   getBreeds: async (species: string, orgId: string): Promise<BreedOption[]> => {
-    const response = await fetchWithAuth(`/breeds?species=${species}&page_size=200`, {
+    const response = await fetchWithAuth(`/breeds?species=${species}&locale=cs&page_size=200`, {
       headers: { 'x-organization-id': orgId },
     });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);

@@ -51,7 +51,7 @@ class TaskResponse(TaskBase):
     """Schema for task response."""
     id: uuid.UUID
     organization_id: uuid.UUID
-    created_by_id: uuid.UUID
+    created_by_id: Optional[uuid.UUID] = None
     status: str  # pending, in_progress, completed, cancelled
     completed_at: Optional[datetime] = None
     created_at: datetime

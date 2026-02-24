@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { CheckSquare, Package, Users, ChevronRight } from 'lucide-react-native';
+import { CheckSquare, Package, Users, UtensilsCrossed, ChevronRight } from 'lucide-react-native';
 
 const MENU_ITEMS = [
   {
@@ -26,6 +26,14 @@ const MENU_ITEMS = [
     route: '/people',
     color: '#059669',
     bg: '#DCFCE7',
+  },
+  {
+    label: 'Krmení',
+    description: 'Plány krmení zvířat',
+    icon: UtensilsCrossed,
+    route: '/feeding',
+    color: '#D97706',
+    bg: '#FEF3C7',
   },
 ] as const;
 
