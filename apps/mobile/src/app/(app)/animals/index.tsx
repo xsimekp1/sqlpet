@@ -20,6 +20,11 @@ const COLUMNS = 2;
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_WIDTH = (SCREEN_WIDTH - 16 * 2 - 8 * (COLUMNS - 1)) / COLUMNS;
 
+const SPECIES_DEFAULT: Record<string, any> = {
+  dog: require('../../../../assets/dog-default.png'),
+  cat: require('../../../../assets/cat-default.png'),
+};
+
 const STATUS_CONFIG: Record<AnimalStatus, { bg: string; text: string; label: string }> = {
   available:          { bg: '#DCFCE7', text: '#166534', label: 'K adopci' },
   reserved:           { bg: '#FEF3C7', text: '#92400E', label: 'Rezervováno' },
@@ -78,6 +83,8 @@ function AnimalCard({ animal }: { animal: AnimalListItem }) {
             style={styles.photo}
             resizeMode="cover"
           />
+        ) : SPECIES_DEFAULT[animal.species] ? (
+          <Image source={SPECIES_DEFAULT[animal.species]} style={styles.photo} resizeMode="cover" />
         ) : (
           <View style={styles.photoPlaceholder}>
             <Text style={styles.photoEmoji}>{emoji}</Text>

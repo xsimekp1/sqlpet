@@ -199,7 +199,6 @@ export default function KennelDetailScreen() {
           <Text style={styles.sectionTitle}>Informace o boxu</Text>
           <View style={styles.card}>
             <InfoRow label="Typ" value={kennel.type} />
-            <InfoRow label="Kategorie velikosti" value={kennel.size_category} />
             <InfoRow label="Poslední úklid" value={formatDate(kennel.last_cleaned_at)} />
             {kennel.maintenance_start_at && (
               <InfoRow

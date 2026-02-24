@@ -24,6 +24,7 @@ export interface AnimalBreed {
   breed_name: string;
   breed_species: string;
   percent: number | null;
+  display_name?: string | null;
 }
 
 export interface AnimalIdentifier {

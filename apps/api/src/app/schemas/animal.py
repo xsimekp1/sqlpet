@@ -47,6 +47,7 @@ class AnimalBreedResponse(BaseModel):
     breed_name: str
     breed_species: Species
     percent: int | None = None
+    display_name: str | None = None  # Localized breed name from breeds_i18n
 
 
 # --- AnimalIdentifier schemas ---

@@ -46,12 +46,21 @@ async def _build_animal_response(
     intake_data: dict | None = None,
 ) -> AnimalResponse:
     """Build AnimalResponse from ORM object with nested breeds and identifiers."""
+    breed_ids_list = [ab.breed_id for ab in (animal.animal_breeds or [])]
+    i18n_map: dict[str, str] = {}
+    if breed_ids_list:
+        i18n_rows = await db.execute(
+            select(BreedI18n.breed_id, BreedI18n.name)
+            .where(BreedI18n.breed_id.in_(breed_ids_list), BreedI18n.locale == "cs")
+        )
+        i18n_map = {str(r.breed_id): r.name for r in i18n_rows}
     breeds = [
         AnimalBreedResponse(
             breed_id=ab.breed_id,
             breed_name=ab.breed.name,
             breed_species=ab.breed.species,
             percent=ab.percent,
+            display_name=i18n_map.get(str(ab.breed_id)),
         )
         for ab in (animal.animal_breeds or [])
     ]
