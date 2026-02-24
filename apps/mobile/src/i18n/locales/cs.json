@@ -1916,5 +1916,20 @@
     "featureAnimalDesc": "Propojení nálezu se zvířetem v systému",
     "featureHistory": "Historie",
     "featureHistoryDesc": "Přehled všech nálezů s možností filtrování a vyhledávání"
+  },
+  "shelterFinder": {
+    "findNearby": "Najít nejbližší útulek",
+    "title": "Najít útulky",
+    "subtitle": "Vyberte druh zvířete",
+    "dog": "Pes",
+    "cat": "Kočka",
+    "other": "Ostatní",
+    "loading": "Hledám útulky...",
+    "empty": "Žádné útulky v okolí {radius} km",
+    "locationDenied": "Pro nalezení útulků je potřeba přístup k poloze",
+    "distance": "{km} km",
+    "back": "Zpět",
+    "mapNearestThree": "3 nejbližší útulky",
+    "tapForDetails": "Klepněte pro detail"
   }
 }

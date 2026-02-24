@@ -184,3 +184,31 @@ const api = {
 };
 
 export default api;
+
+export interface NearbyShelter {
+  id: string;
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+  distance_km: number;
+  accepts_dogs: boolean | null;
+  accepts_cats: boolean | null;
+}
+
+export const publicApi = {
+  getNearbyShelters: async (params: {
+    lat: number;
+    lng: number;
+    species: 'dog' | 'cat' | 'other';
+    radius_km?: number;
+  }): Promise<NearbyShelter[]> => {
+    const { lat, lng, species, radius_km = 50 } = params;
+    const url = `${API_BASE_URL}/admin/registered-shelters/nearby?lat=${lat}&lng=${lng}&radius_km=${radius_km}&species=${species}`;
+    const response = await fetch(url, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    return response.json();
+  },
+};

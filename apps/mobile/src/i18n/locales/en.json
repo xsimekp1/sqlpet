@@ -1893,5 +1893,20 @@
     "featureAnimalDesc": "Link findings to animals in the system",
     "featureHistory": "History",
     "featureHistoryDesc": "Overview of all findings with filtering and search"
+  },
+  "shelterFinder": {
+    "findNearby": "Find nearest shelter",
+    "title": "Find Shelters",
+    "subtitle": "Select animal type",
+    "dog": "Dog",
+    "cat": "Cat",
+    "other": "Other",
+    "loading": "Searching shelters...",
+    "empty": "No shelters within {radius} km",
+    "locationDenied": "Location access is required to find shelters",
+    "distance": "{km} km",
+    "back": "Back",
+    "mapNearestThree": "3 nearest shelters",
+    "tapForDetails": "Tap for details"
   }
 }

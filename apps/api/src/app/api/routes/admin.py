@@ -1642,6 +1642,8 @@ class NearbyShelter(BaseModel):
     lat: float
     lng: float
     distance_km: float
+    accepts_dogs: Optional[bool] = None
+    accepts_cats: Optional[bool] = None
 
 
 @router.get("/registered-shelters/nearby", response_model=list[NearbyShelter])
@@ -1649,21 +1651,33 @@ async def get_nearby_shelters(
     lat: float,
     lng: float,
     radius_km: float = 25,
-    current_user: User = Depends(get_current_user),
+    species: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get shelters within radius of a GPS point using Haversine formula."""
+    """Get shelters within radius of a GPS point using Haversine formula. Public endpoint."""
+    species_filter = ""
+    if species == "dog":
+        species_filter = "AND accepts_dogs = true"
+    elif species == "cat":
+        species_filter = "AND accepts_cats = true"
+
     result = await db.execute(
-        text("""
+        text(f"""
             SELECT id, name, address, lat, lng,
                    (6371 * acos(
                        cos(radians(:lat)) * cos(radians(lat)) *
                        cos(radians(lng) - radians(:lng)) +
                        sin(radians(:lat)) * sin(radians(lat))
-                   )) AS distance_km
+                   )) AS distance_km,
+                   accepts_dogs, accepts_cats
             FROM registered_shelters
             WHERE lat IS NOT NULL AND lng IS NOT NULL
-            HAVING distance_km <= :radius
+            {species_filter}
+            HAVING (6371 * acos(
+                       cos(radians(:lat)) * cos(radians(lat)) *
+                       cos(radians(lng) - radians(:lng)) +
+                       sin(radians(:lat)) * sin(radians(lat))
+                   )) <= :radius
             ORDER BY distance_km
         """),
         {"lat": lat, "lng": lng, "radius": radius_km},
@@ -1678,6 +1692,8 @@ async def get_nearby_shelters(
             lat=row[3],
             lng=row[4],
             distance_km=round(row[5], 2),
+            accepts_dogs=row[6],
+            accepts_cats=row[7],
         )
         for row in rows
     ]

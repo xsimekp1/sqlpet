@@ -12,3 +12,6 @@ node_modules/
 .vercel
 apps/web/nul
 .env*.local
+apps/mobile/.expo/
+apps/api/_tmp_*.py
+*.pdf
