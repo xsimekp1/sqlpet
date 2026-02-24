@@ -13,7 +13,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, selectedOrg, onboardingCompleted, permissions } = useAuth();
+  const { isAuthenticated, isLoading, selectedOrg, onboardingCompleted } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
@@ -30,15 +30,11 @@ export default function DashboardLayout({
       } else if (!onboardingCompleted) {
         const setupPath = `/${locale}/dashboard/setup`;
         if (!pathname.startsWith(setupPath)) {
-          const isAdmin = permissions.includes('organizations.manage');
-          if (isAdmin) {
-            router.push(setupPath);
-          }
-          // Non-admins: banner shown in AppShell, no redirect
+          router.push(setupPath);
         }
       }
     }
-  }, [isAuthenticated, isLoading, selectedOrg, onboardingCompleted, permissions, pathname, locale, router]);
+  }, [isAuthenticated, isLoading, selectedOrg, onboardingCompleted, pathname, locale, router]);
 
   if (isLoading || !isAuthenticated || !selectedOrg) {
     return (

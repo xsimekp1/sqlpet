@@ -1972,6 +1972,7 @@
     "complete": "Dokončit nastavení",
     "completeSuccess": "Nastavení bylo úspěšně uloženo",
     "completeError": "Nepodařilo se uložit nastavení",
+    "nonAdminTitle": "Nastavení čeká na administrátora",
     "nonAdminBanner": "Nastavení útulku není dokončeno. Kontaktujte administrátora.",
     "stepA": {
       "description": "Základní informace o vašem útulku",

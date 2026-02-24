@@ -51,7 +51,21 @@ export default function SetupPage() {
   const router = useRouter();
   const params = useParams();
   const locale = (params?.locale as string) || 'cs';
-  const { setOnboardingCompleted } = useAuth();
+  const { setOnboardingCompleted, permissions } = useAuth();
+  const isAdmin = permissions.includes('organizations.manage');
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>{t('nonAdminTitle')}</CardTitle>
+            <CardDescription>{t('nonAdminBanner')}</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);

@@ -1949,6 +1949,7 @@
     "complete": "Complete setup",
     "completeSuccess": "Settings saved successfully",
     "completeError": "Failed to save settings",
+    "nonAdminTitle": "Setup pending admin action",
     "nonAdminBanner": "Shelter setup is not complete. Contact your administrator.",
     "stepA": {
       "description": "Basic information about your shelter",
