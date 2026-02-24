@@ -39,7 +39,8 @@
     "signedIn": "Přihlášen jako",
     "organization": "Organizace",
     "apiStatus": "API Status",
-    "connected": "Připojeno"
+    "connected": "Připojeno",
+    "setupIncomplete": "⚠️ Nastavení útulku nebylo dokončeno. Přihlaste se přes počítač a dokončete ho v nastavení."
   },
   "errors": {
     "noPermission": "Nemáte oprávnění k této akci"

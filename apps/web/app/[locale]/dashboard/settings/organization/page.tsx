@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ApiClient from '@/app/lib/api';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import ApiClient, { type OrgSettings } from '@/app/lib/api';
 import { type DateFormatStyle } from '@/app/lib/dateFormat';
 
 interface OrganizationSettings {
@@ -27,8 +28,10 @@ interface OrganizationSettings {
 
 export default function OrganizationSettingsPage() {
   const t = useTranslations('settings.organization');
+  const tSetup = useTranslations('setup');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
   const [dateFormat, setDateFormatState] = useState<DateFormatStyle>('eu');
   const [form, setForm] = useState<OrganizationSettings>({
     name: '',
@@ -43,8 +46,16 @@ export default function OrganizationSettingsPage() {
     capacity_birds: '',
   });
 
+  // Org settings (units + legal)
+  const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric');
+  const [inventoryDecimals, setInventoryDecimals] = useState('2');
+  const [legalProfile, setLegalProfile] = useState<'CZ' | 'SK' | 'OTHER'>('CZ');
+  const [finderKeepsDays, setFinderKeepsDays] = useState('60');
+  const [custodyDays, setCustodyDays] = useState('120');
+
   useEffect(() => {
     loadOrganization();
+    loadOrgSettings();
     const saved = localStorage.getItem('dateFormat') as DateFormatStyle | null;
     if (saved === 'eu' || saved === 'us') setDateFormatState(saved);
   }, []);
@@ -68,6 +79,51 @@ export default function OrganizationSettingsPage() {
       toast.error(t('loadError'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadOrgSettings = async () => {
+    try {
+      const settings = await ApiClient.getOrganizationSettings();
+      setUnitSystem(settings.units?.system || 'metric');
+      setInventoryDecimals(String(settings.units?.inventory_decimal_places ?? 2));
+      setLegalProfile((settings.legal?.profile as 'CZ' | 'SK' | 'OTHER') || 'CZ');
+      setFinderKeepsDays(String(settings.legal?.rules?.finder_keeps?.days ?? 60));
+      setCustodyDays(String(settings.legal?.rules?.custody?.days ?? 120));
+    } catch (_err) {
+      // silently ignore - settings might not exist yet
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const current = await ApiClient.getOrganizationSettings();
+      await ApiClient.updateOrganizationSettings({
+        ...current,
+        units: {
+          system: unitSystem,
+          inventory_decimal_places: parseInt(inventoryDecimals),
+        },
+        legal: {
+          profile: legalProfile,
+          rules: {
+            finder_keeps: {
+              ...(current.legal?.rules?.finder_keeps || { start: 'announced', fallback_start: 'found', cz_later_of_announced_received: false }),
+              days: parseInt(finderKeepsDays),
+            },
+            custody: {
+              ...(current.legal?.rules?.custody || { start: 'received', fallback_start: 'found', cz_later_of_announced_received: legalProfile === 'CZ' }),
+              days: parseInt(custodyDays),
+            },
+          },
+        },
+      });
+      toast.success(t('saved'));
+    } catch (err) {
+      toast.error(t('saveError'));
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -281,6 +337,115 @@ export default function OrganizationSettingsPage() {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving}>
           {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          {t('save')}
+        </Button>
+      </div>
+
+      {/* Units section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{tSetup('steps.units')}</CardTitle>
+          <CardDescription>{tSetup('stepB.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <Label>{tSetup('stepB.unitSystem')}</Label>
+            <RadioGroup value={unitSystem} onValueChange={v => setUnitSystem(v as 'metric' | 'imperial')} className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="metric" id="s-metric" />
+                <Label htmlFor="s-metric">{tSetup('stepB.metric')}</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="imperial" id="s-imperial" />
+                <Label htmlFor="s-imperial">{tSetup('stepB.imperial')}</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          <div className="grid gap-2">
+            <Label>{tSetup('stepB.inventoryDecimals')}</Label>
+            <Select value={inventoryDecimals} onValueChange={setInventoryDecimals}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">{tSetup('stepB.decimals0')}</SelectItem>
+                <SelectItem value="2">{tSetup('stepB.decimals2')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Legal section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{tSetup('steps.legal')}</CardTitle>
+          <CardDescription>{tSetup('stepC.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <Label>{tSetup('stepC.profile')}</Label>
+            <RadioGroup value={legalProfile} onValueChange={v => setLegalProfile(v as 'CZ' | 'SK' | 'OTHER')} className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="CZ" id="sl-cz" />
+                <Label htmlFor="sl-cz">{tSetup('stepC.profileCZ')}</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="SK" id="sl-sk" />
+                <Label htmlFor="sl-sk">{tSetup('stepC.profileSK')}</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="OTHER" id="sl-other" />
+                <Label htmlFor="sl-other">{tSetup('stepC.profileOther')}</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left p-3 font-medium">{tSetup('stepC.rulesTable.scenario')}</th>
+                  <th className="text-left p-3 font-medium">{tSetup('stepC.rulesTable.startDate')}</th>
+                  <th className="text-left p-3 font-medium">{tSetup('stepC.rulesTable.days')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                <tr>
+                  <td className="p-3">{tSetup('stepC.scenarioFinderKeeps')}</td>
+                  <td className="p-3 text-muted-foreground text-xs">{tSetup('stepC.startAnnounced')}</td>
+                  <td className="p-3">
+                    <Input
+                      type="number"
+                      min="1"
+                      value={finderKeepsDays}
+                      onChange={e => setFinderKeepsDays(e.target.value)}
+                      className="w-20 h-7 text-sm"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="p-3">{tSetup('stepC.scenarioCustody')}</td>
+                  <td className="p-3 text-muted-foreground text-xs">
+                    {legalProfile === 'CZ' ? tSetup('stepC.startLaterOf') : tSetup('stepC.startReceived')}
+                  </td>
+                  <td className="p-3">
+                    <Input
+                      type="number"
+                      min="1"
+                      value={custodyDays}
+                      onChange={e => setCustodyDays(e.target.value)}
+                      className="w-20 h-7 text-sm"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-muted-foreground">{tSetup('stepC.rulesNote')}</p>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={handleSaveSettings} disabled={savingSettings}>
+          {savingSettings ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
           {t('save')}
         </Button>
       </div>

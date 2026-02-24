@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/app/context/AuthContext';
 import { AppShell } from '@/app/components/app-shell/AppShell';
@@ -13,8 +13,11 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, selectedOrg } = useAuth();
+  const { isAuthenticated, isLoading, selectedOrg, onboardingCompleted, permissions } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const params = useParams();
+  const locale = params?.locale as string || 'cs';
   const t = useTranslations('common');
   useKeyboardShortcuts();
 
@@ -24,9 +27,18 @@ export default function DashboardLayout({
         router.push('/login');
       } else if (!selectedOrg) {
         router.push('/select-org');
+      } else if (!onboardingCompleted) {
+        const setupPath = `/${locale}/dashboard/setup`;
+        if (!pathname.startsWith(setupPath)) {
+          const isAdmin = permissions.includes('organizations.manage');
+          if (isAdmin) {
+            router.push(setupPath);
+          }
+          // Non-admins: banner shown in AppShell, no redirect
+        }
       }
     }
-  }, [isAuthenticated, isLoading, selectedOrg, router]);
+  }, [isAuthenticated, isLoading, selectedOrg, onboardingCompleted, permissions, pathname, locale, router]);
 
   if (isLoading || !isAuthenticated || !selectedOrg) {
     return (
@@ -37,6 +49,11 @@ export default function DashboardLayout({
         </div>
       </div>
     );
+  }
+
+  // Setup wizard uses its own layout — don't wrap with AppShell
+  if (!onboardingCompleted && pathname.startsWith(`/${locale}/dashboard/setup`)) {
+    return <>{children}</>;
   }
 
   return (

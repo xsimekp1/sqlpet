@@ -39,7 +39,8 @@
     "signedIn": "Signed in as",
     "organization": "Organization",
     "apiStatus": "API Status",
-    "connected": "Connected"
+    "connected": "Connected",
+    "setupIncomplete": "⚠️ Shelter setup is not complete. Log in from a computer and complete it in Settings."
   },
   "errors": {
     "noPermission": "You do not have permission for this action"

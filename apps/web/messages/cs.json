@@ -1957,5 +1957,74 @@
     "featureAnimalDesc": "Propojení nálezu se zvířetem v systému",
     "featureHistory": "Historie",
     "featureHistoryDesc": "Přehled všech nálezů s možností filtrování a vyhledávání"
+  },
+  "setup": {
+    "title": "Nastavení útulku",
+    "subtitle": "Dokončete nastavení před spuštěním systému",
+    "steps": {
+      "basic": "Základní info",
+      "units": "Jednotky",
+      "legal": "Legislativa",
+      "summary": "Rekapitulace"
+    },
+    "back": "Zpět",
+    "next": "Další",
+    "complete": "Dokončit nastavení",
+    "completeSuccess": "Nastavení bylo úspěšně uloženo",
+    "completeError": "Nepodařilo se uložit nastavení",
+    "nonAdminBanner": "Nastavení útulku není dokončeno. Kontaktujte administrátora.",
+    "stepA": {
+      "description": "Základní informace o vašem útulku",
+      "orgName": "Název útulku",
+      "orgNamePlaceholder": "Útulek pro zvířata Praha",
+      "street": "Ulice a číslo popisné",
+      "streetPlaceholder": "Příkladní 123",
+      "city": "Město",
+      "zip": "PSČ",
+      "timezone": "Časové pásmo",
+      "locale": "Výchozí jazyk",
+      "timeFormat": "Formát času",
+      "dateFormat": "Formát data",
+      "contactInfo": "Kontaktní informace",
+      "phone": "Telefon",
+      "email": "E-mail",
+      "web": "Webová stránka"
+    },
+    "stepB": {
+      "description": "Nastavení jednotek pro váhu, objem a zásoby",
+      "unitSystem": "Soustava jednotek",
+      "metric": "Metrická",
+      "metricDesc": "kg, g, ml, l — standardní v ČR a SR",
+      "imperial": "Imperiální",
+      "imperialDesc": "lbs, oz, fl oz — pro USA a UK trhy",
+      "inventoryDecimals": "Zobrazení zásob",
+      "decimals0": "Celá čísla (kusy)",
+      "decimals2": "Desetinná místa (kg, litry)",
+      "inventoryDecimalsHint": "Ovlivňuje zobrazení množství v zásobách"
+    },
+    "stepC": {
+      "description": "Nastavení právních lhůt pro nálezová zvířata",
+      "profile": "Legislativní profil",
+      "profileCZ": "Česká republika (zákon č. 166/1999 Sb.)",
+      "profileSK": "Slovensko",
+      "profileOther": "Jiná země / vlastní pravidla",
+      "rulesTitle": "Lhůty",
+      "rulesTable": {
+        "scenario": "Scénář",
+        "startDate": "Začátek lhůty",
+        "days": "Lhůta (dny)"
+      },
+      "scenarioFinderKeeps": "Nálezce si ponechá zvíře",
+      "scenarioCustody": "Zvíře v útulku / karanténě",
+      "startAnnounced": "Datum vyhlášení",
+      "startReceived": "Datum přijetí",
+      "startLaterOf": "Pozdější z (vyhlášení / přijetí)",
+      "rulesNote": "Tyto hodnoty se používají pro výpočty lhůt, upozornění a doporučené kroky.",
+      "editAdvanced": "Upravit (pokročilé)"
+    },
+    "stepD": {
+      "description": "Zkontrolujte nastavení a dokončete konfiguraci útulku",
+      "days": "dní"
+    }
   }
 }

@@ -1934,5 +1934,74 @@
     "featureAnimalDesc": "Link findings to animals in the system",
     "featureHistory": "History",
     "featureHistoryDesc": "Overview of all findings with filtering and search"
+  },
+  "setup": {
+    "title": "Shelter Setup",
+    "subtitle": "Complete the setup before launching the system",
+    "steps": {
+      "basic": "Basic info",
+      "units": "Units",
+      "legal": "Legal",
+      "summary": "Summary"
+    },
+    "back": "Back",
+    "next": "Next",
+    "complete": "Complete setup",
+    "completeSuccess": "Settings saved successfully",
+    "completeError": "Failed to save settings",
+    "nonAdminBanner": "Shelter setup is not complete. Contact your administrator.",
+    "stepA": {
+      "description": "Basic information about your shelter",
+      "orgName": "Shelter name",
+      "orgNamePlaceholder": "Animal Shelter Prague",
+      "street": "Street and number",
+      "streetPlaceholder": "Example St 123",
+      "city": "City",
+      "zip": "ZIP / Postal code",
+      "timezone": "Timezone",
+      "locale": "Default language",
+      "timeFormat": "Time format",
+      "dateFormat": "Date format",
+      "contactInfo": "Contact information",
+      "phone": "Phone",
+      "email": "E-mail",
+      "web": "Website"
+    },
+    "stepB": {
+      "description": "Unit settings for weight, volume, and inventory",
+      "unitSystem": "Unit system",
+      "metric": "Metric",
+      "metricDesc": "kg, g, ml, l — standard in CZ and SK",
+      "imperial": "Imperial",
+      "imperialDesc": "lbs, oz, fl oz — for US and UK markets",
+      "inventoryDecimals": "Inventory display",
+      "decimals0": "Whole numbers (pieces)",
+      "decimals2": "Decimal places (kg, liters)",
+      "inventoryDecimalsHint": "Affects quantity display in inventory"
+    },
+    "stepC": {
+      "description": "Legal deadline settings for found animals",
+      "profile": "Legal profile",
+      "profileCZ": "Czech Republic (Act No. 166/1999 Coll.)",
+      "profileSK": "Slovakia",
+      "profileOther": "Other country / custom rules",
+      "rulesTitle": "Deadlines",
+      "rulesTable": {
+        "scenario": "Scenario",
+        "startDate": "Deadline start",
+        "days": "Deadline (days)"
+      },
+      "scenarioFinderKeeps": "Finder keeps the animal",
+      "scenarioCustody": "Animal in shelter / quarantine",
+      "startAnnounced": "Notice publication date",
+      "startReceived": "Intake date",
+      "startLaterOf": "Later of (notice / intake)",
+      "rulesNote": "These values are used for deadline calculations, alerts, and recommended actions.",
+      "editAdvanced": "Edit (advanced)"
+    },
+    "stepD": {
+      "description": "Review your settings and complete the shelter configuration",
+      "days": "days"
+    }
   }
 }

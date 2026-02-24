@@ -1,6 +1,8 @@
+from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Float, Integer, Numeric, String, Text
+from sqlalchemy import DateTime, Float, Integer, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
@@ -31,6 +33,12 @@ class Organization(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     capacity_rabbits: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     capacity_small: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     capacity_birds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # Onboarding & settings
+    settings: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    onboarding_completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     tags = relationship("Tag", back_populates="organization", lazy="selectin")
