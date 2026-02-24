@@ -1663,21 +1663,22 @@ async def get_nearby_shelters(
 
     result = await db.execute(
         text(f"""
-            SELECT id, name, address, lat, lng,
-                   (6371 * acos(
-                       cos(radians(:lat)) * cos(radians(lat)) *
-                       cos(radians(lng) - radians(:lng)) +
-                       sin(radians(:lat)) * sin(radians(lat))
-                   )) AS distance_km,
-                   accepts_dogs, accepts_cats
-            FROM registered_shelters
-            WHERE lat IS NOT NULL AND lng IS NOT NULL
-            {species_filter}
-            HAVING (6371 * acos(
-                       cos(radians(:lat)) * cos(radians(lat)) *
-                       cos(radians(lng) - radians(:lng)) +
-                       sin(radians(:lat)) * sin(radians(lat))
-                   )) <= :radius
+            SELECT id, name, address, lat, lng, distance_km, accepts_dogs, accepts_cats
+            FROM (
+                SELECT id, name, address, lat, lng,
+                       (6371 * acos(
+                           LEAST(1.0, GREATEST(-1.0,
+                               cos(radians(:lat)) * cos(radians(lat)) *
+                               cos(radians(lng) - radians(:lng)) +
+                               sin(radians(:lat)) * sin(radians(lat))
+                           ))
+                       )) AS distance_km,
+                       accepts_dogs, accepts_cats
+                FROM registered_shelters
+                WHERE lat IS NOT NULL AND lng IS NOT NULL
+                {species_filter}
+            ) _dist
+            WHERE distance_km <= :radius
             ORDER BY distance_km
         """),
         {"lat": lat, "lng": lng, "radius": radius_km},
