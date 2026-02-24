@@ -140,12 +140,16 @@ export default function NewFeedingPlanPage() {
   // Create plan mutation
   const createPlanMutation = useMutation({
     mutationFn: async (data: FeedingPlanFormData) => {
-      return await ApiClient.post('/feeding/plans', {
-        ...data,
-        schedule_json: scheduleTimes.length > 0 ? { times: scheduleTimes, amounts: amounts } : null,
-        food_id: undefined, // Not used in MVP
+      const payload = {
+        animal_id: data.animal_id,
+        start_date: data.start_date,
+        end_date: data.end_date ? data.end_date : null,
         amount_g: data.amount_g ? Number(data.amount_g) : undefined,
-      });
+        amount_text: data.amount_text || undefined,
+        schedule_json: scheduleTimes.length > 0 ? { times: scheduleTimes, amounts: amounts } : null,
+        food_id: undefined,
+      };
+      return await ApiClient.post('/feeding/plans', payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feeding-plans'] });
