@@ -89,7 +89,7 @@ export function getTranslations(locale: Locale) {
 export const supportedLocales: Locale[] = ['cs', 'en'];
 
 export function detectLocale(): Locale {
-  if (typeof navigator !== 'undefined') {
+  if (typeof navigator !== 'undefined' && navigator.language) {
     const browserLang = navigator.language.split('-')[0];
     if (browserLang === 'cs' || browserLang === 'en') {
       return browserLang;

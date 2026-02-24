@@ -1,10 +1,11 @@
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import { authApi } from '../lib/api';
 import { STORAGE_KEYS } from '../constants/config';
 import type { User, MembershipInfo, CurrentUserResponse, TokenResponse } from '../types/auth';
 
-const isWeb = typeof window !== 'undefined' && !window.__REACT_NATIVE_PLATFORM__;
+const isWeb = Platform.OS === 'web';
 
 async function getItem(key: string): Promise<string | null> {
   if (isWeb) {

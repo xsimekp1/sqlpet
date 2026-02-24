@@ -2,6 +2,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
 import { I18nProvider, detectLocale } from '../i18n';
 
@@ -51,10 +52,12 @@ export default function RootLayout() {
   const [locale, setLocale] = useState(detectLocale());
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <I18nProvider initialLocale={locale}>
-        <RootLayoutContent />
-      </I18nProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <I18nProvider initialLocale={locale}>
+          <RootLayoutContent />
+        </I18nProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }
