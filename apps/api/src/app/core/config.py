@@ -50,7 +50,12 @@ class Settings(BaseSettings):
     )
 
     # Feeding Task Settings
-    FEEDING_TASK_HORIZON_HOURS: int = 48  # Default 48h rolling window for task generation
+    FEEDING_TASK_HORIZON_HOURS: int = (
+        48  # Default 48h rolling window for task generation
+    )
+
+    # Resend Email Settings
+    RESEND_API_KEY: str = ""  # Set in production for sending emails
 
     @property
     def max_file_size_bytes(self) -> int:

@@ -9,6 +9,12 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     name: str = Field(..., min_length=1, max_length=255)
     phone: str | None = None
+    organization_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Name of the shelter/organization",
+    )
 
 
 class LoginRequest(BaseModel):

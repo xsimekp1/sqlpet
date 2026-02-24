@@ -31,3 +31,6 @@ python-magic
 
 # Performance monitoring
 colorama
+
+# Email
+resend

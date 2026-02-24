@@ -5,7 +5,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/app/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -41,6 +44,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
   const t = useTranslations();
+  const locale = useLocale();
   const { login } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
@@ -201,6 +205,12 @@ export default function LoginPage() {
                     Zpět k heslu
                   </Button>
                 )}
+                <div className="text-center text-sm">
+                  {t('login.noAccount')}{' '}
+                  <Link href={`/${locale}/register`} className="text-primary hover:underline">
+                    {t('login.registerLink')}
+                  </Link>
+                </div>
               </form>
             </Form>
           </CardContent>
