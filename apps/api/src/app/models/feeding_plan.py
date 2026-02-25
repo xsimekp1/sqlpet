@@ -41,3 +41,4 @@ class FeedingPlan(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     mer_calculation: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     animal = relationship("Animal")
+    food = relationship("Food")
