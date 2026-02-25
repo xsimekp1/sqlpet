@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { ApiClient } from '@/app/lib/api';
+import { canViewSensitiveInfo, maskEmail, maskPhone } from '@/app/lib/permissions';
+import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { Input } from '@/components/ui/input';
@@ -51,6 +53,8 @@ export default function ContactDetailPage() {
   const params = useParams();
   const contactId = params.id as string;
   const t = useTranslations('people');
+  const { selectedOrg } = useAuth();
+  const canViewSensitive = canViewSensitiveInfo(selectedOrg?.role);
 
   const [contact, setContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -300,15 +304,21 @@ export default function ContactDetailPage() {
             ) : (
               <>
                 {contact.email ? (
-                  <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
-                    {contact.email}
-                  </a>
+                  canViewSensitive ? (
+                    <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
+                      {contact.email}
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground select-none" title="Nemáte oprávnění zobrazit">{maskEmail(contact.email)}</span>
+                  )
                 ) : (
                   <span className="text-muted-foreground text-sm italic">prázdné</span>
                 )}
-                <Button size="sm" variant="ghost" onClick={() => startEdit('email', contact.email)}>
-                  <Edit className="h-3 w-3" />
-                </Button>
+                {canViewSensitive && (
+                  <Button size="sm" variant="ghost" onClick={() => startEdit('email', contact.email)}>
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -336,15 +346,21 @@ export default function ContactDetailPage() {
             ) : (
               <>
                 {contact.phone ? (
-                  <a href={`tel:${contact.phone}`} className="hover:underline">
-                    {contact.phone}
-                  </a>
+                  canViewSensitive ? (
+                    <a href={`tel:${contact.phone}`} className="hover:underline">
+                      {contact.phone}
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground select-none" title="Nemáte oprávnění zobrazit">{maskPhone(contact.phone)}</span>
+                  )
                 ) : (
                   <span className="text-muted-foreground text-sm italic">prázdné</span>
                 )}
-                <Button size="sm" variant="ghost" onClick={() => startEdit('phone', contact.phone)}>
-                  <Edit className="h-3 w-3" />
-                </Button>
+                {canViewSensitive && (
+                  <Button size="sm" variant="ghost" onClick={() => startEdit('phone', contact.phone)}>
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                )}
               </>
             )}
           </div>

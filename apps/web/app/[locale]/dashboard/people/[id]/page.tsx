@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/app/context/AuthContext';
+import { canViewSensitiveInfo, maskEmail, maskPhone } from '@/app/lib/permissions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -33,7 +35,9 @@ export default function PersonDetailPage() {
   const router = useRouter();
   const userId = params.id as string;
   const queryClient = useQueryClient();
-  const { selectedOrg } = useOrganizationStore();
+  const { selectedOrg: _selectedOrg } = useOrganizationStore();
+  const { selectedOrg } = useAuth();
+  const canViewSensitive = canViewSensitiveInfo(selectedOrg?.role);
 
   const [selectedRole, setSelectedRole] = useState<string>('');
 
@@ -161,7 +165,7 @@ export default function PersonDetailPage() {
             <Mail className="h-4 w-4 text-muted-foreground" />
             <div>
               <div className="text-sm text-muted-foreground">Email</div>
-              <div className="font-medium">{user.email}</div>
+              <div className="font-medium">{canViewSensitive ? user.email : maskEmail(user.email)}</div>
             </div>
           </div>
           {user.phone && (
@@ -169,7 +173,7 @@ export default function PersonDetailPage() {
               <Phone className="h-4 w-4 text-muted-foreground" />
               <div>
                 <div className="text-sm text-muted-foreground">Phone</div>
-                <div className="font-medium">{user.phone}</div>
+                <div className="font-medium">{canViewSensitive ? user.phone : maskPhone(user.phone)}</div>
               </div>
             </div>
           )}

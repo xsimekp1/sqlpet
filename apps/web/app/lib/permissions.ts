@@ -1,5 +1,35 @@
 import { User } from './api'
 
+export const RESTRICTED_ROLES = ['readonly', 'volunteer', 'foster'];
+
+export function canViewSensitiveInfo(role?: string): boolean {
+  if (!role) return false;
+  if (RESTRICTED_ROLES.includes(role.toLowerCase())) {
+    return false;
+  }
+  return true;
+}
+
+export function formatSensitiveValue(value: string | null | undefined): string {
+  if (!value) return '—';
+  return '••••••••';
+}
+
+export function maskEmail(email: string | null | undefined): string {
+  if (!email) return '—';
+  const [local, domain] = email.split('@');
+  if (!domain) return '••••••••';
+  const maskedLocal = local.length > 2 ? local[0] + '•••' + local.slice(-1) : '••••';
+  return `${maskedLocal}@${domain}`;
+}
+
+export function maskPhone(phone: string | null | undefined): string {
+  if (!phone) return '—';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 4) return '••••••••';
+  return '••• ••• ••••';
+}
+
 /**
  * Check if user has a specific permission
  * Superadmins have all permissions

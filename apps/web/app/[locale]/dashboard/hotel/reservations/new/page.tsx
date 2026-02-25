@@ -24,6 +24,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { useAuth } from '@/app/context/AuthContext';
+import { canViewSensitiveInfo, maskPhone } from '@/app/lib/permissions';
 
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -69,6 +71,8 @@ interface Organization {
 export default function NewHotelReservationPage() {
   const t = useTranslations('hotel');
   const router = useRouter();
+  const { selectedOrg } = useAuth();
+  const canViewSensitive = canViewSensitiveInfo(selectedOrg?.role);
   
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -584,7 +588,7 @@ export default function NewHotelReservationPage() {
                     <SelectContent>
                       {contacts.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
-                          {c.name} {c.phone ? `(${c.phone})` : ''}
+                          {c.name} {c.phone ? `(${canViewSensitive ? c.phone : maskPhone(c.phone)})` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>

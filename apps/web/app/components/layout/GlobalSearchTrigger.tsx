@@ -10,6 +10,8 @@ import { useRouter } from 'next/navigation'
 import ApiClient, { SearchResults } from '@/app/lib/api'
 import { searchCommands, type SearchResult } from '@/app/lib/search/searchCommands'
 import * as LucideIcons from 'lucide-react'
+import { useAuth } from '@/app/context/AuthContext'
+import { canViewSensitiveInfo, maskEmail } from '@/app/lib/permissions'
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value)
@@ -27,6 +29,8 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
   const locale = useLocale() as 'cs' | 'en'
   const { searchOpen, setSearchOpen } = useUIStore()
   const router = useRouter()
+  const { selectedOrg } = useAuth()
+  const canViewSensitive = canViewSensitiveInfo(selectedOrg?.role)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResults | null>(null)
   const [commandResults, setCommandResults] = useState<SearchResult[]>([])
@@ -255,7 +259,7 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
                           >
                             <User2 className="h-4 w-4 text-muted-foreground shrink-0" />
                             <span className="font-medium">{c.name}</span>
-                            {c.email && <span className="text-muted-foreground text-xs">{c.email}</span>}
+                            {c.email && <span className="text-muted-foreground text-xs">{canViewSensitive ? c.email : maskEmail(c.email)}</span>}
                           </button>
                         )
                       })}

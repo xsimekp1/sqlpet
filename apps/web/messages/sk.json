@@ -224,7 +224,8 @@
   },
   "language": {
     "cs": "Čeština",
-    "en": "English"
+    "en": "English",
+    "sk": "Slovenčina"
   },
   "medical": {
     "title": "Lekárska starostlivosť",
@@ -247,7 +248,65 @@
       "filterDiabetic": "Diabetici",
       "filterCancer": "Rakovina"
     },
-    "title": "Lekárska starostlivosť",
+    "stock": {
+      "title": "Stavy liekov na sklade",
+      "description": "Prehľad zásob liekov a vakcín",
+      "lowStock": "Nízky stav",
+      "outOfStock": "Nie je na sklade",
+      "medications": "Lieky",
+      "vaccines": "Vakcíny",
+      "comingSoon": "Pripravujeme...",
+      "implementNote": "Integrácia so skladom bude pridaná v ďalšej fáze",
+      "viewAll": "Zobraziť inventár",
+      "noMedications": "Žiadne lieky ani vakcíny v inventári",
+      "activeLots": "Šarže"
+    },
+    "tasks": {
+      "title": "Lekárske úlohy",
+      "description": "Úlohy súvisiace so zdravotnou starostlivosťou",
+      "count": "{count, plural, =0 {Žiadne úlohy} =1 {# úloha} =2 {# úlohy} other {# úloh}}",
+      "dueToday": "Dnes",
+      "overdue": "Po termíne",
+      "comingSoon": "Pripravujeme...",
+      "implementNote": "Filtrovanie úloh podľa typu bude pridané v ďalšej fáze"
+    },
+    "schedule": {
+      "title": "Plán podávania liekov",
+      "description": "Denný harmonogram medikácie (budúca funkcia)",
+      "comingSoon": "Pripravujeme...",
+      "futureFeature": "Táto funkcia bude dostupná po implementácii lekárskeho backendu"
+    },
+    "errors": {
+      "fetchFailed": "Nepodarilo sa načítať dáta lekárskej starostlivosti"
+    },
+    "requestProcedure": "Požiadať o lekársky úkon",
+    "procedureType": "Typ úkonu",
+    "vaccineFromStock": "Použiť vakcínu zo skladu",
+    "noVaccineInStock": "Žiadne vhodné vakcíny nie sú na sklade",
+    "vaccinePickerPlaceholder": "Vyberte vakcínu (voliteľné)",
+    "vaccineNone": "Bez skladu (manuálne)",
+    "priority": "Priorita",
+    "assignTo": "Priradiť",
+    "dueDate": "Termín",
+    "createTask": "Vytvoriť úlohu",
+    "types": {
+      "checkup": "Prehliadka / Rutinné vyšetrenie",
+      "vaccination": "Očkovanie",
+      "neutering": "Kastrácia / Sterilizácia",
+      "surgery": "Chirurgický zákrok",
+      "dental": "Dentálna starostlivosť",
+      "bloodwork": "Odber krvi / Laboratórne testy",
+      "xray": "Röntgen / Zobrazovanie",
+      "treatment": "Liečba / Terapia",
+      "emergency": "Urgentná starostlivosť",
+      "other": "Iné"
+    },
+    "messages": {
+      "procedureRequested": "Lekársky úkon požadovaný",
+      "procedureRequestedDesc": "Úloha lekárskeho úkonu bola úspešne vytvorená",
+      "error": "Chyba",
+      "errorDesc": "Nepodarilo sa požiadať o lekársky úkon"
+    },
     "today": "Dnes",
     "upcoming": "Nadchádzajúce",
     "history": "História",
@@ -273,160 +332,384 @@
     "batch": "Šarža",
     "administeredBy": "Podal"
   },
-  "feeding": {
-    "title": "Kŕmenie",
-    "management": "Správa kŕmenia",
-    "today": "Dnes",
-    "noFeeding": "Žiadne kŕmenie",
-    "planned": "Plánované",
-    "completed": "Dokončené",
-    "food": "Krmivo",
-    "amount": "Množstvo",
-    "unit": "g",
-    "notes": "Poznámky",
-    "noPlan": "Žiadny plán",
-    "createPlan": "Vytvoriť plán",
-    "markFed": "Označiť ako nakŕmené"
+  "alerts": {
+    "title": "Upozornenia",
+    "description": "Máte {count, plural, =0 {žiadne nové upozornenia} =1 {# nové upozornenie} other {# nové upozornenia}}",
+    "acknowledge": "Potvrdiť",
+    "acknowledgeAll": "Potvrdiť všetko",
+    "noAlerts": {
+      "title": "Všetko v poriadku",
+      "description": "Žiadne nové upozornenia"
+    },
+    "types": {
+      "critical": "Kritické",
+      "warning": "Varovanie",
+      "info": "Informácia"
+    }
   },
-  "inventory": {
-    "title": "Sklad",
-    "items": "Položky",
-    "categories": "Kategorie",
-    "food": "Krmivo",
-    "medicine": "Lekárske potreby",
-    "supplies": "Pomôcky",
-    "addItem": "Pridať položku",
-    "editItem": "Upraviť položku",
-    "quantity": "Množstvo",
-    "unit": "Jednotka",
-    "minQuantity": "Min. množstvo",
-    "expiry": "Expirácia",
-    "noItems": "Žiadne položky",
-    "inStock": "Na sklade",
-    "lowStock": "Nízky stav",
-    "outOfStock": "Vypredané"
+  "walkMode": {
+    "title": "Režim obchôdzky",
+    "description": "Klietka {current} z {total}",
+    "progress": "Priebeh",
+    "status": {
+      "complete": "Dokončené",
+      "inProgress": "Prebieha"
+    },
+    "tasks": {
+      "fed": "Nakŕmené",
+      "walked": "Prechádzka",
+      "cleaned": "Upratané",
+      "waterChecked": "Voda skontrolovaná"
+    },
+    "quickActions": {
+      "title": "Rýchle akcie",
+      "description": "Označiť všetky úlohy ako hotové alebo pridať poznámky",
+      "markComplete": "Označiť všetko ako hotové"
+    },
+    "navigation": {
+      "previous": "Predošlé",
+      "next": "Ďalšie"
+    },
+    "notes": {
+      "title": "Poznámky",
+      "placeholder": "Pridajte poznámky o tejto klietke..."
+    },
+    "overview": {
+      "title": "Všetky klietky"
+    },
+    "completed": {
+      "title": "Obchôdzka dokončená!",
+      "description": "Všetky klietky boli skontrolované",
+      "startNew": "Spustiť novú obchôdzku"
+    }
   },
-  "animals": {
-    "title": "Zvieratá",
-    "new": "Nové zviera",
-    "edit": "Upraviť zviera",
-    "delete": "Vymazať zviera",
-    "name": "Meno",
-    "species": "Druh",
-    "species_label": "Druh",
-    "breed": "Plemeno",
-    "sex": "Pohlavie",
-    "male": "Samec",
-    "female": "Samica",
-    "age": "Vek",
-    "ageYears": "Vek (roky)",
-    "birthDate": "Dátum narodenia",
-    "color": "Farba",
-    "status": "Stav",
-    "available": "K adopcii",
-    "adopted": "Adoptované",
-    "intake": "V príjme",
-    "quarantine": "Karanténa",
-    "hold": "Pozastavené",
-    "outcome:": "Výdaj",
-    "publicCode": "Verejný kód",
-    "chip": "Čip",
-    "noChip": "Bez čipu",
-    "neutered": "Kastrované",
-    "notNeutered": "Nekastrované",
-    "unknown": "Neznáme",
-    "noAnimals": "Žiadne zvieratá",
-    "filter": "Filter",
-    "search": "Hľadať zvieratá...",
-    "all": "Všetky",
-    "save": "Uložiť",
-    "cancel": "Zrušiť",
-    "confirmDelete": "Naozaj chcete vymazať toto zviera?",
-    "deleteSuccess": "Zviera vymazané",
-    "saveSuccess": "Zviera uložené",
-    "createdAt": "Vytvorené",
-    "updatedAt": "Aktualizované"
+  "menu": {
+    "title": "Menu",
+    "description": "Navigácia do všetkých sekcií systému správy útulku",
+    "sections": {
+      "main": "Hlavné",
+      "operations": "Prevádzka",
+      "people": "Ľudia",
+      "system": "Systém"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Prehľad a rýchle akcie"
+    },
+    "animals": {
+      "title": "Zvieratá",
+      "description": "Správa zvierat a ich záznamov"
+    },
+    "kennels": {
+      "title": "Klietky",
+      "description": "Správa klietok a obsadenosti"
+    },
+    "medical": {
+      "title": "Lekárska starostlivosť",
+      "description": "Zdravotné záznamy a liečba"
+    },
+    "feeding": {
+      "title": "Kŕmenie",
+      "description": "Krmiace plány a záznamy"
+    },
+    "tasks": {
+      "title": "Úlohy",
+      "description": "Denné úlohy a pridelenia"
+    },
+    "people": {
+      "title": "Ľudia",
+      "description": "Kontakty a vzťahy"
+    },
+    "adoptions": {
+      "title": "Adopcie",
+      "description": "Adopčný proces a pipeline"
+    },
+    "intake": {
+      "title": "Príjem",
+      "description": "Proces príjmu nových zvierat"
+    },
+    "reports": {
+      "title": "Reporty",
+      "description": "Reporty a analytika"
+    },
+    "settings": {
+      "title": "Nastavenia",
+      "description": "Systémové nastavenia a konfigurácie"
+    },
+    "quickStats": {
+      "title": "Rýchle štatistiky",
+      "description": "Aktuálny prehľad útulku",
+      "animals": "Zvierat",
+      "occupiedKennels": "Obsadených klietok",
+      "medicationDue": "Lieky na podanie",
+      "tasksToday": "Úloh dnes"
+    }
   },
   "kennels": {
     "title": "Klietky",
-    "new": "Nová klietka",
-    "edit": "Upraviť klietku",
-    "delete": "Vymazať klietku",
-    "name": "Názov",
-    "zone": "Zóna",
-    "capacity": "Kapacita",
-    "occupied": "Obsadené",
-    "available": "Dostupné",
-    "maintenance": "Údržba",
-    "noKennels": "Žiadne klietky",
-    "addKennel": "Pridať klietku",
-    "selectKennel": "Vybrať klietku",
-    "animal": "Zviera",
-    "move": "Presunúť",
-    "remove": "Odstrániť"
-  },
-  "people": {
-    "title": "Ľudia",
-    "contacts": "Kontakty",
-    "members": "Členovia",
-    "newContact": "Nový kontakt",
-    "editContact": "Upraviť kontakt",
-    "deleteContact": "Vymazať kontakt",
-    "name": "Meno",
-    "email": "E-mail",
-    "phone": "Telefón",
-    "type": "Typ",
-    "type_donor": "Darcovi",
-    "type_veterinarian": "Veterinár",
-    "type_volunteer": "Dobrovoľník",
-    "type_foster": "Pestún",
-    "type_supplier": "Dodávateľ",
-    "type_partner": "Partner",
-    "type_other": "Iné",
-    "noContacts": "Žiadne kontakty",
-    "save": "Uložiť",
-    "cancel": "Zrušiť"
-  },
-  "tasks": {
-    "title": "Úlohy",
-    "new": "Nová úloha",
-    "edit": "Upraviť úlohu",
-    "delete": "Vymazať úlohu",
-    "description": "Popis",
-    "assignee": "Priradené",
-    "dueDate": "Termín",
-    "priority": "Priorita",
-    "priority_high": "Vysoká",
-    "priority_medium": "Stredná",
-    "priority_low": "Nízka",
-    "status": "Stav",
-    "status_pending": "Čakajúca",
-    "status_in_progress": "V priebehu",
-    "status_completed": "Dokončená",
-    "noTasks": "Žiadne úlohy",
-    "save": "Uložiť",
-    "cancel": "Zrušiť"
+    "description": "Správa klietok a zón útulku",
+    "search": "Hľadať klietky...",
+    "filters": {
+      "zone": "Zóna",
+      "status": "Stav",
+      "type": "Typ",
+      "size": "Veľkosť",
+      "occupancy": "Obsadenosť"
+    },
+    "quickActions": {
+      "addKennel": "Pridať klietku/voliéru",
+      "manageZones": "Spravovať zóny",
+      "manageZonesComingSoon": "Správa zón bude pridaná čoskoro",
+      "walkMode": "Režim obchôdzky",
+      "title": "Rýchle akcie",
+      "description": "Označiť všetky úlohy ako hotové alebo pridať poznámky o tejto klietke..."
+    },
+    "view": {
+      "table": "Tabuľka",
+      "grid": "Karty",
+      "map": "Mapa",
+      "timeline": "Časová os"
+    },
+    "views": {
+      "grid": "Karty",
+      "table": "Tabuľka",
+      "map": "Mapa",
+      "timeline": "Časová os"
+    },
+    "occupancy": {
+      "empty": "Prázdna",
+      "partial": "Čiastočne",
+      "full": "Plná",
+      "over": "Prepad"
+    },
+    "status": {
+      "available": "Dostupná",
+      "maintenance": "Údržba",
+      "closed": "Zatvorená"
+    },
+    "type": {
+      "indoor": "Vnútorná",
+      "outdoor": "Vonková",
+      "isolation": "Izolácia",
+      "quarantine": "Karanténa"
+    },
+    "actions": {
+      "edit": "Upraviť",
+      "moveAnimals": "Presunúť zvieratá",
+      "setMaintenance": "Nastaviť údržbu"
+    },
+    "noResults": {
+      "noFilter": "Žiadne klietky nenájdené",
+      "withFilter": "Žiadne klietky nezodpovedajú filtrom"
+    },
+    "errors": {
+      "fetchFailed": "Nepodarilo sa načítať klietky"
+    },
+    "add": {
+      "title": "Pridať klietku",
+      "description": "Vytvorte novú klietku v útulku",
+      "name": "Názov",
+      "zone": "Zóna",
+      "zonePlaceholder": "Vyberte zónu",
+      "loadingZones": "Načítam zóny...",
+      "type": "Typ",
+      "size": "Veľkosť",
+      "capacity": "Kapacita",
+      "notes": "Poznámky",
+      "notesPlaceholder": "Voliteľné poznámky o tejto klietke",
+      "allowedSpecies": "Pre aké zvieratá",
+      "allowedSpeciesHint": "Automatický názov",
+      "submit": "Vytvoriť",
+      "success": "Klietka/voliéra bola úspešne vytvorená",
+      "error": "Nepodarilo sa vytvoriť klietku"
+    }
   },
   "settings": {
     "title": "Nastavenia",
-    "general": "Všeobecné",
-    "organization": "Organizácia",
-    "users": "Používatelia",
-    "roles": "Roly",
-    "security": "Bezpečnosť",
-    "save": "Uložiť",
+    "description": "Spravujte svoje predvoľby",
     "cancel": "Zrušiť",
-    "name": "Názov",
-    "slug": "URL slug",
-    "logo": "Logo",
-    "timezone": "Časové pásmo"
+    "tabs": {
+      "general": "Všeobecné",
+      "defaultImages": "Predvolené obrázky",
+      "breeds": "Plemená",
+      "colors": "Farby",
+      "members": "Členovia",
+      "roles": "Roly",
+      "organization": "Organizácia"
+    },
+    "organization": {
+      "title": "Organizácia",
+      "description": "Základné informácie o útulku",
+      "basicInfo": "Základné informácie",
+      "basicInfoDesc": "Názov a registračné údaje",
+      "orgName": "Názov útulku",
+      "registrationNumber": "Registračné číslo",
+      "registrationNumberHint": "Formát: SK 51C00155",
+      "location": "Poloha",
+      "locationDesc": "Adresa a GPS súradnice",
+      "address": "Adresa",
+      "addressPlaceholder": "Ulica, Mesto, PSČ",
+      "latitude": "Zemepisná šírka",
+      "longitude": "Zemepisná dĺžka",
+      "capacities": "Kapacity",
+      "capacitiesDesc": "Maximálne kapacity útulku pre jednotlivé druhy zvierat",
+      "dogs": "Psy",
+      "cats": "Mačky",
+      "rabbits": "Hlodavce",
+      "small": "Hlodavce",
+      "birds": "Vtáky",
+      "save": "Uložiť",
+      "saved": "Nastavenia uložené",
+      "saveError": "Chyba pri ukladaní",
+      "loadError": "Chyba pri načítaní",
+      "display": "Zobrazenie",
+      "displayDesc": "Nastavenia formátov a zobrazení dát",
+      "dateFormat": "Formát dátumu",
+      "dateFormatHint": "Platí pre celú organizáciu, ukladá sa lokálne"
+    },
+    "preferences": "Predvoľby",
+    "weightUnit": "Jednotka hmotnosti",
+    "weightUnitDesc": "Vyberte jednotku pre zobrazenie hmotnosti zvierat v celej aplikácii",
+    "kg": "Kilogramy (kg)",
+    "lbs": "Libry (lbs)",
+    "currency": "Mena",
+    "currencyDesc": "Mena pre zobrazenie cien v aplikácii",
+    "timeFormat": "Formát času",
+    "timeFormatDesc": "Spôsob zobrazenia času v aplikácii",
+    "time24h": "24hodinový (0–23)",
+    "time12h": "12hodinový (AM/PM)",
+    "defaultImages": {
+      "uploadTitle": "Nahrať nový predvolený obrázok",
+      "species": "Druh zvieratа",
+      "speciesPlaceholder": "Vyberte druh",
+      "breed": "Plemeno",
+      "breedPlaceholder": "Vyberte plemeno (voliteľné)",
+      "breedLoading": "Načítam plemená...",
+      "breedNone": "Žiadne plemená nenájdené",
+      "breedNew": "Nové plemeno...",
+      "breedNewPlaceholder": "Zadajte názov plemena",
+      "color": "Farba",
+      "colorPlaceholder": "Vyberte farbu",
+      "colorNew": "Iná...",
+      "colorNewPlaceholder": "Zadajte farbu (napr. black, white)",
+      "dropZone": "Pretiahnite obrázok alebo kliknite pre výber",
+      "dropZoneAccept": "Prijíma: JPG, PNG, WEBP",
+      "squareOk": "Štvorcový — OK",
+      "notSquare": "Nie je štvorcový",
+      "submit": "Nahrať obrázok",
+      "uploading": "Nahrávam...",
+      "uploadSuccess": "Obrázok úspešne nahraný",
+      "uploadError": "Nepodarilo sa nahrať obrázok",
+      "listTitle": "Existujúce predvolené obrázky",
+      "listEmpty": "Žiadne predvolené obrázky",
+      "deleteConfirmTitle": "Vymazať obrázok?",
+      "deleteConfirmDesc": "Táto akcia je nevratná. Obrázok bude trvalo odstránený.",
+      "deleteConfirm": "Vymazať",
+      "deleteCancel": "Zrušiť",
+      "deleteSuccess": "Obrázok vymazaný",
+      "deleteError": "Nepodarilo sa vymazať obrázok",
+      "species_dog": "Pes",
+      "species_cat": "Mačka",
+      "species_rodent": "Hlodavec",
+      "species_bird": "Vták",
+      "species_other": "Iné"
+    },
+    "breedsAdmin": {
+      "title": "Správa plemien",
+      "description": "Upravte slovenské a anglické názvy plemien",
+      "searchPlaceholder": "Hľadať plemeno...",
+      "nameCz": "Názov (SK)",
+      "nameEn": "Názov (EN)",
+      "breedName": "Interný názov",
+      "save": "Uložiť",
+      "saving": "Ukladam...",
+      "saveSuccess": "Preklad uložený",
+      "saveError": "Chyba pri ukladaní",
+      "empty": "Žiadne plemená nenájdené"
+    },
+    "initRoles": "Inicializovať štandardné roly",
+    "initRolesSuccess": "Štandardné role inicializované",
+    "colorsAdmin": {
+      "title": "Správa farieb",
+      "description": "Upravte slovenské a anglické názvy farieb",
+      "searchPlaceholder": "Hľadať farbu...",
+      "colorCode": "Kód farby",
+      "nameCz": "Názov (SK)",
+      "nameEn": "Názov (EN)",
+      "used": "Použité",
+      "saveSuccess": "Preklad uložený",
+      "saveError": "Chyba pri ukladaní",
+      "empty": "Žiadne farby nenájdené",
+      "addColor": "Pridať farbu",
+      "create": "Vytvoriť",
+      "createSuccess": "Farba vytvorená",
+      "createError": "Chyba pri vytváraní farby",
+      "codeRequired": "Kód farby je povinný",
+      "delete": "Vymazať",
+      "deleteConfirm": "Naozaj chcete vymazať túto farbu?",
+      "deleteSuccess": "Farba vymazaná",
+      "deleteError": "Chyba pri mazaní farby",
+      "cannotDelete": "Farbu nemožno vymazať — je použitá u zvierat"
+    }
   },
-  "changelog": {
-    "title": "Čo je nové",
-    "version": "Verzia",
-    "date": "Dátum",
-    "features": "Nové funkcie",
-    "fixes": "Opravy",
-    "improvements": "Vylepšenia"
+  "animals": {
+    "view": {
+      "grid": "Kartičky",
+      "table": "Tabuľka"
+    },
+    "statusFilter": {
+      "active": "Aktívne",
+      "available": "Dostupné",
+      "all": "Všetky"
+    },
+    "species": {
+      "label": "Druh",
+      "dog": "Pes",
+      "cat": "Mačka",
+      "rodent": "Hlodavec",
+      "bird": "Vták",
+      "other": "Iné"
+    },
+    "sex": {
+      "male": "Samec",
+      "female": "Samica",
+      "unknown": "Neznáme"
+    },
+    "new": {
+      "title": "Pridať nové zviera",
+      "subtitle": "Zaregistrovať nové zviera v útulku",
+      "basicInfo": "Základné informácie",
+      "basicInfoDesc": "Vyplňte základné údaje o zvierati",
+      "name": "Meno *",
+      "namePlaceholder": "napr. Max, Luna",
+      "species": "Druh *",
+      "speciesPlaceholder": "Vyberte druh",
+      "sex": "Pohlavie *",
+      "sexPlaceholder": "Vyberte pohlavie",
+      "color": "Farba",
+      "colorPlaceholder": "Vyberte farbu",
+      "breed": "Plemeno",
+      "breedPlaceholder": "Vyberte plemeno",
+      "breedLoading": "Načítanie plemien...",
+      "colorLoading": "Načítanie farieb...",
+      "noColorsAvailable": "Pre toto plemeno nie sú dostupné farby",
+      "defaultImageHint": "Predvolený obrázok pre toto plemeno a farbu",
+      "previewTitle": "Náhľad obrázku",
+      "estimatedAge": "Odhadnutý vek (roky)",
+      "estimatedAgePlaceholder": "napr. 2",
+      "intakeDate": "Dátum príjmu *",
+      "create": "Vytvoriť zviera",
+      "creating": "Vytváranie...",
+      "cancel": "Zrušiť",
+      "success": "Zviera bolo úspešne vytvorené!",
+      "error": "Nepodarilo sa vytvoriť zviera"
+    },
+    "alteredStatus": {
+      "label": "Kastrácia",
+      "neutered": "Kastrovaný",
+      "spayed": "Sterilizovaná",
+      "intact": "Nekastrovaný",
+      "unknown": "Neznámo"
+    }
   }
 }

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiClient } from '@/app/lib/api';
 import { useTranslations } from 'next-intl';
+import { useAuth } from '@/app/context/AuthContext';
+import { canViewSensitiveInfo, maskEmail, maskPhone } from '@/app/lib/permissions';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -31,7 +33,9 @@ type ContactTypeFilter = 'all' | 'donor' | 'veterinarian' | 'volunteer' | 'foste
 
 export default function PeoplePage() {
   const t = useTranslations('people');
-  const { selectedOrg } = useOrganizationStore();
+  const { selectedOrg: _selectedOrg } = useOrganizationStore();
+  const { selectedOrg } = useAuth();
+  const canViewSensitive = canViewSensitiveInfo(selectedOrg?.role);
 
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [contactTypeFilter, setContactTypeFilter] = useState<ContactTypeFilter>('all');
@@ -356,7 +360,7 @@ export default function PeoplePage() {
                         {contact.email ? (
                           <div className="flex items-center gap-2">
                             <Mail className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{contact.email}</span>
+                            <span className="text-sm">{canViewSensitive ? contact.email : maskEmail(contact.email)}</span>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>
@@ -366,7 +370,7 @@ export default function PeoplePage() {
                         {contact.phone ? (
                           <div className="flex items-center gap-2">
                             <Phone className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{contact.phone}</span>
+                            <span className="text-sm">{canViewSensitive ? contact.phone : maskPhone(contact.phone)}</span>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>

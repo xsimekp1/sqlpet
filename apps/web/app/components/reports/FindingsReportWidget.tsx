@@ -15,6 +15,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ApiClient, Finding, FindingListResponse } from '@/app/lib/api';
 import { toast } from 'sonner';
+import { useAuth } from '@/app/context/AuthContext';
+import { canViewSensitiveInfo, maskEmail } from '@/app/lib/permissions';
 
 interface Contact {
   id: string;
@@ -38,6 +40,8 @@ const RADIUS_OPTIONS = [
 ];
 
 export default function FindingsReportWidget() {
+  const { selectedOrg } = useAuth();
+  const canViewSensitive = canViewSensitiveInfo(selectedOrg?.role);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -249,7 +253,7 @@ export default function FindingsReportWidget() {
                       className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
                     >
                       {c.name}
-                      {c.email && <span className="text-muted-foreground ml-2">{c.email}</span>}
+                      {c.email && <span className="text-muted-foreground ml-2">{canViewSensitive ? c.email : maskEmail(c.email)}</span>}
                     </button>
                   ))}
                 </div>

@@ -45,6 +45,7 @@ import { useUIStore } from '@/app/stores/uiStore';
 import { useAuth } from '@/app/context/AuthContext';
 import { useTheme } from '@/app/hooks/useTheme';
 import ApiClient from '@/app/lib/api';
+import { canViewSensitiveInfo, maskEmail } from '@/app/lib/permissions';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -92,7 +93,8 @@ export default function SettingsPage() {
   const t = useTranslations('settings');
   const locale = useLocale();
   const { weightUnit, setWeightUnit, currency, setCurrency, timeFormat, setTimeFormat } = useUIStore();
-  const { user } = useAuth();
+  const { user, selectedOrg } = useAuth();
+  const canViewSensitive = canViewSensitiveInfo(selectedOrg?.role);
   const { theme, setTheme } = useTheme();
 
   // Default images state
@@ -1388,7 +1390,7 @@ export default function SettingsPage() {
                     <div key={member.user_id} className="flex items-center justify-between py-3">
                       <div>
                         <p className="font-medium text-sm">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.email}</p>
+                        <p className="text-xs text-muted-foreground">{canViewSensitive ? member.email : maskEmail(member.email)}</p>
                         {member.role_name && (
                           <Badge variant="secondary" className="text-xs mt-0.5">{member.role_name}</Badge>
                         )}
