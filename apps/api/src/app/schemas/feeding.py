@@ -78,6 +78,7 @@ class FeedingPlanBase(BaseModel):
 
 
 class FeedingPlanCreate(FeedingPlanBase):
+    inventory_item_id: Optional[uuid.UUID] = None
     mer_calculation: Optional[Dict[str, Any]] = None  # MER snapshot at plan creation
 
     @field_validator("schedule_json")
@@ -165,6 +166,7 @@ class FeedingPlanUpdate(BaseModel):
 class FeedingPlanResponse(FeedingPlanBase):
     id: uuid.UUID
     organization_id: uuid.UUID
+    inventory_item_id: Optional[uuid.UUID] = None
     is_active: bool
     mer_calculation: Optional[Dict[str, Any]] = None
     animal_name: Optional[str] = None

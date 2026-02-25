@@ -27,6 +27,7 @@ class FeedingService:
         start_date: date,
         created_by_id: uuid.UUID,
         food_id: Optional[uuid.UUID] = None,
+        inventory_item_id: Optional[uuid.UUID] = None,
         amount_g: Optional[float] = None,
         amount_text: Optional[str] = None,
         times_per_day: Optional[int] = None,
@@ -61,6 +62,7 @@ class FeedingService:
             organization_id=organization_id,
             animal_id=animal_id,
             food_id=food_id,
+            inventory_item_id=inventory_item_id,
             amount_g=amount_g,
             amount_text=amount_text,
             times_per_day=times_per_day,
@@ -291,6 +293,7 @@ class FeedingService:
                                 "animal_id": str(plan.animal_id),
                                 "scheduled_time": scheduled_time,
                                 "amount_g": amount_g,
+                                "inventory_item_id": str(plan.inventory_item_id) if plan.inventory_item_id else None,
                             },
                             related_entity_type="animal",
                             related_entity_id=plan.animal_id,
@@ -347,6 +350,8 @@ class FeedingService:
         amount_text: Optional[str] = None,
         notes: Optional[str] = None,
         auto_deduct_inventory: bool = True,
+        amount_g_override: Optional[float] = None,
+        inventory_item_id: Optional[uuid.UUID] = None,
     ) -> Dict[str, Any]:
         """Log that an animal was fed. Returns dict with feeding_log and deductions."""
         feeding_log = FeedingLog(
@@ -360,22 +365,41 @@ class FeedingService:
         )
         self.db.add(feeding_log)
         await self.db.flush()
+        # Refresh to populate server-side defaults (e.g. created_at)
+        await self.db.refresh(feeding_log)
 
         # Auto-deduct from inventory if enabled
         deductions = []
         if auto_deduct_inventory:
-            # Get active feeding plan for this animal
-            plans = await self.get_active_plans_for_animal(animal_id, organization_id)
-            if plans and plans[0].food_id:
-                plan = plans[0]
-                # Get food details
-                food_result = await self.db.execute(
-                    select(Food).where(Food.id == plan.food_id)
-                )
-                food = food_result.scalar_one_or_none()
+            # Resolve item ID and amount to deduct
+            deduct_item_id = inventory_item_id
+            deduct_amount = amount_g_override
 
-                if food and plan.amount_g:
-                    # Deduct from inventory (multi-lot FIFO)
+            if deduct_item_id is None or deduct_amount is None:
+                # Fall back to active feeding plan
+                plans = await self.get_active_plans_for_animal(animal_id, organization_id)
+                if plans:
+                    plan = plans[0]
+                    if deduct_item_id is None:
+                        deduct_item_id = plan.inventory_item_id
+                    if deduct_amount is None:
+                        deduct_amount = float(plan.amount_g) if plan.amount_g else None
+
+            # Only deduct when we have an amount to deduct
+            if deduct_amount is not None:
+                # Resolve food_name fallback for name-based lookup (legacy plans without inventory_item_id)
+                food_name_fallback: Optional[str] = None
+                if deduct_item_id is None:
+                    plans = await self.get_active_plans_for_animal(animal_id, organization_id)
+                    if plans and plans[0].food_id:
+                        food_result = await self.db.execute(
+                            select(Food).where(Food.id == plans[0].food_id)
+                        )
+                        food = food_result.scalar_one_or_none()
+                        if food:
+                            food_name_fallback = food.name
+
+                if deduct_item_id is not None or food_name_fallback is not None:
                     from src.app.services.inventory_service import InventoryService
 
                     inv_service = InventoryService(self.db)
@@ -383,10 +407,11 @@ class FeedingService:
                     try:
                         deductions = await inv_service.deduct_for_feeding(
                             organization_id=organization_id,
-                            food_name=food.name,
-                            amount_g=plan.amount_g,
+                            amount_g=deduct_amount,
                             feeding_log_id=feeding_log.id,
                             user_id=fed_by_user_id,
+                            item_id=deduct_item_id,
+                            food_name=food_name_fallback,
                         )
                     except Exception as e:
                         # Log error but don't fail the feeding log
@@ -480,6 +505,16 @@ class FeedingService:
                     if existing_task:
                         continue
 
+                    # Calculate per-meal amount from schedule
+                    schedule_amounts = plan.schedule_json.get("amounts", [])
+                    meal_idx = schedule_times.index(scheduled_time)
+                    if schedule_amounts and meal_idx < len(schedule_amounts):
+                        meal_amount_g = schedule_amounts[meal_idx]
+                    elif plan.amount_g and len(schedule_times) > 0:
+                        meal_amount_g = plan.amount_g / len(schedule_times)
+                    else:
+                        meal_amount_g = None
+
                     # Create feeding task
                     animal_name = plan.animal.name if plan.animal else "zvíře"
                     task = await task_service.create_task(
@@ -496,6 +531,8 @@ class FeedingService:
                             "feeding_plan_id": str(plan.id),
                             "animal_id": str(plan.animal_id),
                             "scheduled_time": scheduled_time,
+                            "amount_g": meal_amount_g,
+                            "inventory_item_id": str(plan.inventory_item_id) if plan.inventory_item_id else None,
                         },
                         related_entity_type="animal",
                         related_entity_id=plan.animal_id,
@@ -540,12 +577,18 @@ class FeedingService:
         if not animal_id:
             raise ValueError("Task does not have animal_id")
 
+        # Extract per-meal amount and inventory item from task metadata
+        amount_g_raw = task.task_metadata.get("amount_g") if task.task_metadata else None
+        inv_item_id_str = task.task_metadata.get("inventory_item_id") if task.task_metadata else None
+
         # Log feeding
         log_result = await self.log_feeding(
             organization_id=organization_id,
             animal_id=uuid.UUID(animal_id) if isinstance(animal_id, str) else animal_id,
             fed_by_user_id=completed_by_user_id,
             notes=notes,
+            amount_g_override=float(amount_g_raw) if amount_g_raw is not None else None,
+            inventory_item_id=uuid.UUID(inv_item_id_str) if inv_item_id_str else None,
             auto_deduct_inventory=True,
         )
         feeding_log = log_result["feeding_log"]

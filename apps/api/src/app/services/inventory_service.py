@@ -332,28 +332,35 @@ class InventoryService:
     async def deduct_for_feeding(
         self,
         organization_id: uuid.UUID,
-        food_name: str,
         amount_g: float,
         feeding_log_id: uuid.UUID,
         user_id: uuid.UUID,
+        food_name: Optional[str] = None,
+        item_id: Optional[uuid.UUID] = None,
     ) -> List[Dict[str, Any]]:
         """
         Deduct inventory for feeding using FIFO across multiple lots.
         Returns list of deduction dicts (one per lot used).
+        Lookup priority: item_id > food_name (case-insensitive name match).
         """
-        # Find inventory item matching food name (case-insensitive)
-        item_stmt = select(InventoryItem).where(
-            and_(
-                InventoryItem.organization_id == organization_id,
-                func.lower(InventoryItem.name) == func.lower(food_name),
-                InventoryItem.category == InventoryCategory.FOOD,
+        if item_id:
+            item = await self.get_item_by_id(item_id, organization_id)
+            if not item:
+                raise ValueError(f"Inventory item not found: {item_id}")
+        elif food_name:
+            item_stmt = select(InventoryItem).where(
+                and_(
+                    InventoryItem.organization_id == organization_id,
+                    func.lower(InventoryItem.name) == func.lower(food_name),
+                    InventoryItem.category == InventoryCategory.FOOD,
+                )
             )
-        )
-        item_result = await self.db.execute(item_stmt)
-        item = item_result.scalar_one_or_none()
-
-        if not item:
-            raise ValueError(f"No inventory item found for food: {food_name}")
+            item_result = await self.db.execute(item_stmt)
+            item = item_result.scalar_one_or_none()
+            if not item:
+                raise ValueError(f"No inventory item found for food: {food_name}")
+        else:
+            raise ValueError("Either item_id or food_name must be provided")
 
         # Find all lots with stock (FIFO: earliest expiry first)
         lot_stmt = (
@@ -371,8 +378,17 @@ class InventoryService:
         if not lots:
             raise ValueError(f"No stock available for item: {item.name}")
 
-        # Convert grams to item unit (assume kg for MVP)
-        remaining = amount_g / 1000.0  # g → kg
+        # Convert grams to the item's native unit
+        if item.unit_weight_g:
+            # Unit is countable (e.g. cans of 400 g each): 200 g / 400 g = 0.5 cans
+            remaining = amount_g / float(item.unit_weight_g)
+        elif item.unit == 'g':
+            remaining = amount_g          # deduct raw grams
+        elif item.unit == 'kg':
+            remaining = amount_g / 1000.0  # g → kg
+        else:
+            remaining = amount_g / 1000.0  # fallback: assume kg
+
         deductions = []
 
         for lot in lots:

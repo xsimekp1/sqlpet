@@ -30,6 +30,11 @@ class FeedingPlan(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         ForeignKey("foods.id", ondelete="SET NULL"),
         nullable=True,
     )
+    inventory_item_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("inventory_items.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     amount_g: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
     amount_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     times_per_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -42,3 +47,4 @@ class FeedingPlan(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     animal = relationship("Animal")
     food = relationship("Food")
+    inventory_item = relationship("InventoryItem")

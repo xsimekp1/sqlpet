@@ -147,7 +147,7 @@ export default function NewFeedingPlanPage() {
         amount_g: data.amount_g ? Number(data.amount_g) : undefined,
         amount_text: data.amount_text || undefined,
         schedule_json: scheduleTimes.length > 0 ? { times: scheduleTimes, amounts: amounts } : null,
-        food_id: undefined,
+        inventory_item_id: selectedFoodId || undefined,
       };
       return await ApiClient.post('/feeding/plans', payload);
     },
