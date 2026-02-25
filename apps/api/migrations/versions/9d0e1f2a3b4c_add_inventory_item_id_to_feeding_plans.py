@@ -1,6 +1,6 @@
 """add_inventory_item_id_to_feeding_plans
 
-Revision ID: a9b8c7d6e5f4
+Revision ID: 9d0e1f2a3b4c
 Revises: f18870d8d23a
 Create Date: 2026-02-26 00:00:00.000000
 
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'a9b8c7d6e5f4'
+revision: str = '9d0e1f2a3b4c'
 down_revision: Union[str, Sequence[str], None] = 'f18870d8d23a'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
