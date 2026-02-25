@@ -14,12 +14,19 @@ _request_query_data: ContextVar[dict[str, Any]] = ContextVar(
 )
 
 # Async engine (for FastAPI runtime)
-# Use NullPool for Supabase PgBouncer which has connection limits
+# pool_pre_ping validates connections before use, preventing stale-connection errors.
+# statement_cache_size=0 disables asyncpg prepared-statement caching, required when
+# connecting through PgBouncer in transaction mode (Supabase / Railway proxy).
+# pool_recycle closes connections older than 5 minutes so the DB server never sees
+# them as idle long enough to close them first.
 async_engine = create_async_engine(
     settings.DATABASE_URL_ASYNC,
     echo=(settings.ENV == "dev"),
-    poolclass=pool.NullPool,  # NullPool for Supabase PgBouncer compatibility
-    # Note: pool_pre_ping and pool_timeout are not valid with NullPool
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=10,
+    pool_recycle=300,
+    connect_args={"statement_cache_size": 0},
 )
 
 
