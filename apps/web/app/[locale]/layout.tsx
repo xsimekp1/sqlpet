@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const locales = ['cs', 'en'];
+const locales = ['cs', 'en', 'sk'];
 
 export default async function LocaleLayout({
   children,

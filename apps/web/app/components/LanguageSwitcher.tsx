@@ -12,7 +12,7 @@ export function LanguageSwitcher() {
   const t = useTranslations('language');
 
   const switchLocale = () => {
-    const newLocale = locale === 'cs' ? 'en' : 'cs';
+    const newLocale = locale === 'cs' ? 'en' : locale === 'en' ? 'sk' : 'cs';
 
     // Replace the locale in the pathname
     const newPathname = pathname.replace(`/${locale}`, `/${newLocale}`);
@@ -25,11 +25,11 @@ export function LanguageSwitcher() {
       size="sm"
       onClick={switchLocale}
       className="gap-2"
-      title={locale === 'cs' ? t('en') : t('cs')}
+      title={locale === 'cs' ? t('en') : locale === 'en' ? 'Slovenčina' : t('cs')}
     >
       <Globe className="h-4 w-4" />
       <span className="text-sm font-medium">
-        {locale === 'cs' ? 'EN' : 'CS'}
+        {locale === 'cs' ? 'EN' : locale === 'en' ? 'SK' : 'CS'}
       </span>
     </Button>
   );
