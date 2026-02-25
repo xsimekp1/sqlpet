@@ -11,20 +11,22 @@ export function AboutSection() {
 
             <div className="space-y-5 text-gray-600 leading-relaxed">
               <p>
-                Jednoho večera jsme našli kočku v lese. Zraněnou, vystrašenou.
-                Snažili jsme se ji předat do útulku, ale narazili jsme na to,
-                co zná asi každý, kdo s útulky pracuje: žádná evidence online,
-                žádný systém. Jen telefonáty a naděje, že to někdo zvedne.
+                Jednoho večera jsem našel v lese kočku. Byla zraněná a vystrašená. 
+                Měl jsem v hlavě jasný plán: odvézt ji do útulku. Jenže než jsem to stihl udělat, 
+                dostala jméno — Malina — a nějak se to celé zvrtlo.
               </p>
               <p>
-                Ten večer jsme se stali &quot;kočičími lidmi&quot;. A z toho vznikl
-                Petslog. Věříme, že každý útulek, ať už malý obecní nebo velká
-                organizace, si zaslouží nástroj, který šetří čas a zlepšuje péči.
-                Aby se na ta zvířata nezapomnělo.
+                Malina u mě nakonec zůstala. A jestli něco umí, tak je to držet režim, 
+                prosadit si svoje a připomínat mi každý den, že pořádek je jen dočasný stav. 
+                Letos jí bude deset. Řekněme, že máme… intenzivní vztah.
               </p>
               <p>
-                Jsme malý tým z Česka. Budujeme to, co bychom tehdy sami
-                potřebovali. Vede nás Pavel.
+                A právě po těch letech jsem se rozhodl postavit Petslog: moderní systém pro útulky, 
+                který zjednoduší každodenní provoz, ušetří čas i náklady a pomůže zvířatům 
+                rychleji najít domov.
+              </p>
+              <p>
+                Jsme malý tým z Česka. Budujeme Petslog poctivě, krok za krokem.
               </p>
             </div>
           </div>
