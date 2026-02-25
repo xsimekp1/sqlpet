@@ -105,18 +105,40 @@ async def get_feeding_plan(
 ):
     """Get a single feeding plan by ID."""
     from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
     from src.app.models.feeding_plan import FeedingPlan
 
     result = await db.execute(
-        select(FeedingPlan).where(
+        select(FeedingPlan)
+        .where(
             FeedingPlan.id == plan_id,
             FeedingPlan.organization_id == organization_id,
         )
+        .options(selectinload(FeedingPlan.animal), selectinload(FeedingPlan.food))
     )
     plan = result.scalar_one_or_none()
     if not plan:
         raise HTTPException(status_code=404, detail="Feeding plan not found")
-    return plan
+
+    return FeedingPlanResponse(
+        id=plan.id,
+        organization_id=plan.organization_id,
+        animal_id=plan.animal_id,
+        food_id=plan.food_id,
+        amount_g=plan.amount_g,
+        amount_text=plan.amount_text,
+        times_per_day=plan.times_per_day,
+        schedule_json=plan.schedule_json,
+        start_date=plan.start_date,
+        end_date=plan.end_date,
+        notes=plan.notes,
+        is_active=plan.is_active,
+        mer_calculation=plan.mer_calculation,
+        animal_name=plan.animal.name if plan.animal else None,
+        food_name=plan.food.name if plan.food else None,
+        created_at=plan.created_at,
+        updated_at=plan.updated_at,
+    )
 
 
 @router.get("/plans", response_model=FeedingPlanListResponse)
@@ -130,6 +152,7 @@ async def list_feeding_plans(
 ):
     """List feeding plans."""
     from sqlalchemy import select, and_, func
+    from sqlalchemy.orm import selectinload
     from src.app.models.feeding_plan import FeedingPlan
 
     conditions = [FeedingPlan.organization_id == organization_id]
@@ -147,10 +170,35 @@ async def list_feeding_plans(
     stmt = (
         select(FeedingPlan)
         .where(and_(*conditions))
+        .options(selectinload(FeedingPlan.animal), selectinload(FeedingPlan.food))
         .order_by(FeedingPlan.start_date.desc())
     )
     result = await db.execute(stmt)
-    items = result.scalars().all()
+    plans = result.scalars().all()
+
+    items = []
+    for plan in plans:
+        items.append(
+            FeedingPlanResponse(
+                id=plan.id,
+                organization_id=plan.organization_id,
+                animal_id=plan.animal_id,
+                food_id=plan.food_id,
+                amount_g=plan.amount_g,
+                amount_text=plan.amount_text,
+                times_per_day=plan.times_per_day,
+                schedule_json=plan.schedule_json,
+                start_date=plan.start_date,
+                end_date=plan.end_date,
+                notes=plan.notes,
+                is_active=plan.is_active,
+                mer_calculation=plan.mer_calculation,
+                animal_name=plan.animal.name if plan.animal else None,
+                food_name=plan.food.name if plan.food else None,
+                created_at=plan.created_at,
+                updated_at=plan.updated_at,
+            )
+        )
 
     return {"items": items, "total": total}
 

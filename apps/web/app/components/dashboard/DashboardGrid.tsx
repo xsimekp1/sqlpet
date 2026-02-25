@@ -19,18 +19,18 @@ import { MyTasksWidget } from './MyTasksWidget'
 import { UpcomingOutcomesWidget } from './UpcomingOutcomesWidget'
 import VaccinationsExpiringWidget from './VaccinationsExpiringWidget'
 
-const ALL_WIDGETS: { id: string; size: WidgetSize }[] = [
-  { id: 'medical-today', size: 'large' },
-  { id: 'feeding-today', size: 'large' },
-  { id: 'food-consumption', size: 'small' },
-  { id: 'tasks', size: 'small' },
-  { id: 'shelter-stats', size: 'large' },
-  { id: 'occupancy', size: 'large' },
-  { id: 'recently-admitted', size: 'small' },
-  { id: 'walks-today', size: 'small' },
-  { id: 'my-tasks', size: 'small' },
-  { id: 'upcoming-outcomes', size: 'small' },
-  { id: 'vaccinations-expiring', size: 'small' },
+const ALL_WIDGETS: { id: string }[] = [
+  { id: 'medical-today' },
+  { id: 'feeding-today' },
+  { id: 'food-consumption' },
+  { id: 'tasks' },
+  { id: 'shelter-stats' },
+  { id: 'occupancy' },
+  { id: 'recently-admitted' },
+  { id: 'walks-today' },
+  { id: 'my-tasks' },
+  { id: 'upcoming-outcomes' },
+  { id: 'vaccinations-expiring' },
 ]
 
 const widgetLabels: Record<string, string> = {
@@ -91,7 +91,7 @@ function SortableWidget({ widget, editMode, onRemove }: SortableWidgetProps) {
   }
 
   return (
-    <div ref={setNodeRef} style={style} className={widget.size === 'large' ? 'md:col-span-2' : ''}>
+    <div ref={setNodeRef} style={style}>
       <WidgetComponent
         editMode={editMode}
         onRemove={onRemove}

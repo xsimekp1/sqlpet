@@ -167,6 +167,8 @@ class FeedingPlanResponse(FeedingPlanBase):
     organization_id: uuid.UUID
     is_active: bool
     mer_calculation: Optional[Dict[str, Any]] = None
+    animal_name: Optional[str] = None
+    food_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
