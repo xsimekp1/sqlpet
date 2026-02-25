@@ -167,6 +167,24 @@ export default function ChangelogPage() {
                 </p>
               </div>
               <div>
+                <span className="font-semibold text-white">🏨 Hotel</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Rezervace a přehled psů v hotelovém pobytu.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">💬 Chat</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Interní messaging pro komunikaci v týmu útulku.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🎀 Barevné obojky</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Sledování barvy obojku – skvělé pro velké útulky.
+                </p>
+              </div>
+              <div>
                 <span className="font-semibold text-white">🎨 Témata</span>
                 <p className="text-teal-100 text-sm mt-1">
                   3 barevná schémata: Teal Shelter, Berry Rescue, Safari.
