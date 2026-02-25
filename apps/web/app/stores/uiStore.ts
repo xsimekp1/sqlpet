@@ -5,6 +5,18 @@ export interface WidgetConfig {
   id: string
 }
 
+const WIDGET_SIZES: Record<string, 'small' | 'medium' | 'large'> = {
+  'medical-today': 'large',
+  'feeding-today': 'large',
+  'food-consumption': 'medium',
+  'tasks': 'large',
+  'shelter-stats': 'medium',
+  'occupancy': 'medium',
+  'recently-admitted': 'medium',
+  'my-tasks': 'medium',
+  'upcoming-outcomes': 'medium',
+}
+
 const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: 'medical-today' },
   { id: 'feeding-today' },
