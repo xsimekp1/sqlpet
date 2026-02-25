@@ -1889,11 +1889,20 @@ class ApiClient {
     name: string;
     region: string | null;
     country: string | null;
+    phone: string | null;
+    admin_note: string | null;
     member_count: number;
     created_at: string | null;
     admins: { id: string; name: string; email: string }[];
   }[]> {
     return ApiClient.get('/admin/organizations');
+  }
+
+  static async updateOrganization(
+    orgId: string,
+    data: { phone?: string; admin_note?: string }
+  ): Promise<{ id: string; name: string; phone: string | null; admin_note: string | null }> {
+    return ApiClient.patch(`/admin/organizations/${orgId}`, data);
   }
 
   static async deleteOrganization(orgId: string): Promise<{ message: string }> {

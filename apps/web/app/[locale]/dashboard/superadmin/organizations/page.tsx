@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { 
   Building2, Users, Calendar, Globe, Trash2, 
-  Search, Loader2, AlertTriangle, ChevronRight 
+  Search, Loader2, AlertTriangle, ChevronRight, Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,8 @@ interface Organization {
   name: string;
   region: string | null;
   country: string | null;
+  phone: string | null;
+  admin_note: string | null;
   member_count: number;
   created_at: string | null;
   admins: { id: string; name: string; email: string }[];
@@ -54,6 +56,11 @@ export default function SuperadminOrganizationsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [organizationToDelete, setOrganizationToDelete] = useState<Organization | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [organizationToEdit, setOrganizationToEdit] = useState<Organization | null>(null);
+  const [editPhone, setEditPhone] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchOrganizations();
@@ -92,6 +99,36 @@ export default function SuperadminOrganizationsPage() {
   const openDeleteDialog = (org: Organization) => {
     setOrganizationToDelete(org);
     setDeleteDialogOpen(true);
+  };
+
+  const openEditDialog = (org: Organization) => {
+    setOrganizationToEdit(org);
+    setEditPhone(org.phone || '');
+    setEditNote(org.admin_note || '');
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!organizationToEdit) return;
+    setSaving(true);
+    try {
+      await ApiClient.updateOrganization(organizationToEdit.id, {
+        phone: editPhone || undefined,
+        admin_note: editNote || undefined,
+      });
+      setOrganizations(prev => prev.map(o => 
+        o.id === organizationToEdit.id 
+          ? { ...o, phone: editPhone || null, admin_note: editNote || null }
+          : o
+      ));
+      setEditDialogOpen(false);
+      toast.success(t('saveSuccess') || 'Uloženo');
+    } catch (error) {
+      console.error('Failed to update organization:', error);
+      toast.error(t('saveError') || 'Chyba při ukládání');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const filteredOrgs = organizations.filter(org => {
@@ -217,6 +254,8 @@ export default function SuperadminOrganizationsPage() {
             <TableRow>
               <TableHead>{t('organization')}</TableHead>
               <TableHead>{t('country')}</TableHead>
+              <TableHead>{t('phone')}</TableHead>
+              <TableHead>{t('note')}</TableHead>
               <TableHead>{t('admins')}</TableHead>
               <TableHead>{t('members')}</TableHead>
               <TableHead>{t('created')}</TableHead>
@@ -249,6 +288,22 @@ export default function SuperadminOrganizationsPage() {
                       <Badge variant="outline">
                         {COUNTRY_LABELS[org.country] || org.country}
                       </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {org.phone ? (
+                      <span className="text-sm">{org.phone}</span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {org.admin_note ? (
+                      <span className="text-sm max-w-[150px] truncate block" title={org.admin_note}>
+                        {org.admin_note}
+                      </span>
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}
@@ -292,6 +347,14 @@ export default function SuperadminOrganizationsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => openEditDialog(org)}
+                        title={t('edit') || 'Upravit'}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="text-destructive hover:text-destructive"
                         onClick={() => openDeleteDialog(org)}
                       >
@@ -329,6 +392,48 @@ export default function SuperadminOrganizationsPage() {
             >
               {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t('delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Organization Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('editOrganization') || 'Upravit organizaci'}</DialogTitle>
+            <DialogDescription>
+              {organizationToEdit?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">{t('phone') || 'Telefon'}</Label>
+              <Input
+                id="phone"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                placeholder="+420 123 456 789"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="note">{t('note') || 'Poznámka'}</Label>
+              <Textarea
+                id="note"
+                value={editNote}
+                onChange={(e) => setEditNote(e.target.value)}
+                placeholder={t('notePlaceholder') || 'Interní poznámka...'}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t('save')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -27,6 +27,8 @@ class Organization(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     country: Mapped[Optional[str]] = mapped_column(
         String(2), nullable=True
     )  # CZ, SK, etc.
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    admin_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     lat: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     lng: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 

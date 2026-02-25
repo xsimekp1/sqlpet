@@ -2056,6 +2056,14 @@
     "deleteConfirmTitle": "Smazat organizaci?",
     "deleteConfirmDescription": "Opravdu chcete smazat organizaci \"{{name}}\"? Tato akce je nevratná a smaže všechna data včetně zvířat, uživatelů a historie.",
     "cancel": "Zrušit",
-    "delete": "Smazat"
+    "delete": "Smazat",
+    "phone": "Telefon",
+    "note": "Poznámka",
+    "notePlaceholder": "Interní poznámka...",
+    "edit": "Upravit",
+    "editOrganization": "Upravit organizaci",
+    "save": "Uložit",
+    "saveSuccess": "Uloženo",
+    "saveError": "Chyba při ukládání"
   }
 }

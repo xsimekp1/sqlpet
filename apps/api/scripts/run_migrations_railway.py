@@ -1,25 +1,33 @@
+"""
+Railway migration script for adding phone and admin_note to organizations.
+Run this after deploying the new code: railway run python scripts/run_migrations_railway.py
+"""
+
 import subprocess
 import sys
 
 
-def main():
-    print("Running Alembic migrations on Railway...")
+def run_migration():
+    print("Running migrations...")
     try:
         result = subprocess.run(
-            ["railway", "run", "alembic", "upgrade", "head"],
-            cwd="apps/api",
+            ["alembic", "upgrade", "head"],
             capture_output=True,
             text=True,
         )
         print(result.stdout)
         if result.stderr:
             print(result.stderr, file=sys.stderr)
-        return result.returncode
+        if result.returncode != 0:
+            print(f"Migration failed with code {result.returncode}")
+            return False
+        print("Migration completed successfully!")
+        return True
     except FileNotFoundError:
-        print("Error: railway CLI not found. Please install it first:", file=sys.stderr)
-        print("  npm install -g @railway/cli", file=sys.stderr)
-        return 1
+        print("Error: alembic not found", file=sys.stderr)
+        return False
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    success = run_migration()
+    sys.exit(0 if success else 1)

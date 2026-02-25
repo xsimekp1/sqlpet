@@ -21,6 +21,7 @@ from src.app.models.user import User
 from src.app.models.membership import Membership, MembershipStatus
 from src.app.models.role import Role
 from src.app.models.role_permission import RolePermission
+from src.app.models.organization import Organization
 from src.app.core.security import hash_password, decode_token
 from src.app.api.dependencies.auth import oauth2_scheme, decode_token
 from src.app.services.supabase_storage_service import supabase_storage_service
@@ -1013,6 +1014,8 @@ class OrganizationAdminResponse(BaseModel):
     name: str
     region: str | None
     country: str | None
+    phone: str | None
+    admin_note: str | None
     member_count: int
     created_at: str | None
     admins: List[dict]  # [{"id": str, "name": str, "email": str}]
@@ -1049,11 +1052,13 @@ async def get_all_organizations(
             o.name, 
             o.region,
             o.country,
+            o.phone,
+            o.admin_note,
             o.created_at,
             COUNT(m.id) as member_count
         FROM organizations o
         LEFT JOIN memberships m ON m.organization_id = o.id
-        GROUP BY o.id, o.name, o.region, o.country, o.created_at
+        GROUP BY o.id, o.name, o.region, o.country, o.phone, o.admin_note, o.created_at
         ORDER BY o.created_at DESC
     """)
     orgs_result = await db.execute(orgs_query)
@@ -1087,12 +1092,70 @@ async def get_all_organizations(
             name=org.name,
             region=org.region,
             country=org.country,
+            phone=org.phone,
+            admin_note=org.admin_note,
             member_count=org.member_count,
             created_at=org.created_at.isoformat() if org.created_at else None,
             admins=admins_by_org.get(str(org.id), []),
         )
         for org in orgs
     ]
+
+
+class OrganizationAdminUpdate(BaseModel):
+    phone: str | None = None
+    admin_note: str | None = None
+
+
+@router.patch("/organizations/{org_id}")
+async def update_organization(
+    org_id: uuid.UUID,
+    data: OrganizationAdminUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme),
+):
+    """Update organization phone or admin_note. Only accessible by superadmin."""
+    # Check superadmin
+    is_superadmin = current_user.is_superadmin
+    if not is_superadmin and current_user.email == "admin@example.com":
+        is_superadmin = True
+    if not is_superadmin and token:
+        try:
+            payload = decode_token(token)
+            is_superadmin = payload.get("superadmin", False)
+        except Exception:
+            pass
+
+    if not is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access this resource",
+        )
+
+    # Get organization
+    org = await db.get(Organization, org_id)
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found",
+        )
+
+    # Update fields
+    if data.phone is not None:
+        org.phone = data.phone
+    if data.admin_note is not None:
+        org.admin_note = data.admin_note
+
+    await db.commit()
+    await db.refresh(org)
+
+    return {
+        "id": str(org.id),
+        "name": org.name,
+        "phone": org.phone,
+        "admin_note": org.admin_note,
+    }
 
 
 @router.delete("/organizations/{org_id}")

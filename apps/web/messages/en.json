@@ -232,7 +232,15 @@
     "deleteConfirmTitle": "Delete organization?",
     "deleteConfirmDescription": "Are you sure you want to delete organization \"{{name}}\"? This action is irreversible and will delete all data including animals, users and history.",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "phone": "Phone",
+    "note": "Note",
+    "notePlaceholder": "Internal note...",
+    "edit": "Edit",
+    "editOrganization": "Edit organization",
+    "save": "Save",
+    "saveSuccess": "Saved",
+    "saveError": "Error saving"
   },
   "topbar": {
     "search": "Search animals, people, tasks...",
