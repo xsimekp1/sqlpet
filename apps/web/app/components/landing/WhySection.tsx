@@ -31,7 +31,8 @@ const reasons = [
     icon: BarChart3,
     title: 'Reporty a tisky',
     description:
-      'Smlouvy, předávací protokoly, QR kódy pro kotce i zvířata. E-podpis adopčních smluv přímo v systému.',
+      'Smlouvy, předávací protokoly, QR kódy pro kotce i zvířata. E-podpis smluv již brzy.',
+    soon: true,
   },
   {
     icon: Smartphone,
