@@ -241,15 +241,19 @@ export function CreateTaskDialog({ open, onOpenChange, onCreated }: CreateTaskDi
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={loadingEntities ? 'Načítám...' : 'Vyberte zvíře'} />
+                          <SelectValue placeholder={loadingEntities ? 'Načítám...' : animals.length === 0 ? 'Žádná zvířata' : 'Vyberte zvíře'} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {animals.map(a => (
-                          <SelectItem key={a.id} value={a.id}>
-                            {a.name} #{a.public_code}
-                          </SelectItem>
-                        ))}
+                        {animals.length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">Žádná zvířata v útulku</div>
+                        ) : (
+                          animals.map(a => (
+                            <SelectItem key={a.id} value={a.id}>
+                              {a.name} #{a.public_code}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -268,15 +272,19 @@ export function CreateTaskDialog({ open, onOpenChange, onCreated }: CreateTaskDi
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={loadingEntities ? 'Načítám...' : 'Vyberte kotec'} />
+                          <SelectValue placeholder={loadingEntities ? 'Načítám...' : kennels.length === 0 ? 'Žádné kotce' : 'Vyberte kotec'} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {kennels.map(k => (
-                          <SelectItem key={k.id} value={k.id}>
-                            {k.code} – {k.name}
-                          </SelectItem>
-                        ))}
+                        {kennels.length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">Žádné kotce</div>
+                        ) : (
+                          kennels.map(k => (
+                            <SelectItem key={k.id} value={k.id}>
+                              {k.code} – {k.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />

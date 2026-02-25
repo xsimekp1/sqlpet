@@ -928,6 +928,9 @@ async def get_role_permissions(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid role ID")
 
+    from src.app.models.permission import Permission
+    from src.app.models.role_permission import RolePermission
+
     result = await db.execute(
         select(Role).where(
             Role.id == role_uuid, Role.organization_id == organization_id
@@ -936,23 +939,18 @@ async def get_role_permissions(
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Role not found")
 
-    # Get all permission keys
-    from src.app.models.permission import Permission
-
-    perm_result = await db.execute(select(Permission))
-    all_perms = perm_result.scalars().all()
-
-    # Get role permissions
-    role_perm_result = await db.execute(
-        select(RolePermission).where(RolePermission.role_id == role_uuid)
+    result = await db.execute(
+        select(Permission.key, RolePermission.allowed)
+        .outerjoin(
+            RolePermission,
+            (RolePermission.permission_id == Permission.id)
+            & (RolePermission.role_id == role_uuid),
+        )
+        .order_by(Permission.key)
     )
-    role_perms = {
-        str(p.permission_id): p.allowed for p in role_perm_result.scalars().all()
-    }
+    rows = result.all()
 
-    return [
-        {"key": p.key, "allowed": role_perms.get(str(p.id), False)} for p in all_perms
-    ]
+    return [{"key": key, "allowed": bool(allowed)} for key, allowed in rows]
 
 
 @router.put("/roles/{role_id}/permissions", status_code=status.HTTP_204_NO_CONTENT)

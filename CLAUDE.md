@@ -300,6 +300,13 @@ response = await client.post("/animals", headers=headers, json={...})
 
 Without this header, you'll get a 400 Bad Request error. This is the **most common mistake** when writing API tests.
 
+## Performance Troubleshooting
+
+**Při řešení problémů s výkonem endpointů:**
+- Tabulky jsou momentálně prázdné nebo mají pár řádků - **chybějící indexy nikdy nejsou problém**
+- Hledej spíše: N+1 queries, sekvenční dotazy místo JOIN, redundantní načítání dat
+- Vždy zkontroluj počet queries v logu (proměnná `queries`) - endpoint by měl mít 1-3 dotazy, ne 7+
+
 ## Key Conventions
 
 - All code and variable names in English
