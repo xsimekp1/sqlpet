@@ -26,6 +26,7 @@ import {
   PlusCircle,
   Building2,
   Search,
+  MapPin,
 } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
