@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, PawPrint, Building2, Pill, Grid } from 'lucide-react-native';
+import { Home, PawPrint, Building2, Pill, Grid, MessageCircle } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AppLayout() {
@@ -55,6 +55,14 @@ export default function AppLayout() {
           headerShown: false,
           tabBarLabel: 'Dnes',
           tabBarIcon: ({ color, size }) => <Pill size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          headerShown: false,
+          tabBarLabel: 'Chat',
+          tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
       <Tabs.Screen

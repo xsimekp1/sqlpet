@@ -181,7 +181,63 @@ const api = {
     const data = await response.json();
     return Array.isArray(data) ? data : (data.items ?? []);
   },
+
+  // Chat API
+  getChatUsers: async (): Promise<ChatUser[]> => {
+    const response = await fetchWithAuth('/chat/users');
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    return response.json();
+  },
+
+  getConversations: async (): Promise<Conversation[]> => {
+    const response = await fetchWithAuth('/chat/conversations');
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    return response.json();
+  },
+
+  getMessages: async (partnerId: string): Promise<ChatMessage[]> => {
+    const response = await fetchWithAuth(`/chat/messages/${partnerId}`);
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    return response.json();
+  },
+
+  sendMessage: async (recipientId: string, content: string): Promise<ChatMessage> => {
+    const response = await fetchWithAuth('/chat/messages', {
+      method: 'POST',
+      body: JSON.stringify({ recipient_id: recipientId, content }),
+    });
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+    return response.json();
+  },
 };
+
+export interface ChatUser {
+  id: string;
+  name: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface Conversation {
+  partner_id: string;
+  partner_name: string;
+  partner_avatar: string | null;
+  last_message: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender_id: string;
+  sender_name: string;
+  recipient_id: string;
+  recipient_name: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+  read_at: string | null;
+}
 
 export default api;
 
