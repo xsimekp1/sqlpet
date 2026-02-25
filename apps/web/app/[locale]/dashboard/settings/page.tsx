@@ -556,9 +556,9 @@ export default function SettingsPage() {
         <TabsList>
           <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
           <TabsTrigger value="security">🔒 2FA</TabsTrigger>
-          <TabsTrigger value="defaultImages">{t('tabs.defaultImages')}</TabsTrigger>
           {user?.is_superadmin && (
             <>
+              <TabsTrigger value="defaultImages">{t('tabs.defaultImages')}</TabsTrigger>
               <TabsTrigger value="breeds">{t('tabs.breeds')}</TabsTrigger>
               <TabsTrigger value="colors">{t('tabs.colors')}</TabsTrigger>
               <TabsTrigger value="organizations">
@@ -722,6 +722,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* ── Default Images tab ── */}
+        {user?.is_superadmin && (
         <TabsContent value="defaultImages" className="space-y-6">
           {/* Upload form */}
           <Card>
@@ -946,6 +947,7 @@ export default function SettingsPage() {
             )}
           </div>
         </TabsContent>
+        )}
 
         {/* ── Breeds tab ── */}
         <TabsContent value="breeds" className="space-y-4">

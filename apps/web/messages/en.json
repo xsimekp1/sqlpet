@@ -2,6 +2,9 @@
   "app": {
     "name": "Petslog"
   },
+  "table": {
+    "actions": "Actions"
+  },
   "reports": {
     "animalCountTitle": "Animal count in shelter (last 90 days)",
     "animalCountDesc": "Daily count — animals with active stay (from intake to outcome)",
