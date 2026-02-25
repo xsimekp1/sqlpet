@@ -64,7 +64,7 @@ async def po_env(db_session, test_user):
     yield {"org": org, "item": item, "headers": headers}
 
     await db_session.execute(
-        delete(PurchaseOrderItem).where(PurchaseOrderItem.item_id == item_id)
+        delete(PurchaseOrderItem).where(PurchaseOrderItem.inventory_item_id == item_id)
     )
     await db_session.execute(
         delete(PurchaseOrder).where(PurchaseOrder.organization_id == org_id)

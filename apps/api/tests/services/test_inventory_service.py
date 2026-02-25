@@ -154,9 +154,9 @@ class TestInventoryService:
         sample_user,
     ):
         """Test recording an IN transaction"""
-        # Arrange
+        # Arrange - mock returns item for first call, lot for second call
         mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = sample_item
+        mock_result.scalar_one_or_none.side_effect = [sample_item, sample_lot]
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         # Act
@@ -189,9 +189,9 @@ class TestInventoryService:
         sample_user,
     ):
         """Test recording an OUT transaction"""
-        # Arrange
+        # Arrange - mock returns item for first call, lot for second call
         mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = sample_item
+        mock_result.scalar_one_or_none.side_effect = [sample_item, sample_lot]
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         # Act

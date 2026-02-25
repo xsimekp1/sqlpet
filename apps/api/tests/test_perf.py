@@ -28,7 +28,7 @@ async def test_middleware_sets_trace_id():
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            response = await client.get("/health")
+            response = await client.get("/health/db")
             assert response.status_code == 200
             assert "x-trace-id" in response.headers
 
@@ -43,7 +43,7 @@ async def test_middleware_accepts_trace_id_header():
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
             response = await client.get(
-                "/health", headers={"x-trace-id": "custom-trace-123"}
+                "/health/db", headers={"x-trace-id": "custom-trace-123"}
             )
             assert response.status_code == 200
             assert response.headers.get("x-trace-id") == "custom-trace-123"

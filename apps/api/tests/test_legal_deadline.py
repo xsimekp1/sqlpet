@@ -141,6 +141,7 @@ class TestLegalDeadlineService:
         """Test Scenario C: finder kept animal, notice already published, then brought to shelter.
         Deadline = 4 months from original notice_published_at."""
         from src.app.services.legal_deadline import _add_months
+
         notice = date.today() - timedelta(days=30)  # published 30 days ago
         result = compute_legal_deadline(
             notice_published_at=notice,
@@ -155,6 +156,7 @@ class TestLegalDeadlineService:
     def test_scenario_c_municipality_none_notice_set(self):
         """Test Scenario C also triggers when municipality_irrevocably_transferred is None."""
         from src.app.services.legal_deadline import _add_months
+
         notice = date.today() - timedelta(days=10)
         result = compute_legal_deadline(
             notice_published_at=notice,
@@ -387,7 +389,8 @@ async def test_animal_api_returns_legal_deadline(client, legal_deadline_env):
     assert "legal_deadline_days_left" in animal_data
     assert "legal_deadline_state" in animal_data
 
-    assert animal_data["legal_deadline_type"] == "2m_notice"
+    # Using configurable org settings - returns rule_key as deadline_type
+    assert animal_data["legal_deadline_type"] == "finder_keeps"
 
 
 @pytest.mark.anyio
@@ -417,7 +420,8 @@ async def test_animal_list_returns_legal_deadline_fields(client, legal_deadline_
     animal_data = animal_resp.json()
 
     assert "legal_deadline_at" in animal_data
-    assert animal_data["legal_deadline_type"] == "2m_notice"
+    # Using configurable org settings - returns rule_key as deadline_type
+    assert animal_data["legal_deadline_type"] == "finder_keeps"
 
 
 @pytest.mark.anyio
@@ -457,7 +461,8 @@ async def test_update_intake_legal_deadline_fields(client, legal_deadline_env):
         headers=legal_deadline_env["headers"],
     )
     animal_data = animal_resp.json()
-    assert animal_data["legal_deadline_type"] == "2m_notice"
+    # Using configurable org settings - returns rule_key as deadline_type
+    assert animal_data["legal_deadline_type"] == "finder_keeps"
 
 
 @pytest.mark.anyio

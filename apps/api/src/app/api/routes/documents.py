@@ -481,7 +481,7 @@ async def list_animal_documents(
             response.template_name = doc.template.name
             response.template_code = doc.template.code
         if doc.created_by:
-            response.created_by_name = f"{doc.created_by.first_name or ''} {doc.created_by.last_name or ''}".strip()
+            response.created_by_name = doc.created_by.name or ""
         items.append(response)
 
     return DocumentInstanceListResponse(items=items, total=total)
@@ -520,7 +520,7 @@ async def get_document(
         response.template_name = document.template.name
         response.template_code = document.template.code
     if document.created_by:
-        response.created_by_name = f"{document.created_by.first_name or ''} {document.created_by.last_name or ''}".strip()
+        response.created_by_name = document.created_by.name or ""
 
     return response
 
