@@ -25,9 +25,13 @@ import {
 
 const schema = z.object({
   name: z.string().min(1, 'Jméno je povinné'),
-  email: z.string().min(1, 'Email je povinný').email('Neplatný formát emailu'),
+  email: z.string().optional(),
+  phone: z.string().optional(),
   shelter: z.string().min(1, 'Název útulku je povinný'),
   interest: z.enum(['free', 'demo', 'beta']),
+}).refine((data) => data.email || data.phone, {
+  message: 'Email nebo telefon musí být vyplněn',
+  path: ['email'],
 });
 
 type FormData = z.infer<typeof schema>;
@@ -53,17 +57,36 @@ export function LeadModal({ open, onClose, defaultInterest = 'free' }: LeadModal
   // Reset form with new defaultInterest when modal opens
   useEffect(() => {
     if (open) {
-      reset({ interest: defaultInterest, name: '', email: '', shelter: '' });
+      reset({ interest: defaultInterest, name: '', email: '', phone: '', shelter: '' });
     }
   }, [open, defaultInterest, reset]);
 
   const onSubmit = async (data: FormData) => {
-    // TODO: POST na /api/leads endpoint
-    console.log('Lead form submitted:', data);
-    await new Promise((r) => setTimeout(r, 500)); // simulate request
-    toast.success('Děkujeme! Ozveme se do 24 hodin.');
-    reset();
-    onClose();
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+      const response = await fetch(`${API_URL}/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email || null,
+          phone: data.phone || null,
+          shelter_name: data.shelter,
+          interest: data.interest,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to submit');
+      }
+      
+      toast.success('Děkujeme! Ozveme se do 24 hodin.');
+      reset();
+      onClose();
+    } catch (error: any) {
+      toast.error(error.message || 'Nepodařilo se odeslat formulář');
+    }
   };
 
   return (
@@ -102,6 +125,17 @@ export function LeadModal({ open, onClose, defaultInterest = 'free' }: LeadModal
             {errors.email && (
               <p className="text-destructive text-xs mt-1">{errors.email.message}</p>
             )}
+          </div>
+
+          <div>
+            <Label htmlFor="lead-phone">Telefon</Label>
+            <Input
+              id="lead-phone"
+              type="tel"
+              {...register('phone')}
+              placeholder="+420 777 123 456"
+              className="mt-1"
+            />
           </div>
 
           <div>

@@ -28,8 +28,8 @@ const columns = [
   {
     title: 'Právní',
     links: [
-      { label: 'Podmínky použití', href: '#' },
-      { label: 'Ochrana soukromí (GDPR)', href: '#' },
+      { label: 'Podmínky užití', href: `/${locale}/podminky-uziti` },
+      { label: 'Ochrana soukromí (GDPR)', href: `/${locale}/gdpr` },
     ],
   },
 ];

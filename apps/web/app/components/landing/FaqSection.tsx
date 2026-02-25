@@ -53,15 +53,6 @@ export function FaqSection() {
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Časté dotazy
           </h2>
-          <p className="text-lg text-gray-500">
-            Máte otázku, která tu není? Napište nám na{' '}
-            <a
-              href="mailto:info@pets-log.com"
-              className="text-teal-600 hover:underline"
-            >
-              info@pets-log.com
-            </a>
-          </p>
         </div>
 
         <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden">

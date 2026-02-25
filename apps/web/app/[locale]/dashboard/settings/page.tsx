@@ -162,6 +162,52 @@ export default function SettingsPage() {
   const [settingPassword, setSettingPassword] = useState(false);
   const [changeRoleTarget, setChangeRoleTarget] = useState<MemberListItem | null>(null);
   const [changeRoleValue, setChangeRoleValue] = useState('');
+
+  // Leads state (superadmin)
+  interface Lead {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    interest: string;
+    shelter_name: string | null;
+    is_processed: boolean;
+    created_at: string;
+  }
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [isLoadingLeads, setIsLoadingLeads] = useState(false);
+
+  const loadLeads = async () => {
+    if (!user?.is_superadmin) return;
+    setIsLoadingLeads(true);
+    try {
+      const res = await fetch(`${API_URL}/leads`, { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setLeads(data);
+      }
+    } catch (e) {
+      console.error('Failed to load leads', e);
+    } finally {
+      setIsLoadingLeads(false);
+    }
+  };
+
+  const markLeadProcessed = async (leadId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_processed: true }),
+      });
+      if (res.ok) {
+        setLeads(leads.map(l => l.id === leadId ? { ...l, is_processed: true } : l));
+        toast.success('Lead označen jako zpracovaný');
+      }
+    } catch (e) {
+      toast.error('Nepodařilo se označit lead');
+    }
+  };
   const [changingRole, setChangingRole] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -552,12 +598,14 @@ export default function SettingsPage() {
         if (v === 'colors') loadColorsAdmin();
         if (v === 'members') loadMembers();
         if (v === 'organizations') loadOrganizations();
+        if (v === 'leads') loadLeads();
       }}>
         <TabsList>
           <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
           <TabsTrigger value="security">🔒 2FA</TabsTrigger>
           {user?.is_superadmin && (
             <>
+              <TabsTrigger value="leads">📥 Leads</TabsTrigger>
               <TabsTrigger value="defaultImages">{t('tabs.defaultImages')}</TabsTrigger>
               <TabsTrigger value="breeds">{t('tabs.breeds')}</TabsTrigger>
               <TabsTrigger value="colors">{t('tabs.colors')}</TabsTrigger>
@@ -720,6 +768,58 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ── Leads tab ── */}
+        {user?.is_superadmin && (
+        <TabsContent value="leads" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>📥 Zájemci o Petslog</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingLeads ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : leads.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">Žádné leads</p>
+              ) : (
+                <div className="space-y-3">
+                  {leads.map((lead) => (
+                    <div key={lead.id} className={`flex items-center justify-between p-4 border rounded-lg ${lead.is_processed ? 'bg-muted/50 opacity-60' : 'bg-yellow-50'}`}>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{lead.name}</p>
+                          {lead.is_processed && <Badge variant="secondary">Zpracováno</Badge>}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {lead.email && <span>{lead.email}</span>}
+                          {lead.email && lead.phone && <span> · </span>}
+                          {lead.phone && <span>{lead.phone}</span>}
+                        </p>
+                        <p className="text-sm">
+                          {lead.interest === 'demo' && '🎯 Domluvit ukázku'}
+                          {lead.interest === 'free' && '🆓 Vyzkoušet zdarma'}
+                          {lead.interest === 'beta' && '🧪 Beta program'}
+                          {lead.shelter_name && <span> · {lead.shelter_name}</span>}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(lead.created_at).toLocaleString('cs-CZ')}
+                        </p>
+                      </div>
+                      {!lead.is_processed && (
+                        <Button size="sm" onClick={() => markLeadProcessed(lead.id)}>
+                          Označit jako zpracované
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        )}
 
         {/* ── Default Images tab ── */}
         {user?.is_superadmin && (
