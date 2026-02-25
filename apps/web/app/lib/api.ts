@@ -1876,10 +1876,28 @@ class ApiClient {
     id: string;
     name: string;
     region: string | null;
+    country: string | null;
     member_count: number;
+    created_at: string | null;
     admins: { id: string; name: string; email: string }[];
   }[]> {
     return ApiClient.get('/admin/organizations');
+  }
+
+  static async getAdminOrganizations(): Promise<{
+    id: string;
+    name: string;
+    region: string | null;
+    country: string | null;
+    member_count: number;
+    created_at: string | null;
+    admins: { id: string; name: string; email: string }[];
+  }[]> {
+    return ApiClient.get('/admin/organizations');
+  }
+
+  static async deleteOrganization(orgId: string): Promise<{ message: string }> {
+    return ApiClient.delete(`/admin/organizations/${orgId}`);
   }
 
   static async importRegisteredShelters(file: File): Promise<{
