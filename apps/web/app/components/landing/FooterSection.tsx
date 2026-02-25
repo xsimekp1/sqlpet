@@ -4,37 +4,36 @@ interface FooterSectionProps {
   locale: string;
 }
 
-const columns = [
-  {
-    title: 'Produkt',
-    links: [
-      { label: 'Funkce', href: '/cs/funkce' },
-      { label: 'Ceník', href: '#pricing' },
-      { label: 'Changelog', href: '/cs/changelog' },
-    ],
-  },
-  {
-    title: 'Blog',
-    links: [
-      { label: '15 Founders - Sara Polak', href: '#' },
-    ],
-  },
-  {
-    title: 'Firma',
-    links: [
-      { label: 'O nás', href: '#about' },
-    ],
-  },
-  {
-    title: 'Právní',
-    links: [
-      { label: 'Podmínky užití', href: `/${locale}/podminky-uziti` },
-      { label: 'Ochrana soukromí (GDPR)', href: `/${locale}/gdpr` },
-    ],
-  },
-];
-
 export function FooterSection({ locale }: FooterSectionProps) {
+  const columns = [
+    {
+      title: 'Produkt',
+      links: [
+        { label: 'Funkce', href: `/${locale}/funkce` },
+        { label: 'Ceník', href: '#pricing' },
+        { label: 'Changelog', href: `/${locale}/changelog` },
+      ],
+    },
+    {
+      title: 'Blog',
+      links: [
+        { label: '15 Founders - Sara Polak', href: '#' },
+      ],
+    },
+    {
+      title: 'Firma',
+      links: [
+        { label: 'O nás', href: '#about' },
+      ],
+    },
+    {
+      title: 'Právní',
+      links: [
+        { label: 'Podmínky užití', href: `/${locale}/podminky-uziti` },
+        { label: 'Ochrana soukromí (GDPR)', href: `/${locale}/gdpr` },
+      ],
+    },
+  ];
   return (
     <footer className="bg-gray-900 text-gray-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
