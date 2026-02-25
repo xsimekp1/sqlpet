@@ -223,13 +223,13 @@ export default function LoginPage() {
 
         {/* Logo video - below login form, extending off-screen */}
       </div>
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[120%] max-w-none -z-10 overflow-hidden">
+      <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[120%] max-w-lg -z-10">
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="h-28 w-auto mx-auto translate-y-[15%]"
+          className="h-32 w-auto mx-auto"
         >
           <source src="/vidu-video-3172321556102224.webm" type="video/webm" />
         </video>
