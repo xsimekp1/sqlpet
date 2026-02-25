@@ -315,7 +315,7 @@ export default function SuperadminOrganizationsPage() {
               {t('deleteConfirmTitle')}
             </DialogTitle>
             <DialogDescription>
-              {t('deleteConfirmDescription', { name: organizationToDelete?.name })}
+              {t('deleteConfirmDescription', { name: organizationToDelete?.name || '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
