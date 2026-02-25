@@ -13,6 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { MapPin, ChevronRight } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { useTranslations } from '../../i18n';
 
@@ -183,6 +184,15 @@ export default function LoginScreen() {
               <Text style={styles.buttonText}>{t('login.submit')}</Text>
             )}
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.shelterFinderButton}
+            onPress={() => router.push('/(public)/shelter-finder')}
+          >
+            <MapPin size={18} color="#6B4EFF" />
+            <Text style={styles.shelterFinderText}>{t('shelterFinder.findNearby')}</Text>
+            <ChevronRight size={16} color="#6B4EFF" />
+          </TouchableOpacity>
         </Animated.View>
 
         <Text style={styles.version}>v1.0.0</Text>
@@ -206,8 +216,8 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 320,
-    height: 120,
+    width: 360,
+    height: 135,
   },
   form: {
     width: '100%',
@@ -255,6 +265,24 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  shelterFinderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#6B4EFF',
+    backgroundColor: '#F0ECFF',
+    marginTop: 12,
+  },
+  shelterFinderText: {
+    color: '#6B4EFF',
+    fontSize: 15,
     fontWeight: '600',
   },
   version: {

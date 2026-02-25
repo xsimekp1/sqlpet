@@ -22,12 +22,21 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#6B4EFF"
       },
-      "package": "com.sqlpet.petslog"
+      "package": "com.sqlpet.petslog",
+      "config": {
+        "googleMaps": {
+          "apiKey": "PLACEHOLDER_REPLACE_ME"
+        }
+      }
     },
     "web": {},
     "plugins": [
+      "expo-dev-client",
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      ["expo-location", {
+        "locationWhenInUsePermission": "Tato aplikace potřebuje přístup k vaší poloze pro nalezení nejbližšího útulku."
+      }]
     ],
     "experiments": {
       "typedRoutes": true

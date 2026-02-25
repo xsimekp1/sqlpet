@@ -41,6 +41,37 @@ export interface ApiError {
   detail: string;
 }
 
+// Org Settings types
+export interface LegalRuleConfig {
+  start: 'announced' | 'received' | 'found';
+  fallback_start: 'found' | 'received';
+  days: number;
+  cz_later_of_announced_received: boolean;
+}
+
+export interface OrgSettingsLegal {
+  profile: 'CZ' | 'SK' | 'OTHER';
+  rules: Record<string, LegalRuleConfig>;
+}
+
+export interface OrgSettingsUnits {
+  system: 'metric' | 'imperial';
+  inventory_decimal_places: number;
+}
+
+export interface OrgSettings {
+  locale_default: string;
+  timezone: string;
+  time_format: '24h' | '12h';
+  date_format: string;
+  contact_phone: string | null;
+  contact_email: string | null;
+  contact_web: string | null;
+  org_address: { street?: string; city?: string; zip?: string; country?: string } | null;
+  units: OrgSettingsUnits;
+  legal: OrgSettingsLegal;
+}
+
 // Task types
 export interface Task {
   id: string;
@@ -1632,8 +1663,22 @@ class ApiClient {
     capacity_rabbits: number | null;
     capacity_small: number | null;
     capacity_birds: number | null;
+    settings: OrgSettings | null;
+    onboarding_completed_at: string | null;
   }> {
     return this.get('/organization/current');
+  }
+
+  static async getOrganizationSettings(): Promise<OrgSettings> {
+    return this.get('/organization/settings');
+  }
+
+  static async updateOrganizationSettings(data: Partial<OrgSettings>): Promise<OrgSettings> {
+    return this.put('/organization/settings', data);
+  }
+
+  static async completeOnboarding(): Promise<void> {
+    await this.post('/organization/onboarding/complete', {});
   }
 
   static async updateOrganization(data: {

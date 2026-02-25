@@ -802,56 +802,8 @@ async def init_org_roles_from_templates(
     db: AsyncSession = Depends(get_db),
 ):
     """Create org-specific copies of all global template roles (idempotent)."""
-    templates = (
-        (
-            await db.execute(
-                select(Role).where(Role.is_template == True)  # noqa: E712
-            )
-        )
-        .scalars()
-        .all()
-    )
-
-    for template in templates:
-        existing = (
-            await db.execute(
-                select(Role).where(
-                    Role.organization_id == organization_id,
-                    Role.name == template.name,
-                )
-            )
-        ).scalar_one_or_none()
-        if existing:
-            continue
-
-        new_role = Role(
-            id=uuid.uuid4(),
-            organization_id=organization_id,
-            name=template.name,
-            description=template.description,
-            is_template=False,
-        )
-        db.add(new_role)
-        await db.flush()
-
-        template_permissions = (
-            (
-                await db.execute(
-                    select(RolePermission).where(RolePermission.role_id == template.id)
-                )
-            )
-            .scalars()
-            .all()
-        )
-        for tp in template_permissions:
-            db.add(
-                RolePermission(
-                    role_id=new_role.id,
-                    permission_id=tp.permission_id,
-                    allowed=tp.allowed,
-                )
-            )
-
+    from src.app.services.role_service import init_org_roles as _init_org_roles
+    await _init_org_roles(db, organization_id)
     await db.commit()
 
 
@@ -1642,6 +1594,8 @@ class NearbyShelter(BaseModel):
     lat: float
     lng: float
     distance_km: float
+    accepts_dogs: Optional[bool] = None
+    accepts_cats: Optional[bool] = None
 
 
 @router.get("/registered-shelters/nearby", response_model=list[NearbyShelter])
@@ -1649,21 +1603,34 @@ async def get_nearby_shelters(
     lat: float,
     lng: float,
     radius_km: float = 25,
-    current_user: User = Depends(get_current_user),
+    species: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get shelters within radius of a GPS point using Haversine formula."""
+    """Get shelters within radius of a GPS point using Haversine formula. Public endpoint."""
+    species_filter = ""
+    if species == "dog":
+        species_filter = "AND accepts_dogs = true"
+    elif species == "cat":
+        species_filter = "AND accepts_cats = true"
+
     result = await db.execute(
-        text("""
-            SELECT id, name, address, lat, lng,
-                   (6371 * acos(
-                       cos(radians(:lat)) * cos(radians(lat)) *
-                       cos(radians(lng) - radians(:lng)) +
-                       sin(radians(:lat)) * sin(radians(lat))
-                   )) AS distance_km
-            FROM registered_shelters
-            WHERE lat IS NOT NULL AND lng IS NOT NULL
-            HAVING distance_km <= :radius
+        text(f"""
+            SELECT id, name, address, lat, lng, distance_km, accepts_dogs, accepts_cats
+            FROM (
+                SELECT id, name, address, lat, lng,
+                       (6371 * acos(
+                           LEAST(1.0, GREATEST(-1.0,
+                               cos(radians(:lat)) * cos(radians(lat)) *
+                               cos(radians(lng) - radians(:lng)) +
+                               sin(radians(:lat)) * sin(radians(lat))
+                           ))
+                       )) AS distance_km,
+                       accepts_dogs, accepts_cats
+                FROM registered_shelters
+                WHERE lat IS NOT NULL AND lng IS NOT NULL
+                {species_filter}
+            ) _dist
+            WHERE distance_km <= :radius
             ORDER BY distance_km
         """),
         {"lat": lat, "lng": lng, "radius": radius_km},
@@ -1678,6 +1645,8 @@ async def get_nearby_shelters(
             lat=row[3],
             lng=row[4],
             distance_km=round(row[5], 2),
+            accepts_dogs=row[6],
+            accepts_cats=row[7],
         )
         for row in rows
     ]

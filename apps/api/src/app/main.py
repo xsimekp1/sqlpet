@@ -340,6 +340,8 @@ ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vite dev
     "https://web-theta-peach-77.vercel.app",
     "https://sqlpet.vercel.app",
+    "https://pets-log.com",
+    "https://www.pets-log.com",
     *EXTRA_ORIGINS,
 ]
 

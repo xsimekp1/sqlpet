@@ -19,6 +19,8 @@ interface AuthContextType {
   permissions: string[];
   isAuthenticated: boolean;
   isLoading: boolean;
+  onboardingCompleted: boolean;
+  setOnboardingCompleted: (value: boolean) => void;
   login: (email: string, password: string, totpCode?: string) => Promise<void>;
   logout: () => Promise<void>;
   selectOrganization: (orgId: string) => Promise<void>;
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<SelectedOrg | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -79,6 +82,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const permData = await permResponse.json();
                 console.log('[Auth] Permissions loaded:', permData.permissions.length);
                 setPermissions(permData.permissions || []);
+              }
+
+              // Fetch onboarding status
+              try {
+                const orgInfoResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/organization/current`, {
+                  headers: {
+                    'Authorization': `Bearer ${orgResponse.access_token}`,
+                    'x-organization-id': orgData.id,
+                  },
+                });
+                if (orgInfoResponse.ok) {
+                  const orgInfo = await orgInfoResponse.json();
+                  setOnboardingCompleted(!!orgInfo.onboarding_completed_at);
+                }
+              } catch (e) {
+                console.error('[Auth] Failed to fetch org info:', e);
               }
             } catch (e) {
               console.error('[Auth] Failed to refresh token or fetch permissions:', e);
@@ -140,6 +159,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(orgResponse.access_token);
         setRefreshTokenState(orgResponse.refresh_token);
 
+        const orgData = {
+          id: membership.organization_id,
+          name: membership.organization_name,
+          role: membership.role_name,
+        };
+
         // Fetch permissions for the new organization
         try {
           const permResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/auth/permissions`, {
@@ -154,11 +179,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setPermissions([]);
         }
 
-        const orgData = {
-          id: membership.organization_id,
-          name: membership.organization_name,
-          role: membership.role_name,
-        };
+        // Fetch onboarding status
+        try {
+          const orgInfoResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/organization/current`, {
+            headers: {
+              'Authorization': `Bearer ${orgResponse.access_token}`,
+              'x-organization-id': orgData.id,
+            },
+          });
+          if (orgInfoResponse.ok) {
+            const orgInfo = await orgInfoResponse.json();
+            setOnboardingCompleted(!!orgInfo.onboarding_completed_at);
+          }
+        } catch (e) {
+          console.error('Failed to fetch org info:', e);
+        }
+
         setSelectedOrg(orgData);
         localStorage.setItem('selectedOrg', JSON.stringify(orgData));
         router.push('/dashboard');
@@ -192,6 +228,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(response.access_token);
     setRefreshTokenState(response.refresh_token);
 
+    // Store org info
+    const orgData = {
+      id: membership.organization_id,
+      name: membership.organization_name,
+      role: membership.role_name,
+    };
+
     // Fetch permissions for the new organization
     try {
       const permResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/auth/permissions`, {
@@ -206,12 +249,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPermissions([]);
     }
 
-    // Store org info
-    const orgData = {
-      id: membership.organization_id,
-      name: membership.organization_name,
-      role: membership.role_name,
-    };
+    // Fetch onboarding status
+    try {
+      const orgInfoResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/organization/current`, {
+        headers: {
+          'Authorization': `Bearer ${response.access_token}`,
+          'x-organization-id': orgData.id,
+        },
+      });
+      if (orgInfoResponse.ok) {
+        const orgInfo = await orgInfoResponse.json();
+        setOnboardingCompleted(!!orgInfo.onboarding_completed_at);
+      }
+    } catch (e) {
+      console.error('Failed to fetch org info:', e);
+    }
+
     setSelectedOrg(orgData);
     localStorage.setItem('selectedOrg', JSON.stringify(orgData));
     router.push('/dashboard');
@@ -238,6 +291,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setMemberships([]);
     setSelectedOrg(null);
     setPermissions([]);
+    setOnboardingCompleted(true);
     router.push('/login');
   }, [router]);
 
@@ -263,6 +317,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     permissions,
     isAuthenticated: !!token && !!user,
     isLoading,
+    onboardingCompleted,
+    setOnboardingCompleted,
     login,
     logout,
     selectOrganization,

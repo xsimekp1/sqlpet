@@ -14,7 +14,9 @@ from src.app.api.dependencies.auth import (
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Animal, Species
 from src.app.models.kennel import Kennel, Zone
-from src.app.services.legal_deadline import compute_legal_deadline
+from src.app.services.legal_deadline import compute_legal_deadline, compute_legal_deadline_from_settings
+from src.app.schemas.org_settings import get_org_settings
+from src.app.models.organization import Organization
 from src.app.models.animal_event import AnimalEvent, AnimalEventType
 from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.models.animal_weight_log import AnimalWeightLog
@@ -44,6 +46,7 @@ async def _build_animal_response(
     db: AsyncSession,
     kennel_data: dict | None = None,
     intake_data: dict | None = None,
+    org_legal=None,
 ) -> AnimalResponse:
     """Build AnimalResponse from ORM object with nested breeds and identifiers."""
     breed_ids_list = [ab.breed_id for ab in (animal.animal_breeds or [])]
@@ -151,12 +154,21 @@ async def _build_animal_response(
 
     # Compute legal deadline if this is a found animal
     if resp.current_intake_reason == "found" and resp.notice_published_at is not None:
-        deadline_info = compute_legal_deadline(
-            notice_published_at=resp.notice_published_at,
-            shelter_received_at=resp.current_intake_date,
-            finder_claims_ownership=resp.finder_claims_ownership,
-            municipality_irrevocably_transferred=resp.municipality_irrevocably_transferred,
-        )
+        if org_legal is not None:
+            deadline_info = compute_legal_deadline_from_settings(
+                announced_at=resp.notice_published_at,
+                received_at=resp.current_intake_date,
+                found_at=resp.current_intake_date,
+                finder_keeps=resp.finder_claims_ownership,
+                org_legal=org_legal,
+            )
+        else:
+            deadline_info = compute_legal_deadline(
+                notice_published_at=resp.notice_published_at,
+                shelter_received_at=resp.current_intake_date,
+                finder_claims_ownership=resp.finder_claims_ownership,
+                municipality_irrevocably_transferred=resp.municipality_irrevocably_transferred,
+            )
         resp.legal_deadline_at = deadline_info.deadline_at
         resp.legal_deadline_type = deadline_info.deadline_type
         resp.legal_deadline_days_left = deadline_info.days_left
@@ -508,7 +520,10 @@ async def get_animal(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Animal not found"
         )
-    return await _build_animal_response(animal, db)
+    # Load org settings for configurable legal deadline
+    org = await db.get(Organization, organization_id)
+    org_legal = get_org_settings(org).legal if org else None
+    return await _build_animal_response(animal, db, org_legal=org_legal)
 
 
 @router.patch(

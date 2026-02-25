@@ -55,6 +55,16 @@ export default function HomeScreen() {
     enabled: !!selectedOrganizationId,
   });
 
+  const { data: orgData } = useQuery({
+    queryKey: ['org', 'current', selectedOrganizationId],
+    queryFn: () =>
+      api.get<{ onboarding_completed_at: string | null }>('/organization/current', {
+        'x-organization-id': selectedOrganizationId!,
+      }),
+    enabled: !!selectedOrganizationId,
+  });
+  const onboardingCompleted = !!orgData?.onboarding_completed_at;
+
   const recentAnimals = recentData?.items ?? [];
 
   const currentOrg = memberships.find(
@@ -86,6 +96,12 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.content}>
+        {!onboardingCompleted && (
+          <View style={styles.setupBanner}>
+            <Text style={styles.setupBannerText}>{t('home.setupIncomplete')}</Text>
+          </View>
+        )}
+
         <View style={styles.card}>
           <Text style={styles.cardLabel}>{t('home.signedIn')}</Text>
           <Text style={styles.userName}>{user?.name || 'User'}</Text>
@@ -365,6 +381,20 @@ const styles = StyleSheet.create({
   animalMiniDays: {
     fontSize: 11,
     color: '#9CA3AF',
+  },
+  setupBanner: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  setupBannerText: {
+    color: '#92400E',
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
   },
   footer: {
     padding: 16,

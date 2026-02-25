@@ -5,10 +5,15 @@ Czech law: 2 months from notice publication if finder claims ownership,
 4 months from notice if finder directly hands animal to shelter after notice.
 """
 
+from __future__ import annotations
+
 from calendar import monthrange
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from src.app.schemas.org_settings import OrgSettingsLegal
 
 
 @dataclass
@@ -139,6 +144,99 @@ def compute_legal_deadline(
         label="Bez lhůty (nálezce nechce, obec nepřevedla)",
         missing_fields=[],
     )
+
+
+def compute_legal_deadline_from_settings(
+    announced_at: Optional[date],
+    received_at: Optional[date],
+    found_at: Optional[date],
+    finder_keeps: Optional[bool],
+    org_legal: "OrgSettingsLegal",
+) -> LegalDeadlineInfo:
+    """Configurable version of compute_legal_deadline that reads rules from org settings.
+
+    Falls back gracefully when required dates are missing.
+    """
+    from src.app.schemas.org_settings import OrgSettingsLegal  # local import to avoid circular
+
+    rule_key = "finder_keeps" if finder_keeps else "custody"
+    rule = org_legal.rules.get(rule_key)
+    if not rule:
+        return LegalDeadlineInfo(
+            deadline_at=None,
+            deadline_type="unknown",
+            days_left=None,
+            deadline_state="missing_data",
+            label="Není nálezové zvíře",
+            missing_fields=[rule_key],
+        )
+
+    start_date = _resolve_start_date(
+        rule_start=rule.start,
+        fallback_start=rule.fallback_start,
+        announced_at=announced_at,
+        received_at=received_at,
+        found_at=found_at,
+        cz_later_of=rule.cz_later_of_announced_received,
+    )
+
+    if start_date is None:
+        missing = []
+        if rule.start == "announced" and announced_at is None:
+            missing.append("announced_at")
+        if rule.start == "received" and received_at is None:
+            missing.append("received_at")
+        if not missing:
+            missing.append(rule.fallback_start)
+        return LegalDeadlineInfo(
+            deadline_at=None,
+            deadline_type=rule_key,
+            days_left=None,
+            deadline_state="missing_data",
+            label="Chybí startovní datum",
+            missing_fields=missing,
+        )
+
+    deadline_at = _add_months(start_date, rule.days // 30) if rule.days % 30 == 0 else _add_days(start_date, rule.days)
+    label_base = f"{rule.days} dní od " + ("vyhlášení" if rule.start == "announced" else "přijetí")
+    return _build_deadline_info(
+        deadline_at=deadline_at,
+        deadline_type=rule_key,
+        label_base=label_base,
+    )
+
+
+def _resolve_start_date(
+    rule_start: str,
+    fallback_start: str,
+    announced_at: Optional[date],
+    received_at: Optional[date],
+    found_at: Optional[date],
+    cz_later_of: bool,
+) -> Optional[date]:
+    """Resolve which date to use as the start for the deadline calculation."""
+    _date_map = {
+        "announced": announced_at,
+        "received": received_at,
+        "found": found_at,
+    }
+
+    primary = _date_map.get(rule_start)
+    fallback = _date_map.get(fallback_start)
+
+    if cz_later_of and announced_at and received_at:
+        # CZ rule: start from the LATER of announced_at and received_at
+        return max(announced_at, received_at)
+
+    if primary is not None:
+        return primary
+    return fallback
+
+
+def _add_days(d: date, days: int) -> date:
+    """Add N days to a date."""
+    from datetime import timedelta
+    return d + timedelta(days=days)
 
 
 def _add_months(d: date, months: int) -> date:

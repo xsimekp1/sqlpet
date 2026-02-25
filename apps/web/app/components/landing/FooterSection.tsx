@@ -17,7 +17,7 @@ const columns = [
     title: 'Firma',
     links: [
       { label: 'O nás', href: '#about' },
-      { label: 'Kontakt', href: 'mailto:info@petslog.cz' },
+      { label: 'Kontakt', href: 'mailto:info@pets-log.com' },
       { label: 'Blog', href: '#' },
     ],
   },

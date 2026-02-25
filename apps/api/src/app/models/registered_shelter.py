@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Float, String, Text
+from sqlalchemy import Boolean, Date, DateTime, Float, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
@@ -22,6 +22,8 @@ class RegisteredShelter(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     lng: Mapped[float | None] = mapped_column(Float, nullable=True)
     registration_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    accepts_dogs: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    accepts_cats: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     imported_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
     )
