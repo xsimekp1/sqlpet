@@ -16,9 +16,7 @@ class MembershipStatus(str, enum.Enum):
 
 class Membership(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "memberships"
-    __table_args__ = (
-        Index("ix_memberships_org_user", "organization_id", "user_id"),
-    )
+    __table_args__ = (Index("ix_memberships_org_user", "organization_id", "user_id"),)
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -37,6 +35,11 @@ class Membership(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         nullable=True,
     )
     status: Mapped[MembershipStatus] = mapped_column(
-        Enum(MembershipStatus, name="membership_status_enum", create_constraint=False, native_enum=True),
+        Enum(
+            MembershipStatus,
+            name="membership_status_enum",
+            create_constraint=False,
+            native_enum=True,
+        ),
         default=MembershipStatus.ACTIVE,
     )

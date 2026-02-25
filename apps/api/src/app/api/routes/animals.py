@@ -14,10 +14,12 @@ from src.app.api.dependencies.auth import (
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Animal, Species
 from src.app.models.kennel import Kennel, Zone
-from src.app.services.legal_deadline import compute_legal_deadline, compute_legal_deadline_from_settings
+from src.app.services.legal_deadline import (
+    compute_legal_deadline,
+    compute_legal_deadline_from_settings,
+)
 from src.app.schemas.org_settings import get_org_settings
 from src.app.models.organization import Organization
-from src.app.models.animal_event import AnimalEvent, AnimalEventType
 from src.app.models.animal_identifier import AnimalIdentifier
 from src.app.models.animal_weight_log import AnimalWeightLog
 from src.app.models.animal_bcs_log import AnimalBCSLog
@@ -53,8 +55,9 @@ async def _build_animal_response(
     i18n_map: dict[str, str] = {}
     if breed_ids_list:
         i18n_rows = await db.execute(
-            select(BreedI18n.breed_id, BreedI18n.name)
-            .where(BreedI18n.breed_id.in_(breed_ids_list), BreedI18n.locale == "cs")
+            select(BreedI18n.breed_id, BreedI18n.name).where(
+                BreedI18n.breed_id.in_(breed_ids_list), BreedI18n.locale == "cs"
+            )
         )
         i18n_map = {str(r.breed_id): r.name for r in i18n_rows}
     breeds = [
@@ -666,31 +669,50 @@ async def get_weight_history(
 class BirthRequest(BaseModel):
     litter_count: int = Field(..., ge=1, le=20)
     birth_date: date | None = None  # defaults to today
-    collar_colors: list[str | None] | None = None  # Optional collar colors for each offspring
+    collar_colors: list[str | None] | None = (
+        None  # Optional collar colors for each offspring
+    )
     naming_scheme: str = "number"  # "number", "letter", or "color"
     mother_lactating: bool = False  # Set mother as lactating after birth
 
-    @field_validator('collar_colors')
+    @field_validator("collar_colors")
     @classmethod
     def validate_collar_colors(cls, v, info):
         if v is None:
             return v
-        litter_count = info.data.get('litter_count')
+        litter_count = info.data.get("litter_count")
         if litter_count and len(v) != litter_count:
-            raise ValueError(f'collar_colors length ({len(v)}) must equal litter_count ({litter_count})')
+            raise ValueError(
+                f"collar_colors length ({len(v)}) must equal litter_count ({litter_count})"
+            )
 
-        valid_colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', None, 'none']
+        valid_colors = [
+            "red",
+            "blue",
+            "green",
+            "yellow",
+            "orange",
+            "purple",
+            "pink",
+            "brown",
+            None,
+            "none",
+        ]
         for color in v:
             if color not in valid_colors:
-                raise ValueError(f'Invalid collar color: {color}. Must be one of {valid_colors}')
+                raise ValueError(
+                    f"Invalid collar color: {color}. Must be one of {valid_colors}"
+                )
         return v
 
-    @field_validator('naming_scheme')
+    @field_validator("naming_scheme")
     @classmethod
     def validate_naming_scheme(cls, v):
-        valid_schemes = ['number', 'letter', 'color']
+        valid_schemes = ["number", "letter", "color"]
         if v not in valid_schemes:
-            raise ValueError(f'Invalid naming_scheme: {v}. Must be one of {valid_schemes}')
+            raise ValueError(
+                f"Invalid naming_scheme: {v}. Must be one of {valid_schemes}"
+            )
         return v
 
 
@@ -749,7 +771,7 @@ async def register_birth(
         collar_color = None
         if data.collar_colors and i < len(data.collar_colors):
             color = data.collar_colors[i]
-            collar_color = color if color and color != 'none' else None
+            collar_color = color if color and color != "none" else None
 
         # Generate name based on naming scheme
         if data.naming_scheme == "letter":
@@ -766,8 +788,14 @@ async def register_birth(
         elif data.naming_scheme == "color" and collar_color:
             # Use color name in Czech (map to i18n keys)
             color_names_cs = {
-                'red': 'červený', 'blue': 'modrý', 'green': 'zelený', 'yellow': 'žlutý',
-                'orange': 'oranžový', 'purple': 'fialový', 'pink': 'růžový', 'brown': 'hnědý'
+                "red": "červený",
+                "blue": "modrý",
+                "green": "zelený",
+                "yellow": "žlutý",
+                "orange": "oranžový",
+                "purple": "fialový",
+                "pink": "růžový",
+                "brown": "hnědý",
             }
             color_name = color_names_cs.get(collar_color, collar_color)
             offspring_name = f"{mother.name} – {color_name}"
@@ -1149,18 +1177,6 @@ async def mark_animal_walked(
     now = datetime.utcnow()
     animal.last_walked_at = now
 
-    event = AnimalEvent(
-        id=uuid.uuid4(),
-        organization_id=organization_id,
-        animal_id=animal_id,
-        event_type=AnimalEventType.WALK,
-        occurred_at=now,
-        title="Venčení",
-        description="Zvíře bylo venčeno",
-        related_user_id=current_user.id,
-    )
-    db.add(event)
-
     await db.commit()
     await db.refresh(animal)
 
@@ -1170,7 +1186,10 @@ async def mark_animal_walked(
 @router.post("/{animal_id}/publish-to-website", response_model=AnimalResponse)
 async def publish_animal_to_website(
     animal_id: uuid.UUID,
-    type: str = Query("shelter", description="Publication type: 'shelter' (4 months) or 'finder' (2 months)"),
+    type: str = Query(
+        "shelter",
+        description="Publication type: 'shelter' (4 months) or 'finder' (2 months)",
+    ),
     current_user: User = Depends(require_permission("animals.write")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
@@ -1223,11 +1242,15 @@ async def publish_animal_to_website(
 
     # Already published?
     if animal.website_published_at:
-        raise HTTPException(status_code=400, detail="Animal already published to website")
+        raise HTTPException(
+            status_code=400, detail="Animal already published to website"
+        )
 
     # Validate type parameter
     if type not in ["shelter", "finder"]:
-        raise HTTPException(status_code=400, detail="Invalid type. Must be 'shelter' or 'finder'")
+        raise HTTPException(
+            status_code=400, detail="Invalid type. Must be 'shelter' or 'finder'"
+        )
 
     # Set publication date and compute deadline based on type
     today = date.today()
@@ -1264,7 +1287,9 @@ async def publish_animal_to_website(
             "website_published_at": str(today),
             "website_deadline_at": str(deadline),
             "website_deadline_type": type,
-            "status": new_status.value if hasattr(new_status, "value") else str(new_status),
+            "status": new_status.value
+            if hasattr(new_status, "value")
+            else str(new_status),
         },
     )
 

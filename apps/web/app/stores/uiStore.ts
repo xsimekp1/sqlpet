@@ -14,7 +14,6 @@ const WIDGET_SIZES: Record<string, 'small' | 'medium' | 'large'> = {
   'occupancy': 'medium',
   'recently-admitted': 'medium',
   'my-tasks': 'medium',
-  'upcoming-outcomes': 'medium',
 }
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
@@ -26,7 +25,6 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: 'occupancy' },
   { id: 'recently-admitted' },
   { id: 'my-tasks' },
-  { id: 'upcoming-outcomes' },
 ]
 
 interface UIState {

@@ -9,7 +9,6 @@ from src.app.models.animal import (
     AgeGroup,
     SizeEstimated,
 )
-from src.app.models.animal_event import AnimalEvent, AnimalEventType
 from src.app.models.breed import Breed
 from src.app.models.breed_i18n import BreedI18n
 from src.app.models.animal_breed import AnimalBreed
@@ -59,7 +58,11 @@ from src.app.models.user_shortcut import UserKeyboardShortcut
 from src.app.models.incident import AnimalIncident
 from src.app.models.purchase_order import PurchaseOrder, PurchaseOrderItem
 from src.app.models.animal_passport import AnimalPassport, AnimalPassportDocument
-from src.app.models.document_template import DocumentTemplate, DocumentInstance, DocumentStatus
+from src.app.models.document_template import (
+    DocumentTemplate,
+    DocumentInstance,
+    DocumentStatus,
+)
 from src.app.models.login_log import LoginLog
 
 __all__ = [
@@ -72,8 +75,6 @@ __all__ = [
     "AlteredStatus",
     "AgeGroup",
     "SizeEstimated",
-    "AnimalEvent",
-    "AnimalEventType",
     "Breed",
     "BreedI18n",
     "AnimalBreed",

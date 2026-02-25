@@ -89,6 +89,8 @@ export default function WalksPage() {
       setWalks(data.items || []);
     } catch (error: any) {
       toast.error(t('noActivity'));
+    } finally {
+      setLoading(false);
     }
   };
 

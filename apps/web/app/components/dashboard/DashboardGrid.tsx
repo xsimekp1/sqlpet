@@ -16,7 +16,6 @@ import { OccupancyWidget } from './OccupancyWidget'
 import { RecentlyAdmittedWidget } from './RecentlyAdmittedWidget'
 import { WalksTodayWidget } from './WalksTodayWidget'
 import { MyTasksWidget } from './MyTasksWidget'
-import { UpcomingOutcomesWidget } from './UpcomingOutcomesWidget'
 import VaccinationsExpiringWidget from './VaccinationsExpiringWidget'
 
 const ALL_WIDGETS: { id: string }[] = [
@@ -29,7 +28,6 @@ const ALL_WIDGETS: { id: string }[] = [
   { id: 'recently-admitted' },
   { id: 'walks-today' },
   { id: 'my-tasks' },
-  { id: 'upcoming-outcomes' },
   { id: 'vaccinations-expiring' },
 ]
 
@@ -43,7 +41,6 @@ const widgetLabels: Record<string, string> = {
   'recently-admitted': 'recentlyAdmitted',
   'walks-today': 'walksToday',
   'my-tasks': 'myTasks',
-  'upcoming-outcomes': 'upcomingOutcomes',
   'vaccinations-expiring': 'vaccinationsExpiring',
 }
 
@@ -58,7 +55,6 @@ const widgetComponents = {
   'recently-admitted': RecentlyAdmittedWidget,
   'walks-today': WalksTodayWidget,
   'my-tasks': MyTasksWidget,
-  'upcoming-outcomes': UpcomingOutcomesWidget,
   'vaccinations-expiring': VaccinationsExpiringWidget,
 }
 
