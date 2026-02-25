@@ -1,7 +1,7 @@
 """Public API routes - no authentication required."""
 
-import uuid
 from typing import List
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import select, func
