@@ -21,6 +21,7 @@ from src.app.api.routes.kennels import (
 from src.app.api.routes.stays import router as stays_router
 from src.app.api.routes.tasks import router as tasks_router
 from src.app.api.routes.feeding import router as feeding_router
+from src.app.api.routes.public import router as public_router
 from src.app.api.routes.inventory import router as inventory_router
 from src.app.api.routes.purchase_orders import router as purchase_orders_router
 from src.app.api.routes.tags import router as tags_router
@@ -46,6 +47,7 @@ from src.app.api.routes.animals_stats import router as animals_stats_router
 from src.app.api.routes.metrics import router as metrics_router
 from src.app.api.routes.documents import router as documents_router
 from src.app.api.routes.gdpr import router as gdpr_router
+from src.app.api.routes.leads import router as leads_router
 
 # Files router is now working properly after fixing import issues
 
@@ -466,6 +468,7 @@ app.include_router(public_animals_router)
 app.include_router(stays_router)
 app.include_router(tasks_router)
 app.include_router(feeding_router)
+app.include_router(public_router)
 app.include_router(inventory_router)
 app.include_router(purchase_orders_router)
 app.include_router(tags_router)
@@ -490,3 +493,4 @@ app.include_router(animals_stats_router)
 app.include_router(metrics_router)
 app.include_router(documents_router)
 app.include_router(gdpr_router)
+app.include_router(leads_router)
