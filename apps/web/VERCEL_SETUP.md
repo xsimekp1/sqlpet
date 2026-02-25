@@ -1,4 +1,4 @@
-# Vercel Deployment Setup for PawShelter Web
+# Vercel Deployment Setup for Petslog Web
 
 ## Project Configuration
 

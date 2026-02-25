@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "PawShelter"
+    "name": "Petslog"
   },
   "reports": {
     "animalCountTitle": "Počet zvířat v útulku (posledních 90 dní)",
@@ -199,7 +199,9 @@
     "help": "Nápověda",
     "calendar": "Kalendář",
     "newOrg": "Nová organizace",
-    "registeredShelters": "Registr útulků"
+    "registeredShelters": "Registr útulků",
+    "superadmin": "Superadmin",
+    "organizations": "Organizace"
   },
   "topbar": {
     "search": "Hledat zvířata, lidi, úkoly...",
@@ -1649,7 +1651,7 @@
   },
   "help": {
     "title": "Nápověda",
-    "description": "PawShelter (ÚtulekOS) je systém pro správu útulku. Pokrývá každodenní provoz: evidenci zvířat, přiřazení ke kotcům, zdravotní úkoly, plány krmení a inventář.",
+    "description": "Petslog je systém pro správu útulku. Pokrývá každodenní provoz: evidenci zvířat, přiřazení ke kotcům, zdravotní úkoly, plány krmení a inventář.",
     "shortcuts": {
       "title": "Klávesové zkratky",
       "search": "Otevřít globální vyhledávání"
@@ -2029,5 +2031,29 @@
       "description": "Zkontrolujte nastavení a dokončete konfiguraci útulku",
       "days": "dní"
     }
+  },
+  "superadmin": {
+    "title": "Správa organizací",
+    "totalOrganizations": "Celkem organizací",
+    "newThisMonth": "Nových tento měsíc",
+    "byCountry": "Podle země",
+    "noData": "Žádná data",
+    "searchPlaceholder": "Hledat organizaci nebo email...",
+    "allCountries": "Všechny země",
+    "organization": "Organizace",
+    "country": "Země",
+    "admins": "Administrátoři",
+    "members": "Členů",
+    "created": "Vytvořeno",
+    "actions": "Akce",
+    "viewMembers": "Členové",
+    "noOrganizations": "Žádné organizace",
+    "errorLoading": "Chyba při načítání",
+    "deleteSuccess": "Organizace smazána",
+    "deleteError": "Chyba při mazání",
+    "deleteConfirmTitle": "Smazat organizaci?",
+    "deleteConfirmDescription": "Opravdu chcete smazat organizaci \"{{name}}\"? Tato akce je nevratná a smaže všechna data včetně zvířat, uživatelů a historie.",
+    "cancel": "Zrušit",
+    "delete": "Smazat"
   }
 }

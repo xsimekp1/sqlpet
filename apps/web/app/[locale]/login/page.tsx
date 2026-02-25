@@ -221,16 +221,18 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        {/* Logo video below login */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="h-24 w-auto mt-8 rounded-lg"
-        >
-          <source src="/vidu-video-3172321556102224.webm" type="video/webm" />
-        </video>
+        {/* Logo video below login - centered, 10% hidden at bottom */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="h-24 w-auto mx-auto mb-[-10%]"
+          >
+            <source src="/vidu-video-3172321556102224.webm" type="video/webm" />
+          </video>
+        </div>
       </div>
     </div>
   );

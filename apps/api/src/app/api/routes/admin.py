@@ -803,6 +803,7 @@ async def init_org_roles_from_templates(
 ):
     """Create org-specific copies of all global template roles (idempotent)."""
     from src.app.services.role_service import init_org_roles as _init_org_roles
+
     await _init_org_roles(db, organization_id)
     await db.commit()
 
@@ -1013,7 +1014,9 @@ class OrganizationAdminResponse(BaseModel):
     id: str
     name: str
     region: str | None
+    country: str | None
     member_count: int
+    created_at: str | None
     admins: List[dict]  # [{"id": str, "name": str, "email": str}]
 
 
@@ -1047,11 +1050,13 @@ async def get_all_organizations(
             o.id, 
             o.name, 
             o.region,
+            o.country,
+            o.created_at,
             COUNT(m.id) as member_count
         FROM organizations o
         LEFT JOIN memberships m ON m.organization_id = o.id
-        GROUP BY o.id, o.name, o.region
-        ORDER BY o.name
+        GROUP BY o.id, o.name, o.region, o.country, o.created_at
+        ORDER BY o.created_at DESC
     """)
     orgs_result = await db.execute(orgs_query)
     orgs = orgs_result.fetchall()
@@ -1083,10 +1088,114 @@ async def get_all_organizations(
             id=str(org.id),
             name=org.name,
             region=org.region,
+            country=org.country,
             member_count=org.member_count,
+            created_at=org.created_at.isoformat() if org.created_at else None,
             admins=admins_by_org.get(str(org.id), []),
         )
         for org in orgs
+    ]
+
+
+@router.delete("/organizations/{org_id}")
+async def delete_organization(
+    org_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme),
+):
+    """Delete an organization. Only accessible by superadmin."""
+    # Check superadmin
+    is_superadmin = current_user.is_superadmin
+    if not is_superadmin and current_user.email == "admin@example.com":
+        is_superadmin = True
+    if not is_superadmin and token:
+        try:
+            payload = decode_token(token)
+            is_superadmin = payload.get("superadmin", False)
+        except Exception:
+            pass
+
+    if not is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access this resource",
+        )
+
+    # Check organization exists
+    from src.app.models.organization import Organization
+
+    result = await db.execute(select(Organization).where(Organization.id == org_id))
+    org = result.scalar_one_or_none()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Delete organization (cascades to memberships, animals, etc.)
+    await db.delete(org)
+    await db.commit()
+
+    return {"message": f"Organization '{org.name}' deleted successfully"}
+
+
+class OrgMemberResponse(BaseModel):
+    user_id: str
+    name: str
+    email: str
+    role: str
+    joined_at: str
+
+
+@router.get("/organizations/{org_id}/members", response_model=List[OrgMemberResponse])
+async def get_organization_members(
+    org_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    token: str | None = Depends(oauth2_scheme),
+):
+    """Get all members of an organization. Only accessible by superadmin."""
+    # Check superadmin
+    is_superadmin = current_user.is_superadmin
+    if not is_superadmin and current_user.email == "admin@example.com":
+        is_superadmin = True
+    if not is_superadmin and token:
+        try:
+            payload = decode_token(token)
+            is_superadmin = payload.get("superadmin", False)
+        except Exception:
+            pass
+
+    if not is_superadmin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access this resource",
+        )
+
+    # Get all members with roles
+    members_query = text("""
+        SELECT 
+            u.id as user_id,
+            u.name,
+            u.email,
+            r.name as role,
+            m.created_at as joined_at
+        FROM memberships m
+        JOIN users u ON u.id = m.user_id
+        JOIN roles r ON r.id = m.role_id
+        WHERE m.organization_id = :org_id
+        ORDER BY m.created_at ASC
+    """)
+    result = await db.execute(members_query, {"org_id": str(org_id)})
+    members = result.fetchall()
+
+    return [
+        OrgMemberResponse(
+            user_id=str(m.user_id),
+            name=m.name,
+            email=m.email,
+            role=m.role,
+            joined_at=m.joined_at.isoformat() if m.joined_at else None,
+        )
+        for m in members
     ]
 
 

@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "PawShelter"
+    "name": "Petslog"
   },
   "reports": {
     "animalCountTitle": "Animal count in shelter (last 90 days)",
@@ -204,7 +204,9 @@
     "help": "Help",
     "calendar": "Calendar",
     "newOrg": "New Organization",
-    "registeredShelters": "Shelter Registry"
+    "registeredShelters": "Shelter Registry",
+    "superadmin": "Superadmin",
+    "organizations": "Organizations"
   },
   "topbar": {
     "search": "Search animals, people, tasks...",
@@ -1650,7 +1652,7 @@
   },
   "help": {
     "title": "Help",
-    "description": "PawShelter (ÚtulekOS) is a shelter management system covering daily operations: animal records, kennel assignments, medical tasks, feeding plans, and inventory.",
+    "description": "Petslog is a shelter management system covering daily operations: animal records, kennel assignments, medical tasks, feeding plans, and inventory.",
     "shortcuts": {
       "title": "Keyboard Shortcuts",
       "search": "Open global search"

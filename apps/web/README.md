@@ -1,6 +1,6 @@
-# PawShelter Web Frontend
+# Petslog Web Frontend
 
-Next.js 14+ frontend for the PawShelter animal shelter management system.
+Next.js 14+ frontend for the Petslog animal shelter management system.
 
 ## Tech Stack
 

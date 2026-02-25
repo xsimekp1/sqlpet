@@ -121,7 +121,7 @@ export default function FindingsPage() {
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationQuery)}&countrycodes=cz&limit=1`,
         {
           headers: {
-            'User-Agent': 'PawShelter/1.0'
+            'User-Agent': 'Petslog/1.0'
           }
         }
       );
