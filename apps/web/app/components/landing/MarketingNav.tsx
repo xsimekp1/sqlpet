@@ -39,9 +39,9 @@ export function MarketingNav({ locale }: MarketingNavProps) {
               <Image
                 src="/petslog.png"
                 alt="Petslog"
-                width={100}
-                height={33}
-                className="h-8 w-auto"
+                width={140}
+                height={93}
+                className="h-10 w-auto"
                 priority
               />
             </Link>
@@ -92,9 +92,9 @@ export function MarketingNav({ locale }: MarketingNavProps) {
                   <Image
                     src="/petslog.png"
                     alt="Petslog"
-                    width={100}
-                    height={33}
-                    className="h-8 w-auto"
+                    width={140}
+                    height={93}
+                    className="h-10 w-auto"
                   />
                   <Link href={`/${locale}/login`} onClick={() => setMobileOpen(false)}>
                     <Button variant="ghost" className="w-full justify-start">

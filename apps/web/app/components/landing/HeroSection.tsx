@@ -49,17 +49,16 @@ export function HeroSection() {
             <Button
               size="lg"
               className="bg-white text-teal-700 hover:bg-teal-50 font-semibold px-8 shadow-lg"
-              onClick={() => openModal('demo')}
-            >
-              Domluvit ukázku
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white/60 text-white hover:bg-white/10 font-semibold px-8"
               onClick={() => openModal('free')}
             >
               Začít zdarma
+            </Button>
+            <Button
+              size="lg"
+              className="bg-teal-500 hover:bg-teal-400 text-white font-semibold px-8"
+              onClick={() => openModal('demo')}
+            >
+              Domluvit ukázku
             </Button>
           </div>
 
@@ -68,8 +67,6 @@ export function HeroSection() {
             <span className="flex items-center gap-1.5">🇨🇿 Česká legislativa</span>
             <span className="hidden sm:block text-teal-400">·</span>
             <span className="flex items-center gap-1.5">☁️ Bezpečný cloud</span>
-            <span className="hidden sm:block text-teal-400">·</span>
-            <span className="flex items-center gap-1.5">📱 Android app v přípravě</span>
           </div>
         </motion.div>
 

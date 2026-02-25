@@ -41,14 +41,11 @@ export function FooterSection({ locale }: FooterSectionProps) {
               <span className="text-xl font-bold text-white">🐾 Petslog</span>
             </Link>
             <p className="text-sm leading-relaxed">
-              Správa útulku bez chaosu. Navrženo pro reálný provoz útulků v ČR.
+              Správa zvířat bez chaosu. Navrženo pro reálný provoz v ČR.
             </p>
-            <a
-              href="mailto:info@petslog.cz"
-              className="inline-block mt-3 text-sm text-teal-400 hover:text-teal-300 transition-colors"
-            >
-              info@petslog.cz
-            </a>
+            <span className="inline-block mt-3 text-sm text-teal-400">
+              Mailovou službu teprve zařizujeme
+            </span>
           </div>
 
           {/* Link columns */}

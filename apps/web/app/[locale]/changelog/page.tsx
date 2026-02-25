@@ -54,6 +54,27 @@ export default function ChangelogPage() {
             </p>
           </div>
 
+          {/* Week 24-25.2. */}
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 24. – 25. února 2026</span>
+            </h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-6 space-y-4">
+              <div>
+                <span className="font-semibold text-white">🍖 Widget spotřeby krmiva</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Dashboard widget zobrazující denní spotřebu krmiva – kolik gramů kterého krmiva je potřeba.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🌐 Přesun na pets-log.com</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Web je nyní dostupný na nové doméně pets-log.com.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Week 21-23.2. */}
           <section className="mb-12">
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">

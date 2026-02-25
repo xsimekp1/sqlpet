@@ -48,7 +48,7 @@ const categories: FeatureCategory[] = [
       { text: 'Denní přehled – co je potřeba podat' },
       { text: 'Očkovací průkazy s upozorněním na končící platnost' },
       { text: 'Očkování, procedury, controlled substance' },
-      { text: 'Veterinární návštěvy a diagnózy' },
+      { text: 'Veterinární návštěvy a diagnózy', soon: true },
     ],
     screenshot: '/images/features/leky.png',
   },
@@ -57,7 +57,7 @@ const categories: FeatureCategory[] = [
     emoji: '📄',
     items: [
       { text: 'Tiskové šablony: smlouvy, předávací protokoly' },
-      { text: 'E-podpis adopčních smluv' },
+      { text: 'E-podpis adopčních smluv', soon: true },
       { text: 'Export dat: CSV / PDF' },
       { text: 'Audit log – kdo co změnil a kdy' },
     ],
@@ -67,7 +67,7 @@ const categories: FeatureCategory[] = [
     title: 'Krmení',
     emoji: '🍖',
     items: [
-      { text: 'Krmné plány per zvíře' },
+      { text: 'Individuální krmné plány' },
       { text: 'Denní přehled – co a kdy krmit' },
       { text: 'Logy – co bylo skutečně podáno' },
     ],
@@ -88,7 +88,7 @@ const categories: FeatureCategory[] = [
     title: 'Veřejné profily & QR kódy',
     emoji: '🌐',
     items: [
-      { text: 'Veřejný výpis adoptabilních zvířat' },
+      { text: 'Nabídka zvířat k adopci' },
       { text: 'QR kódy na kotcích – návštěvníci načtou mobilem a hned vidí info' },
       { text: 'Embed widget pro web útulku' },
       { text: 'Sdíletelné profily zvířat' },
@@ -120,7 +120,7 @@ const categories: FeatureCategory[] = [
     emoji: '⚡',
     items: [
       { text: 'Mobilní režim "Procházka po útulku" – rychlé akce u kotce' },
-      { text: 'Barevné obojky pro mláďata – 8 barev pro identifikaci ve vrhu' },
+      { text: 'Evidence barevných obojků pro mláďata' },
       { text: 'Keyword engine → okamžitý alert při kritické události' },
     ],
     screenshot: '/images/features/rychle-akce.png',

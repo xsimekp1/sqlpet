@@ -125,7 +125,7 @@ export function PricingSection() {
                   className={`w-full ${
                     plan.highlight
                       ? 'bg-teal-600 hover:bg-teal-700 text-white'
-                      : 'border border-teal-600 text-teal-700 bg-transparent hover:bg-teal-50'
+                      : 'bg-teal-600 hover:bg-teal-700 text-white'
                   }`}
                   onClick={() => openModal(plan.ctaInterest)}
                 >

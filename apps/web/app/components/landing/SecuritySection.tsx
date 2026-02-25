@@ -21,8 +21,7 @@ export function SecuritySection() {
             <h3 className="font-semibold text-gray-900 mb-2">Data v EU</h3>
             <p className="text-sm text-gray-600">
               Všechna data ukládáme v cloudu v EU (AWS/Google Cloud region Frankfurt). 
-              Splňujeme tak GDPR automaticky — cloud v EU je sám o sobě dostatečný 
-              z právního hlediska, ukládáte-li osobní data občanů EU.
+              Cloud v EU splňuje GDPR požadavky pro ukládání osobních dat občanů EU.
             </p>
           </div>
 
@@ -48,8 +47,7 @@ export function SecuritySection() {
             <div className="text-2xl mb-3">🔑</div>
             <h3 className="font-semibold text-gray-900 mb-2">Dvoufaktorová autentifikace</h3>
             <p className="text-sm text-gray-600">
-              Volitelná 2FA pomocí Google Authenticator nebo podobných aplikací. 
-              Záložní kódy pro případ ztráty telefonu.
+              Volitelná 2FA pomocí Google Authenticator nebo podobných aplikací.
             </p>
           </div>
 
