@@ -41,10 +41,10 @@ export function RecentlyAdmittedWidget({ editMode, onRemove, dragHandleProps }: 
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
-      className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 border-emerald-200/50 dark:border-emerald-800/30"
+      className="bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-soft)] border-[var(--color-primary)]/30"
     >
       {loading ? (
-        <div className="h-40 rounded-xl bg-emerald-100/50 animate-pulse" />
+        <div className="h-40 rounded-xl bg-[var(--color-primary-soft)]/50 animate-pulse" />
       ) : animal ? (
         <Link href={`/dashboard/animals/${animal.id}`} className="block group">
           {/* Big photo */}

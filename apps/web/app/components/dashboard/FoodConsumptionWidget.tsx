@@ -61,15 +61,15 @@ export function FoodConsumptionWidget({ editMode, onRemove, dragHandleProps }: F
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
-      className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-amber-200/50 dark:border-amber-800/30"
+      className="bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-soft)] border-[var(--color-primary)]/30"
     >
       <div className="space-y-4">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-900/30">
-            <Package className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+          <div className="p-3 rounded-xl bg-[var(--color-primary-soft)]">
+            <Package className="h-6 w-6 text-[var(--color-primary)]" />
           </div>
           <div className="flex-1">
-            <p className="text-4xl font-bold text-amber-700 dark:text-amber-400">{formatGrams(totalGrams)}</p>
+            <p className="text-4xl font-bold text-[var(--color-primary)]">{formatGrams(totalGrams)}</p>
             <p className="text-sm text-muted-foreground">{t('totalDaily')}</p>
           </div>
         </div>
@@ -77,7 +77,7 @@ export function FoodConsumptionWidget({ editMode, onRemove, dragHandleProps }: F
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-10 bg-amber-100/50 dark:bg-amber-900/20 rounded animate-pulse" />
+              <div key={i} className="h-10 bg-[var(--color-primary-soft)]/50 rounded animate-pulse" />
             ))}
           </div>
         ) : consumptionData && consumptionData.length > 0 ? (
@@ -88,7 +88,7 @@ export function FoodConsumptionWidget({ editMode, onRemove, dragHandleProps }: F
                 className="flex items-center justify-between p-2 rounded-lg bg-white/50 dark:bg-black/20"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate text-amber-900 dark:text-amber-100">
+                  <p className="font-medium text-sm truncate text-[var(--color-primary)]">
                     {item.food_name}
                   </p>
                   <p className="text-xs text-muted-foreground">

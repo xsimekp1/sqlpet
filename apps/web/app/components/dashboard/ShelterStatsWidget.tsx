@@ -70,7 +70,7 @@ export function ShelterStatsWidget({ editMode, onRemove, dragHandleProps }: Shel
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
-      className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20 border-violet-200/50 dark:border-violet-800/30"
+      className="bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-soft)] border-[var(--color-primary)]/30"
     >
       <div className="space-y-3">
         <div className="flex items-center gap-3">

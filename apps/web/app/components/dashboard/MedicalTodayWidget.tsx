@@ -50,7 +50,7 @@ export function MedicalTodayWidget({ editMode, onRemove, dragHandleProps }: Medi
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
-      className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/20 dark:to-pink-950/20 border-red-200/50 dark:border-red-800/30"
+      className="bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-soft)] border-[var(--color-primary)]/30"
     >
       <div className="space-y-4">
         <div className="flex items-center gap-4">

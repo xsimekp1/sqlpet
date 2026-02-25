@@ -1,31 +1,21 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type WidgetSize = 'small' | 'large'
-
 export interface WidgetConfig {
   id: string
-  size: WidgetSize
 }
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
-  { id: 'medical-today', size: 'large' },
-  { id: 'feeding-today', size: 'large' },
-  { id: 'food-consumption', size: 'small' },
-  { id: 'tasks', size: 'small' },
-  { id: 'shelter-stats', size: 'large' },
-  { id: 'occupancy', size: 'large' },
-  { id: 'recently-admitted', size: 'small' },
-  { id: 'my-tasks', size: 'small' },
-  { id: 'upcoming-outcomes', size: 'small' },
+  { id: 'medical-today' },
+  { id: 'feeding-today' },
+  { id: 'food-consumption' },
+  { id: 'tasks' },
+  { id: 'shelter-stats' },
+  { id: 'occupancy' },
+  { id: 'recently-admitted' },
+  { id: 'my-tasks' },
+  { id: 'upcoming-outcomes' },
 ]
-
-const WIDGET_SIZES: Record<string, WidgetSize> = {
-  'medical-today': 'large',
-  'feeding-today': 'large',
-  'shelter-stats': 'large',
-  'occupancy': 'large',
-}
 
 interface UIState {
   // Sidebar

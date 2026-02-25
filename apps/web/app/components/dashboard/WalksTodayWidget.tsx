@@ -44,12 +44,12 @@ export function WalksTodayWidget({ editMode, onRemove, dragHandleProps }: WalksT
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
-      className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200/50 dark:border-green-800/30"
+      className="bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-soft)] border-[var(--color-primary)]/30"
     >
       <div className="space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin text-green-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-[var(--color-primary)]" />
           </div>
         ) : walks.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
@@ -60,10 +60,10 @@ export function WalksTodayWidget({ editMode, onRemove, dragHandleProps }: WalksT
             {walks.map((walk) => (
               <div
                 key={walk.id}
-                className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-green-950/20 border border-green-100 dark:border-green-900/30"
+                className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-[var(--color-primary-soft)]/20 border border-[var(--color-primary-soft)]"
               >
                 <div className="flex items-center gap-2">
-                  <PawPrint className="h-4 w-4 text-green-600" />
+                  <PawPrint className="h-4 w-4 text-[var(--color-primary)]" />
                   <div>
                     <p className="text-sm font-medium">
                       {walk.animals?.map(a => a.name).join(', ') || (walk.animal_ids?.[0] ? walk.animal_ids[0].slice(0, 8) : '-')}

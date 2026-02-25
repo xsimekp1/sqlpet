@@ -56,21 +56,21 @@ export function OccupancyWidget({ editMode, onRemove, dragHandleProps }: Occupan
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
-      className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20 border-purple-200/50 dark:border-purple-800/30"
+      className="bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-soft)] border-[var(--color-primary)]/30"
     >
       <div className="space-y-4">
         {loading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-[var(--color-primary)]" />
           </div>
         ) : (
           <>
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-purple-100 dark:bg-purple-900/30">
-                <Grid3x3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="p-3 rounded-xl bg-[var(--color-primary-soft)]">
+                <Grid3x3 className="h-6 w-6 text-[var(--color-primary)]" />
               </div>
               <div className="flex-1">
-                <p className="text-4xl font-bold text-purple-700 dark:text-purple-400">{totalOccupied}</p>
+                <p className="text-4xl font-bold text-[var(--color-primary)]">{totalOccupied}</p>
                 <p className="text-sm text-muted-foreground">/ {totalCapacity} {t('totalCapacity')}</p>
               </div>
             </div>
@@ -79,13 +79,13 @@ export function OccupancyWidget({ editMode, onRemove, dragHandleProps }: Occupan
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{t('overall')}</span>
-                <span className="font-medium text-purple-700 dark:text-purple-400">
+                <span className="font-medium text-[var(--color-primary)]">
                   {Math.round(overallPercentage)}%
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-purple-100 dark:bg-purple-900/30 overflow-hidden">
+              <div className="h-2 rounded-full bg-[var(--color-primary-soft)] overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-violet-500 transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary)] transition-all duration-300"
                   style={{ width: `${overallPercentage}%` }}
                 />
               </div>

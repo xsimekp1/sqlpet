@@ -3,7 +3,7 @@
 import { DndContext, closestCenter, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useUIStore, WidgetConfig, WidgetSize } from '@/app/stores/uiStore'
+import { useUIStore, WidgetConfig } from '@/app/stores/uiStore'
 import { useTranslations } from 'next-intl'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -157,7 +157,7 @@ export function DashboardGrid() {
                 key={w.id}
                 variant="outline"
                 size="sm"
-                onClick={() => setDashboardWidgets([...dashboardWidgets, { id: w.id, size: w.size }])}
+                onClick={() => setDashboardWidgets([...dashboardWidgets, { id: w.id }])}
               >
                 <Plus className="h-3 w-3 mr-1" />
                 {t(widgetLabels[w.id] as any)}

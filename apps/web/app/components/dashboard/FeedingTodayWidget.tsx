@@ -46,7 +46,7 @@ export function FeedingTodayWidget({ editMode, onRemove, dragHandleProps }: Feed
       editMode={editMode}
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
-      className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200/50 dark:border-green-800/30"
+      className="bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-soft)] border-[var(--color-primary)]/30"
     >
       <div className="space-y-4">
         <div className="flex items-center gap-4">
@@ -69,7 +69,7 @@ export function FeedingTodayWidget({ editMode, onRemove, dragHandleProps }: Feed
           </div>
           <div className="h-2 rounded-full bg-green-100 dark:bg-green-900/30 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary)] transition-all duration-300"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>

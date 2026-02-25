@@ -53,19 +53,19 @@ export function TasksWidget({ editMode, onRemove, dragHandleProps }: TasksWidget
         editMode={editMode}
         onRemove={onRemove}
         dragHandleProps={dragHandleProps}
-        className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200/50 dark:border-blue-800/30"
+        className="bg-gradient-to-br from-[var(--color-primary-soft)] to-[var(--color-primary-soft)] border-[var(--color-primary)]/30"
       >
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30">
-              <CheckSquare className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 rounded-xl bg-[var(--color-primary-soft)]">
+              <CheckSquare className="h-6 w-6 text-[var(--color-primary)]" />
             </div>
             <div className="flex-1">
               {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-[var(--color-primary)]" />
               ) : (
                 <>
-                  <p className="text-4xl font-bold text-blue-700 dark:text-blue-400">{tasksDue ?? 0}</p>
+                  <p className="text-4xl font-bold text-[var(--color-primary)]">{tasksDue ?? 0}</p>
                   <p className="text-sm text-muted-foreground">{t('tasksDue')}</p>
                 </>
               )}
