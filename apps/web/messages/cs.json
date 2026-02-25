@@ -27,6 +27,7 @@
     "password": "Heslo",
     "submit": "Přihlásit se",
     "error": "Neplatné přihlašovací údaje",
+    "wrongPassword": "Neplatné heslo",
     "emailRequired": "E-mail je povinný",
     "emailInvalid": "Neplatný formát e-mailu",
     "passwordRequired": "Heslo je povinné",

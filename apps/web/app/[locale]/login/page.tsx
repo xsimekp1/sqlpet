@@ -77,7 +77,16 @@ export default function LoginPage() {
       }
     } catch (error) {
       setIsLoggingIn(false);
-      const errorMessage = error instanceof Error ? error.message : t('login.error');
+      let errorMessage: string;
+      if (error instanceof Error) {
+        if (error.message.toLowerCase().includes('password')) {
+          errorMessage = t('login.wrongPassword');
+        } else {
+          errorMessage = error.message;
+        }
+      } else {
+        errorMessage = t('login.error');
+      }
       toast.error(errorMessage);
       form.setError('root', {
         message: errorMessage,

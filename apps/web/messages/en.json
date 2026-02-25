@@ -27,6 +27,7 @@
     "password": "Password",
     "submit": "Sign In",
     "error": "Invalid credentials",
+    "wrongPassword": "Invalid password",
     "emailRequired": "Email is required",
     "emailInvalid": "Invalid email format",
     "passwordRequired": "Password is required",
