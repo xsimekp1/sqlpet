@@ -38,8 +38,20 @@ async def get_organization_users(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get all users in the current organization (for starting new conversations)."""
-    q = select(User).where(User.organization_id == organization_id)
+    """
+    Get all users in the current organization (for starting new conversations).
+    Superadmins see all users across all organizations.
+    Regular users don't see superadmins in the list.
+    """
+    # If current user is superadmin, return all users across all organizations
+    if current_user.is_superadmin:
+        q = select(User).order_by(User.full_name, User.name)
+    else:
+        # Regular users only see users in their organization, excluding superadmins
+        q = select(User).where(
+            User.organization_id == organization_id, User.is_superadmin == False
+        )
+
     result = await db.execute(q)
     users = result.scalars().all()
 
@@ -89,19 +101,31 @@ async def get_conversations(
 ):
     """Get list of conversations (users the current user has chatted with)."""
 
-    # Get all messages where current user is either sender or recipient
-    # and group by conversation partner
-    q = (
-        select(ChatMessage)
-        .where(
-            ChatMessage.organization_id == organization_id,
-            or_(
-                ChatMessage.sender_id == current_user.id,
-                ChatMessage.recipient_id == current_user.id,
-            ),
+    # If superadmin, get conversations across all organizations
+    if current_user.is_superadmin:
+        q = (
+            select(ChatMessage)
+            .where(
+                or_(
+                    ChatMessage.sender_id == current_user.id,
+                    ChatMessage.recipient_id == current_user.id,
+                ),
+            )
+            .order_by(ChatMessage.created_at.desc())
         )
-        .order_by(ChatMessage.created_at.desc())
-    )
+    else:
+        # Regular users only see conversations in their current organization
+        q = (
+            select(ChatMessage)
+            .where(
+                ChatMessage.organization_id == organization_id,
+                or_(
+                    ChatMessage.sender_id == current_user.id,
+                    ChatMessage.recipient_id == current_user.id,
+                ),
+            )
+            .order_by(ChatMessage.created_at.desc())
+        )
 
     result = await db.execute(q)
     messages = result.scalars().all()
@@ -154,24 +178,43 @@ async def get_messages(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid partner ID")
 
-    # Get messages between current user and partner
-    q = (
-        select(ChatMessage)
-        .where(
-            ChatMessage.organization_id == organization_id,
-            or_(
-                and_(
-                    ChatMessage.sender_id == str(current_user.id),
-                    ChatMessage.recipient_id == partner_id,
+    # If superadmin, get messages across all organizations
+    if current_user.is_superadmin:
+        q = (
+            select(ChatMessage)
+            .where(
+                or_(
+                    and_(
+                        ChatMessage.sender_id == str(current_user.id),
+                        ChatMessage.recipient_id == partner_id,
+                    ),
+                    and_(
+                        ChatMessage.sender_id == partner_id,
+                        ChatMessage.recipient_id == str(current_user.id),
+                    ),
                 ),
-                and_(
-                    ChatMessage.sender_id == partner_id,
-                    ChatMessage.recipient_id == str(current_user.id),
-                ),
-            ),
+            )
+            .order_by(ChatMessage.created_at.asc())
         )
-        .order_by(ChatMessage.created_at.asc())
-    )
+    else:
+        # Regular users only see messages in their current organization
+        q = (
+            select(ChatMessage)
+            .where(
+                ChatMessage.organization_id == organization_id,
+                or_(
+                    and_(
+                        ChatMessage.sender_id == str(current_user.id),
+                        ChatMessage.recipient_id == partner_id,
+                    ),
+                    and_(
+                        ChatMessage.sender_id == partner_id,
+                        ChatMessage.recipient_id == str(current_user.id),
+                    ),
+                ),
+            )
+            .order_by(ChatMessage.created_at.asc())
+        )
 
     # Mark messages as read
     await db.execute(
@@ -239,13 +282,47 @@ async def send_message(
     if not recipient:
         raise HTTPException(status_code=404, detail="Recipient not found")
 
-    # Check if recipient is in same organization
-    # (we allow messaging within same org only)
+    # Check if recipient is superadmin
+    is_recipient_superadmin = recipient.is_superadmin
+
+    # If recipient is superadmin and sender is not, check if conversation already exists
+    # (i.e., superadmin started the conversation first)
+    if is_recipient_superadmin and not current_user.is_superadmin:
+        existing_conv = await db.execute(
+            select(ChatMessage)
+            .where(
+                ChatMessage.organization_id == organization_id,
+                or_(
+                    and_(
+                        ChatMessage.sender_id == str(recipient.id),
+                        ChatMessage.recipient_id == str(current_user.id),
+                    ),
+                    and_(
+                        ChatMessage.sender_id == str(current_user.id),
+                        ChatMessage.recipient_id == str(recipient.id),
+                    ),
+                ),
+            )
+            .limit(1)
+        )
+        if not existing_conv.scalar_one_or_none():
+            raise HTTPException(
+                status_code=403,
+                detail="Cannot message superadmin. They must start the conversation first.",
+            )
+
+    # Determine organization_id for the message
+    # Superadmins can message users in any organization (use recipient's org)
+    # Regular users use their current organization
+    if current_user.is_superadmin:
+        msg_organization_id = recipient.organization_id
+    else:
+        msg_organization_id = organization_id
 
     # Create message
     message = ChatMessage(
         id=uuid.uuid4(),
-        organization_id=organization_id,
+        organization_id=msg_organization_id,
         sender_id=str(current_user.id),
         recipient_id=data.recipient_id,
         content=data.content,
