@@ -1898,7 +1898,7 @@ class ApiClient {
     return ApiClient.get('/admin/organizations');
   }
 
-  static async updateOrganization(
+  static async updateOrganizationAdmin(
     orgId: string,
     data: { phone?: string; admin_note?: string }
   ): Promise<{ id: string; name: string; phone: string | null; admin_note: string | null }> {

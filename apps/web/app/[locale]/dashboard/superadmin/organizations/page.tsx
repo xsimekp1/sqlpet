@@ -114,7 +114,7 @@ export default function SuperadminOrganizationsPage() {
     if (!organizationToEdit) return;
     setSaving(true);
     try {
-      await ApiClient.updateOrganization(organizationToEdit.id, {
+      await ApiClient.updateOrganizationAdmin(organizationToEdit.id, {
         phone: editPhone || undefined,
         admin_note: editNote || undefined,
       });
