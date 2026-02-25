@@ -70,10 +70,26 @@ class AuthService:
             self.db.add(organization)
             await self.db.flush()
 
+            # Auto-initialize org-specific roles from templates
+            from src.app.services.role_service import init_org_roles
+            await init_org_roles(self.db, organization.id)
+
+            # Use the org-specific admin role (just created above)
             admin_role_result = await self.db.execute(
-                select(Role).where(Role.is_template == True).limit(1)
+                select(Role).where(
+                    Role.organization_id == organization.id,
+                    Role.name == "admin",
+                    Role.is_template == False,  # noqa: E712
+                )
             )
             admin_role = admin_role_result.scalar_one_or_none()
+
+            # Fallback: first template role (should not happen, but safe)
+            if not admin_role:
+                admin_role_result = await self.db.execute(
+                    select(Role).where(Role.is_template == True).order_by(Role.name).limit(1)  # noqa: E712
+                )
+                admin_role = admin_role_result.scalar_one_or_none()
 
             if not admin_role:
                 admin_role = Role(

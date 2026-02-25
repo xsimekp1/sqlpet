@@ -14,14 +14,14 @@ class EmailService:
         try:
             response = resend.Emails.send(
                 {
-                    "from": f"PawShelter <onboarding@resend.dev>",
+                    "from": "Petslog <onboarding@resend.dev>",
                     "to": email,
-                    "subject": "Vítejte v PawShelter!",
+                    "subject": "Vítejte v Petslog!",
                     "html": f"""
                 <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <h1 style="color: #6366f1;">Vítejte v PawShelter!</h1>
+                        <h1 style="color: #6366f1;">Vítejte v Petslog!</h1>
                         <p>Ahoj {name},</p>
                         <p>Vaše registrace byla úspěšně dokončena. Vytvořili jste účet pro organizaci:</p>
                         <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
@@ -30,11 +30,11 @@ class EmailService:
                         <p>Nyní se můžete přihlásit a začít používat systém pro správu vašeho útulku.</p>
                         <p style="margin-top: 30px;">
                             S pozdravem,<br>
-                            Tým PawShelter
+                            Tým Petslog
                         </p>
                         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
                         <p style="font-size: 12px; color: #6b7280;">
-                            PawShelter - Moderní systém pro správu zvířecích útulků
+                            Petslog - Moderní systém pro správu zvířecích útulků
                         </p>
                     </div>
                 </body>
@@ -53,13 +53,13 @@ class EmailService:
         """Send password reset email."""
         try:
             reset_url = (
-                f"https://sqlpet.vercel.app/cs/reset-password?token={reset_token}"
+                f"https://pets-log.com/cs/reset-password?token={reset_token}"
             )
             response = resend.Emails.send(
                 {
-                    "from": f"PawShelter <onboarding@resend.dev>",
+                    "from": "Petslog <onboarding@resend.dev>",
                     "to": email,
-                    "subject": "Obnovení hesla - PawShelter",
+                    "subject": "Obnovení hesla - Petslog",
                     "html": f"""
                 <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -80,7 +80,7 @@ class EmailService:
                         <p>Pokud jste o obnovení hesla nežádali, můžete tento email ignorovat.</p>
                         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
                         <p style="font-size: 12px; color: #6b7280;">
-                            PawShelter - Moderní systém pro správu zvířecích útulků
+                            Petslog - Moderní systém pro správu zvířecích útulků
                         </p>
                     </div>
                 </body>

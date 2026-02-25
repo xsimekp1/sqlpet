@@ -17,7 +17,7 @@ const columns = [
     title: 'Firma',
     links: [
       { label: 'O nás', href: '#about' },
-      { label: 'Kontakt', href: 'mailto:info@petslog.cz' },
+      { label: 'Kontakt', href: 'mailto:info@pets-log.com' },
       { label: 'Blog', href: '#' },
     ],
   },
@@ -44,10 +44,10 @@ export function FooterSection({ locale }: FooterSectionProps) {
               Správa útulku bez chaosu. Navrženo pro reálný provoz útulků v ČR.
             </p>
             <a
-              href="mailto:info@petslog.cz"
+              href="mailto:info@pets-log.com"
               className="inline-block mt-3 text-sm text-teal-400 hover:text-teal-300 transition-colors"
             >
-              info@petslog.cz
+              info@pets-log.com
             </a>
           </div>
 

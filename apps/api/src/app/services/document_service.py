@@ -1,16 +1,20 @@
 """Document template rendering service."""
 import re
+from collections import defaultdict
 from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select, extract
+from sqlalchemy import func, select, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.app.models.animal import Animal
 from src.app.models.animal_identifier import AnimalIdentifier, IdentifierType
 from src.app.models.intake import Intake
+from src.app.models.inventory_item import InventoryCategory, InventoryItem
+from src.app.models.inventory_lot import InventoryLot
+from src.app.models.inventory_transaction import InventoryTransaction, TransactionReason, TransactionType
 from src.app.models.organization import Organization
 from src.app.models.contact import Contact
 from src.app.models.user import User
@@ -425,6 +429,129 @@ class DocumentService:
 
         return rows
 
+    async def _get_org_food_consumption_data(
+        self,
+        organization_id: UUID,
+        year: int,
+    ) -> list[dict[str, Any]]:
+        """Fetch aggregated food consumption (OUT/CONSUMPTION/FOOD) for the given year."""
+        CZECH_MONTHS = {
+            1: "Leden", 2: "Únor", 3: "Březen", 4: "Duben",
+            5: "Květen", 6: "Červen", 7: "Červenec", 8: "Srpen",
+            9: "Září", 10: "Říjen", 11: "Listopad", 12: "Prosinec",
+        }
+
+        query = (
+            select(
+                func.extract("month", InventoryTransaction.created_at).label("month_num"),
+                InventoryItem.name.label("item_name"),
+                InventoryItem.food_type.label("food_type"),
+                InventoryItem.unit.label("unit"),
+                InventoryItem.unit_weight_g.label("unit_weight_g"),
+                func.sum(InventoryTransaction.quantity).label("total_qty"),
+                func.sum(
+                    InventoryTransaction.quantity
+                    * func.coalesce(InventoryLot.cost_per_unit, InventoryItem.price_per_unit, 0)
+                ).label("total_cost"),
+            )
+            .join(InventoryItem, InventoryTransaction.item_id == InventoryItem.id)
+            .outerjoin(InventoryLot, InventoryTransaction.lot_id == InventoryLot.id)
+            .where(
+                InventoryTransaction.organization_id == organization_id,
+                InventoryTransaction.direction == TransactionType.OUT,
+                InventoryTransaction.reason == TransactionReason.CONSUMPTION,
+                InventoryItem.category == InventoryCategory.FOOD,
+                extract("year", InventoryTransaction.created_at) == year,
+            )
+            .group_by(
+                func.extract("month", InventoryTransaction.created_at),
+                InventoryItem.name,
+                InventoryItem.food_type,
+                InventoryItem.unit,
+                InventoryItem.unit_weight_g,
+            )
+            .order_by(
+                func.extract("month", InventoryTransaction.created_at),
+                InventoryItem.name,
+            )
+        )
+
+        result = await self.db.execute(query)
+        db_rows = result.all()
+
+        data: list[dict[str, Any]] = []
+        for row in db_rows:
+            month_num = int(row.month_num)
+            total_qty = float(row.total_qty) if row.total_qty else 0.0
+            unit_weight_g = row.unit_weight_g
+            total_weight_kg = (total_qty * unit_weight_g / 1000) if unit_weight_g else None
+            total_cost = float(row.total_cost) if row.total_cost else 0.0
+
+            data.append({
+                "month_num": month_num,
+                "month_label": CZECH_MONTHS.get(month_num, str(month_num)),
+                "item_name": row.item_name or "",
+                "food_type": row.food_type or "",
+                "unit": row.unit or "",
+                "unit_weight_g": unit_weight_g,
+                "total_qty": total_qty,
+                "total_weight_kg": total_weight_kg,
+                "total_cost": total_cost,
+            })
+
+        return data
+
+    async def _get_org_website_listing_data(
+        self,
+        organization_id: UUID,
+        year: int,
+    ) -> list[dict[str, Any]]:
+        """Fetch animals published on website for the given year (by website_published_at)."""
+        DEADLINE_TYPE_LABELS = {
+            "finder": "Nálezce (2M)",
+            "shelter": "Útulkem (4M)",
+        }
+
+        query = (
+            select(Animal)
+            .where(
+                Animal.organization_id == organization_id,
+                Animal.website_published_at.isnot(None),
+                extract("year", Animal.website_published_at) == year,
+            )
+            .order_by(Animal.website_published_at.asc())
+        )
+        result = await self.db.execute(query)
+        animals = result.scalars().all()
+
+        rows: list[dict[str, Any]] = []
+        for animal in animals:
+            is_gone = animal.outcome_date is not None
+            published_at = animal.website_published_at.strftime("%d.%m.%Y") if animal.website_published_at else ""
+            deadline_at = animal.website_deadline_at.strftime("%d.%m.%Y") if animal.website_deadline_at else ""
+            deadline_type_label = DEADLINE_TYPE_LABELS.get(animal.website_deadline_type or "", "")
+            gone_at = animal.outcome_date.strftime("%d.%m.%Y") if is_gone else ""
+            status_label = "Odešlo" if is_gone else "Stále na webu"
+
+            species_str = SPECIES_LABELS["cs"].get(
+                str(animal.species.value) if hasattr(animal.species, "value") else str(animal.species),
+                "",
+            )
+
+            rows.append({
+                "name": animal.name or "",
+                "public_code": animal.public_code or "",
+                "species_label": species_str,
+                "published_at": published_at,
+                "deadline_at": deadline_at,
+                "deadline_type_label": deadline_type_label,
+                "is_gone": is_gone,
+                "gone_at": gone_at,
+                "status_label": status_label,
+            })
+
+        return rows
+
     async def render_org_template(
         self,
         template: DocumentTemplate,
@@ -434,6 +561,12 @@ class DocumentService:
         locale: str = "cs",
     ) -> str:
         """Render an org-level template (not tied to a specific animal)."""
+        if template.code == "annual_food_consumption":
+            return await self._render_food_consumption_report(template, organization_id, created_by_user_id, year, locale)
+        if template.code == "website_listing_report":
+            return await self._render_website_listing_report(template, organization_id, created_by_user_id, year, locale)
+
+        # Default: annual intake report
         org = await self._get_organization_data(organization_id)
         user = await self._get_user_data(created_by_user_id)
         intakes = await self._get_org_intakes_data(organization_id, year, locale)
@@ -461,6 +594,141 @@ class DocumentService:
                 "year": str(year),
                 "generated_at": datetime.now().strftime("%d.%m.%Y %H:%M"),
                 "total": str(len(intakes)),
+            },
+            "data": {
+                "rows_html": rows_html,
+            },
+        }
+
+        rendered_html = self._replace_placeholders(template.content_html, context)
+        return A4_STYLE + rendered_html
+
+    async def _render_food_consumption_report(
+        self,
+        template: DocumentTemplate,
+        organization_id: UUID,
+        created_by_user_id: UUID,
+        year: int,
+        locale: str = "cs",
+    ) -> str:
+        """Render the annual food consumption report."""
+        org = await self._get_organization_data(organization_id)
+        user = await self._get_user_data(created_by_user_id)
+        rows = await self._get_org_food_consumption_data(organization_id, year)
+
+        # Group by month, build HTML with month headers + subtotals
+        months_dict: dict[int, list[dict[str, Any]]] = defaultdict(list)
+        for row in rows:
+            months_dict[row["month_num"]].append(row)
+
+        rows_html = ""
+        grand_weight = 0.0
+        grand_cost = 0.0
+
+        for month_num in sorted(months_dict.keys()):
+            month_rows = months_dict[month_num]
+            month_label = month_rows[0]["month_label"]
+
+            # Month header row (teal background)
+            rows_html += (
+                f'<tr style="background:#e0f2f1;">'
+                f'<td colspan="6" style="border:1px solid #ccc;padding:6px 8px;font-weight:bold;font-size:12px;">'
+                f'{month_label}'
+                f'</td>'
+                f'</tr>'
+            )
+
+            month_weight = 0.0
+            month_cost = 0.0
+
+            for i, row in enumerate(month_rows, start=1):
+                weight_str = f"{row['total_weight_kg']:.2f}" if row["total_weight_kg"] is not None else "—"
+                rows_html += (
+                    f'<tr>'
+                    f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:center;">{i}</td>'
+                    f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["item_name"]}</td>'
+                    f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["food_type"]}</td>'
+                    f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:right;">{row["total_qty"]:g} {row["unit"]}</td>'
+                    f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:right;">{weight_str}</td>'
+                    f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:right;">{row["total_cost"]:.2f}</td>'
+                    f'</tr>'
+                )
+                if row["total_weight_kg"] is not None:
+                    month_weight += row["total_weight_kg"]
+                month_cost += row["total_cost"]
+
+            # Monthly subtotal row (gray background)
+            month_weight_str = f"{month_weight:.2f}" if month_weight else "—"
+            rows_html += (
+                f'<tr style="background:#f5f5f5;">'
+                f'<td colspan="4" style="border:1px solid #ccc;padding:5px 7px;text-align:right;font-weight:bold;">Součet {month_label}:</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:right;font-weight:bold;">{month_weight_str}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:right;font-weight:bold;">{month_cost:.2f}</td>'
+                f'</tr>'
+            )
+            grand_weight += month_weight
+            grand_cost += month_cost
+
+        context = {
+            "org": org,
+            "user": user,
+            "report": {
+                "year": str(year),
+                "generated_at": datetime.now().strftime("%d.%m.%Y %H:%M"),
+                "total_weight_kg": f"{grand_weight:.2f}",
+                "total_cost": f"{grand_cost:.2f}",
+                "total_rows": str(len(rows)),
+            },
+            "data": {
+                "rows_html": rows_html,
+            },
+        }
+
+        rendered_html = self._replace_placeholders(template.content_html, context)
+        return A4_STYLE + rendered_html
+
+    async def _render_website_listing_report(
+        self,
+        template: DocumentTemplate,
+        organization_id: UUID,
+        created_by_user_id: UUID,
+        year: int,
+        locale: str = "cs",
+    ) -> str:
+        """Render the website listing report (animals with website_published_at set)."""
+        org = await self._get_organization_data(organization_id)
+        user = await self._get_user_data(created_by_user_id)
+        rows = await self._get_org_website_listing_data(organization_id, year)
+
+        rows_html = ""
+        for i, row in enumerate(rows, start=1):
+            row_bg = "#ffebee" if row["is_gone"] else "#e8f5e9"
+            rows_html += (
+                f'<tr style="background:{row_bg};">'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:center;">{i}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["name"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["public_code"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["species_label"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:center;">{row["published_at"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:center;">{row["deadline_at"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["deadline_type_label"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;text-align:center;">{row["gone_at"]}</td>'
+                f'<td style="border:1px solid #ccc;padding:5px 7px;">{row["status_label"]}</td>'
+                f'</tr>'
+            )
+
+        total_gone = sum(1 for r in rows if r["is_gone"])
+        total_active = len(rows) - total_gone
+
+        context = {
+            "org": org,
+            "user": user,
+            "report": {
+                "year": str(year),
+                "generated_at": datetime.now().strftime("%d.%m.%Y %H:%M"),
+                "total": str(len(rows)),
+                "total_gone": str(total_gone),
+                "total_active": str(total_active),
             },
             "data": {
                 "rows_html": rows_html,

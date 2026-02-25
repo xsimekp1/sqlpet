@@ -15,7 +15,9 @@
     "print": "Print",
     "close": "Close",
     "templates": {
-      "annual_intake_report": "Annual Intake Report"
+      "annual_intake_report": "Annual Intake Report",
+      "annual_food_consumption": "Annual Food Consumption",
+      "website_listing_report": "Animals Listed on Website"
     }
   },
   "login": {

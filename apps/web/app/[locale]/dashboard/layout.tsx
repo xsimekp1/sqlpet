@@ -13,7 +13,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, selectedOrg, onboardingCompleted } = useAuth();
+  const { isAuthenticated, isLoading, selectedOrg, onboardingCompleted, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
@@ -27,7 +27,7 @@ export default function DashboardLayout({
         router.push('/login');
       } else if (!selectedOrg) {
         router.push('/select-org');
-      } else if (!onboardingCompleted) {
+      } else if (!onboardingCompleted && !user?.is_superadmin) {
         const setupPath = `/${locale}/dashboard/setup`;
         if (!pathname.startsWith(setupPath)) {
           router.push(setupPath);
@@ -48,7 +48,7 @@ export default function DashboardLayout({
   }
 
   // Setup wizard uses its own layout — don't wrap with AppShell
-  if (!onboardingCompleted && pathname.startsWith(`/${locale}/dashboard/setup`)) {
+  if (!onboardingCompleted && !user?.is_superadmin && pathname.startsWith(`/${locale}/dashboard/setup`)) {
     return <>{children}</>;
   }
 

@@ -199,6 +199,12 @@ const plannedReports = [
                   <SelectItem value="annual_intake_report">
                     {t('reports.templates.annual_intake_report')}
                   </SelectItem>
+                  <SelectItem value="annual_food_consumption">
+                    {t('reports.templates.annual_food_consumption')}
+                  </SelectItem>
+                  <SelectItem value="website_listing_report">
+                    {t('reports.templates.website_listing_report')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

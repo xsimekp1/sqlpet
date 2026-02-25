@@ -15,7 +15,9 @@
     "print": "Tisk",
     "close": "Zavřít",
     "templates": {
-      "annual_intake_report": "Výpis přijatých zvířat (roční)"
+      "annual_intake_report": "Výpis přijatých zvířat (roční)",
+      "annual_food_consumption": "Roční spotřeba krmiva",
+      "website_listing_report": "Zvířata vystavená na webu"
     }
   },
   "login": {

@@ -56,10 +56,10 @@ export function FaqSection() {
           <p className="text-lg text-gray-500">
             Máte otázku, která tu není? Napište nám na{' '}
             <a
-              href="mailto:info@petslog.cz"
+              href="mailto:info@pets-log.com"
               className="text-teal-600 hover:underline"
             >
-              info@petslog.cz
+              info@pets-log.com
             </a>
           </p>
         </div>
