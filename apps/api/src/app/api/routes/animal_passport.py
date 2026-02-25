@@ -1,12 +1,23 @@
 """Animal Passport API routes."""
+
 import uuid
 from datetime import date, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File as FastAPIFile, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    UploadFile,
+    File as FastAPIFile,
+    Query,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.app.api.dependencies.auth import get_current_organization_id, require_permission
+from src.app.api.dependencies.auth import (
+    get_current_organization_id,
+    require_permission,
+)
 from src.app.api.dependencies.db import get_db
 from src.app.models.animal import Animal
 from src.app.models.animal_passport import AnimalPassport, AnimalPassportDocument
@@ -39,8 +50,7 @@ async def get_animal_passport(
     # Verify animal exists and belongs to org
     animal_result = await db.execute(
         select(Animal).where(
-            Animal.id == animal_id,
-            Animal.organization_id == organization_id
+            Animal.id == animal_id, Animal.organization_id == organization_id
         )
     )
     animal = animal_result.scalar_one_or_none()
@@ -56,9 +66,7 @@ async def get_animal_passport(
     if not passport:
         # Create empty passport
         passport = AnimalPassport(
-            id=uuid.uuid4(),
-            animal_id=animal_id,
-            organization_id=organization_id
+            id=uuid.uuid4(), animal_id=animal_id, organization_id=organization_id
         )
         db.add(passport)
         await db.commit()
@@ -72,9 +80,18 @@ async def get_animal_passport(
     )
     documents_with_files = documents_result.all()
 
-    # Build response with file URLs
-    passport_data = PassportResponse.model_validate(passport)
-    passport_data.documents = []
+    # Build response manually to avoid lazy loading issues
+    passport_data = PassportResponse(
+        id=passport.id,
+        animal_id=passport.animal_id,
+        passport_number=passport.passport_number,
+        issued_at=passport.issued_at,
+        issuer_name=passport.issuer_name,
+        notes=passport.notes,
+        created_at=passport.created_at,
+        updated_at=passport.updated_at,
+        documents=[],
+    )
 
     for doc, file in documents_with_files:
         # Generate file URL using supabase storage service
@@ -87,7 +104,7 @@ async def get_animal_passport(
                 document_type=doc.document_type,
                 created_at=doc.created_at,
                 file_url=file_url,
-                file_name=file.original_filename
+                file_name=file.original_filename,
             )
         )
 
@@ -106,8 +123,7 @@ async def create_or_update_passport(
     # Verify animal
     animal_result = await db.execute(
         select(Animal).where(
-            Animal.id == animal_id,
-            Animal.organization_id == organization_id
+            Animal.id == animal_id, Animal.organization_id == organization_id
         )
     )
     animal = animal_result.scalar_one_or_none()
@@ -130,16 +146,25 @@ async def create_or_update_passport(
             id=uuid.uuid4(),
             animal_id=animal_id,
             organization_id=organization_id,
-            **data.model_dump()
+            **data.model_dump(),
         )
         db.add(passport)
 
     await db.commit()
     await db.refresh(passport)
 
-    # Return passport with empty documents list
-    passport_data = PassportResponse.model_validate(passport)
-    passport_data.documents = []
+    # Return passport with empty documents list - build manually to avoid lazy loading
+    passport_data = PassportResponse(
+        id=passport.id,
+        animal_id=passport.animal_id,
+        passport_number=passport.passport_number,
+        issued_at=passport.issued_at,
+        issuer_name=passport.issuer_name,
+        notes=passport.notes,
+        created_at=passport.created_at,
+        updated_at=passport.updated_at,
+        documents=[],
+    )
 
     return passport_data
 
@@ -157,8 +182,7 @@ async def upload_passport_document(
     # Verify animal and get/create passport
     animal_result = await db.execute(
         select(Animal).where(
-            Animal.id == animal_id,
-            Animal.organization_id == organization_id
+            Animal.id == animal_id, Animal.organization_id == organization_id
         )
     )
     animal = animal_result.scalar_one_or_none()
@@ -172,18 +196,14 @@ async def upload_passport_document(
 
     if not passport:
         passport = AnimalPassport(
-            id=uuid.uuid4(),
-            animal_id=animal_id,
-            organization_id=organization_id
+            id=uuid.uuid4(), animal_id=animal_id, organization_id=organization_id
         )
         db.add(passport)
         await db.flush()
 
     # Process file upload
     file_content, content_type = await file_upload_service.process_upload(
-        file=file,
-        organization_id=str(organization_id),
-        is_public=False
+        file=file, organization_id=str(organization_id), is_public=False
     )
 
     # Upload to Supabase
@@ -213,7 +233,7 @@ async def upload_passport_document(
         id=uuid.uuid4(),
         passport_id=passport.id,
         file_id=db_file.id,
-        document_type=document_type
+        document_type=document_type,
     )
     db.add(passport_document)
     await db.commit()
@@ -225,7 +245,7 @@ async def upload_passport_document(
         document_type=passport_document.document_type,
         created_at=passport_document.created_at,
         file_url=file_url,
-        file_name=file.filename
+        file_name=file.filename,
     )
 
 
@@ -242,15 +262,11 @@ async def get_expiring_vaccinations(
 
     # Get all vaccinations with valid_until for this org
     query = (
-        select(
-            AnimalVaccination,
-            Animal.name,
-            Animal.public_code
-        )
+        select(AnimalVaccination, Animal.name, Animal.public_code)
         .join(Animal, AnimalVaccination.animal_id == Animal.id)
         .where(
             Animal.organization_id == organization_id,
-            AnimalVaccination.valid_until.isnot(None)
+            AnimalVaccination.valid_until.isnot(None),
         )
         .order_by(AnimalVaccination.valid_until.asc())
     )
@@ -265,8 +281,10 @@ async def get_expiring_vaccinations(
     for vacc, animal_name, animal_public_code in rows:
         days_until = (vacc.valid_until - today).days
 
-        status = "expired" if days_until < 0 else (
-            "expiring_soon" if days_until <= days else "expiring_later"
+        status = (
+            "expired"
+            if days_until < 0
+            else ("expiring_soon" if days_until <= days else "expiring_later")
         )
 
         item = VaccinationExpiring(
@@ -275,10 +293,12 @@ async def get_expiring_vaccinations(
             animal_name=animal_name,
             animal_public_code=animal_public_code,
             vaccine_type=vacc.vaccination_type,
-            administered_at=vacc.administered_at.date() if hasattr(vacc.administered_at, 'date') else vacc.administered_at,
+            administered_at=vacc.administered_at.date()
+            if hasattr(vacc.administered_at, "date")
+            else vacc.administered_at,
             valid_until=vacc.valid_until,
             days_until_expiration=days_until,
-            status=status
+            status=status,
         )
 
         if status == "expired":
@@ -290,8 +310,12 @@ async def get_expiring_vaccinations(
 
     return VaccinationExpirationSummary(
         total_vaccinations=len(rows),
-        expiring_within_14_days=len([v for v in rows if 0 <= (v[0].valid_until - today).days <= 14]),
-        expiring_within_30_days=len([v for v in rows if 0 <= (v[0].valid_until - today).days <= 30]),
+        expiring_within_14_days=len(
+            [v for v in rows if 0 <= (v[0].valid_until - today).days <= 14]
+        ),
+        expiring_within_30_days=len(
+            [v for v in rows if 0 <= (v[0].valid_until - today).days <= 30]
+        ),
         expired=len(expired),
-        upcoming=expiring_soon + expired[:5]  # Show 5 most urgent expired
+        upcoming=expiring_soon + expired[:5],  # Show 5 most urgent expired
     )
