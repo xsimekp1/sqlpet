@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.app.api.dependencies.db import get_db
 from src.app.models.file import DefaultAnimalImage
 
-router = APIRouter(prefix="/public", tags=["public"])
+router = APIRouter(prefix="/api/public", tags=["public"])
 
 
 class DefaultImageResponse(BaseModel):
