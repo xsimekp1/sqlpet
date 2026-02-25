@@ -168,7 +168,10 @@ class FeedingPlanResponse(FeedingPlanBase):
     is_active: bool
     mer_calculation: Optional[Dict[str, Any]] = None
     animal_name: Optional[str] = None
+    animal_public_code: Optional[str] = None
     food_name: Optional[str] = None
+    food_brand: Optional[str] = None
+    closed_plans_count: int = 0
     created_at: datetime
     updated_at: datetime
 

@@ -398,6 +398,50 @@ async def list_inventory_transactions(
     return transactions
 
 
+@router.delete("/transactions/{transaction_id}", status_code=200, response_model=InventoryTransactionResponse)
+async def cancel_inventory_transaction(
+    transaction_id: uuid.UUID,
+    current_user: User = Depends(require_permission("inventory.write")),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """Cancel (reverse) an inventory transaction by creating an opposite entry."""
+    from sqlalchemy import select
+    from src.app.models.inventory_transaction import InventoryTransaction, TransactionReason
+
+    tx = (
+        await db.execute(
+            select(InventoryTransaction).where(
+                InventoryTransaction.id == transaction_id,
+                InventoryTransaction.organization_id == organization_id,
+            )
+        )
+    ).scalar_one_or_none()
+
+    if not tx:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+
+    inventory_service = InventoryService(db)
+
+    # Reversal: IN → writeoff (OUT), OUT → purchase (IN)
+    reversal_reason = TransactionReason.WRITEOFF if tx.direction == "in" else TransactionReason.PURCHASE
+
+    try:
+        reversal = await inventory_service.record_transaction(
+            organization_id=organization_id,
+            item_id=tx.item_id,
+            reason=reversal_reason,
+            quantity=tx.quantity,
+            note="Storno transakce",
+            lot_id=tx.lot_id,
+            user_id=current_user.id,
+        )
+        await db.commit()
+        return reversal
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
 # Low stock alert endpoint (for MVP simplification - optional)
 @router.get("/low-stock", response_model=List[InventoryStockResponse])
 async def get_low_stock_items(

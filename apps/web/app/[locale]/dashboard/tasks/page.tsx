@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, AlertCircle, Plus, Ban, ArrowUpDown } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Plus, Ban, ArrowUpDown, Bot } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -517,6 +517,17 @@ export default function TasksPage() {
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="top">{task.created_by_name}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : !task.created_by_name && task.type === 'feeding' ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="h-7 w-7 flex items-center justify-center cursor-default">
+                              <Bot className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">Systém</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     ) : (

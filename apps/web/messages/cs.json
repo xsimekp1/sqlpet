@@ -1287,6 +1287,8 @@
       "feedingLoggedDesc": "Krmení bylo úspěšně zaznamenáno",
       "tasksGenerated": "Úkoly vygenerovány",
       "tasksGeneratedDesc": "Úkoly krmení byly vygenerovány z aktivních plánů",
+      "previousPlanClosed": "Předchozí plán ukončen",
+      "previousPlanClosedDesc": "Starý krmný plán pro toto zvíře byl automaticky ukončen den před zahájením nového.",
       "error": "Chyba",
       "errorDesc": "Nepodařilo se dokončit operaci"
     },
@@ -1388,6 +1390,9 @@
     "reorderThreshold": "Limit pro objednání",
 "totalQuantity": "Celkové množství",
     "onTheWay": "na cestě",
+    "activeLots": "Aktivní šarže",
+    "showEmptyLots": "Zobrazit prázdné šarže",
+    "expectedDelivery": "Očekávané dodání",
     "noItemsFound": "Nebyly nalezeny žádné položky. Vytvořte první položku pro začátek.",
     "lotNumber": "Číslo šarže",
     "expiresAt": "Vyprší",
@@ -1469,7 +1474,10 @@
         "in": "Příjem",
         "out": "Výdej",
         "adjust": "Úprava"
-      }
+      },
+      "confirmCancel": "Opravdu zrušit tuto transakci? Vytvoří se obrácený pohyb.",
+      "cancelled": "Transakce zrušena",
+      "cancelledDesc": "Byl vytvořen opačný pohyb skladu."
     },
     "messages": {
       "showingItems": "Zobrazeno {count} položek",

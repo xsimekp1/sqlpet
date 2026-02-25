@@ -162,19 +162,19 @@ export default function FeedingPlansPage() {
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">
-                      {plan.animal?.name || 'Unknown'}
+                      {plan.animal_name || 'Unknown'}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {plan.animal?.public_code || ''}
+                      {plan.animal_public_code || ''}
                     </div>
                   </TableCell>
                   <TableCell>
-                    {plan.food ? (
+                    {plan.food_name ? (
                       <div>
-                        <div className="font-medium">{plan.food.name}</div>
-                        {plan.food.brand && (
+                        <div className="font-medium">{plan.food_name}</div>
+                        {plan.food_brand && (
                           <div className="text-sm text-muted-foreground">
-                            {plan.food.brand}
+                            {plan.food_brand}
                           </div>
                         )}
                       </div>

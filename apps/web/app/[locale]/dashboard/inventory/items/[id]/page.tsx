@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive, Pencil, ArrowDownToLine, ArrowUpFromLine, RotateCcw, Truck, Flame, Camera } from 'lucide-react';
+import { ArrowLeft, Plus, Package, TrendingUp, TrendingDown, Calendar, Trash2, Receipt, UtensilsCrossed, Pill, Syringe, Archive, Pencil, ArrowDownToLine, ArrowUpFromLine, RotateCcw, Truck, Flame, Camera, XCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDate } from '@/app/lib/dateFormat';
 import Link from 'next/link';
@@ -40,6 +40,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   food: <UtensilsCrossed className="h-8 w-8" />,
@@ -133,6 +139,11 @@ export default function InventoryItemDetailPage() {
   const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData?.items ?? []);
   const totalQuantity = lots.reduce((sum: number, lot: any) => sum + (Number(lot.quantity) || 0), 0);
 
+  const earliestDelivery = onTheWayData?.purchase_orders
+    ?.map((po: any) => po.expected_delivery_date)
+    .filter(Boolean)
+    .sort()[0] ?? null;
+
   const activeFeedingPlans: any[] = feedingPlansData?.items ?? [];
   const dailyConsumptionG = activeFeedingPlans.reduce((sum: number, p: any) => sum + (Number(p.amount_g) || 0), 0);
 
@@ -215,6 +226,20 @@ export default function InventoryItemDetailPage() {
         description: error.message,
         variant: 'destructive',
       });
+    },
+  });
+
+  // Cancel (reverse) transaction mutation
+  const cancelTransactionMutation = useMutation({
+    mutationFn: (transactionId: string) => ApiClient.delete(`/inventory/transactions/${transactionId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory-transactions', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-item', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-lots', itemId] });
+      toast({ title: t('transactions.cancelled'), description: t('transactions.cancelledDesc') });
+    },
+    onError: (error: Error) => {
+      toast({ title: t('messages.error'), description: error.message, variant: 'destructive' });
     },
   });
 
@@ -322,10 +347,26 @@ export default function InventoryItemDetailPage() {
             <h1 className="text-3xl font-bold tracking-tight">{item.name}</h1>
             {getCategoryBadge(item.category)}
             {onTheWayData && onTheWayData.quantity_on_the_way > 0 && (
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                <Truck className="h-3 w-3 mr-1" />
-                {formatQuantity(onTheWayData.quantity_on_the_way, item.unit)} {t('onTheWay')}
-              </Badge>
+              earliestDelivery ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 cursor-default">
+                        <Truck className="h-3 w-3 mr-1" />
+                        {formatQuantity(onTheWayData.quantity_on_the_way, item.unit)} {t('onTheWay')}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      {t('expectedDelivery')}: {formatDate(earliestDelivery)}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                  <Truck className="h-3 w-3 mr-1" />
+                  {formatQuantity(onTheWayData.quantity_on_the_way, item.unit)} {t('onTheWay')}
+                </Badge>
+              )
             )}
           </div>
         </div>
@@ -422,7 +463,7 @@ export default function InventoryItemDetailPage() {
       {/* Item Info Cards - Compact */}
       <div className="grid gap-2 md:grid-cols-6 lg:grid-cols-8">
         <div className="border rounded-lg p-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 min-h-[2rem]">
             <Package className="h-3 w-3" />
             {t('totalQuantity')}
           </div>
@@ -431,7 +472,7 @@ export default function InventoryItemDetailPage() {
           </div>
         </div>
         <div className="border rounded-lg p-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 min-h-[2rem]">
             <Package className="h-3 w-3" />
             {t('activeLots')}
           </div>
@@ -440,7 +481,7 @@ export default function InventoryItemDetailPage() {
           </div>
         </div>
         <div className="border rounded-lg p-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 min-h-[2rem]">
             <TrendingDown className="h-3 w-3" />
             {t('reorderThreshold')}
           </div>
@@ -449,7 +490,7 @@ export default function InventoryItemDetailPage() {
           </div>
         </div>
         <div className="border rounded-lg p-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 min-h-[2rem]">
             <Receipt className="h-3 w-3" />
             {t('fields.pricePerUnit')}
           </div>
@@ -461,7 +502,7 @@ export default function InventoryItemDetailPage() {
         </div>
         {item.category === 'food' && item.kcal_per_100g && (
           <div className="border rounded-lg p-2">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 min-h-[2rem]">
               <UtensilsCrossed className="h-3 w-3" />
               {t('fields.kcalPer100g')}
             </div>
@@ -470,7 +511,7 @@ export default function InventoryItemDetailPage() {
         )}
         {item.category === 'food' && dailyConsumptionG > 0 && (
           <div className="border rounded-lg p-2">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 min-h-[2rem]">
               <Flame className="h-3 w-3" />
               {t('dailyConsumption')}
             </div>
@@ -515,7 +556,7 @@ export default function InventoryItemDetailPage() {
       <Tabs defaultValue={tracksLots ? 'lots' : 'transactions'} className="space-y-4">
         <TabsList>
           {tracksLots && <TabsTrigger value="lots">{t('lots')}</TabsTrigger>}
-          <TabsTrigger value="transactions">{t('transactions')}</TabsTrigger>
+          <TabsTrigger value="transactions">{t('transactions.title')}</TabsTrigger>
         </TabsList>
 
         {/* Lots Tab */}
@@ -686,12 +727,13 @@ export default function InventoryItemDetailPage() {
                   <TableHead>{t('fields.quantity')}</TableHead>
                   <TableHead>{t('transactions.note')}</TableHead>
                   <TableHead>{t('fields.created')}</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transactions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       {t('transactions.noTransactions')}
                     </TableCell>
                   </TableRow>
@@ -728,6 +770,21 @@ export default function InventoryItemDetailPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(tx.created_at, true)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          disabled={cancelTransactionMutation.isPending}
+                          onClick={() => {
+                            if (window.confirm(t('transactions.confirmCancel'))) {
+                              cancelTransactionMutation.mutate(tx.id);
+                            }
+                          }}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

@@ -1407,6 +1407,8 @@
       "feedingLoggedDesc": "The feeding has been logged successfully",
       "tasksGenerated": "Tasks generated",
       "tasksGeneratedDesc": "Feeding tasks have been generated from active plans",
+      "previousPlanClosed": "Previous plan closed",
+      "previousPlanClosedDesc": "The old feeding plan for this animal was automatically closed one day before the new plan starts.",
       "error": "Error",
       "errorDesc": "Failed to complete the operation"
     },
@@ -1508,6 +1510,9 @@
     "reorderThreshold": "Reorder threshold",
     "totalQuantity": "Total quantity",
     "onTheWay": "on the way",
+    "activeLots": "Active Lots",
+    "showEmptyLots": "Show empty lots",
+    "expectedDelivery": "Expected Delivery",
     "noItemsFound": "No inventory items found. Create your first item to get started.",
     "lotNumber": "Lot number",
     "expiresAt": "Expires at",
@@ -1588,7 +1593,10 @@
         "in": "In",
         "out": "Out",
         "adjust": "Adjust"
-      }
+      },
+      "confirmCancel": "Cancel this transaction? A reversal entry will be created.",
+      "cancelled": "Transaction cancelled",
+      "cancelledDesc": "A reversal transaction has been created."
     },
     "messages": {
       "showingItems": "Showing {count} items",

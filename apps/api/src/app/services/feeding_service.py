@@ -34,8 +34,28 @@ class FeedingService:
         end_date: Optional[date] = None,
         notes: Optional[str] = None,
         mer_calculation: Optional[Dict[str, Any]] = None,
-    ) -> FeedingPlan:
-        """Create a new feeding plan for an animal."""
+    ) -> tuple[FeedingPlan, int]:
+        """Create a new feeding plan for an animal. Returns (plan, n_closed_plans)."""
+        today = date.today()
+
+        # Auto-close overlapping active plans for this animal
+        overlap_stmt = select(FeedingPlan).where(
+            FeedingPlan.animal_id == animal_id,
+            FeedingPlan.organization_id == organization_id,
+            FeedingPlan.is_active == True,
+            (FeedingPlan.end_date.is_(None)) | (FeedingPlan.end_date >= start_date),
+        )
+        overlapping = (await self.db.execute(overlap_stmt)).scalars().all()
+        auto_close_date = start_date - timedelta(days=1)
+        n_closed = 0
+        for old_plan in overlapping:
+            old_plan.end_date = auto_close_date
+            if auto_close_date < today:
+                old_plan.is_active = False
+            n_closed += 1
+        if n_closed:
+            await self.db.flush()
+
         plan = FeedingPlan(
             id=uuid.uuid4(),
             organization_id=organization_id,
@@ -67,7 +87,7 @@ class FeedingService:
             },
         )
 
-        return plan
+        return plan, n_closed
 
     async def update_feeding_plan(
         self,
@@ -174,12 +194,16 @@ class FeedingService:
         tasks_created = []
 
         # Get all active feeding plans with schedules
-        stmt = select(FeedingPlan).where(
-            and_(
-                FeedingPlan.organization_id == organization_id,
-                FeedingPlan.is_active == True,
-                FeedingPlan.schedule_json.isnot(None),
+        stmt = (
+            select(FeedingPlan)
+            .where(
+                and_(
+                    FeedingPlan.organization_id == organization_id,
+                    FeedingPlan.is_active == True,
+                    FeedingPlan.schedule_json.isnot(None),
+                )
             )
+            .options(selectinload(FeedingPlan.animal))
         )
         result = await self.db.execute(stmt)
         plans = result.scalars().all()
@@ -252,13 +276,14 @@ class FeedingService:
 
                     # Create feeding task
                     try:
+                        animal_name = plan.animal.name if plan.animal else "zvíře"
                         task = await task_service.create_task(
                             organization_id=organization_id,
                             created_by_id=None,  # System-generated feeding task
-                            title=f"Feed {plan.animal_id} at {scheduled_time}",
-                            description=f"Scheduled feeding at {scheduled_time}. Amount: {amount_g}g"
+                            title=f"Krmení {animal_name}",
+                            description=f"Krmení v {scheduled_time}. Množství: {amount_g}g"
                             if amount_g
-                            else f"Scheduled feeding at {scheduled_time}",
+                            else f"Krmení v {scheduled_time}",
                             task_type=TaskType.FEEDING,
                             due_at=due_at,
                             task_metadata={

@@ -271,6 +271,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
   
   /* Apply theme gradient to main content area */
   [data-theme="teal"] main:not(.changelog) {

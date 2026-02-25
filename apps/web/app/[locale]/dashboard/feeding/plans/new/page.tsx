@@ -151,8 +151,14 @@ export default function NewFeedingPlanPage() {
       };
       return await ApiClient.post('/feeding/plans', payload);
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['feeding-plans'] });
+      if (data?.closed_plans_count > 0) {
+        toast({
+          title: t('messages.previousPlanClosed'),
+          description: t('messages.previousPlanClosedDesc'),
+        });
+      }
       toast({
         title: t('messages.planCreated'),
         description: t('messages.planCreatedDesc'),
@@ -210,8 +216,11 @@ export default function NewFeedingPlanPage() {
     setScheduleTimes(scheduleTimes.filter((t) => t !== time));
   };
 
+  const reqCls = (filled: boolean) =>
+    filled ? 'bg-white' : 'bg-amber-50 border-amber-300 focus-visible:ring-amber-400';
+
   return (
-    <div className="space-y-6 max-w-6xl pb-20">
+    <div className="space-y-6 max-w-6xl pb-24">
       <div className="flex items-center gap-4">
         <Link href={`/${locale}/dashboard/feeding/plans`}>
           <Button variant="ghost" size="icon">
@@ -242,7 +251,7 @@ export default function NewFeedingPlanPage() {
                 }}
                 required
               >
-                <SelectTrigger className="bg-white data-[placeholder]:text-muted-foreground">
+                <SelectTrigger className={`${reqCls(!!selectedAnimalId)} data-[placeholder]:text-muted-foreground`}>
                   <SelectValue placeholder={t('selectAnimal')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -324,7 +333,7 @@ export default function NewFeedingPlanPage() {
                 )}
               </div>
               <Input
-                className="bg-white"
+                className={reqCls(!!watchedAmountG)}
                 id="amount_g"
                 type="number"
                 step="1"

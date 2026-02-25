@@ -78,7 +78,7 @@ async def create_feeding_plan(
     """Create a new feeding plan for an animal."""
     feeding_service = FeedingService(db)
 
-    plan = await feeding_service.create_feeding_plan(
+    plan, n_closed = await feeding_service.create_feeding_plan(
         organization_id=organization_id,
         animal_id=plan_data.animal_id,
         start_date=plan_data.start_date,
@@ -93,7 +93,41 @@ async def create_feeding_plan(
         mer_calculation=plan_data.mer_calculation,
     )
     await db.commit()
-    return plan
+
+    # Reload with relationships for response
+    from sqlalchemy import select as _select
+    from sqlalchemy.orm import selectinload as _selectinload
+    from src.app.models.feeding_plan import FeedingPlan as _FeedingPlan
+
+    result = await db.execute(
+        _select(_FeedingPlan)
+        .where(_FeedingPlan.id == plan.id)
+        .options(_selectinload(_FeedingPlan.animal), _selectinload(_FeedingPlan.food))
+    )
+    plan = result.scalar_one()
+
+    return FeedingPlanResponse(
+        id=plan.id,
+        organization_id=plan.organization_id,
+        animal_id=plan.animal_id,
+        food_id=plan.food_id,
+        amount_g=plan.amount_g,
+        amount_text=plan.amount_text,
+        times_per_day=plan.times_per_day,
+        schedule_json=plan.schedule_json,
+        start_date=plan.start_date,
+        end_date=plan.end_date,
+        notes=plan.notes,
+        is_active=plan.is_active,
+        mer_calculation=plan.mer_calculation,
+        animal_name=plan.animal.name if plan.animal else None,
+        animal_public_code=plan.animal.public_code if plan.animal else None,
+        food_name=plan.food.name if plan.food else None,
+        food_brand=plan.food.brand if plan.food else None,
+        closed_plans_count=n_closed,
+        created_at=plan.created_at,
+        updated_at=plan.updated_at,
+    )
 
 
 @router.get("/plans/{plan_id}", response_model=FeedingPlanResponse)
@@ -135,7 +169,9 @@ async def get_feeding_plan(
         is_active=plan.is_active,
         mer_calculation=plan.mer_calculation,
         animal_name=plan.animal.name if plan.animal else None,
+        animal_public_code=plan.animal.public_code if plan.animal else None,
         food_name=plan.food.name if plan.food else None,
+        food_brand=plan.food.brand if plan.food else None,
         created_at=plan.created_at,
         updated_at=plan.updated_at,
     )
@@ -194,7 +230,9 @@ async def list_feeding_plans(
                 is_active=plan.is_active,
                 mer_calculation=plan.mer_calculation,
                 animal_name=plan.animal.name if plan.animal else None,
+                animal_public_code=plan.animal.public_code if plan.animal else None,
                 food_name=plan.food.name if plan.food else None,
+                food_brand=plan.food.brand if plan.food else None,
                 created_at=plan.created_at,
                 updated_at=plan.updated_at,
             )
