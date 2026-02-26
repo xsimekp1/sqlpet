@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
@@ -18,12 +16,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect } from 'expo-router';
 import api, { ChatMessage, Conversation } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function ChatDetailScreen() {
   const { partnerId } = useLocalSearchParams<{ partnerId: string }>();
   const router = useRouter();
-  const { orgId } = useAuth();
+  const orgId = useAuthStore((s) => s.selectedOrganizationId);
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);

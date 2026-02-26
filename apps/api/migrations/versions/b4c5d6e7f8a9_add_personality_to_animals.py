@@ -10,6 +10,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 # revision identifiers, used by Alembic.
@@ -23,7 +24,7 @@ def upgrade() -> None:
     """Add personality JSONB column for animal personality traits."""
     op.add_column(
         "animals",
-        sa.Column("personality", sa.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("personality", JSONB(astext_type=sa.Text()), nullable=True),
     )
 
 
