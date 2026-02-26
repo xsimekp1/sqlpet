@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -18,11 +16,11 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect } from 'expo-router';
 import api, { Conversation, ChatUser } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { orgId } = useAuth();
+  const orgId = useAuthStore((s) => s.selectedOrganizationId);
   const [refreshing, setRefreshing] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
   const [sending, setSending] = useState(false);
