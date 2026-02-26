@@ -365,12 +365,37 @@ async def cors_aware_http_exception_handler(request: Request, exc: HTTPException
     )
 
 
+_DB_CONN_ERROR_KEYWORDS = (
+    "Circuit breaker",
+    "Failed to retrieve database credentials",
+    "connection was closed",
+    "ConnectionDoesNotExistError",
+    "could not connect",
+    "Connection refused",
+    "CancelledError",
+)
+
+
 @app.exception_handler(Exception)
 async def cors_aware_general_exception_handler(request: Request, exc: Exception):
     import traceback
 
-    print(f"UNHANDLED EXCEPTION [{request.method} {request.url.path}]: {exc}")
-    print(traceback.format_exc())
+    err_str = str(exc)
+    is_db_error = any(kw in err_str for kw in _DB_CONN_ERROR_KEYWORDS) or any(
+        kw in traceback.format_exc() for kw in _DB_CONN_ERROR_KEYWORDS
+    )
+
+    if is_db_error:
+        # Single-line log — avoids Railway 500-logs/sec rate limit
+        print(f"DB connection error [{request.method} {request.url.path}]: {exc!r}")
+        status_code = 503
+        detail = "Database temporarily unavailable. Please try again shortly."
+    else:
+        print(f"UNHANDLED EXCEPTION [{request.method} {request.url.path}]: {exc}")
+        print(traceback.format_exc())
+        status_code = 500
+        detail = "Internal server error"
+
     origin = request.headers.get("origin", "")
     headers = {}
     if origin and (
@@ -380,7 +405,7 @@ async def cors_aware_general_exception_handler(request: Request, exc: Exception)
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
     return JSONResponse(
-        status_code=500, content={"detail": "Internal server error"}, headers=headers
+        status_code=status_code, content={"detail": detail}, headers=headers
     )
 
 
