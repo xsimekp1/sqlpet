@@ -14,21 +14,15 @@ _request_query_data: ContextVar[dict[str, Any]] = ContextVar(
 )
 
 # Async engine (for FastAPI runtime)
-# pool_pre_ping validates connections before use, preventing stale-connection errors.
-# statement_cache_size=0 disables asyncpg prepared-statement caching, required for
-# Supabase Supavisor / PgBouncer in transaction mode.
-# pool_recycle closes connections older than 5 minutes so the DB server never sees
-# them as idle long enough to close them first.
-# pool_size=2/max_overflow=3 is conservative: Supabase Supavisor acts as its own
-# pool, so a small app-level pool is enough and avoids tripping the circuit breaker.
+# NullPool: Supabase Supavisor is its own connection pool, so an app-level pool
+# only adds friction (CancelledError timeouts, circuit-breaker storms).
+# Each request gets a fresh connection from Supavisor's pool and closes it on exit.
+# statement_cache_size=0: required for Supavisor / PgBouncer transaction mode —
+# disables asyncpg prepared-statement caching which is incompatible with the proxy.
 async_engine = create_async_engine(
     settings.DATABASE_URL_ASYNC,
     echo=(settings.ENV == "dev"),
-    pool_pre_ping=True,
-    pool_size=2,
-    max_overflow=3,
-    pool_recycle=300,
-    pool_timeout=30,
+    poolclass=pool.NullPool,
     connect_args={"statement_cache_size": 0},
 )
 
