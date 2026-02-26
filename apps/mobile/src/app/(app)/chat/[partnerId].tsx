@@ -15,8 +15,8 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect } from 'expo-router';
-import api, { ChatMessage, Conversation } from '@/lib/api';
-import { useAuthStore } from '@/stores/authStore';
+import api, { ChatMessage, Conversation } from '../../../lib/api';
+import { useAuthStore } from '../../../stores/authStore';
 
 export default function ChatDetailScreen() {
   const { partnerId } = useLocalSearchParams<{ partnerId: string }>();

@@ -15,8 +15,8 @@ import {
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect } from 'expo-router';
-import api, { Conversation, ChatUser } from '@/lib/api';
-import { useAuthStore } from '@/stores/authStore';
+import api, { Conversation, ChatUser } from '../../../lib/api';
+import { useAuthStore } from '../../../stores/authStore';
 
 export default function ChatScreen() {
   const router = useRouter();
