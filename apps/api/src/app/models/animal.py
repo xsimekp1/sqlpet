@@ -13,8 +13,9 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    JSON,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin
@@ -185,15 +186,14 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     bcs: Mapped[int | None] = mapped_column(Integer, nullable=True)
     expected_litter_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     behavior_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    personality: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     is_special_needs: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
 
     # Litter identification (collar colors)
     collar_color: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    collar_removed_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
-    )
+    collar_removed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Website publication tracking (for found animals)
     website_published_at: Mapped[date | None] = mapped_column(Date, nullable=True)

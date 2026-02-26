@@ -1,13 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { ApiClient } from '@/app/lib/api';
+import { toast } from 'sonner';
 
 interface PersonalityTabProps {
   species: 'dog' | 'cat';
+  personality?: {
+    social?: number;
+    activity?: number;
+    kids?: number;
+    cudliness?: number;
+  } | null;
+  animalId: string;
 }
 
 const DOG_AXES = [
@@ -121,31 +130,64 @@ function StepSlider({
   );
 }
 
-export default function PersonalityTab({ species }: PersonalityTabProps) {
+export default function PersonalityTab({ species, personality, animalId }: PersonalityTabProps) {
   const [values, setValues] = useState(() => {
+    if (personality) {
+      return personality;
+    }
     const defaults = { social: 2, activity: 2 };
     if (species === 'dog') {
       return { ...defaults, kids: 2 };
     }
     return { ...defaults, cudliness: 2 };
   });
+  const [saving, setSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   const axes = species === 'dog' ? DOG_AXES : CAT_AXES;
 
   const handleChange = (key: string, value: number) => {
     setValues((prev) => ({ ...prev, [key]: value }));
+    setHasChanges(true);
   };
+
+  const saveToBackend = useCallback(async (data: typeof values) => {
+    if (!hasChanges) return;
+    setSaving(true);
+    try {
+      await ApiClient.patch(`/animals/${animalId}`, {
+        personality: data,
+      });
+      setHasChanges(false);
+    } catch (error) {
+      console.error('Failed to save personality:', error);
+      toast.error('Nepodařilo se uložit osobnost');
+    } finally {
+      setSaving(false);
+    }
+  }, [animalId, hasChanges]);
+
+  useEffect(() => {
+    if (!hasChanges) return;
+    const timer = setTimeout(() => {
+      saveToBackend(values);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [values, hasChanges, saveToBackend]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{species === 'dog' ? '🐕' : '🐱'}</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          <span>{species === 'dog' ? '🐕' : '🐱'}</span>
+          {saving && <span className="text-xs text-muted-foreground">Ukládám...</span>}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {axes.map((axis) => (
           <StepSlider
             key={axis.key}
-            value={values[axis.key as keyof typeof values]}
+            value={values[axis.key as keyof typeof values] ?? 2}
             onChange={(v) => handleChange(axis.key, v)}
             lowIcon={axis.lowIcon}
             highIcon={axis.highIcon}

@@ -1449,6 +1449,267 @@
     "blue-tan": "Modroohnivá",
     "blue_tan": "Modroohnivá",
     "red": "Rezavá",
-    "cream": "Krémová"
+    "cream": "Krémová",
+    "brindle": "Pruhovaná",
+    "orange": "Oranžová",
+    "tabby": "Tygrovitý"
+  },
+  "birth": {
+    "title": "Zaevidovať porod",
+    "description": "Zaevidujete porod u {name}. Systém vytvorí zadaný počet mláďat rovnakého druhu a plemena, pridá ich do jej klietky a nastaví dátum narodenia.",
+    "assignColorsDescription": "Priraďte farebné obojky pre rozlíšenie mláďat",
+    "offspringPreview": "Náhľad narodených mláďat",
+    "noCollar": "Bez obojku",
+    "duplicateColorsWarning": "Mláďat je viac ako 8, farby sa opakujú. Odporúčame upraviť ručne.",
+    "next": "Ďalšie",
+    "back": "Späť",
+    "confirmBirth": "Potvrdiť porod",
+    "litterCount": "Počet mláďat",
+    "birthDate": "Dátum porodu (voliteľné, výchozie: dnes)",
+    "namingScheme": "Spôsob označenia",
+    "namingSchemes": {
+      "number": "Čísla (1, 2, 3...)",
+      "numberDesc": "Mláďatá budú pomenované: Meno matky – mláďa 1, mláďa 2, ...",
+      "letter": "Písmená (A, B, C...)",
+      "letterDesc": "Mláďatá budú pomenované: Meno matky – A, B, C, ...",
+      "color": "Farebné obojky",
+      "colorDesc": "Mláďatá budú pomenované podľa farby obojku (červený, modrý, ...)"
+    },
+    "motherLactating": "Matka dojčí",
+    "motherLactatingSet": "Matka nastavená ako dojčiaca",
+    "cancel": "Zrušiť",
+    "submit": "Zaregistrovať",
+    "submitting": "Ukladam…",
+    "invalidCount": "Zadajte počet mláďat (1–20)",
+    "success": "Zaevidované {count} mláďat. Boli pridané do klietky.",
+    "error": "Chyba pri registrácii porodu",
+    "offspringOne": "mláďa",
+    "offspringFew": "mláďatá",
+    "offspringMany": "mláďat",
+    "colors": {
+      "red": "Červený",
+      "blue": "Modrý",
+      "green": "Zelený",
+      "yellow": "Žltý",
+      "orange": "Oranžový",
+      "purple": "Fialový",
+      "pink": "Ružový",
+      "brown": "Hnedý"
+    }
+  },
+  "mer": {
+    "title": "Odporúčanie kŕmenia (RER/MER)",
+    "noWeight": "Najprv zadajte váhu zvieratа pre výpočet energetických potrieb.",
+    "healthLabel": "Zdravotný stav",
+    "environmentLabel": "Prostredie",
+    "weightGoalLabel": "Cieľ váhy",
+    "foodKcalLabel": "Krmivo (kcal/100g)",
+    "calculate": "Vypočítať",
+    "recalculate": "Prepočítať",
+    "recalculateAfterAltering": "Kastrácia mení faktor energetickej potreby — zvážte prepočítanie MER v záložke Kŕmenie.",
+    "calculating": "Počítam…",
+    "calcError": "Chyba pri výpočte MER",
+    "noWeightToast": "Najprv zadajte váhu zvieratа.",
+    "breakdown": "Ako sa k tomu prišlo",
+    "applyRecommendation": "Použiť odporúčanie v pláne kŕmenia",
+    "timesPerDay": "{meals}× denne",
+    "health": {
+      "healthy": "Zdravý",
+      "recovery": "Rekonvalescencia",
+      "critical": "Kritický stav",
+      "cancer": "Onkologické ochorenie",
+      "obese_program": "Redukčný program",
+      "kidney_disease": "Ochorenie obličiek",
+      "pregnant": "Breznosť",
+      "lactating": "Laktácia"
+    },
+    "environment": {
+      "indoor": "Vnútorné prostredie",
+      "outdoor_summer": "Vonková klietka – leto (> 20 °C)",
+      "outdoor_cool": "Vonková klietka – jeseň (10–20 °C)",
+      "outdoor_winter": "Vonková klietka – zima (< 10 °C)",
+      "outdoor_cold": "Vonková klietka – mráz (< 0 °C)"
+    },
+    "weightGoal": {
+      "maintain": "Udržať váhu",
+      "lose": "Schudnúť (-20 %)",
+      "gain": "Pribrať (+20 %)"
+    },
+    "factors": {
+      "activity": "Aktivita",
+      "bcs": "BCS",
+      "age": "Vek",
+      "health": "Zdravie",
+      "environment": "Prostredie",
+      "breed_size": "Veľkosť",
+      "weight_goal": "Cieľ váhy"
+    }
+  },
+  "adoptions": {
+    "title": "Adopcie",
+    "description": "Správa adopčného procesu",
+    "comingSoon": "Adopčný modul bude dostupný v ďalšej verzii",
+    "viewAnimals": "Prejsť na zoznam zvierat",
+    "pipeline": {
+      "title": "Adopčný pipeline",
+      "stages": {
+        "inquiry": "Záujem",
+        "application": "Žiadosť",
+        "meeting": "Stretnutie",
+        "homecheck": "Domáce šetrenie",
+        "approved": "Schválené",
+        "adopted": "Adoptované"
+      }
+    }
+  },
+  "help": {
+    "title": "Pomocník",
+    "description": "Petslog je systém pre správu útulku. Pokrýva každodenný prevádzku: evidenciu zvierat, priradenie ku klietkam, zdravotné úlohy, plány kŕmenia a inventár.",
+    "shortcuts": {
+      "title": "Klávesové skratky",
+      "search": "Otvoriť globálne vyhľadávanie"
+    },
+    "docs": {
+      "title": "Dokumentácia",
+      "comingSoon": "Plná dokumentácia bude dostupná v budúcej verzii"
+    },
+    "support": {
+      "title": "Kontaktovať podporu",
+      "description": "Potrebujete pomoc? Kontaktujte náš tím podpory"
+    },
+    "guide": {
+      "title": "Sprievodca aplikáciou",
+      "main": "Hlavné",
+      "operations": "Prevádzka",
+      "people": "Ľudia",
+      "system": "Systém",
+      "auth": "Prihlásenie"
+    },
+    "pages": {
+      "dashboard": { "title": "Dashboard", "description": "Prehľad útulku: zvieratá, úlohy, upozornenia a rýchle akcie" },
+      "animals": { "title": "Zvieratá", "description": "Zoznam a správa všetkých zvierat v útulku, ich profily a záznamy" },
+      "kennels": { "title": "Klietky", "description": "Správa klietok, obsadenosť, režim obchôdzky a presun zvierat" },
+      "hotel": { "title": "Hotel", "description": "Rezervácie hotelových pobytov pre zvieratá, check-in a check-out" },
+      "walks": { "title": "Venicie", "description": "Zaznamenávanie a história venčenia zvierat" },
+      "medical": { "title": "Lekárska starostlivosť", "description": "Zdravotné záznamy, karanténa, očkovanie a lieky" },
+      "feeding": { "title": "Kŕmenie", "description": "Krmné plány, dávkovanie a záznamy kŕmenia" },
+      "inventory": { "title": "Sklad", "description": "Sklad liekov, krmív a potrieb, sledovanie zásob" },
+      "tasks": { "title": "Úlohy", "description": "Správa úloh, ich pridelovanie a sledovanie splnenia" },
+      "calendar": { "title": "Kalendár", "description": "Kalendár udalostí: príjmy, návštevy veterinára, plánované adopcie" },
+      "people": { "title": "Ľudia", "description": "Kontakty, pestúni, dobrovoľníci a vzťahy" },
+      "chat": { "title": "Správy", "description": "Interný chat medzi členmi organizácie" },
+      "adoptions": { "title": "Adopcie", "description": "Správa adopčného procesu a pipeline" },
+      "intake": { "title": "Príjem", "description": "Príjem nových zvierat do útulku" },
+      "reports": { "title": "Reporty", "description": "Štatistiky a prehľady o prevádzke útulku" },
+      "settings": { "title": "Nastavenia", "description": "Nastavenia organizácie, používatelia, roly a predvoľby" },
+      "help": { "title": "Pomocník", "description": "Klávesové skratky a sprievodca aplikáciou" },
+      "selectOrg": { "title": "Výber organizácie", "description": "Výber organizácie po prihlásení" },
+      "login": { "title": "Prihlásenie", "description": "Prihlásenie do systému pomocou e-mailu a hesla" }
+    }
+  },
+  "search": {
+    "animals": "Zvieratá",
+    "kennels": "Klietky",
+    "contacts": "Kontakty",
+    "inventory": "Sklad",
+    "noResults": "Žiadne výsledky",
+    "typing": "Napíšte aspoň 2 znaky pre vyhľadávanie..."
+  },
+  "intake": {
+    "title": "Príjmy zvierat",
+    "new": "Nový príjem",
+    "reason": "Dôvod príjmu",
+    "reasons": {
+      "found": "Nález",
+      "return": "Návrat",
+      "surrender": "Odovzdanie",
+      "official": "Úradný prídel",
+      "transfer": "Prevod",
+      "birth": "Porod v útulku",
+      "hotel": "Hotel (dočasný pobyt)",
+      "other": "Iné"
+    },
+    "finder": "Kto našiel",
+    "plannedEnd": "Plánovaný koniec",
+    "plannedPerson": "Plánovaný adoptér/pestún",
+    "funding": "Spôsob financovania"
+  },
+  "hotel": {
+    "title": "Hotelové rezervácie",
+    "new": "Nová rezervácia",
+    "selectKennel": "Vyberte klietku",
+    "selectContact": "Vyberte kontakt",
+    "animalName": "Meno zvieratа",
+    "species": "Druh",
+    "breed": "Plemeno",
+    "from": "Od",
+    "to": "Do",
+    "pricePerDay": "Cena za deň",
+    "totalPrice": "Celková cena",
+    "checkAvailability": "Skontrolovať dostupnosť",
+    "available": "Klietka je dostupná",
+    "notAvailable": "Klietka nie je dostupná",
+    "requiresSingleCage": "Požiadavka na samostatnú klietku",
+    "checkin": "Check-in",
+    "cancel": "Zrušiť",
+    "status": {
+      "pending": "Čaká na potvrdenie",
+      "confirmed": "Potvrdené",
+      "cancelled": "Zrušené",
+      "completed": "Dokončené"
+    }
+  },
+  "shortcuts": {
+    "title": "Klávesové skratky",
+    "description": "Prispôsobte si klávesové skratky pre rýchlu navigáciu",
+    "shortcuts": "Skratky",
+    "clickToEdit": "Kliknite na skratku pre zmenu",
+    "pressKeys": "Stlačte klávesy...",
+    "action": "Akcia",
+    "shortcut": "Skratka",
+    "resetDefault": "Obnoviť výchozie",
+    "back": "Späť",
+    "saved": "Skratka uložená",
+    "saveError": "Nepodarilo sa uložiť skratku",
+    "hints": "Nápovedy ku skratkam",
+    "hintsDescription": "Po opakovanom použití funkcie zobraziť nápovedu na klávesovú skratku",
+    "hintMessage": "Používáte {label} často. Skúste {shortcut} pre rýchlejší prístup.",
+    "actions": {
+      "open_search": "Otvoriť hľadanie",
+      "open_animals": "Otvoriť zvieratá",
+      "open_kennels": "Otvoriť klietky",
+      "open_tasks": "Otvoriť úlohy",
+      "open_inventory": "Otvoriť sklad",
+      "open_feeding": "Otvoriť kŕmenie"
+    }
+  },
+  "calendar": {
+    "title": "Kalendár",
+    "today": "Dnes",
+    "intakeStart": "Príjem",
+    "expectedLitter": "Očakávaný porod",
+    "escaped": "Útek",
+    "plannedAdoption": "Plánovaná adopcia",
+    "plannedOutcome": "Koniec pobytu",
+    "vetVisit": "Návšteva veterinára",
+    "vetVisitComingSoon": "Návštevy veterinára budú pridané čoskoro",
+    "noEvents": "Žiadne udalosti",
+    "weekdays": ["Po", "Ut", "St", "Št", "Pia", "So", "Ne"]
+  },
+  "chat": {
+    "title": "Správy",
+    "newConversation": "Nová konverzácia",
+    "noConversations": "Žiadne konverzácie",
+    "noMessages": "Žiadne správy",
+    "selectConversation": "Vyberte konverzáciu",
+    "typeMessage": "Napíšte správu...",
+    "noUsersInOrg": "V organizácii nie sú žiadni ďalší používatelia",
+    "needTwoMembers": "Pre chat potrebujete aspoň dvoch členov organizácie",
+    "errors": {
+      "loadUsers": "Nepodarilo sa načítať používateľov",
+      "loadConversations": "Nepodarilo sa načítať konverzácie",
+      "loadMessages": "Nepodarilo sa načítať správy",
+      "sendMessage": "Nepodarilo sa odoslať správu"
+    }
   }
 }

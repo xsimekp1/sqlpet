@@ -105,7 +105,8 @@ class AnimalCreate(BaseModel):
     bcs: int | None = None
     expected_litter_date: date | None = None
     behavior_notes: str | None = None
-    is_special_needs: bool = False
+    personality: dict | None = None
+    is_special_needs: bool | None = None
     primary_photo_url: str | None = None
     thumbnail_url: str | None = None
     default_image_url: str | None = None
@@ -152,11 +153,11 @@ class AnimalResponse(AnimalCreate):
     # Website publication tracking (for found animals)
     website_published_at: date | None = None
     website_deadline_at: date | None = None
-    website_deadline_type: str | None = None  # "shelter" (4 months) or "finder" (2 months)
-    website_days_left: int | None = None  # Computed: days until deadline
-    website_deadline_state: str | None = (
-        None  # "waiting" | "expired" | "not_published"
+    website_deadline_type: str | None = (
+        None  # "shelter" (4 months) or "finder" (2 months)
     )
+    website_days_left: int | None = None  # Computed: days until deadline
+    website_deadline_state: str | None = None  # "waiting" | "expired" | "not_published"
 
     # Intake legal fields
     notice_published_at: date | None = None
@@ -195,6 +196,7 @@ class AnimalUpdate(BaseModel):
     bcs: int | None = None
     expected_litter_date: date | None = None
     behavior_notes: str | None = None
+    personality: dict | None = None
     is_special_needs: bool | None = None
     primary_photo_url: str | None = None
     thumbnail_url: str | None = None

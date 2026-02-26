@@ -2017,9 +2017,9 @@ if (photoInputRef.current) photoInputRef.current.value = '';
             </Card>
 
             {/* Right: Personality axes */}
-            {(animal.species === 'dog' || animal.species === 'cat') && (
-              <PersonalityTab species={animal.species} />
-            )}
+              {(animal.species === 'dog' || animal.species === 'cat') && (
+                <PersonalityTab species={animal.species} personality={animal.personality} animalId={animal.id} />
+              )}
           </div>
         </TabsContent>
 
