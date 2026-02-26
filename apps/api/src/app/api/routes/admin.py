@@ -1275,6 +1275,8 @@ class RegisteredShelterResponse(BaseModel):
     lng: float | None
     registration_date: str | None
     notes: str | None
+    phone: str | None
+    website: str | None
 
 
 @router.get("/registered-shelters", response_model=list[RegisteredShelterResponse])
@@ -1303,8 +1305,8 @@ async def get_registered_shelters(
         )
 
     query = text("""
-        SELECT id, registration_number, name, address, region, activity_type, 
-               capacity, lat, lng, registration_date, notes
+        SELECT id, registration_number, name, address, region, activity_type,
+               capacity, lat, lng, registration_date, notes, phone, website
         FROM registered_shelters
         ORDER BY region, name
     """)
@@ -1326,6 +1328,8 @@ async def get_registered_shelters(
             "lng": row[8],
             "registration_date": row[9].isoformat() if row[9] else None,
             "notes": row[10] if len(row) > 10 else None,
+            "phone": row[11] if len(row) > 11 else None,
+            "website": row[12] if len(row) > 12 else None,
         }
 
         # Filter by region if provided
@@ -1612,6 +1616,8 @@ class CreateRegisteredShelterRequest(BaseModel):
     lng: float | None = None
     registration_date: str | None = None
     notes: str | None = None
+    phone: str | None = None
+    website: str | None = None
 
 
 @router.post("/registered-shelters", response_model=RegisteredShelterResponse)
@@ -1642,10 +1648,10 @@ async def create_registered_shelter(
 
     await db.execute(
         text("""
-            INSERT INTO registered_shelters 
-            (id, registration_number, name, address, region, activity_type, capacity, lat, lng, registration_date, notes, imported_at, created_at, updated_at)
-            VALUES 
-            (:id, :reg_number, :name, :address, :region, :activity_type, :capacity, :lat, :lng, :reg_date, :notes, NOW(), NOW(), NOW())
+            INSERT INTO registered_shelters
+            (id, registration_number, name, address, region, activity_type, capacity, lat, lng, registration_date, notes, phone, website, imported_at, created_at, updated_at)
+            VALUES
+            (:id, :reg_number, :name, :address, :region, :activity_type, :capacity, :lat, :lng, :reg_date, :notes, :phone, :website, NOW(), NOW(), NOW())
         """),
         {
             "id": str(shelter_id),
@@ -1659,6 +1665,8 @@ async def create_registered_shelter(
             "lng": data.lng,
             "reg_date": data.registration_date,
             "notes": data.notes,
+            "phone": data.phone,
+            "website": data.website,
         },
     )
     await db.commit()
@@ -1675,22 +1683,26 @@ async def create_registered_shelter(
         lng=data.lng,
         registration_date=data.registration_date,
         notes=data.notes,
+        phone=data.phone,
+        website=data.website,
     )
 
 
-class UpdateShelterNotesRequest(BaseModel):
-    notes: str
+class UpdateRegisteredShelterRequest(BaseModel):
+    notes: str | None = None
+    phone: str | None = None
+    website: str | None = None
 
 
-@router.patch("/registered-shelters/{shelter_id}/notes", status_code=status.HTTP_200_OK)
-async def update_shelter_notes(
+@router.patch("/registered-shelters/{shelter_id}", status_code=status.HTTP_200_OK)
+async def update_registered_shelter(
     shelter_id: str,
-    data: UpdateShelterNotesRequest,
+    data: UpdateRegisteredShelterRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     token: str | None = Depends(oauth2_scheme),
 ):
-    """Update notes for a shelter. Only accessible by superadmin."""
+    """Update contact details and notes for a shelter. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
     if not is_superadmin and current_user.email == "admin@example.com":
         is_superadmin = True
@@ -1718,10 +1730,10 @@ async def update_shelter_notes(
     await db.execute(
         text("""
             UPDATE registered_shelters
-            SET notes = :notes, updated_at = NOW()
+            SET notes = :notes, phone = :phone, website = :website, updated_at = NOW()
             WHERE id = :id
         """),
-        {"notes": data.notes, "id": str(shelter_uuid)},
+        {"notes": data.notes, "phone": data.phone, "website": data.website, "id": str(shelter_uuid)},
     )
     await db.commit()
 

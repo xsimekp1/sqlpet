@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
-import { MapPin, Building2, Search, Filter, Loader2, Upload, Plus, Map, List } from 'lucide-react';
+import { MapPin, Building2, Search, Filter, Loader2, Upload, Plus, Map, List, Phone, Globe, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -47,6 +47,8 @@ interface RegisteredShelter {
   lng: number | null;
   registration_date: string | null;
   notes?: string | null;
+  phone?: string | null;
+  website?: string | null;
 }
 
 export default function RegisteredSheltersPage() {
@@ -58,6 +60,8 @@ export default function RegisteredSheltersPage() {
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+
+  // Create dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newShelter, setNewShelter] = useState({
@@ -69,8 +73,16 @@ export default function RegisteredSheltersPage() {
     capacity: '',
     lat: '',
     lng: '',
+    phone: '',
+    website: '',
     notes: '',
   });
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingShelterId, setEditingShelterId] = useState<string | null>(null);
+  const [editingSaving, setEditingSaving] = useState(false);
+  const [editForm, setEditForm] = useState({ notes: '', phone: '', website: '' });
 
   useEffect(() => {
     loadRegions();
@@ -161,7 +173,7 @@ export default function RegisteredSheltersPage() {
       });
       toast.success('Útulek přidán');
       setDialogOpen(false);
-      setNewShelter({ registration_number: '', name: '', address: '', region: '', activity_type: '', capacity: '', lat: '', lng: '', notes: '' });
+      setNewShelter({ registration_number: '', name: '', address: '', region: '', activity_type: '', capacity: '', lat: '', lng: '', phone: '', website: '', notes: '' });
       loadShelters();
       loadRegions();
     } catch (error) {
@@ -169,6 +181,42 @@ export default function RegisteredSheltersPage() {
       toast.error('Nepodařilo se uložit');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEditOpen = (shelter: RegisteredShelter) => {
+    setEditingShelterId(shelter.id);
+    setEditForm({
+      notes: shelter.notes ?? '',
+      phone: shelter.phone ?? '',
+      website: shelter.website ?? '',
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editingShelterId) return;
+    setEditingSaving(true);
+    try {
+      await ApiClient.updateRegisteredShelter(editingShelterId, {
+        notes: editForm.notes || null,
+        phone: editForm.phone || null,
+        website: editForm.website || null,
+      });
+      setShelters((prev) =>
+        prev.map((s) =>
+          s.id === editingShelterId
+            ? { ...s, notes: editForm.notes || null, phone: editForm.phone || null, website: editForm.website || null }
+            : s
+        )
+      );
+      toast.success('Uloženo');
+      setEditDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to update shelter:', error);
+      toast.error('Nepodařilo se uložit');
+    } finally {
+      setEditingSaving(false);
     }
   };
 
@@ -323,6 +371,27 @@ export default function RegisteredSheltersPage() {
                           <MapPin className="h-3 w-3" />
                           {shelter.address}
                         </div>
+                        {(shelter.phone || shelter.website) && (
+                          <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                            {shelter.phone && (
+                              <span className="flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                {shelter.phone}
+                              </span>
+                            )}
+                            {shelter.website && (
+                              <a
+                                href={shelter.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 hover:text-foreground hover:underline"
+                              >
+                                <Globe className="h-3 w-3" />
+                                {shelter.website.replace(/^https?:\/\//, '')}
+                              </a>
+                            )}
+                          </div>
+                        )}
                         <div className="flex items-center gap-4 mt-2 text-xs">
                           <Badge variant="secondary">{shelter.region}</Badge>
                           {shelter.activity_type && (
@@ -335,14 +404,23 @@ export default function RegisteredSheltersPage() {
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="flex flex-col items-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => handleEditOpen(shelter)}
+                          title="Upravit kontakt & poznámky"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         {shelter.capacity && (
                           <p className="text-sm font-medium">{shelter.capacity}</p>
                         )}
                         {shelter.lat && shelter.lng ? (
-                          <Badge className="mt-2 bg-green-500">GPS ✓</Badge>
+                          <Badge className="bg-green-500">GPS ✓</Badge>
                         ) : (
-                          <Badge variant="outline" className="mt-2">Bez GPS</Badge>
+                          <Badge variant="outline">Bez GPS</Badge>
                         )}
                       </div>
                     </div>
@@ -381,7 +459,7 @@ export default function RegisteredSheltersPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Add/Edit Dialog */}
+      {/* Add Shelter Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -467,6 +545,24 @@ export default function RegisteredSheltersPage() {
               </div>
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="newPhone">Telefon</Label>
+              <Input
+                id="newPhone"
+                value={newShelter.phone}
+                onChange={(e) => setNewShelter({ ...newShelter, phone: e.target.value })}
+                placeholder="+420 123 456 789"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="newWebsite">Web</Label>
+              <Input
+                id="newWebsite"
+                value={newShelter.website}
+                onChange={(e) => setNewShelter({ ...newShelter, website: e.target.value })}
+                placeholder="https://www.utulek.cz"
+              />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="notes">Poznámky</Label>
               <Textarea
                 id="notes"
@@ -481,6 +577,51 @@ export default function RegisteredSheltersPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Zrušit</Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Uložit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Contact & Notes Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Kontakt &amp; poznámky</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="editPhone">Telefon</Label>
+              <Input
+                id="editPhone"
+                value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                placeholder="+420 123 456 789"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editWebsite">Web</Label>
+              <Input
+                id="editWebsite"
+                value={editForm.website}
+                onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
+                placeholder="https://www.utulek.cz"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="editNotes">Poznámky</Label>
+              <Textarea
+                id="editNotes"
+                value={editForm.notes}
+                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                placeholder="Vaše poznámky k tomuto útulku..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Zrušit</Button>
+            <Button onClick={handleEditSave} disabled={editingSaving}>
+              {editingSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Uložit'}
             </Button>
           </DialogFooter>
         </DialogContent>

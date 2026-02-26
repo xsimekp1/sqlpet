@@ -22,6 +22,8 @@ class RegisteredShelter(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     lng: Mapped[float | None] = mapped_column(Float, nullable=True)
     registration_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    website: Mapped[str | None] = mapped_column(String(500), nullable=True)
     accepts_dogs: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     accepts_cats: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     imported_at: Mapped[datetime] = mapped_column(

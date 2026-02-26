@@ -1862,6 +1862,9 @@ class ApiClient {
     lat: number | null;
     lng: number | null;
     registration_date: string | null;
+    notes: string | null;
+    phone: string | null;
+    website: string | null;
   }[]> {
     const params = region ? `?region=${encodeURIComponent(region)}` : '';
     return ApiClient.get(`/admin/registered-shelters${params}`);
@@ -1944,12 +1947,17 @@ class ApiClient {
     lat?: number | null;
     lng?: number | null;
     notes?: string;
+    phone?: string;
+    website?: string;
   }): Promise<any> {
     return ApiClient.post('/admin/registered-shelters', data);
   }
 
-  static async updateShelterNotes(shelterId: string, notes: string): Promise<void> {
-    return ApiClient.patch(`/admin/registered-shelters/${shelterId}/notes`, { notes });
+  static async updateRegisteredShelter(
+    shelterId: string,
+    data: { notes?: string | null; phone?: string | null; website?: string | null }
+  ): Promise<void> {
+    return ApiClient.patch(`/admin/registered-shelters/${shelterId}`, data);
   }
 
   static async getSheltersForMap(): Promise<Array<{
