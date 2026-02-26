@@ -161,6 +161,7 @@ export interface Animal {
   bcs: number | null;
   expected_litter_date: string | null;
   behavior_notes: string | null;
+  personality: { social?: number; activity?: number; kids?: number; cudliness?: number; } | null;
   is_special_needs: boolean;
   weight_current_kg: number | null;
   mer_kcal_per_day: number | null;
