@@ -191,6 +191,11 @@ export interface Animal {
   notice_published_at?: string | null;
   finder_claims_ownership?: boolean | null;
   municipality_irrevocably_transferred?: boolean | null;
+
+  // Animal's own legal fields (for cases without intake - e.g., animal with finder)
+  legal_notice_published_at?: string | null;
+  legal_finder_claims_ownership?: boolean | null;
+  legal_municipality_transferred?: boolean | null;
   
   created_at: string;
   updated_at: string;

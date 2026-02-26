@@ -198,6 +198,10 @@ class AnimalUpdate(BaseModel):
     behavior_notes: str | None = None
     personality: dict | None = None
     is_special_needs: bool | None = None
+    # Legal deadline fields (independent of intake - for animals with finder)
+    legal_notice_published_at: date | None = None
+    legal_finder_claims_ownership: bool | None = None
+    legal_municipality_transferred: bool | None = None
     primary_photo_url: str | None = None
     thumbnail_url: str | None = None
     default_image_url: str | None = None

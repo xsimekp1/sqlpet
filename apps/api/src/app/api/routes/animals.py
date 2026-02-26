@@ -155,22 +155,38 @@ async def _build_animal_response(
         except Exception:
             pass
 
-    # Compute legal deadline if this is a found animal
-    if resp.current_intake_reason == "found" and resp.notice_published_at is not None:
+    # For legal deadline computation: use intake data OR animal's own legal fields
+    # (animal's legal fields are for cases when there's no intake - e.g., animal staying with finder)
+    effective_notice_published_at = (
+        resp.notice_published_at or animal.legal_notice_published_at
+    )
+    effective_finder_claims_ownership = (
+        resp.finder_claims_ownership
+        if resp.finder_claims_ownership is not None
+        else animal.legal_finder_claims_ownership
+    )
+    effective_municipality_transferred = (
+        resp.municipality_irrevocably_transferred
+        if resp.municipality_irrevocably_transferred is not None
+        else animal.legal_municipality_transferred
+    )
+
+    # Compute legal deadline if this is a found animal and we have notice date
+    if effective_notice_published_at is not None:
         if org_legal is not None:
             deadline_info = compute_legal_deadline_from_settings(
-                announced_at=resp.notice_published_at,
+                announced_at=effective_notice_published_at,
                 received_at=resp.current_intake_date,
                 found_at=resp.current_intake_date,
-                finder_keeps=resp.finder_claims_ownership,
+                finder_keeps=effective_finder_claims_ownership,
                 org_legal=org_legal,
             )
         else:
             deadline_info = compute_legal_deadline(
-                notice_published_at=resp.notice_published_at,
+                notice_published_at=effective_notice_published_at,
                 shelter_received_at=resp.current_intake_date,
-                finder_claims_ownership=resp.finder_claims_ownership,
-                municipality_irrevocably_transferred=resp.municipality_irrevocably_transferred,
+                finder_claims_ownership=effective_finder_claims_ownership,
+                municipality_irrevocably_transferred=effective_municipality_transferred,
             )
         resp.legal_deadline_at = deadline_info.deadline_at
         resp.legal_deadline_type = deadline_info.deadline_type

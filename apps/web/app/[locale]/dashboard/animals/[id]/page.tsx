@@ -193,6 +193,7 @@ export default function AnimalDetailPage() {
     municipality_irrevocably_transferred: '' as '' | 'true' | 'false',
   });
   const [savingLegalDeadline, setSavingLegalDeadline] = useState(false);
+  const [legalProfile, setLegalProfile] = useState<'CZ' | 'SK' | 'OTHER'>('CZ');
 
   // Website publication
   const [publishing, setPublishing] = useState(false);
@@ -362,6 +363,19 @@ if (photoInputRef.current) photoInputRef.current.value = '';
     };
     fetchAll();
   }, [animalId]);
+
+  // Load organization settings for legal profile
+  useEffect(() => {
+    const loadOrgSettings = async () => {
+      try {
+        const settings = await ApiClient.getOrganizationSettings();
+        setLegalProfile((settings.legal?.profile as 'CZ' | 'SK' | 'OTHER') || 'CZ');
+      } catch (_err) {
+        // Use default CZ if settings not available
+      }
+    };
+    loadOrgSettings();
+  }, []);
 
   const currentIdx = animalIds.indexOf(animalId);
   const prevId = currentIdx > 0 ? animalIds[currentIdx - 1] : null;
@@ -806,16 +820,23 @@ if (photoInputRef.current) photoInputRef.current.value = '';
       const intakes = await ApiClient.get('/intakes', { animal_id: animal.id });
       const activeIntake = Array.isArray(intakes) && intakes.length > 0 ? intakes[0] : null;
       
-      if (!activeIntake?.id) {
-        toast.error('Neexistuje intake záznam');
-        return;
-      }
-
-      await ApiClient.patch(`/intakes/${activeIntake.id}`, {
+      const formData = {
         notice_published_at: legalDeadlineForm.notice_published_at || null,
         finder_claims_ownership: legalDeadlineForm.finder_claims_ownership === '' ? null : legalDeadlineForm.finder_claims_ownership === 'true',
         municipality_irrevocably_transferred: legalDeadlineForm.municipality_irrevocably_transferred === '' ? null : legalDeadlineForm.municipality_irrevocably_transferred === 'true',
-      });
+      };
+
+      if (activeIntake?.id) {
+        // Has intake - save to intake
+        await ApiClient.patch(`/intakes/${activeIntake.id}`, formData);
+      } else {
+        // No intake (animal with finder) - save to animal using new fields
+        await ApiClient.patch(`/animals/${animal.id}`, {
+          legal_notice_published_at: formData.notice_published_at,
+          legal_finder_claims_ownership: formData.finder_claims_ownership,
+          legal_municipality_transferred: formData.municipality_irrevocably_transferred,
+        });
+      }
       
       // Refresh animal data
       const updated = await ApiClient.getAnimal(animal.id);
@@ -831,10 +852,15 @@ if (photoInputRef.current) photoInputRef.current.value = '';
 
   const startEditLegalDeadline = () => {
     if (!animal) return;
+    // Prefer intake data, fallback to animal's own legal fields (for animals with finder)
+    const noticeDate = animal.notice_published_at || animal.legal_notice_published_at;
+    const finderClaims = animal.finder_claims_ownership ?? animal.legal_finder_claims_ownership;
+    const municipality = animal.municipality_irrevocably_transferred ?? animal.legal_municipality_transferred;
+    
     setLegalDeadlineForm({
-      notice_published_at: animal.notice_published_at?.split('T')[0] || '',
-      finder_claims_ownership: animal.finder_claims_ownership === null ? '' : animal.finder_claims_ownership ? 'true' : 'false',
-      municipality_irrevocably_transferred: animal.municipality_irrevocably_transferred === null ? '' : animal.municipality_irrevocably_transferred ? 'true' : 'false',
+      notice_published_at: noticeDate?.split('T')[0] || '',
+      finder_claims_ownership: finderClaims === null || finderClaims === undefined ? '' : finderClaims ? 'true' : 'false',
+      municipality_irrevocably_transferred: municipality === null || municipality === undefined ? '' : municipality ? 'true' : 'false',
     });
     setEditingLegalDeadline(true);
   };
@@ -1199,8 +1225,8 @@ if (photoInputRef.current) photoInputRef.current.value = '';
             </div>
           )}
 
-          {/* Legal Deadline Section - for found animals */}
-          {animal.current_intake_reason === 'found' && (
+          {/* Legal Deadline Section - for found animals, only CZ profile */}
+          {(animal.current_intake_reason === 'found' || animal.legal_notice_published_at) && legalProfile === 'CZ' && (
             <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-semibold text-amber-800 dark:text-amber-200 text-sm">

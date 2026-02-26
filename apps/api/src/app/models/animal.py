@@ -207,6 +207,17 @@ class Animal(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
     )
 
+    # Legal deadline tracking (independent of intake - for animals with finder)
+    # These fields store the legal announcement dates for found animals
+    # that are not physically in the shelter (staying with finder)
+    legal_notice_published_at: Mapped[date | None] = mapped_column(Date, nullable=True)
+    legal_finder_claims_ownership: Mapped[bool | None] = mapped_column(
+        Boolean, nullable=True
+    )
+    legal_municipality_transferred: Mapped[bool | None] = mapped_column(
+        Boolean, nullable=True
+    )
+
     # Relationships
     animal_breeds = relationship(
         "AnimalBreed",
