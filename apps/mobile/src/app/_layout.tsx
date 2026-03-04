@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
 import { I18nProvider, detectLocale } from '../i18n';
+import mobileAds from 'react-native-google-mobile-ads';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,10 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   const [locale, setLocale] = useState(detectLocale());
+
+  useEffect(() => {
+    mobileAds().initialize();
+  }, []);
 
   return (
     <SafeAreaProvider>

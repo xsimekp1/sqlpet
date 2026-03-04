@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
   StatusBar,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
@@ -15,10 +16,11 @@ import Constants from 'expo-constants';
 import { useQuery } from '@tanstack/react-query';
 // type-only import — erased at runtime, no module-level side effects
 import type MapViewType from 'react-native-maps';
-import { MapPin, ChevronLeft } from 'lucide-react-native';
+import { MapPin, ChevronLeft, Phone } from 'lucide-react-native';
 import { useTranslations } from '../../i18n';
 import { publicApi } from '../../lib/api';
 import { MapErrorBoundary } from '../../components/MapErrorBoundary';
+import { AdBanner } from '../../components/AdBanner';
 
 type Species = 'dog' | 'cat' | 'other';
 
@@ -64,6 +66,7 @@ const PIN_COLORS = ['#22C55E', '#F97316', '#EF4444'];
 export default function ShelterFinderScreen() {
   const router = useRouter();
   const { t } = useTranslations();
+  const isPremiumUser = false; // TODO: napojit na authStore / API response
   const [step, setStep] = useState<'select' | 'results'>('select');
   const [species, setSpecies] = useState<Species | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -136,6 +139,16 @@ export default function ShelterFinderScreen() {
           {item.accepts_cats && <Text style={styles.speciesIcon}>🐈</Text>}
         </View>
       </View>
+      {item.phone && (
+        <TouchableOpacity
+          style={styles.phoneButton}
+          onPress={() => Linking.openURL(`tel:${item.phone}`)}
+          activeOpacity={0.7}
+        >
+          <Phone size={15} color="#16A34A" />
+          <Text style={styles.phoneText}>{item.phone}</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -154,39 +167,42 @@ export default function ShelterFinderScreen() {
       </View>
 
       {step === 'select' ? (
-        <View style={styles.selectContainer}>
-          <Text style={styles.subtitle}>{t('shelterFinder.subtitle')}</Text>
+        <>
+          <View style={styles.selectContainer}>
+            <Text style={styles.subtitle}>{t('shelterFinder.subtitle')}</Text>
 
-          {locationError && (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorText}>{locationError}</Text>
-            </View>
-          )}
+            {locationError && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorText}>{locationError}</Text>
+              </View>
+            )}
 
-          <TouchableOpacity
-            style={styles.speciesCard}
-            onPress={() => handleSelectSpecies('dog')}
-          >
-            <Text style={styles.speciesEmoji}>🐕</Text>
-            <Text style={styles.speciesLabel}>{t('shelterFinder.dog')}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.speciesCard}
+              onPress={() => handleSelectSpecies('dog')}
+            >
+              <Text style={styles.speciesEmoji}>🐕</Text>
+              <Text style={styles.speciesLabel}>{t('shelterFinder.dog')}</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.speciesCard}
-            onPress={() => handleSelectSpecies('cat')}
-          >
-            <Text style={styles.speciesEmoji}>🐈</Text>
-            <Text style={styles.speciesLabel}>{t('shelterFinder.cat')}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.speciesCard}
+              onPress={() => handleSelectSpecies('cat')}
+            >
+              <Text style={styles.speciesEmoji}>🐈</Text>
+              <Text style={styles.speciesLabel}>{t('shelterFinder.cat')}</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.speciesCard}
-            onPress={() => handleSelectSpecies('other')}
-          >
-            <Text style={styles.speciesEmoji}>🐾</Text>
-            <Text style={styles.speciesLabel}>{t('shelterFinder.other')}</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.speciesCard}
+              onPress={() => handleSelectSpecies('other')}
+            >
+              <Text style={styles.speciesEmoji}>🐾</Text>
+              <Text style={styles.speciesLabel}>{t('shelterFinder.other')}</Text>
+            </TouchableOpacity>
+          </View>
+          <AdBanner isPremiumUser={isPremiumUser} />
+        </>
       ) : (
         <View style={styles.resultsContainer}>
           {/* Species selector tabs */}
@@ -544,5 +560,19 @@ const styles = StyleSheet.create({
   },
   speciesIcon: {
     fontSize: 18,
+  },
+  phoneButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  phoneText: {
+    fontSize: 14,
+    color: '#16A34A',
+    fontWeight: '600',
   },
 });

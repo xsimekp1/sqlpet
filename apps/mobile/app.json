@@ -36,7 +36,14 @@
       "expo-secure-store",
       ["expo-location", {
         "locationWhenInUsePermission": "Tato aplikace potřebuje přístup k vaší poloze pro nalezení nejbližšího útulku."
-      }]
+      }],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3769855629143605~9438574844",
+          "iosAppId": "ca-app-pub-3769855629143605~9438574844"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
