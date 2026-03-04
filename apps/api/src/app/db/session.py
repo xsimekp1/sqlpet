@@ -14,15 +14,18 @@ _request_query_data: ContextVar[dict[str, Any]] = ContextVar(
 )
 
 # Async engine (for FastAPI runtime)
-# NullPool: Supabase Supavisor is its own connection pool, so an app-level pool
-# only adds friction (CancelledError timeouts, circuit-breaker storms).
-# Each request gets a fresh connection from Supavisor's pool and closes it on exit.
-# statement_cache_size=0: required for Supavisor / PgBouncer transaction mode —
-# disables asyncpg prepared-statement caching which is incompatible with the proxy.
+# Use a small real pool instead of NullPool so connections are reused across requests.
+# NullPool opened a fresh connection per request which exhausts Supabase Session-mode
+# max_clients under concurrent load ("MaxClientsInSessionMode" error).
+# pool_size=5 + max_overflow=10 → at most 15 simultaneous DB connections.
+# statement_cache_size=0: required for Supavisor / PgBouncer — disables asyncpg
+# prepared-statement caching which is incompatible with the proxy.
 async_engine = create_async_engine(
     settings.DATABASE_URL_ASYNC,
     echo=(settings.ENV == "dev"),
-    poolclass=pool.NullPool,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,
     connect_args={"statement_cache_size": 0},
 )
 

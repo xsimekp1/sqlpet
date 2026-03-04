@@ -1012,7 +1012,6 @@ async def update_role_permissions(
 class OrganizationAdminResponse(BaseModel):
     id: str
     name: str
-    region: str | None
     country: str | None
     phone: str | None
     admin_note: str | None
@@ -1047,10 +1046,9 @@ async def get_all_organizations(
 
     # Get all organizations with member count
     orgs_query = text("""
-        SELECT 
-            o.id, 
-            o.name, 
-            o.region,
+        SELECT
+            o.id,
+            o.name,
             o.country,
             o.phone,
             o.admin_note,
@@ -1058,7 +1056,7 @@ async def get_all_organizations(
             COUNT(m.id) as member_count
         FROM organizations o
         LEFT JOIN memberships m ON m.organization_id = o.id
-        GROUP BY o.id, o.name, o.region, o.country, o.phone, o.admin_note, o.created_at
+        GROUP BY o.id, o.name, o.country, o.phone, o.admin_note, o.created_at
         ORDER BY o.created_at DESC
     """)
     orgs_result = await db.execute(orgs_query)
@@ -1090,7 +1088,6 @@ async def get_all_organizations(
         OrganizationAdminResponse(
             id=str(org.id),
             name=org.name,
-            region=org.region,
             country=org.country,
             phone=org.phone,
             admin_note=org.admin_note,
@@ -1783,6 +1780,8 @@ class NearbyShelter(BaseModel):
     distance_km: float
     accepts_dogs: Optional[bool] = None
     accepts_cats: Optional[bool] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
 
 
 @router.get("/registered-shelters/nearby", response_model=list[NearbyShelter])
@@ -1802,7 +1801,7 @@ async def get_nearby_shelters(
 
     result = await db.execute(
         text(f"""
-            SELECT id, name, address, lat, lng, distance_km, accepts_dogs, accepts_cats
+            SELECT id, name, address, lat, lng, distance_km, accepts_dogs, accepts_cats, phone, website
             FROM (
                 SELECT id, name, address, lat, lng,
                        (6371 * acos(
@@ -1812,7 +1811,7 @@ async def get_nearby_shelters(
                                sin(radians(:lat)) * sin(radians(lat))
                            ))
                        )) AS distance_km,
-                       accepts_dogs, accepts_cats
+                       accepts_dogs, accepts_cats, phone, website
                 FROM registered_shelters
                 WHERE lat IS NOT NULL AND lng IS NOT NULL
                 {species_filter}
@@ -1834,6 +1833,8 @@ async def get_nearby_shelters(
             distance_km=round(row[5], 2),
             accepts_dogs=row[6],
             accepts_cats=row[7],
+            phone=row[8],
+            website=row[9],
         )
         for row in rows
     ]
