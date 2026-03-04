@@ -37,7 +37,15 @@
       ["expo-location", {
         "locationWhenInUsePermission": "Tato aplikace potřebuje přístup k vaší poloze pro nalezení nejbližšího útulku."
       }],
-      "./plugins/withAdMob"
+      "./plugins/withAdMob",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.25"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
