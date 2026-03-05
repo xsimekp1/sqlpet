@@ -44,6 +44,7 @@ class Organization(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     onboarding_completed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    default_locale: Mapped[str] = mapped_column(String(5), default="cs", nullable=False, server_default="cs")
 
     # Relationships
     tags = relationship("Tag", back_populates="organization", lazy="selectin")

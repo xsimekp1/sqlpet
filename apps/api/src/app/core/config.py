@@ -51,7 +51,7 @@ class Settings(BaseSettings):
 
     # Feeding Task Settings
     FEEDING_TASK_HORIZON_HOURS: int = (
-        48  # Default 48h rolling window for task generation
+        12  # 12h rolling window — changes propagate quickly, minimal conflicts
     )
 
     # Resend Email Settings

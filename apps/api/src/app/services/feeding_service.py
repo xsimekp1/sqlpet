@@ -1,7 +1,7 @@
 """Feeding service for managing feeding plans and logs."""
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func, delete
+from sqlalchemy import select, and_, func, update
 from sqlalchemy.orm import selectinload
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date, timezone, timedelta
@@ -19,6 +19,10 @@ class FeedingService:
     def __init__(self, db: AsyncSession, audit_service: Optional[AuditService] = None):
         self.db = db
         self.audit = audit_service or AuditService(db)
+
+    # -------------------------------------------------------------------------
+    # Plan management
+    # -------------------------------------------------------------------------
 
     async def create_feeding_plan(
         self,
@@ -54,6 +58,8 @@ class FeedingService:
             if auto_close_date < today:
                 old_plan.is_active = False
             n_closed += 1
+            # Recalculate future tasks for the old plan now that it has an end date
+            await self.recalculate_future_tasks(old_plan, organization_id)
         if n_closed:
             await self.db.flush()
 
@@ -129,185 +135,18 @@ class FeedingService:
                 after=changes,
             )
 
-            # If schedule changed, delete future pending tasks and regenerate
-            if (
-                "schedule_json" in updates
-                or "start_date" in updates
-                or "end_date" in updates
-            ):
-                await self._delete_future_pending_tasks(plan_id, organization_id)
-
+            # If schedule or dates changed, recalculate future pending tasks
+            schedule_changed = any(
+                k in changes for k in ("schedule_json", "amount_g", "start_date", "end_date")
+            )
+            if schedule_changed:
+                await self.recalculate_future_tasks(plan, organization_id)
+                # Generate any new task slots the updated plan may have added
                 from_dt = datetime.now(timezone.utc)
                 to_dt = from_dt + timedelta(hours=settings.FEEDING_TASK_HORIZON_HOURS)
                 await self.ensure_feeding_tasks_window(organization_id, from_dt, to_dt)
 
         return plan
-
-    async def _delete_future_pending_tasks(
-        self,
-        plan_id: uuid.UUID,
-        organization_id: uuid.UUID,
-    ) -> int:
-        """Delete pending feeding tasks for plan where due_at > now."""
-        stmt = delete(Task).where(
-            and_(
-                Task.organization_id == organization_id,
-                Task.type == TaskType.FEEDING,
-                Task.task_metadata["feeding_plan_id"].astext == str(plan_id),
-                Task.status == TaskStatus.PENDING,
-                Task.due_at > datetime.now(timezone.utc),
-            )
-        )
-        result = await self.db.execute(stmt)
-        return result.rowcount
-
-    async def ensure_feeding_tasks_window(
-        self,
-        organization_id: uuid.UUID,
-        from_dt: datetime,
-        to_dt: datetime,
-    ) -> List[Task]:
-        """
-        Generate feeding tasks within specified window. Idempotent.
-
-        Algorithm:
-        1. Load active feeding plans with schedule_json
-        2. For each plan:
-           - Skip if not active in [from_dt, to_dt] (check start_date/end_date)
-           - For each day in window:
-             - For each time in schedule_json["times"]:
-               - Check if task already exists (leverages unique constraint)
-               - If not, create Task with:
-                 - type=FEEDING
-                 - due_at = date + time
-                 - task_metadata = {
-                     "feeding_plan_id": str(plan_id),
-                     "animal_id": str(plan.animal_id),
-                     "scheduled_time": time,
-                     "amount_g": amounts[index] if amounts else plan.amount_g / len(times)
-                   }
-                 - related_entity_type="animal", related_entity_id=plan.animal_id
-        3. Return created tasks
-        """
-        from src.app.services.task_service import TaskService
-
-        task_service = TaskService(self.db)
-
-        tasks_created = []
-
-        # Get all active feeding plans with schedules
-        stmt = (
-            select(FeedingPlan)
-            .where(
-                and_(
-                    FeedingPlan.organization_id == organization_id,
-                    FeedingPlan.is_active == True,
-                    FeedingPlan.schedule_json.isnot(None),
-                )
-            )
-            .options(selectinload(FeedingPlan.animal))
-        )
-        result = await self.db.execute(stmt)
-        plans = result.scalars().all()
-
-        # Iterate through each day in the window
-        current_date = from_dt.date()
-        end_date = to_dt.date()
-
-        while current_date <= end_date:
-            for plan in plans:
-                # Skip if plan is not active on this date
-                if plan.start_date > current_date:
-                    continue
-                if plan.end_date and plan.end_date < current_date:
-                    continue
-
-                if not plan.schedule_json:
-                    continue
-
-                # Check if schedule has times array
-                schedule_times = plan.schedule_json.get("times", [])
-                if not schedule_times:
-                    continue
-
-                # Get amounts array (if provided)
-                amounts = plan.schedule_json.get("amounts", [])
-
-                for idx, scheduled_time in enumerate(schedule_times):
-                    # Parse time
-                    try:
-                        time_obj = datetime.strptime(scheduled_time, "%H:%M").time()
-                    except ValueError:
-                        continue  # Skip invalid time format
-
-                    # Construct due_at datetime
-                    due_at = datetime.combine(current_date, time_obj)
-                    # Make timezone-aware
-                    due_at = due_at.replace(tzinfo=timezone.utc)
-
-                    # Skip if due_at is outside window
-                    if due_at < from_dt or due_at > to_dt:
-                        continue
-
-                    # Calculate amount for this feeding
-                    if amounts and idx < len(amounts):
-                        amount_g = amounts[idx]
-                    elif plan.amount_g and len(schedule_times) > 0:
-                        amount_g = plan.amount_g / len(schedule_times)
-                    else:
-                        amount_g = None
-
-                    # Check if task already exists (leverage unique constraint)
-                    existing_task_stmt = select(Task).where(
-                        and_(
-                            Task.organization_id == organization_id,
-                            Task.type == TaskType.FEEDING,
-                            Task.related_entity_id == plan.animal_id,
-                            Task.task_metadata["feeding_plan_id"].astext
-                            == str(plan.id),
-                            Task.due_at == due_at,
-                            Task.deleted_at.is_(None),
-                        )
-                    )
-                    existing_result = await self.db.execute(existing_task_stmt)
-                    existing_task = existing_result.scalar_one_or_none()
-
-                    if existing_task:
-                        # Task already exists, skip
-                        continue
-
-                    # Create feeding task
-                    try:
-                        animal_name = plan.animal.name if plan.animal else "zvíře"
-                        task = await task_service.create_task(
-                            organization_id=organization_id,
-                            created_by_id=None,  # System-generated feeding task
-                            title=f"Krmení {animal_name}",
-                            description=f"Krmení v {scheduled_time}. Množství: {amount_g}g"
-                            if amount_g
-                            else f"Krmení v {scheduled_time}",
-                            task_type=TaskType.FEEDING,
-                            due_at=due_at,
-                            task_metadata={
-                                "feeding_plan_id": str(plan.id),
-                                "animal_id": str(plan.animal_id),
-                                "scheduled_time": scheduled_time,
-                                "amount_g": amount_g,
-                                "inventory_item_id": str(plan.inventory_item_id) if plan.inventory_item_id else None,
-                            },
-                            related_entity_type="animal",
-                            related_entity_id=plan.animal_id,
-                        )
-                        tasks_created.append(task)
-                    except Exception as e:
-                        # If unique constraint violation, skip (task already exists)
-                        if "uq_feeding_task_window" in str(e):
-                            continue
-                        raise
-
-            current_date += timedelta(days=1)
-
-        return tasks_created
 
     async def deactivate_feeding_plan(
         self,
@@ -323,12 +162,271 @@ class FeedingService:
             is_active=False,
         )
 
+    # -------------------------------------------------------------------------
+    # Task management
+    # -------------------------------------------------------------------------
+
+    async def recalculate_future_tasks(
+        self,
+        plan: FeedingPlan,
+        organization_id: uuid.UUID,
+    ) -> Dict[str, int]:
+        """
+        Smart recalculate future PENDING tasks for a plan after a plan change.
+
+        Rules:
+        - DONE (COMPLETED) tasks are NEVER modified.
+        - Tasks with manually_modified=True are NEVER overwritten.
+        - PENDING tasks whose scheduled_time still exists in the new plan → update amount_g.
+        - PENDING tasks whose scheduled_time no longer exists in the new plan → CANCELLED.
+
+        Returns dict with counts: {"updated": n, "cancelled": n}.
+        """
+        now = datetime.now(timezone.utc)
+
+        # Load all future PENDING feeding tasks for this plan
+        stmt = select(Task).where(
+            and_(
+                Task.organization_id == organization_id,
+                Task.type == TaskType.FEEDING,
+                Task.task_metadata["feeding_plan_id"].astext == str(plan.id),
+                Task.status == TaskStatus.PENDING,
+                Task.due_at > now,
+                Task.deleted_at.is_(None),
+            )
+        )
+        result = await self.db.execute(stmt)
+        future_tasks = result.scalars().all()
+
+        if not future_tasks:
+            return {"updated": 0, "cancelled": 0}
+
+        # Determine new meal slots from updated plan
+        new_schedule = plan.schedule_json or {}
+        new_times = new_schedule.get("times", [])
+        new_amounts = new_schedule.get("amounts", [])
+
+        # Build new amount per time slot
+        new_amount_by_time: Dict[str, Optional[float]] = {}
+        for idx, t in enumerate(new_times):
+            if new_amounts and idx < len(new_amounts):
+                new_amount_by_time[t] = float(new_amounts[idx])
+            elif plan.amount_g and new_times:
+                new_amount_by_time[t] = float(plan.amount_g) / len(new_times)
+            else:
+                new_amount_by_time[t] = None
+
+        # Check plan end_date — tasks beyond end_date should be cancelled
+        plan_end_dt: Optional[datetime] = None
+        if plan.end_date:
+            plan_end_dt = datetime(
+                plan.end_date.year, plan.end_date.month, plan.end_date.day,
+                23, 59, 59, tzinfo=timezone.utc
+            )
+
+        n_updated = 0
+        n_cancelled = 0
+
+        for task in future_tasks:
+            # Never touch manually modified tasks
+            if task.manually_modified:
+                continue
+
+            scheduled_time = (task.task_metadata or {}).get("scheduled_time")
+
+            # Cancel if task is beyond new plan end_date
+            if plan_end_dt and task.due_at > plan_end_dt:
+                task.status = TaskStatus.CANCELLED
+                n_cancelled += 1
+                continue
+
+            # Cancel if this time slot no longer exists in the new plan
+            if scheduled_time not in new_amount_by_time:
+                task.status = TaskStatus.CANCELLED
+                n_cancelled += 1
+                continue
+
+            # Update amount_g in task metadata
+            new_amount = new_amount_by_time[scheduled_time]
+            task.task_metadata = {
+                **(task.task_metadata or {}),
+                "amount_g": new_amount,
+            }
+            n_updated += 1
+
+        if future_tasks:
+            await self.db.flush()
+
+        return {"updated": n_updated, "cancelled": n_cancelled}
+
+    async def cancel_future_tasks(
+        self,
+        animal_id: uuid.UUID,
+        organization_id: uuid.UUID,
+        from_dt: Optional[datetime] = None,
+    ) -> int:
+        """
+        Cancel all future PENDING feeding tasks for an animal.
+        Used when animal leaves the shelter.
+        Returns number of cancelled tasks.
+        """
+        if from_dt is None:
+            from_dt = datetime.now(timezone.utc)
+
+        stmt = select(Task).where(
+            and_(
+                Task.organization_id == organization_id,
+                Task.type == TaskType.FEEDING,
+                Task.related_entity_id == animal_id,
+                Task.status == TaskStatus.PENDING,
+                Task.due_at > from_dt,
+                Task.deleted_at.is_(None),
+            )
+        )
+        result = await self.db.execute(stmt)
+        tasks = result.scalars().all()
+
+        for task in tasks:
+            task.status = TaskStatus.CANCELLED
+
+        if tasks:
+            await self.db.flush()
+
+        return len(tasks)
+
+    async def ensure_feeding_tasks_window(
+        self,
+        organization_id: uuid.UUID,
+        from_dt: datetime,
+        to_dt: datetime,
+    ) -> List[Task]:
+        """
+        Idempotently generate feeding tasks within the specified time window.
+
+        Algorithm for each active plan:
+        - For each day in [from_dt.date, to_dt.date]:
+          - For each time in schedule_json["times"]:
+            - due_at = date + time
+            - Skip if outside [from_dt, to_dt]
+            - Skip if task already exists (by plan_id + due_at)
+            - Create task
+        """
+        from src.app.services.task_service import TaskService
+
+        task_service = TaskService(self.db)
+        tasks_created = []
+
+        stmt = (
+            select(FeedingPlan)
+            .where(
+                and_(
+                    FeedingPlan.organization_id == organization_id,
+                    FeedingPlan.is_active == True,
+                    FeedingPlan.schedule_json.isnot(None),
+                )
+            )
+            .options(selectinload(FeedingPlan.animal))
+        )
+        result = await self.db.execute(stmt)
+        plans = result.scalars().all()
+
+        current_date = from_dt.date()
+        end_date = to_dt.date()
+
+        while current_date <= end_date:
+            for plan in plans:
+                if plan.start_date > current_date:
+                    continue
+                if plan.end_date and plan.end_date < current_date:
+                    continue
+
+                schedule_times = (plan.schedule_json or {}).get("times", [])
+                if not schedule_times:
+                    continue
+
+                amounts = (plan.schedule_json or {}).get("amounts", [])
+
+                for idx, scheduled_time in enumerate(schedule_times):
+                    try:
+                        time_obj = datetime.strptime(scheduled_time, "%H:%M").time()
+                    except ValueError:
+                        continue
+
+                    due_at = datetime.combine(current_date, time_obj, tzinfo=timezone.utc)
+
+                    if due_at < from_dt or due_at > to_dt:
+                        continue
+
+                    # Calculate per-meal amount
+                    if amounts and idx < len(amounts):
+                        amount_g = float(amounts[idx])
+                    elif plan.amount_g and schedule_times:
+                        amount_g = float(plan.amount_g) / len(schedule_times)
+                    else:
+                        amount_g = None
+
+                    # Idempotency check
+                    existing_stmt = select(Task).where(
+                        and_(
+                            Task.organization_id == organization_id,
+                            Task.type == TaskType.FEEDING,
+                            Task.related_entity_id == plan.animal_id,
+                            Task.task_metadata["feeding_plan_id"].astext == str(plan.id),
+                            Task.due_at == due_at,
+                            Task.deleted_at.is_(None),
+                        )
+                    )
+                    existing = (await self.db.execute(existing_stmt)).scalar_one_or_none()
+                    if existing:
+                        continue
+
+                    try:
+                        animal_name = plan.animal.name if plan.animal else "zvíře"
+                        task = await task_service.create_task(
+                            organization_id=organization_id,
+                            created_by_id=None,
+                            title=f"Krmení {animal_name}",
+                            description=(
+                                f"Krmení v {scheduled_time}. Množství: {amount_g}g"
+                                if amount_g
+                                else f"Krmení v {scheduled_time}"
+                            ),
+                            task_type=TaskType.FEEDING,
+                            due_at=due_at,
+                            task_metadata={
+                                "feeding_plan_id": str(plan.id),
+                                "animal_id": str(plan.animal_id),
+                                "scheduled_time": scheduled_time,
+                                "amount_g": amount_g,
+                                "inventory_item_id": (
+                                    str(plan.inventory_item_id)
+                                    if plan.inventory_item_id
+                                    else None
+                                ),
+                            },
+                            related_entity_type="animal",
+                            related_entity_id=plan.animal_id,
+                        )
+                        tasks_created.append(task)
+                    except Exception as e:
+                        if "uq_feeding_task_window" in str(e):
+                            continue
+                        raise
+
+            current_date += timedelta(days=1)
+
+        return tasks_created
+
+    # -------------------------------------------------------------------------
+    # Feeding log
+    # -------------------------------------------------------------------------
+
     async def get_active_plans_for_animal(
         self,
         animal_id: uuid.UUID,
         organization_id: uuid.UUID,
     ) -> List[FeedingPlan]:
-        """Get all active feeding plans for an animal."""
+        """Get all active feeding plans for an animal (current date)."""
         today = date.today()
         stmt = select(FeedingPlan).where(
             and_(
@@ -365,18 +463,14 @@ class FeedingService:
         )
         self.db.add(feeding_log)
         await self.db.flush()
-        # Refresh to populate server-side defaults (e.g. created_at)
         await self.db.refresh(feeding_log)
 
-        # Auto-deduct from inventory if enabled
         deductions = []
         if auto_deduct_inventory:
-            # Resolve item ID and amount to deduct
             deduct_item_id = inventory_item_id
             deduct_amount = amount_g_override
 
             if deduct_item_id is None or deduct_amount is None:
-                # Fall back to active feeding plan
                 plans = await self.get_active_plans_for_animal(animal_id, organization_id)
                 if plans:
                     plan = plans[0]
@@ -385,9 +479,7 @@ class FeedingService:
                     if deduct_amount is None:
                         deduct_amount = float(plan.amount_g) if plan.amount_g else None
 
-            # Only deduct when we have an amount to deduct
             if deduct_amount is not None:
-                # Resolve food_name fallback for name-based lookup (legacy plans without inventory_item_id)
                 food_name_fallback: Optional[str] = None
                 if deduct_item_id is None:
                     plans = await self.get_active_plans_for_animal(animal_id, organization_id)
@@ -403,7 +495,6 @@ class FeedingService:
                     from src.app.services.inventory_service import InventoryService
 
                     inv_service = InventoryService(self.db)
-
                     try:
                         deductions = await inv_service.deduct_for_feeding(
                             organization_id=organization_id,
@@ -414,7 +505,6 @@ class FeedingService:
                             food_name=food_name_fallback,
                         )
                     except Exception as e:
-                        # Log error but don't fail the feeding log
                         print(f"Warning: Failed to deduct inventory: {e}")
 
         await self.audit.log_action(
@@ -432,115 +522,6 @@ class FeedingService:
 
         return {"feeding_log": feeding_log, "deductions": deductions}
 
-    async def generate_feeding_tasks_for_schedule(
-        self,
-        organization_id: uuid.UUID,
-        current_time: datetime,
-        days_ahead: int = 2,
-    ) -> List[Task]:
-        """
-        Generate feeding tasks for all active feeding plans.
-        Generates tasks for today + days_ahead (default 2 days).
-        """
-        from src.app.services.task_service import TaskService
-
-        task_service = TaskService(self.db)
-
-        tasks_created = []
-        today = current_time.date()
-
-        # Get all active feeding plans with schedules
-        stmt = (
-            select(FeedingPlan)
-            .where(
-                and_(
-                    FeedingPlan.organization_id == organization_id,
-                    FeedingPlan.is_active == True,
-                    FeedingPlan.start_date <= today + timedelta(days=days_ahead),
-                    (FeedingPlan.end_date.is_(None)) | (FeedingPlan.end_date >= today),
-                    FeedingPlan.schedule_json.isnot(None),
-                )
-            )
-            .options(selectinload(FeedingPlan.animal))
-        )
-        result = await self.db.execute(stmt)
-        plans = result.scalars().all()
-
-        # Generate tasks for each day from today to today + days_ahead
-        for day_offset in range(days_ahead + 1):
-            target_date = today + timedelta(days=day_offset)
-
-            for plan in plans:
-                if not plan.schedule_json:
-                    continue
-
-                # Check if plan is active on target date
-                if plan.start_date > target_date:
-                    continue
-                if plan.end_date and plan.end_date < target_date:
-                    continue
-
-                # Check if schedule has times array
-                schedule_times = plan.schedule_json.get("times", [])
-                if not schedule_times:
-                    continue
-
-                for scheduled_time in schedule_times:
-                    # Check if task already exists for this animal + time + date
-                    existing_task_stmt = select(Task).where(
-                        and_(
-                            Task.organization_id == organization_id,
-                            Task.type == TaskType.FEEDING,
-                            Task.related_entity_type == "animal",
-                            Task.related_entity_id == plan.animal_id,
-                            func.date(Task.due_at) == target_date,
-                            Task.task_metadata["scheduled_time"].astext
-                            == scheduled_time,
-                            Task.status != TaskStatus.CANCELLED,
-                        )
-                    )
-                    existing_result = await self.db.execute(existing_task_stmt)
-                    existing_task = existing_result.scalar_one_or_none()
-
-                    if existing_task:
-                        continue
-
-                    # Calculate per-meal amount from schedule
-                    schedule_amounts = plan.schedule_json.get("amounts", [])
-                    meal_idx = schedule_times.index(scheduled_time)
-                    if schedule_amounts and meal_idx < len(schedule_amounts):
-                        meal_amount_g = schedule_amounts[meal_idx]
-                    elif plan.amount_g and len(schedule_times) > 0:
-                        meal_amount_g = plan.amount_g / len(schedule_times)
-                    else:
-                        meal_amount_g = None
-
-                    # Create feeding task
-                    animal_name = plan.animal.name if plan.animal else "zvíře"
-                    task = await task_service.create_task(
-                        organization_id=organization_id,
-                        created_by_id=None,  # System-generated
-                        title=f"Nakrmit {animal_name}",
-                        description=f"Scheduled feeding at {scheduled_time}. Amount: {plan.amount_text or f'{plan.amount_g}g'}",
-                        task_type=TaskType.FEEDING,
-                        due_at=datetime.combine(
-                            target_date,
-                            datetime.strptime(scheduled_time, "%H:%M").time(),
-                        ),
-                        task_metadata={
-                            "feeding_plan_id": str(plan.id),
-                            "animal_id": str(plan.animal_id),
-                            "scheduled_time": scheduled_time,
-                            "amount_g": meal_amount_g,
-                            "inventory_item_id": str(plan.inventory_item_id) if plan.inventory_item_id else None,
-                        },
-                        related_entity_type="animal",
-                        related_entity_id=plan.animal_id,
-                    )
-                    tasks_created.append(task)
-
-        return tasks_created
-
     async def complete_feeding_task(
         self,
         task_id: uuid.UUID,
@@ -549,10 +530,9 @@ class FeedingService:
         notes: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Complete a feeding task - creates feeding log and deducts inventory.
-        Returns dict with task, feeding_log, and inventory_transaction.
+        Complete a feeding task — creates feeding log, deducts inventory.
+        Returns dict with task, feeding_log, and deductions.
         """
-        # Get task
         task_stmt = select(Task).where(
             and_(
                 Task.id == task_id,
@@ -569,19 +549,13 @@ class FeedingService:
         if task.status == TaskStatus.COMPLETED:
             raise ValueError(f"Task {task_id} is already completed")
 
-        # Extract animal_id from task metadata
-        animal_id = task.task_metadata.get("animal_id") if task.task_metadata else None
-        if not animal_id:
-            animal_id = task.related_entity_id
-
+        animal_id = (task.task_metadata or {}).get("animal_id") or task.related_entity_id
         if not animal_id:
             raise ValueError("Task does not have animal_id")
 
-        # Extract per-meal amount and inventory item from task metadata
-        amount_g_raw = task.task_metadata.get("amount_g") if task.task_metadata else None
-        inv_item_id_str = task.task_metadata.get("inventory_item_id") if task.task_metadata else None
+        amount_g_raw = (task.task_metadata or {}).get("amount_g")
+        inv_item_id_str = (task.task_metadata or {}).get("inventory_item_id")
 
-        # Log feeding
         log_result = await self.log_feeding(
             organization_id=organization_id,
             animal_id=uuid.UUID(animal_id) if isinstance(animal_id, str) else animal_id,
@@ -594,14 +568,12 @@ class FeedingService:
         feeding_log = log_result["feeding_log"]
         deductions = log_result.get("deductions", [])
 
-        # Persist feeding_log_id into task metadata for later retrieval
         task.task_metadata = {
             **(task.task_metadata or {}),
             "feeding_log_id": str(feeding_log.id),
         }
         await self.db.flush()
 
-        # Mark task as completed
         from src.app.services.task_service import TaskService
 
         task_service = TaskService(self.db)
@@ -625,10 +597,7 @@ class FeedingService:
         days: int = 30,
     ) -> List[FeedingLog]:
         """Get feeding history for an animal."""
-        from datetime import timedelta
-
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
-
         stmt = (
             select(FeedingLog)
             .where(
@@ -642,3 +611,18 @@ class FeedingService:
         )
         result = await self.db.execute(stmt)
         return result.scalars().all()
+
+    # -------------------------------------------------------------------------
+    # Legacy (kept for compatibility)
+    # -------------------------------------------------------------------------
+
+    async def generate_feeding_tasks_for_schedule(
+        self,
+        organization_id: uuid.UUID,
+        current_time: datetime,
+        days_ahead: int = 2,
+    ) -> List[Task]:
+        """Legacy: generate tasks for today + days_ahead. Use ensure_feeding_tasks_window instead."""
+        from_dt = current_time
+        to_dt = current_time + timedelta(days=days_ahead)
+        return await self.ensure_feeding_tasks_window(organization_id, from_dt, to_dt)

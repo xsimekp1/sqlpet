@@ -15,6 +15,8 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     is_superadmin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    locale: Mapped[str] = mapped_column(String(5), default="cs", nullable=False, server_default="cs")
+
     totp_secret: Mapped[str | None] = mapped_column(String(32), nullable=True)
     totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     backup_codes: Mapped[str | None] = mapped_column(String(255), nullable=True)

@@ -4,6 +4,7 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 from contextvars import copy_context
+from datetime import datetime, timezone, timedelta
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
@@ -251,7 +252,39 @@ async def lifespan(app: FastAPI):
 
             setup_sql_listeners(async_engine.sync_engine)
 
+    # Start background feeding-task generator (every 15 minutes)
+    import asyncio
+
+    async def _feeding_task_loop():
+        """Generate feeding tasks for the next 12h for all active organizations."""
+        await asyncio.sleep(30)  # Small startup delay so DB is ready
+        while True:
+            try:
+                from src.app.db.session import AsyncSessionLocal
+                from src.app.models.organization import Organization
+                from src.app.services.feeding_service import FeedingService
+                from sqlalchemy import select as _select
+
+                async with AsyncSessionLocal() as db:
+                    orgs = (await db.execute(_select(Organization))).scalars().all()
+                    now = datetime.now(timezone.utc)
+                    horizon = now + timedelta(hours=settings.FEEDING_TASK_HORIZON_HOURS)
+                    for org in orgs:
+                        try:
+                            svc = FeedingService(db)
+                            await svc.ensure_feeding_tasks_window(org.id, now, horizon)
+                        except Exception as org_err:
+                            print(f"[feeding-scheduler] org {org.id}: {org_err}")
+                    await db.commit()
+            except Exception as e:
+                print(f"[feeding-scheduler] error: {e}")
+            await asyncio.sleep(15 * 60)  # 15 minutes
+
+    _scheduler_task = asyncio.create_task(_feeding_task_loop())
+
     yield
+
+    _scheduler_task.cancel()
     await async_engine.dispose()
 
 

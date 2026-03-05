@@ -127,6 +127,9 @@ class Task(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         ForeignKey("inventory_items.id", ondelete="SET NULL"),
         nullable=True,
     )
+    manually_modified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
 
     # Relationships
     created_by = relationship("User", foreign_keys=[created_by_id])
