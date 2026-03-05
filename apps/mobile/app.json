@@ -1,4 +1,8 @@
 {
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-3769855629143605~9438574844",
+    "ios_app_id": "ca-app-pub-3769855629143605~9438574844"
+  },
   "expo": {
     "name": "Petslog",
     "slug": "petslog",
@@ -36,8 +40,7 @@
       "expo-secure-store",
       ["expo-location", {
         "locationWhenInUsePermission": "Tato aplikace potřebuje přístup k vaší poloze pro nalezení nejbližšího útulku."
-      }],
-      "./plugins/withAdMob"
+      }]
     ],
     "experiments": {
       "typedRoutes": true
