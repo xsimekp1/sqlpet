@@ -49,24 +49,31 @@ async def _build_animal_response(
     kennel_data: dict | None = None,
     intake_data: dict | None = None,
     org_legal=None,
+    breed_i18n_map: dict | None = None,
+    color_i18n_map: dict | None = None,
 ) -> AnimalResponse:
     """Build AnimalResponse from ORM object with nested breeds and identifiers."""
-    breed_ids_list = [ab.breed_id for ab in (animal.animal_breeds or [])]
-    i18n_map: dict[str, str] = {}
-    if breed_ids_list:
-        i18n_rows = await db.execute(
-            select(BreedI18n.breed_id, BreedI18n.name).where(
-                BreedI18n.breed_id.in_(breed_ids_list), BreedI18n.locale == "cs"
+    # Use pre-loaded breed i18n map (from bulk load in list endpoint).
+    # Fall back to per-animal query only for single-animal fetches.
+    if breed_i18n_map is None:
+        breed_ids_list = [ab.breed_id for ab in (animal.animal_breeds or [])]
+        if breed_ids_list:
+            i18n_rows = await db.execute(
+                select(BreedI18n.breed_id, BreedI18n.name).where(
+                    BreedI18n.breed_id.in_(breed_ids_list), BreedI18n.locale == "cs"
+                )
             )
-        )
-        i18n_map = {str(r.breed_id): r.name for r in i18n_rows}
+            breed_i18n_map = {str(r.breed_id): r.name for r in i18n_rows}
+        else:
+            breed_i18n_map = {}
+
     breeds = [
         AnimalBreedResponse(
             breed_id=ab.breed_id,
             breed_name=ab.breed.name,
             breed_species=ab.breed.species,
             percent=ab.percent,
-            display_name=i18n_map.get(str(ab.breed_id)),
+            display_name=breed_i18n_map.get(str(ab.breed_id)),
         )
         for ab in (animal.animal_breeds or [])
     ]
@@ -78,18 +85,20 @@ async def _build_animal_response(
     resp.breeds = breeds
     resp.identifiers = identifiers
 
-    # Překlad barvy z color_i18n
+    # Překlad barvy z color_i18n — použij předpočítanou mapu nebo fallback dotaz
     if animal.color:
-        color_i18n_result = await db.execute(
-            text(
-                "SELECT name FROM color_i18n"
-                " WHERE code = :code AND locale = 'cs' AND organization_id IS NULL"
-                " LIMIT 1"
-            ),
-            {"code": animal.color},
-        )
-        color_name = color_i18n_result.scalar_one_or_none()
-        resp.color_display_name = color_name
+        if color_i18n_map is not None:
+            resp.color_display_name = color_i18n_map.get(animal.color)
+        else:
+            color_i18n_result = await db.execute(
+                text(
+                    "SELECT name FROM color_i18n"
+                    " WHERE code = :code AND locale = 'cs' AND organization_id IS NULL"
+                    " LIMIT 1"
+                ),
+                {"code": animal.color},
+            )
+            resp.color_display_name = color_i18n_result.scalar_one_or_none()
 
     # default_image_url is now stored in DB - use it directly
     # (no query needed)
@@ -503,10 +512,45 @@ async def list_animals(
         )
         kennel_data = extra_data.get("kennels", {})
         intake_data = extra_data.get("intakes", {})
+
+        # Bulk-load breed i18n for all animals in one query (avoids N+1)
+        all_breed_ids = {
+            ab.breed_id
+            for a in items
+            for ab in (a.animal_breeds or [])
+        }
+        if all_breed_ids:
+            breed_rows = await db.execute(
+                select(BreedI18n.breed_id, BreedI18n.name).where(
+                    BreedI18n.breed_id.in_(all_breed_ids), BreedI18n.locale == "cs"
+                )
+            )
+            breed_i18n_map = {str(r.breed_id): r.name for r in breed_rows}
+        else:
+            breed_i18n_map = {}
+
+        # Bulk-load color i18n for all unique colors in one query (avoids N+1)
+        all_colors = list({a.color for a in items if a.color})
+        if all_colors:
+            color_rows = await db.execute(
+                text(
+                    "SELECT code, name FROM color_i18n"
+                    " WHERE code = ANY(:codes) AND locale = 'cs' AND organization_id IS NULL"
+                ),
+                {"codes": all_colors},
+            )
+            color_i18n_map = {r[0]: r[1] for r in color_rows}
+        else:
+            color_i18n_map = {}
+
         built_items = []
         for a in items:
             built_items.append(
-                await _build_animal_response(a, db, kennel_data, intake_data)
+                await _build_animal_response(
+                    a, db, kennel_data, intake_data,
+                    breed_i18n_map=breed_i18n_map,
+                    color_i18n_map=color_i18n_map,
+                )
             )
         return AnimalListResponse(
             items=built_items,

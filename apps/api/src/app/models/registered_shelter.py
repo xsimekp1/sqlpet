@@ -29,3 +29,7 @@ class RegisteredShelter(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     imported_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
     )
+    phone_source: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    search_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    scrape_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    last_checked: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

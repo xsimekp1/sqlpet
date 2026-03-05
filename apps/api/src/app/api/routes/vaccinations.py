@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.api.dependencies.auth import (
@@ -87,8 +88,10 @@ async def list_vaccinations(
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(AnimalVaccination).where(
-        AnimalVaccination.organization_id == organization_id
+    q = (
+        select(AnimalVaccination)
+        .where(AnimalVaccination.organization_id == organization_id)
+        .options(selectinload(AnimalVaccination.animal))
     )
 
     if animal_id:
