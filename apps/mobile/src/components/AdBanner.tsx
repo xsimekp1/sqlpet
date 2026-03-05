@@ -19,7 +19,8 @@ interface AdBannerProps {
 export function AdBanner({ isPremiumUser = false }: AdBannerProps) {
   if (isPremiumUser) return null;
 
-  const adUnitId = __DEV__ ? TEST_AD_UNIT_ID : PROD_AD_UNIT_ID;
+  const adUnitId =
+    process.env.EXPO_PUBLIC_AD_MODE === 'production' ? PROD_AD_UNIT_ID : TEST_AD_UNIT_ID;
 
   return (
     <View style={styles.container}>
