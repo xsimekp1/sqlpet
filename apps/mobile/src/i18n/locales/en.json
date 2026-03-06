@@ -98,7 +98,6 @@
     "noActivity": "No activities",
     "selectAnimal": "Select animal",
     "selectAtLeastOne": "Select at least one animal",
-    "activityCompleted": "Activity completed",
     "failedToStart": "Failed to start activity",
     "failedToComplete": "Failed to complete activity",
     "startedAt": "Started:",
@@ -387,7 +386,7 @@
     "search": "Search kennels...",
     "filters": {
       "zone": "Zone",
-      "status": "Status", 
+      "status": "Status",
       "type": "Type",
       "size": "Size",
       "occupancy": "Occupancy"
@@ -414,7 +413,7 @@
     "occupancy": {
       "empty": "Empty",
       "partial": "Partial",
-      "full": "Full", 
+      "full": "Full",
       "over": "Over"
     },
     "status": {
@@ -809,7 +808,7 @@
       "subtitle": "Register a new animal in the shelter",
       "basicInfo": "Basic Information",
       "basicInfoDesc": "Fill in the animal's basic details",
-      "name": "Name *",
+      "name": "Name",
       "namePlaceholder": "e.g. Max, Luna",
       "species": "Species *",
       "speciesPlaceholder": "Select species",
@@ -826,17 +825,14 @@
       "previewTitle": "Image Preview",
       "estimatedAge": "Estimated Age (years)",
       "estimatedAgePlaceholder": "e.g. 2",
-      "intakeDate": "Intake Date *",
+      "intakeDate": "Intake",
       "create": "Create Animal",
       "creating": "Creating...",
       "cancel": "Cancel",
       "success": "Animal created successfully!",
       "error": "Failed to create animal",
-      "name": "Name",
-      "breed": "Breed",
       "age": "Age",
-      "kennel": "Kennel",
-      "intakeDate": "Intake"
+      "kennel": "Kennel"
     },
     "alteredStatus": {
       "label": "Neutered",
@@ -1411,8 +1407,36 @@
     "description": "Manage stock, lots, and transactions",
     "items": "Items",
     "lots": "Lots",
-    "transactions": "Transactions",
-    "actions": "Actions",
+    "transactions": {
+      "title": "Transaction History",
+      "add": "Add Transaction",
+      "direction": "Direction",
+      "reason": "Reason",
+      "note": "Note",
+      "notePlaceholder": "Optional note",
+      "noTransactions": "No transactions found",
+      "reasons": {
+        "opening_balance": "Opening Balance",
+        "purchase": "Purchase",
+        "donation": "Donation",
+        "consumption": "Consumption",
+        "writeoff": "Write-off"
+      },
+      "directions": {
+        "in": "In",
+        "out": "Out",
+        "adjust": "Adjust"
+      }
+    },
+    "actions": {
+      "createItem": "Create Item",
+      "editItem": "Edit Item",
+      "addLot": "Add Lot",
+      "recordTransaction": "Record Transaction",
+      "viewHistory": "View History",
+      "viewDetails": "View Details",
+      "save": "Save"
+    },
     "delete": "Delete",
     "deleteItem": "Delete item?",
     "deleteItemConfirm": "This will permanently delete item \"{name}\". This action cannot be undone.",
@@ -1469,15 +1493,6 @@
       "notes": "Description / notes",
       "notesPlaceholder": "Product description, storage instructions, notes…"
     },
-    "actions": {
-      "createItem": "Create Item",
-      "editItem": "Edit Item",
-      "addLot": "Add Lot",
-      "recordTransaction": "Record Transaction",
-      "viewHistory": "View History",
-      "viewDetails": "View Details",
-      "save": "Save"
-    },
     "units": {
       "can": "Can",
       "Konzerva": "Can",
@@ -1491,27 +1506,6 @@
       "g": "Gram",
       "l": "Litre",
       "ml": "Millilitre"
-    },
-    "transactions": {
-      "title": "Transaction History",
-      "add": "Add Transaction",
-      "direction": "Direction",
-      "reason": "Reason",
-      "note": "Note",
-      "notePlaceholder": "Optional note",
-      "noTransactions": "No transactions found",
-      "reasons": {
-        "opening_balance": "Opening Balance",
-        "purchase": "Purchase",
-        "donation": "Donation",
-        "consumption": "Consumption",
-        "writeoff": "Write-off"
-      },
-      "directions": {
-        "in": "In",
-        "out": "Out",
-        "adjust": "Adjust"
-      }
     },
     "messages": {
       "showingItems": "Showing {count} items",
@@ -1559,8 +1553,6 @@
       "lots": "Lots",
       "actions": "Actions",
       "viewDetails": "Details",
-      "showingItems": "Showing {count} items",
-      "outOfStock": "Out of stock",
       "lotsCreatedOnReceiving": "Lots are created automatically when receiving stock",
       "saving": "Saving…"
     },
@@ -1630,40 +1622,102 @@
       "auth": "Authentication"
     },
     "pages": {
-      "dashboard": { "title": "Dashboard", "description": "Shelter overview: animals, tasks, alerts and quick actions" },
-      "animals": { "title": "Animals", "description": "List and management of all animals in the shelter" },
-      "kennels": { "title": "Kennels", "description": "Kennel management, occupancy, walk mode and animal moves" },
-      "hotel": { "title": "Hotel", "description": "Hotel reservations for animals, check-in and check-out" },
-      "walks": { "title": "Walks", "description": "Recording and history of animal walks" },
-      "medical": { "title": "Medical Care", "description": "Health records, quarantine, vaccinations and medications" },
-      "feeding": { "title": "Feeding", "description": "Feeding plans, dosing and feeding logs" },
-      "inventory": { "title": "Inventory", "description": "Inventory of medicines, food and supplies, stock tracking" },
-      "tasks": { "title": "Tasks", "description": "Task management, assignment and completion tracking" },
-      "calendar": { "title": "Calendar", "description": "Calendar of events: intakes, vet visits, planned adoptions" },
-      "people": { "title": "People", "description": "Contacts, fosters, volunteers and relationships" },
-      "chat": { "title": "Messages", "description": "Internal chat between organization members" },
-      "adoptions": { "title": "Adoptions", "description": "Adoption process and pipeline management" },
-      "intake": { "title": "Intake", "description": "Intake of new animals into the shelter" },
-      "reports": { "title": "Reports", "description": "Statistics and overviews of shelter operations" },
-      "settings": { "title": "Settings", "description": "Organization settings, users, roles and preferences" },
-      "help": { "title": "Help", "description": "Keyboard shortcuts and application guide" },
-      "selectOrg": { "title": "Select Organization", "description": "Organization selection after login" },
-      "login": { "title": "Login", "description": "System login using email and password" }
+      "dashboard": {
+        "title": "Dashboard",
+        "description": "Shelter overview: animals, tasks, alerts and quick actions"
+      },
+      "animals": {
+        "title": "Animals",
+        "description": "List and management of all animals in the shelter"
+      },
+      "kennels": {
+        "title": "Kennels",
+        "description": "Kennel management, occupancy, walk mode and animal moves"
+      },
+      "hotel": {
+        "title": "Hotel",
+        "description": "Hotel reservations for animals, check-in and check-out"
+      },
+      "walks": {
+        "title": "Walks",
+        "description": "Recording and history of animal walks"
+      },
+      "medical": {
+        "title": "Medical Care",
+        "description": "Health records, quarantine, vaccinations and medications"
+      },
+      "feeding": {
+        "title": "Feeding",
+        "description": "Feeding plans, dosing and feeding logs"
+      },
+      "inventory": {
+        "title": "Inventory",
+        "description": "Inventory of medicines, food and supplies, stock tracking"
+      },
+      "tasks": {
+        "title": "Tasks",
+        "description": "Task management, assignment and completion tracking"
+      },
+      "calendar": {
+        "title": "Calendar",
+        "description": "Calendar of events: intakes, vet visits, planned adoptions"
+      },
+      "people": {
+        "title": "People",
+        "description": "Contacts, fosters, volunteers and relationships"
+      },
+      "chat": {
+        "title": "Messages",
+        "description": "Internal chat between organization members"
+      },
+      "adoptions": {
+        "title": "Adoptions",
+        "description": "Adoption process and pipeline management"
+      },
+      "intake": {
+        "title": "Intake",
+        "description": "Intake of new animals into the shelter"
+      },
+      "reports": {
+        "title": "Reports",
+        "description": "Statistics and overviews of shelter operations"
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "Organization settings, users, roles and preferences"
+      },
+      "help": {
+        "title": "Help",
+        "description": "Keyboard shortcuts and application guide"
+      },
+      "selectOrg": {
+        "title": "Select Organization",
+        "description": "Organization selection after login"
+      },
+      "login": {
+        "title": "Login",
+        "description": "System login using email and password"
+      }
     }
   },
   "search": {
-    "animals": "Animals",
-    "kennels": "Kennels",
-    "contacts": "Contacts",
-    "inventory": "Inventory",
+    "placeholder": "Search commands, animals, people...",
+    "commands": "Commands",
     "noResults": "No results found",
-    "typing": "Type at least 2 characters to search..."
+    "noResultsHint": "Try different keywords",
+    "emptyState": "Start typing to search",
+    "emptyStateHint": "Find commands, animals, and people",
+    "matchReason": {
+      "title": "title",
+      "keyword": "keyword",
+      "synonym": "synonym"
+    }
   },
   "intake": {
     "title": "Animal Intakes",
     "new": "New Intake",
     "reason": "Intake reason",
-"reasons": {
+    "reasons": {
       "found": "Found",
       "return": "Return from adoption",
       "surrender": "Owner surrender",
@@ -1714,7 +1768,15 @@
     "vetVisit": "Vet visit",
     "vetVisitComingSoon": "Vet visits coming soon",
     "noEvents": "No events this day",
-    "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    "weekdays": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    ]
   },
   "chat": {
     "title": "Messages",
@@ -1730,19 +1792,6 @@
       "loadConversations": "Failed to load conversations",
       "loadMessages": "Failed to load messages",
       "sendMessage": "Failed to send message"
-    }
-  },
-  "search": {
-    "placeholder": "Search commands, animals, people...",
-    "commands": "Commands",
-    "noResults": "No results found",
-    "noResultsHint": "Try different keywords",
-    "emptyState": "Start typing to search",
-    "emptyStateHint": "Find commands, animals, and people",
-    "matchReason": {
-      "title": "title",
-      "keyword": "keyword",
-      "synonym": "synonym"
     }
   },
   "shoppingList": {
@@ -1909,6 +1958,7 @@
     "back": "Back",
     "mapNearestThree": "3 nearest shelters",
     "tapForDetails": "Tap for details",
-    "mapUnavailable": "Map not available in Expo Go"
+    "mapUnavailable": "Map not available in Expo Go",
+    "call": "Call"
   }
 }

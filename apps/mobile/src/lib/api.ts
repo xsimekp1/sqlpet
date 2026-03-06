@@ -250,6 +250,8 @@ export interface NearbyShelter {
   distance_km: number;
   accepts_dogs: boolean | null;
   accepts_cats: boolean | null;
+  phone: string | null;
+  website: string | null;
 }
 
 export const publicApi = {
