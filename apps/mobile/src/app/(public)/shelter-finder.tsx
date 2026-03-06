@@ -167,7 +167,7 @@ export default function ShelterFinderScreen() {
       </View>
 
       {step === 'select' ? (
-        <>
+        <View style={styles.selectWrapper}>
           <View style={styles.selectContainer}>
             <Text style={styles.subtitle}>{t('shelterFinder.subtitle')}</Text>
 
@@ -202,7 +202,7 @@ export default function ShelterFinderScreen() {
             </TouchableOpacity>
           </View>
           <AdBanner isPremiumUser={isPremiumUser} />
-        </>
+        </View>
       ) : (
         <View style={styles.resultsContainer}>
           {/* Species selector tabs */}
@@ -339,8 +339,11 @@ const styles = StyleSheet.create({
   headerSpacer: {
     minWidth: 80,
   },
-  selectContainer: {
+  selectWrapper: {
     flex: 1,
+  },
+  selectContainer: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 32,
     gap: 16,
