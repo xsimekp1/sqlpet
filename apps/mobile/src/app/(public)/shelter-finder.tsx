@@ -71,19 +71,22 @@ export default function ShelterFinderScreen() {
   const [species, setSpecies] = useState<Species | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [locating, setLocating] = useState<Species | null>(null);
   const mapRef = useRef<InstanceType<typeof MapViewType>>(null);
 
   const handleSelectSpecies = async (s: Species) => {
+    if (locating) return;
     setSpecies(s);
     setLocationError(null);
-
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      setLocationError(t('shelterFinder.locationDenied'));
-      return;
-    }
+    setLocating(s);
 
     try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationError(t('shelterFinder.locationDenied'));
+        return;
+      }
+
       const loc = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
@@ -91,6 +94,8 @@ export default function ShelterFinderScreen() {
       setStep('results');
     } catch {
       setLocationError(t('shelterFinder.locationDenied'));
+    } finally {
+      setLocating(null);
     }
   };
 
@@ -177,29 +182,20 @@ export default function ShelterFinderScreen() {
               </View>
             )}
 
-            <TouchableOpacity
-              style={styles.speciesCard}
-              onPress={() => handleSelectSpecies('dog')}
-            >
-              <Text style={styles.speciesEmoji}>🐕</Text>
-              <Text style={styles.speciesLabel}>{t('shelterFinder.dog')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.speciesCard}
-              onPress={() => handleSelectSpecies('cat')}
-            >
-              <Text style={styles.speciesEmoji}>🐈</Text>
-              <Text style={styles.speciesLabel}>{t('shelterFinder.cat')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.speciesCard}
-              onPress={() => handleSelectSpecies('other')}
-            >
-              <Text style={styles.speciesEmoji}>🐾</Text>
-              <Text style={styles.speciesLabel}>{t('shelterFinder.other')}</Text>
-            </TouchableOpacity>
+            {(['dog', 'cat', 'other'] as Species[]).map((s) => (
+              <TouchableOpacity
+                key={s}
+                style={[styles.speciesCard, locating === s && styles.speciesCardActive]}
+                onPress={() => handleSelectSpecies(s)}
+                disabled={!!locating}
+              >
+                <Text style={styles.speciesEmoji}>
+                  {s === 'dog' ? '🐕' : s === 'cat' ? '🐈' : '🐾'}
+                </Text>
+                <Text style={styles.speciesLabel}>{t(`shelterFinder.${s}`)}</Text>
+                {locating === s && <ActivityIndicator size="small" color="#6B4EFF" />}
+              </TouchableOpacity>
+            ))}
           </View>
           <AdBanner isPremiumUser={isPremiumUser} />
         </View>
@@ -382,6 +378,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  speciesCardActive: {
+    borderColor: '#6B4EFF',
+    backgroundColor: '#F0ECFF',
   },
   speciesEmoji: {
     fontSize: 36,
