@@ -246,6 +246,7 @@ export default function ShelterFinderScreen() {
                       <MapView
                         ref={mapRef}
                         style={styles.map}
+                        provider="google"
                         initialRegion={{
                           latitude: location.lat,
                           longitude: location.lng,

@@ -11,7 +11,8 @@ export class MapErrorBoundary extends React.Component<
 > {
   state: State = { hasError: false };
 
-  static getDerivedStateFromError(): State {
+  static getDerivedStateFromError(error: Error): State {
+    console.error('[MapErrorBoundary] caught:', error?.message);
     return { hasError: true };
   }
 
