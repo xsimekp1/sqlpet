@@ -1715,7 +1715,17 @@
     "contacts": "Kontakty",
     "inventory": "Sklad",
     "noResults": "Žádné výsledky",
-    "typing": "Napište alespoň 2 znaky pro vyhledávání..."
+    "typing": "Napište alespoň 2 znaky pro vyhledávání...",
+    "placeholder": "Hledat akce, zvířata, lidi...",
+    "commands": "Akce",
+    "noResultsHint": "Zkuste jiné klíčové slovo",
+    "emptyState": "Začněte psát pro vyhledávání",
+    "emptyStateHint": "Najděte akce, zvířata a lidi",
+    "matchReason": {
+      "title": "název",
+      "keyword": "klíčové slovo",
+      "synonym": "synonymum"
+    }
   },
   "intake": {
     "title": "Příjmy zvířat",
@@ -1812,19 +1822,6 @@
       "loadConversations": "Nepodařilo se načíst konverzace",
       "loadMessages": "Nepodařilo se načíst zprávy",
       "sendMessage": "Nepodařilo se odeslat zprávu"
-    }
-  },
-  "search": {
-    "placeholder": "Hledat akce, zvířata, lidi...",
-    "commands": "Akce",
-    "noResults": "Nic nenalezeno",
-    "noResultsHint": "Zkuste jiné klíčové slovo",
-    "emptyState": "Začněte psát pro vyhledávání",
-    "emptyStateHint": "Najděte akce, zvířata a lidi",
-    "matchReason": {
-      "title": "název",
-      "keyword": "klíčové slovo",
-      "synonym": "synonymum"
     }
   },
   "shoppingList": {

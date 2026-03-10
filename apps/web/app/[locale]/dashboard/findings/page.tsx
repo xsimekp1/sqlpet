@@ -242,52 +242,54 @@ export default function FindingsPage() {
         <TabsContent value="map" className="mt-4">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Map - left side, square */}
-            <div className="lg:w-[60%] lg:max-w-[600px] aspect-square">
-              <Card className="h-full min-h-[300px]">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Mapa</CardTitle>
-                    <div className="flex gap-1">
-                      <Button
-                        variant={showHeatMap ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setShowHeatMap(!showHeatMap)}
-                      >
-                        Heat
-                      </Button>
-                      <Button
-                        variant={showShelters ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setShowShelters(!showShelters)}
-                      >
-                        Útulky
-                      </Button>
+            <div className="lg:w-[60%] lg:max-w-[600px] flex flex-col gap-2">
+              <div className="aspect-square">
+                <Card className="h-full min-h-[300px]">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">Mapa</CardTitle>
+                      <div className="flex gap-1">
+                        <Button
+                          variant={showHeatMap ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setShowHeatMap(!showHeatMap)}
+                        >
+                          Heat
+                        </Button>
+                        <Button
+                          variant={showShelters ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setShowShelters(!showShelters)}
+                        >
+                          Útulky
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-2 h-[calc(100%-60px)]">
-                  <div className="w-full h-full">
-                    <InteractiveMap
-                      findings={findingsWithLocation}
-                      organization={mapData?.organization}
-                      gpsCenter={gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : null}
-                      radius={radius}
-                      onMapClick={handleMapClick}
-                      showHeatMap={showHeatMap}
-                      showShelters={showShelters}
-                    />
-                  </div>
-                </CardContent>
-                {/* Legend - mobile only, below map */}
-                <div className="sm:hidden px-3 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground border-t pt-2">
-                  <span>🐕 Pes</span>
-                  <span>🐈 Kočka</span>
-                  <span>🐰 Králík</span>
-                  <span>🐦 Pták</span>
-                  <span>🐾 Jiné</span>
-                  <span>🏠 Útulek</span>
-                </div>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="p-2 h-[calc(100%-60px)]">
+                    <div className="w-full h-full">
+                      <InteractiveMap
+                        findings={findingsWithLocation}
+                        organization={mapData?.organization}
+                        gpsCenter={gpsLat && gpsLng ? { lat: gpsLat, lng: gpsLng } : null}
+                        radius={radius}
+                        onMapClick={handleMapClick}
+                        showHeatMap={showHeatMap}
+                        showShelters={showShelters}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              {/* Legend - mobile only, below map card */}
+              <div className="sm:hidden flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground px-1">
+                <span>🐕 Pes</span>
+                <span>🐈 Kočka</span>
+                <span>🐰 Králík</span>
+                <span>🐦 Pták</span>
+                <span>🐾 Jiné</span>
+                <span>🏠 Útulek</span>
+              </div>
             </div>
             
             {/* Sidebar - right side */}

@@ -59,6 +59,8 @@ export function useShortcutHint(config: ShortcutHintConfig) {
   }, []);
 
   const trackClick = useCallback(() => {
+    // Don't show keyboard shortcut hints on touch devices
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     if (!isEnabled() || !stateRef.current) return;
 
     const now = Date.now();
