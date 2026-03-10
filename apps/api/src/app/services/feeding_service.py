@@ -10,7 +10,7 @@ import uuid
 from src.app.models.feeding_plan import FeedingPlan
 from src.app.models.feeding_log import FeedingLog
 from src.app.models.food import Food
-from src.app.models.task import Task, TaskType, TaskStatus
+from src.app.models.task import Task, TaskType, TaskStatus, TaskPriority
 from src.app.services.audit_service import AuditService
 from src.app.core.config import settings
 
@@ -303,19 +303,9 @@ class FeedingService:
         """
         Idempotently generate feeding tasks within the specified time window.
 
-        Algorithm for each active plan:
-        - For each day in [from_dt.date, to_dt.date]:
-          - For each time in schedule_json["times"]:
-            - due_at = date + time
-            - Skip if outside [from_dt, to_dt]
-            - Skip if task already exists (by plan_id + due_at)
-            - Create task
+        Optimized: single query for existing tasks + batch insert (no per-task flush/audit).
         """
-        from src.app.services.task_service import TaskService
-
-        task_service = TaskService(self.db)
-        tasks_created = []
-
+        # 1. Load all active plans with their animals
         stmt = (
             select(FeedingPlan)
             .where(
@@ -330,6 +320,30 @@ class FeedingService:
         result = await self.db.execute(stmt)
         plans = result.scalars().all()
 
+        if not plans:
+            return []
+
+        # 2. Load all existing feeding tasks for this window in ONE query
+        existing_stmt = select(Task.task_metadata, Task.due_at).where(
+            and_(
+                Task.organization_id == organization_id,
+                Task.type == TaskType.FEEDING,
+                Task.due_at >= from_dt,
+                Task.due_at <= to_dt,
+                Task.deleted_at.is_(None),
+            )
+        )
+        existing_result = await self.db.execute(existing_stmt)
+        existing_rows = existing_result.all()
+
+        # Build a set of (feeding_plan_id, due_at) for O(1) lookup
+        existing_keys: set[tuple[str, datetime]] = set()
+        for metadata, due_at in existing_rows:
+            if metadata and "feeding_plan_id" in metadata:
+                existing_keys.add((metadata["feeding_plan_id"], due_at))
+
+        # 3. Compute which tasks need to be created
+        tasks_to_create: List[Task] = []
         current_date = from_dt.date()
         end_date = to_dt.date()
 
@@ -357,7 +371,10 @@ class FeedingService:
                     if due_at < from_dt or due_at > to_dt:
                         continue
 
-                    # Calculate per-meal amount
+                    # Idempotency check — pure Python, no DB query
+                    if (str(plan.id), due_at) in existing_keys:
+                        continue
+
                     if amounts and idx < len(amounts):
                         amount_g = float(amounts[idx])
                     elif plan.amount_g and schedule_times:
@@ -365,57 +382,47 @@ class FeedingService:
                     else:
                         amount_g = None
 
-                    # Idempotency check
-                    existing_stmt = select(Task).where(
-                        and_(
-                            Task.organization_id == organization_id,
-                            Task.type == TaskType.FEEDING,
-                            Task.related_entity_id == plan.animal_id,
-                            Task.task_metadata["feeding_plan_id"].astext == str(plan.id),
-                            Task.due_at == due_at,
-                            Task.deleted_at.is_(None),
-                        )
-                    )
-                    existing = (await self.db.execute(existing_stmt)).scalar_one_or_none()
-                    if existing:
-                        continue
-
-                    try:
-                        animal_name = plan.animal.name if plan.animal else "zvíře"
-                        task = await task_service.create_task(
-                            organization_id=organization_id,
-                            created_by_id=None,
-                            title=f"Krmení {animal_name}",
-                            description=(
-                                f"Krmení v {scheduled_time}. Množství: {amount_g}g"
-                                if amount_g
-                                else f"Krmení v {scheduled_time}"
+                    animal_name = plan.animal.name if plan.animal else "zvíře"
+                    task = Task(
+                        id=uuid.uuid4(),
+                        organization_id=organization_id,
+                        created_by_id=None,
+                        title=f"Krmení {animal_name}",
+                        description=(
+                            f"Krmení v {scheduled_time}. Množství: {amount_g}g"
+                            if amount_g
+                            else f"Krmení v {scheduled_time}"
+                        ),
+                        type=TaskType.FEEDING,
+                        priority=TaskPriority.MEDIUM,
+                        status=TaskStatus.PENDING,
+                        due_at=due_at,
+                        task_metadata={
+                            "feeding_plan_id": str(plan.id),
+                            "animal_id": str(plan.animal_id),
+                            "scheduled_time": scheduled_time,
+                            "amount_g": amount_g,
+                            "inventory_item_id": (
+                                str(plan.inventory_item_id)
+                                if plan.inventory_item_id
+                                else None
                             ),
-                            task_type=TaskType.FEEDING,
-                            due_at=due_at,
-                            task_metadata={
-                                "feeding_plan_id": str(plan.id),
-                                "animal_id": str(plan.animal_id),
-                                "scheduled_time": scheduled_time,
-                                "amount_g": amount_g,
-                                "inventory_item_id": (
-                                    str(plan.inventory_item_id)
-                                    if plan.inventory_item_id
-                                    else None
-                                ),
-                            },
-                            related_entity_type="animal",
-                            related_entity_id=plan.animal_id,
-                        )
-                        tasks_created.append(task)
-                    except Exception as e:
-                        if "uq_feeding_task_window" in str(e):
-                            continue
-                        raise
+                        },
+                        related_entity_type="animal",
+                        related_entity_id=plan.animal_id,
+                    )
+                    tasks_to_create.append(task)
+                    # Track in-memory to avoid duplicates within this batch
+                    existing_keys.add((str(plan.id), due_at))
 
             current_date += timedelta(days=1)
 
-        return tasks_created
+        # 4. Batch insert — one flush for all new tasks
+        if tasks_to_create:
+            self.db.add_all(tasks_to_create)
+            await self.db.flush()
+
+        return tasks_to_create
 
     # -------------------------------------------------------------------------
     # Feeding log
