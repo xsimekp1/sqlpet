@@ -203,23 +203,20 @@ export default function HotelReservationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Hotelové rezervace</h1>
-          <p className="text-muted-foreground">Správa hotelových pobytů pro zvířata</p>
+          <p className="text-muted-foreground hidden md:block">Správa hotelových pobytů pro zvířata</p>
         </div>
-        <Link href="/dashboard/hotel/reservations/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Nová rezervace
-          </Button>
-        </Link>
-      </div>
-
-      <div className="flex gap-4 items-center justify-between">
-        <div className="flex gap-4 items-center">
+        <div className="flex flex-col items-end gap-2">
+          <Link href="/dashboard/hotel/reservations/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nová rezervace
+            </Button>
+          </Link>
           <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Všechny statusy" />
             </SelectTrigger>
             <SelectContent>
@@ -286,9 +283,11 @@ export default function HotelReservationsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(res.id)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+                        {res.status !== 'checked_out' && res.status !== 'cancelled' && (
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(res.id)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
                         {res.status === 'pending' || res.status === 'confirmed' ? (
                           <>
                             <Button size="sm" variant="outline" onClick={() => handleCheckin(res.id)}>

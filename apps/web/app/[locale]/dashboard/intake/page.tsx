@@ -148,7 +148,7 @@ export default function IntakePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Příjmy zvířat</h1>
-          <p className="text-muted-foreground mt-1">Přehled všech příjmů zvířat do útulku</p>
+          <p className="text-muted-foreground mt-1 hidden md:block">Přehled všech příjmů zvířat do útulku</p>
         </div>
         <Link href="/dashboard/intake/new">
           <Button>

@@ -125,22 +125,24 @@ export default function PurchasesPage() {
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label>{t('filters.dateFrom')}</Label>
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
-        </div>
+        <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-2 md:contents md:gap-4">
+          <div className="space-y-2">
+            <Label>{t('filters.dateFrom')}</Label>
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label>{t('filters.dateTo')}</Label>
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
+          <div className="space-y-2">
+            <Label>{t('filters.dateTo')}</Label>
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className="flex items-end">

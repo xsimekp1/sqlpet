@@ -159,6 +159,8 @@ export default function KennelDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [copying, setCopying] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [completingTaskIds, setCompletingTaskIds] = useState<Set<string>>(new Set());
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -364,12 +366,20 @@ export default function KennelDetailPage() {
   };
 
   const handleCompleteTask = async (taskId: string) => {
+    setCompletingTaskIds(prev => new Set(prev).add(taskId));
     try {
       const updated = await ApiClient.completeTask(taskId);
       setTasks(prev => prev.map(t => t.id === taskId ? updated : t));
       toast.success('Úkol dokončen');
     } catch (e: any) {
-      toast.error(e.message || 'Chyba');
+      const msg = e.message || '';
+      if (msg.toLowerCase().includes('already completed')) {
+        toast.warning('Úkol již byl dokončen');
+      } else {
+        toast.error(msg || 'Chyba při dokončování úkolu');
+      }
+    } finally {
+      setCompletingTaskIds(prev => { const n = new Set(prev); n.delete(taskId); return n; });
     }
   };
 
@@ -593,9 +603,9 @@ export default function KennelDetailPage() {
                 </div>
               ) : kennel.allowed_species && kennel.allowed_species.length > 0 ? (
                 <div className="flex items-center justify-between">
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     {kennel.allowed_species.map(s => (
-                      <span key={s} className={`text-lg ${SPECIES_CONFIG[s]?.bg.split(' ')[0]}`}>
+                      <span key={s} className={`text-2xl ${SPECIES_CONFIG[s]?.bg.split(' ')[0]}`}>
                         {SPECIES_CONFIG[s]?.emoji}
                       </span>
                     ))}
@@ -790,7 +800,7 @@ export default function KennelDetailPage() {
                         <th className="text-left p-2 font-medium">Od</th>
                         <th className="text-left p-2 font-medium">Do</th>
                         <th className="text-left p-2 font-medium">Délka</th>
-                        <th className="text-left p-2 font-medium">Důvod</th>
+                        <th className="text-left p-2 font-medium hidden md:table-cell">Důvod</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -828,7 +838,7 @@ export default function KennelDetailPage() {
                           <td className="p-2 text-muted-foreground whitespace-nowrap">
                             {formatDuration(stay.start_at, stay.end_at)}
                           </td>
-                          <td className="p-2 text-muted-foreground">{stay.reason ?? '—'}</td>
+                          <td className="p-2 text-muted-foreground hidden md:table-cell">{stay.reason ?? '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -859,9 +869,10 @@ export default function KennelDetailPage() {
                   {tasks.map(task => (
                     <div
                       key={task.id}
-                      className={`flex items-start justify-between gap-3 p-3 rounded-lg border transition-opacity ${
+                      className={`flex items-start justify-between gap-3 p-3 rounded-lg border transition-opacity cursor-pointer hover:bg-muted/40 ${
                         task.status === 'completed' || task.status === 'cancelled' ? 'opacity-50' : ''
                       }`}
+                      onClick={() => setEditingTask(task)}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -886,10 +897,14 @@ export default function KennelDetailPage() {
                           size="sm"
                           variant="outline"
                           className="shrink-0 text-green-600 hover:text-green-700"
-                          onClick={() => handleCompleteTask(task.id)}
+                          disabled={completingTaskIds.has(task.id)}
+                          onClick={(e) => { e.stopPropagation(); handleCompleteTask(task.id); }}
                         >
-                          <CheckCircle2 className="h-4 w-4 mr-1" />
-                          Dokončit
+                          {completingTaskIds.has(task.id) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <><CheckCircle2 className="h-4 w-4 mr-1" />Dokončit</>
+                          )}
                         </Button>
                       )}
                     </div>
@@ -906,6 +921,14 @@ export default function KennelDetailPage() {
         onOpenChange={setTaskDialogOpen}
         kennelId={kennelId}
         onCreated={task => setTasks(prev => [task, ...prev])}
+      />
+      <KennelTaskDialog
+        open={!!editingTask}
+        onOpenChange={open => { if (!open) setEditingTask(null); }}
+        kennelId={kennelId}
+        editTask={editingTask ?? undefined}
+        onCreated={() => {}}
+        onUpdated={updated => setTasks(prev => prev.map(t => t.id === updated.id ? updated : t))}
       />
 
       {/* QR Code Dialog */}

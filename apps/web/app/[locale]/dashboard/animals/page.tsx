@@ -277,25 +277,29 @@ export default function AnimalsPage() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Button
             variant={selectMode ? 'default' : 'outline'}
+            size="icon"
+            className="md:w-auto md:px-4"
             onClick={() => { setSelectMode(v => !v); setSelectedIds(new Set()); }}
           >
             {selectMode ? (
-              <><CheckSquare className="h-4 w-4 mr-2" />Výběr zapnutý</>
+              <><CheckSquare className="h-4 w-4 md:mr-2" /><span className="hidden md:inline">Výběr zapnutý</span></>
             ) : (
-              <><Square className="h-4 w-4 mr-2" />Vybrat</>
+              <><Square className="h-4 w-4 md:mr-2" /><span className="hidden md:inline">Vybrat</span></>
             )}
           </Button>
           <Button
             variant="outline"
+            size="icon"
+            className="md:w-auto md:px-4"
             onClick={() => setView(v => v === 'grid' ? 'table' : 'grid')}
           >
             {view === 'grid' ? (
-              <><List className="h-4 w-4 mr-2" />{t('animals.view.table')}</>
+              <><List className="h-4 w-4 md:mr-2" /><span className="hidden md:inline">{t('animals.view.table')}</span></>
             ) : (
-              <><LayoutGrid className="h-4 w-4 mr-2" />{t('animals.view.grid')}</>
+              <><LayoutGrid className="h-4 w-4 md:mr-2" /><span className="hidden md:inline">{t('animals.view.grid')}</span></>
             )}
           </Button>
           <div className="hidden md:inline-flex">
@@ -314,9 +318,9 @@ export default function AnimalsPage() {
               </Tooltip>
             </TooltipProvider>
           </div>
-          <Button className="gap-2" onClick={() => setCreateChoiceOpen(true)}>
+          <Button size="icon" className="md:w-auto md:px-4 md:gap-2" onClick={() => setCreateChoiceOpen(true)}>
             <Plus className="h-4 w-4" />
-            {t('animals.createChoice.withIntake')}
+            <span className="hidden md:inline">{t('animals.createChoice.withIntake')}</span>
           </Button>
         </div>
       </div>
@@ -939,7 +943,7 @@ export default function AnimalsPage() {
 
       {/* Export button - bottom right */}
       {canExport && animals.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-20 md:bottom-6 right-6 z-50">
           <Button
             variant="outline"
             size="sm"

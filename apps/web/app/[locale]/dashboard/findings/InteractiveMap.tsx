@@ -304,34 +304,16 @@ export default function InteractiveMap({
         ))}
       </MapContainer>
 
-      {/* Legend */}
-      <div className="absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg border text-xs space-y-1 z-[1000]">
+      {/* Legend - desktop only (inside map) */}
+      <div className="hidden sm:block absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg border text-xs space-y-1 z-[1000]">
         <div className="font-semibold mb-2">Legenda</div>
-        <div className="flex items-center gap-2">
-          <span>🐕</span>
-          <span>Pes</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>🐈</span>
-          <span>Kočka</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>🐰</span>
-          <span>Králík</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>🐦</span>
-          <span>Pták</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>🐾</span>
-          <span>Jiné</span>
-        </div>
+        <div className="flex items-center gap-2"><span>🐕</span><span>Pes</span></div>
+        <div className="flex items-center gap-2"><span>🐈</span><span>Kočka</span></div>
+        <div className="flex items-center gap-2"><span>🐰</span><span>Králík</span></div>
+        <div className="flex items-center gap-2"><span>🐦</span><span>Pták</span></div>
+        <div className="flex items-center gap-2"><span>🐾</span><span>Jiné</span></div>
         <div className="border-t pt-1 mt-1">
-          <div className="flex items-center gap-2">
-            <span>🏠</span>
-            <span>Útulek</span>
-          </div>
+          <div className="flex items-center gap-2"><span>🏠</span><span>Útulek</span></div>
         </div>
       </div>
     </div>

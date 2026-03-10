@@ -57,38 +57,65 @@ interface KennelTaskDialogProps {
   onOpenChange: (open: boolean) => void;
   kennelId: string;
   onCreated: (task: Task) => void;
+  editTask?: Task;
+  onUpdated?: (task: Task) => void;
 }
 
-export function KennelTaskDialog({ open, onOpenChange, kennelId, onCreated }: KennelTaskDialogProps) {
+export function KennelTaskDialog({ open, onOpenChange, kennelId, onCreated, editTask, onUpdated }: KennelTaskDialogProps) {
   const t = useTranslations('kennels');
   const [submitting, setSubmitting] = useState(false);
+  const isEdit = !!editTask;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      title: '',
-      type: 'general',
-      priority: 'medium',
-      due_at: '',
-      description: '',
+      title: editTask?.title ?? '',
+      type: (editTask?.type as any) ?? 'general',
+      priority: (editTask?.priority as any) ?? 'medium',
+      due_at: editTask?.due_at ? editTask.due_at.split('T')[0] : '',
+      description: editTask?.description ?? '',
     },
+  });
+
+  // Reset form when editTask changes
+  const { reset } = form;
+  useState(() => {
+    reset({
+      title: editTask?.title ?? '',
+      type: (editTask?.type as any) ?? 'general',
+      priority: (editTask?.priority as any) ?? 'medium',
+      due_at: editTask?.due_at ? editTask.due_at.split('T')[0] : '',
+      description: editTask?.description ?? '',
+    });
   });
 
   const handleSubmit = async (values: FormValues) => {
     setSubmitting(true);
     try {
-      const task = await ApiClient.createTask({
-        title: values.title,
-        type: values.type,
-        priority: values.priority,
-        due_at: values.due_at || undefined,
-        description: values.description || undefined,
-        related_entity_type: 'kennel',
-        related_entity_id: kennelId,
-      });
-      toast.success(t('task.success'));
-      form.reset();
-      onCreated(task);
+      if (isEdit && editTask) {
+        const task = await ApiClient.updateTask(editTask.id, {
+          title: values.title,
+          type: values.type,
+          priority: values.priority,
+          due_at: values.due_at || undefined,
+          description: values.description || undefined,
+        });
+        toast.success('Úkol upraven');
+        onUpdated?.(task);
+      } else {
+        const task = await ApiClient.createTask({
+          title: values.title,
+          type: values.type,
+          priority: values.priority,
+          due_at: values.due_at || undefined,
+          description: values.description || undefined,
+          related_entity_type: 'kennel',
+          related_entity_id: kennelId,
+        });
+        toast.success(t('task.success'));
+        form.reset();
+        onCreated(task);
+      }
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e.message || t('task.error'));
@@ -103,10 +130,10 @@ export function KennelTaskDialog({ open, onOpenChange, kennelId, onCreated }: Ke
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5" />
-            {t('task.dialogTitle')}
+            {isEdit ? 'Upravit úkol' : t('task.dialogTitle')}
           </DialogTitle>
           <DialogDescription>
-            Vytvořte nový úkol pro tento kotec
+            {isEdit ? 'Upravte detaily úkolu' : 'Vytvořte nový úkol pro tento kotec'}
           </DialogDescription>
         </DialogHeader>
 
@@ -226,7 +253,7 @@ export function KennelTaskDialog({ open, onOpenChange, kennelId, onCreated }: Ke
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {t('task.submit')}
+                {isEdit ? 'Uložit změny' : t('task.submit')}
               </Button>
             </DialogFooter>
           </form>

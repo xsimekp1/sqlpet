@@ -881,6 +881,11 @@
       "female": "Female",
       "unknown": "Unknown"
     },
+    "name": "Name",
+    "breed": "Breed",
+    "age": "Age",
+    "kennel": "Kennel",
+    "intakeDate": "Intake",
     "new": {
       "title": "Add New Animal",
       "subtitle": "Register a new animal in the shelter",

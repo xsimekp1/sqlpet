@@ -156,7 +156,7 @@ export function GlobalSearchTrigger({ className }: { className?: string }) {
                 placeholder={t('topbar.search')}
                 className="border-0 shadow-none focus-visible:ring-0 text-base p-0 h-auto"
               />
-              <kbd className="text-xs text-muted-foreground border rounded px-1">Esc</kbd>
+              <kbd className="hidden sm:inline text-xs text-muted-foreground border rounded px-1">Esc</kbd>
             </div>
 
             {/* Results */}

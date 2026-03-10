@@ -124,17 +124,17 @@ export default function InventoryPage() {
             {t('description')}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Link href="/dashboard/inventory/purchases">
-            <Button variant="outline">
-              <Package className="h-4 w-4 mr-2" />
-              {t('viewPurchases')}
+            <Button variant="outline" size="icon" className="md:w-auto md:px-4">
+              <Package className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">{t('viewPurchases')}</span>
             </Button>
           </Link>
           <Link href="/dashboard/inventory/items/new">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              {t('createItem')}
+            <Button size="icon" className="md:w-auto md:px-4">
+              <Plus className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">{t('createItem')}</span>
             </Button>
           </Link>
         </div>

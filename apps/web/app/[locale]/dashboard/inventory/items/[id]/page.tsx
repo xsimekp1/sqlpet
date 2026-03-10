@@ -333,131 +333,139 @@ export default function InventoryItemDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/inventory">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-muted text-muted-foreground shrink-0">
-          {CATEGORY_ICONS[item.category] ?? <Package className="h-8 w-8" />}
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">{item.name}</h1>
-            {getCategoryBadge(item.category)}
-            {onTheWayData && onTheWayData.quantity_on_the_way > 0 && (
-              earliestDelivery ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 cursor-default">
-                        <Truck className="h-3 w-3 mr-1" />
-                        {formatQuantity(onTheWayData.quantity_on_the_way, item.unit)} {t('onTheWay')}
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      {t('expectedDelivery')}: {formatDate(earliestDelivery)}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                  <Truck className="h-3 w-3 mr-1" />
-                  {formatQuantity(onTheWayData.quantity_on_the_way, item.unit)} {t('onTheWay')}
-                </Badge>
-              )
-            )}
+      <div className="flex flex-col gap-3">
+        {/* Row 1: back + icon + name + badges */}
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard/inventory">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-muted text-muted-foreground shrink-0">
+            {CATEGORY_ICONS[item.category] ?? <Package className="h-7 w-7" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight truncate">{item.name}</h1>
+            <div className="flex items-center gap-2 flex-wrap mt-0.5">
+              {getCategoryBadge(item.category)}
+              {onTheWayData && onTheWayData.quantity_on_the_way > 0 && (
+                earliestDelivery ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 cursor-default">
+                          <Truck className="h-3 w-3 mr-1" />
+                          {formatQuantity(onTheWayData.quantity_on_the_way, item.unit)} {t('onTheWay')}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {t('expectedDelivery')}: {formatDate(earliestDelivery)}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                    <Truck className="h-3 w-3 mr-1" />
+                    {formatQuantity(onTheWayData.quantity_on_the_way, item.unit)} {t('onTheWay')}
+                  </Badge>
+                )
+              )}
+            </div>
           </div>
         </div>
-        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-              <Trash2 className="h-4 w-4 mr-1.5" />
-              {t('delete')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t('deleteItem')}</DialogTitle>
-              <DialogDescription>
-                {t('deleteItemConfirm', { name: item.name })}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>{t('cancel')}</Button>
-              <Button
-                variant="destructive"
-                onClick={() => deleteItemMutation.mutate()}
-                disabled={deleteItemMutation.isPending}
-              >
-                {deleteItemMutation.isPending ? t('deleting') : t('delete')}
+
+        {/* Row 2: action buttons */}
+        <div className="flex items-center gap-2 ml-1">
+          {/* Delete Dialog */}
+          <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                <Trash2 className="h-4 w-4 mr-1.5" />
+                {t('delete')}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Edit Button */}
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Pencil className="h-4 w-4 mr-1.5" />
-              {t('actions.editItem')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t('actions.editItem')}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">{t('fields.name')}</Label>
-                <Input
-                  id="edit-name"
-                  defaultValue={item?.name}
-                  onChange={(e) => {}}
-                />
-              </div>
-              {item?.category === 'food' && (
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{t('deleteItem')}</DialogTitle>
+                <DialogDescription>
+                  {t('deleteItemConfirm', { name: item.name })}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>{t('cancel')}</Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => deleteItemMutation.mutate()}
+                  disabled={deleteItemMutation.isPending}
+                >
+                  {deleteItemMutation.isPending ? t('deleting') : t('delete')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Dialog */}
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Pencil className="h-4 w-4 mr-1.5" />
+                {t('actions.editItem')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{t('actions.editItem')}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-kcal">{t('fields.kcalPer100g')}</Label>
+                  <Label htmlFor="edit-name">{t('fields.name')}</Label>
                   <Input
-                    id="edit-kcal"
-                    type="number"
-                    defaultValue={item?.kcal_per_100g || ''}
-                    placeholder="např. 350"
+                    id="edit-name"
+                    defaultValue={item?.name}
+                    onChange={(e) => {}}
                   />
                 </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="edit-reorder">{t('fields.reorderThreshold')}</Label>
-                <Input
-                  id="edit-reorder"
-                  type="number"
-                  defaultValue={item?.reorder_threshold || ''}
-                />
+                {item?.category === 'food' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-kcal">{t('fields.kcalPer100g')}</Label>
+                    <Input
+                      id="edit-kcal"
+                      type="number"
+                      defaultValue={item?.kcal_per_100g || ''}
+                      placeholder="např. 350"
+                    />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="edit-reorder">{t('fields.reorderThreshold')}</Label>
+                  <Input
+                    id="edit-reorder"
+                    type="number"
+                    defaultValue={item?.reorder_threshold || ''}
+                  />
+                </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditOpen(false)}>{t('cancel')}</Button>
-              <Button
-                onClick={() => {
-                  const name = (document.getElementById('edit-name') as HTMLInputElement).value;
-                  const kcal = (document.getElementById('edit-kcal') as HTMLInputElement).value;
-                  const reorder = (document.getElementById('edit-reorder') as HTMLInputElement).value;
-                  editItemMutation.mutate({
-                    name: name || undefined,
-                    kcal_per_100g: kcal ? Number(kcal) : undefined,
-                    reorder_threshold: reorder ? Number(reorder) : undefined,
-                  });
-                }}
-                disabled={editItemMutation.isPending}
-              >
-                {editItemMutation.isPending ? t('messages.saving') : t('actions.editItem')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditOpen(false)}>{t('cancel')}</Button>
+                <Button
+                  onClick={() => {
+                    const name = (document.getElementById('edit-name') as HTMLInputElement).value;
+                    const kcal = (document.getElementById('edit-kcal') as HTMLInputElement).value;
+                    const reorder = (document.getElementById('edit-reorder') as HTMLInputElement).value;
+                    editItemMutation.mutate({
+                      name: name || undefined,
+                      kcal_per_100g: kcal ? Number(kcal) : undefined,
+                      reorder_threshold: reorder ? Number(reorder) : undefined,
+                    });
+                  }}
+                  disabled={editItemMutation.isPending}
+                >
+                  {editItemMutation.isPending ? t('messages.saving') : t('actions.editItem')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Item Info Cards - Compact */}
@@ -813,7 +821,6 @@ export default function InventoryItemDetailPage() {
         <Textarea
           value={notesValue}
           onChange={(e) => setNotesValue(e.target.value)}
-          placeholder={t('fields.notesPlaceholder')}
           className="resize-none min-h-[80px]"
         />
       </div>

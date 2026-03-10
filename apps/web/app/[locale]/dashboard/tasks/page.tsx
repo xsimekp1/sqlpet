@@ -341,7 +341,7 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24 md:pb-0">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Úkoly</h1>
@@ -355,80 +355,78 @@ export default function TasksPage() {
 
       {/* Inline new-task form */}
       {showNewTaskForm && (
-        <div className="flex gap-2 items-center border rounded-lg p-3 bg-muted/30">
+        <div className="flex flex-col gap-2 border rounded-lg p-3 bg-muted/30">
           <Input
             placeholder="Název úkolu..."
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCreateTask()}
-            className="flex-1"
+            className="w-full"
             autoFocus
           />
-          <Select
-            value={newTaskPriority}
-            onValueChange={(v) => setNewTaskPriority(v as 'low' | 'medium' | 'high')}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">Nízká</SelectItem>
-              <SelectItem value="medium">Střední</SelectItem>
-              <SelectItem value="high">Vysoká</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            onClick={handleCreateTask}
-            disabled={!newTaskTitle.trim() || createTaskMutation.isPending}
-          >
-            Přidat
-          </Button>
-          <Button variant="outline" onClick={() => { setShowNewTaskForm(false); setNewTaskTitle(''); }}>
-            Zrušit
-          </Button>
+          <div className="flex gap-2 items-center">
+            <Select
+              value={newTaskPriority}
+              onValueChange={(v) => setNewTaskPriority(v as 'low' | 'medium' | 'high')}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Nízká</SelectItem>
+                <SelectItem value="medium">Střední</SelectItem>
+                <SelectItem value="high">Vysoká</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={handleCreateTask}
+              disabled={!newTaskTitle.trim() || createTaskMutation.isPending}
+            >
+              Přidat
+            </Button>
+            <Button variant="outline" onClick={() => { setShowNewTaskForm(false); setNewTaskTitle(''); }}>
+              Zrušit
+            </Button>
+          </div>
         </div>
       )}
 
       {/* Filters — instant frontend filtering, no API calls */}
-      <div className="flex gap-4">
-        <div className="w-48">
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value as TaskStatus)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Filtr stavu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Aktivní (čeká + probíhá)</SelectItem>
-              <SelectItem value="all">Všechny stavy</SelectItem>
-              <SelectItem value="pending">Čeká</SelectItem>
-              <SelectItem value="in_progress">Probíhá</SelectItem>
-              <SelectItem value="completed">Splněno</SelectItem>
-              <SelectItem value="cancelled">Zrušeno</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="flex flex-wrap gap-2">
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => setStatusFilter(value as TaskStatus)}
+        >
+          <SelectTrigger className="w-36 md:w-48">
+            <SelectValue placeholder="Filtr stavu" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">Aktivní (čeká + probíhá)</SelectItem>
+            <SelectItem value="all">Všechny stavy</SelectItem>
+            <SelectItem value="pending">Čeká</SelectItem>
+            <SelectItem value="in_progress">Probíhá</SelectItem>
+            <SelectItem value="completed">Splněno</SelectItem>
+            <SelectItem value="cancelled">Zrušeno</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <div className="w-48">
-          <Select
-            value={typeFilter}
-            onValueChange={(value) => setTypeFilter(value as TaskType)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Filtr typu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Všechny typy</SelectItem>
-              <SelectItem value="general">Obecný</SelectItem>
-              <SelectItem value="feeding">Krmení</SelectItem>
-              <SelectItem value="medical">Medicínský</SelectItem>
-              <SelectItem value="cleaning">Úklid</SelectItem>
-              <SelectItem value="maintenance">Údržba</SelectItem>
-              <SelectItem value="administrative">Administrativní</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          value={typeFilter}
+          onValueChange={(value) => setTypeFilter(value as TaskType)}
+        >
+          <SelectTrigger className="w-36 md:w-48">
+            <SelectValue placeholder="Filtr typu" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Všechny typy</SelectItem>
+            <SelectItem value="general">Obecný</SelectItem>
+            <SelectItem value="feeding">Krmení</SelectItem>
+            <SelectItem value="medical">Medicínský</SelectItem>
+            <SelectItem value="cleaning">Úklid</SelectItem>
+            <SelectItem value="maintenance">Údržba</SelectItem>
+            <SelectItem value="administrative">Administrativní</SelectItem>
+          </SelectContent>
+        </Select>
 
         <Button
           variant={prioritySort ? 'default' : 'outline'}
@@ -441,7 +439,7 @@ export default function TasksPage() {
         </Button>
 
         {totalTasks > 0 && (
-          <div className="flex items-center text-sm text-muted-foreground">
+          <div className="flex items-center text-sm text-muted-foreground ml-auto">
             {totalTasks} úkolů celkem
           </div>
         )}

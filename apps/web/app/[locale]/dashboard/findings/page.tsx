@@ -222,7 +222,7 @@ export default function FindingsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('description')}</p>
+          <p className="text-muted-foreground hidden md:block">{t('description')}</p>
         </div>
       </div>
 
@@ -278,6 +278,15 @@ export default function FindingsPage() {
                     />
                   </div>
                 </CardContent>
+                {/* Legend - mobile only, below map */}
+                <div className="sm:hidden px-3 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground border-t pt-2">
+                  <span>🐕 Pes</span>
+                  <span>🐈 Kočka</span>
+                  <span>🐰 Králík</span>
+                  <span>🐦 Pták</span>
+                  <span>🐾 Jiné</span>
+                  <span>🏠 Útulek</span>
+                </div>
               </Card>
             </div>
             

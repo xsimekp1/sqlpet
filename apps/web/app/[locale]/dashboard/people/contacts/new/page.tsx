@@ -77,8 +77,8 @@ export default function NewContactPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('addPerson')}</h1>
-          <p className="text-muted-foreground">
-            Add a new contact to your database
+          <p className="text-muted-foreground hidden md:block">
+            Přidejte nový kontakt do databáze
           </p>
         </div>
       </div>
@@ -89,11 +89,11 @@ export default function NewContactPage() {
           <Label htmlFor="name">{t('fields.name')} *</Label>
           <Input
             id="name"
-            placeholder="e.g. John Doe"
+            placeholder=""
             {...register('name', { required: true })}
           />
           {errors.name && (
-            <p className="text-sm text-destructive">Name is required</p>
+            <p className="text-sm text-destructive">Jméno je povinné</p>
           )}
         </div>
 
@@ -105,7 +105,7 @@ export default function NewContactPage() {
             required
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select contact type" />
+              <SelectValue placeholder="Vyberte typ kontaktu" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="donor">{t('types.donor')}</SelectItem>
@@ -121,14 +121,14 @@ export default function NewContactPage() {
 
         {/* Profession/Specialty */}
         <div className="space-y-2">
-          <Label htmlFor="profession">Profession / Specialty</Label>
+          <Label htmlFor="profession">Profese / Specializace</Label>
           <Input
             id="profession"
-            placeholder="e.g. Accountant, Lawyer, Photographer, IT Support"
+            placeholder="např. Účetní, Právník, Fotograf, IT podpora"
             {...register('profession')}
           />
           <p className="text-sm text-muted-foreground">
-            For professional services: účetní, právník, fotograf, IT podpora, atd.
+            Pro profesní služby: účetní, právník, fotograf, IT podpora, atd.
           </p>
         </div>
 
@@ -159,11 +159,11 @@ export default function NewContactPage() {
           <Label htmlFor="organization_name">{t('fields.organization')}</Label>
           <Input
             id="organization_name"
-            placeholder="e.g. ABC Veterinary Clinic"
+            placeholder="např. Veterinární klinika ABC"
             {...register('organization_name')}
           />
           <p className="text-sm text-muted-foreground">
-            If this contact represents an organization or business
+            Pokud kontakt zastupuje organizaci nebo firmu
           </p>
         </div>
 
@@ -173,38 +173,38 @@ export default function NewContactPage() {
           <Textarea
             id="address"
             rows={3}
-            placeholder="Street address, city, postal code"
+            placeholder="Ulice, město, PSČ"
             {...register('address')}
           />
         </div>
 
         {/* Financial Information Section */}
         <div className="pt-4 border-t">
-          <h3 className="text-lg font-semibold mb-4">Financial Information</h3>
+          <h3 className="text-lg font-semibold mb-4">Finanční informace</h3>
           <div className="space-y-4">
             {/* Bank Account */}
             <div className="space-y-2">
-              <Label htmlFor="bank_account">Bank Account / IBAN</Label>
+              <Label htmlFor="bank_account">Bankovní účet / IBAN</Label>
               <Input
                 id="bank_account"
-                placeholder="e.g. CZ65 0800 0000 1920 0014 5399"
+                placeholder="např. CZ65 0800 0000 1920 0014 5399"
                 {...register('bank_account')}
               />
               <p className="text-sm text-muted-foreground">
-                For payments to contractors or invoice payments from suppliers
+                Pro platby dodavatelům nebo přijímání plateb od dárců
               </p>
             </div>
 
             {/* Tax ID */}
             <div className="space-y-2">
-              <Label htmlFor="tax_id">Tax ID / IČO</Label>
+              <Label htmlFor="tax_id">IČO / DIČ</Label>
               <Input
                 id="tax_id"
-                placeholder="e.g. 12345678"
+                placeholder="např. 12345678"
                 {...register('tax_id')}
               />
               <p className="text-sm text-muted-foreground">
-                Business registration number for invoicing
+                Identifikační číslo pro fakturaci
               </p>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function NewContactPage() {
           <Textarea
             id="notes"
             rows={4}
-            placeholder="Any additional notes or information..."
+            placeholder=""
             {...register('notes')}
           />
         </div>
@@ -227,11 +227,11 @@ export default function NewContactPage() {
             type="submit"
             disabled={createContactMutation.isPending}
           >
-            {createContactMutation.isPending ? 'Creating...' : 'Create Contact'}
+            {createContactMutation.isPending ? 'Ukládám...' : 'Vytvořit kontakt'}
           </Button>
           <Link href="/dashboard/people">
             <Button type="button" variant="outline">
-              Cancel
+              Zrušit
             </Button>
           </Link>
         </div>

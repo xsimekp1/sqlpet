@@ -31,16 +31,11 @@ import { Input } from '@/components/ui/input';
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher';
 import ApiClient from '@/app/lib/api';
 
-const formSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: 'login.emailRequired' })
-    .email({ message: 'login.emailInvalid' }),
-  password: z.string().min(1, { message: 'login.passwordRequired' }),
-  totpCode: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = {
+  email: string;
+  password: string;
+  totpCode?: string;
+};
 
 export default function LoginPage() {
   const t = useTranslations();
@@ -48,6 +43,15 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
+
+  const formSchema = z.object({
+    email: z
+      .string()
+      .min(1, { message: t('login.emailRequired') })
+      .email({ message: t('login.emailInvalid') }),
+    password: z.string().min(1, { message: t('login.passwordRequired') }),
+    totpCode: z.string().optional(),
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

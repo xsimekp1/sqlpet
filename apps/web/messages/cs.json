@@ -755,6 +755,11 @@
       "female": "Samice",
       "unknown": "Neznámé"
     },
+    "name": "Jméno",
+    "breed": "Plemeno",
+    "age": "Věk",
+    "kennel": "Kotec",
+    "intakeDate": "Příjem",
     "new": {
       "title": "Přidat nové zvíře",
       "subtitle": "Zaregistrovat nové zvíře v útulku",

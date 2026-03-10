@@ -598,24 +598,24 @@ export default function KennelsPage() {
               </Tooltip>
             </TooltipProvider>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span tabIndex={0}>
-                  <Button variant="outline" className="gap-2" disabled>
-                    <Settings className="h-4 w-4" />
-                    {t('quickActions.manageZones')}
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>{t('quickActions.manageZonesComingSoon')}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <Button variant="outline" className="gap-2">
-            <Footprints className="h-4 w-4" />
-            {t('quickActions.walkMode')}
-          </Button>
-          <div className="hidden md:inline-flex">
+          <div className="hidden md:flex gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0}>
+                    <Button variant="outline" className="gap-2" disabled>
+                      <Settings className="h-4 w-4" />
+                      {t('quickActions.manageZones')}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{t('quickActions.manageZonesComingSoon')}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <Button variant="outline" className="gap-2">
+              <Footprints className="h-4 w-4" />
+              {t('quickActions.walkMode')}
+            </Button>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -631,9 +631,9 @@ export default function KennelsPage() {
               </Tooltip>
             </TooltipProvider>
           </div>
-          <Button className="gap-2" onClick={() => setShowAddDialog(true)}>
+          <Button size="icon" className="md:w-auto md:px-4 md:gap-2" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4" />
-            {t('quickActions.addKennel')}
+            <span className="hidden md:inline">{t('quickActions.addKennel')}</span>
           </Button>
         </div>
       </div>

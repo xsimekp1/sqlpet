@@ -166,7 +166,7 @@ export function Sidebar() {
       {/* Mobile overlay backdrop */}
       {!sidebarCollapsed && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity no-print"
+          className="lg:hidden fixed inset-0 bg-black/50 z-[2000] transition-opacity no-print"
           onClick={toggleSidebar}
         />
       )}
@@ -175,7 +175,7 @@ export function Sidebar() {
       <aside
         className={cn(
           // Mobile: fixed overlay, slide in from left
-          'fixed lg:relative inset-y-0 left-0 z-50',
+          'fixed lg:relative inset-y-0 left-0 z-[2001]',
           'flex flex-col h-full border-r bg-card transition-all duration-300',
           // Mobile visibility
           'lg:flex',
