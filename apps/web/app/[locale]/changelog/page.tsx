@@ -64,27 +64,13 @@ export default function ChangelogPage() {
                 <span className="font-semibold text-white">📱 Velká oprava mobilního UI</span>
                 <p className="text-teal-100 text-sm mt-1">
                   Kompletní přepracování layoutu pro malé obrazovky – tlačítka přestala přetékat,
-                  tabulky se dají číst celé, spodní navigace nepřekrývá obsah.
+                  tabulky se dají číst celé, obsah není překrytý navigací.
                 </p>
               </div>
               <div>
-                <span className="font-semibold text-white">👥 Lidé jako karty na mobilu</span>
+                <span className="font-semibold text-white">🧪 Testování mobilní aplikace</span>
                 <p className="text-teal-100 text-sm mt-1">
-                  Sekce Lidé zobrazuje kontakty a adoptéry jako přehledné karty. Telefonní číslo
-                  je přímo volatelné jedním klepnutím.
-                </p>
-              </div>
-              <div>
-                <span className="font-semibold text-white">✅ Úkoly v kotci</span>
-                <p className="text-teal-100 text-sm mt-1">
-                  Úkoly v detailu kotce jsou nyní klikatelné pro editaci. Tlačítko Dokončit
-                  zobrazuje spinner a hlídá dvojité kliknutí.
-                </p>
-              </div>
-              <div>
-                <span className="font-semibold text-white">🗺️ Mapa nálezů na mobilu</span>
-                <p className="text-teal-100 text-sm mt-1">
-                  Legenda mapy přesunuta pod mapu na mobilních zařízeních. Sidebar již nepřekrývá mapu (opravena kolize z-indexů s Leaflet).
+                  Probíhá interní testování nativní mobilní aplikace pro iOS a Android. Brzy spustíme uzavřenou betu – sledujte novinky!
                 </p>
               </div>
             </div>
