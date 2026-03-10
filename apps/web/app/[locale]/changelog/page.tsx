@@ -54,6 +54,42 @@ export default function ChangelogPage() {
             </p>
           </div>
 
+          {/* Week 3-10.3 */}
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 3. – 10. března 2026</span>
+            </h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-6 space-y-4">
+              <div>
+                <span className="font-semibold text-white">📱 Velká oprava mobilního UI</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Kompletní přepracování layoutu pro malé obrazovky – tlačítka přestala přetékat,
+                  tabulky se dají číst celé, spodní navigace nepřekrývá obsah.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">👥 Lidé jako karty na mobilu</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Sekce Lidé zobrazuje kontakty a adoptéry jako přehledné karty. Telefonní číslo
+                  je přímo volatelné jedním klepnutím.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">✅ Úkoly v kotci</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Úkoly v detailu kotce jsou nyní klikatelné pro editaci. Tlačítko Dokončit
+                  zobrazuje spinner a hlídá dvojité kliknutí.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🗺️ Mapa nálezů na mobilu</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Legenda mapy přesunuta pod mapu na mobilních zařízeních. Sidebar již nepřekrývá mapu (opravena kolize z-indexů s Leaflet).
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Week 23.2 - 1.3 */}
           <section className="mb-12">
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
