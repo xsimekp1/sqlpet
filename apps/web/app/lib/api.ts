@@ -1452,6 +1452,16 @@ class ApiClient {
   // WEIGHT / BCS
   // ========================================
 
+  static async addIdentifier(animalId: string, type: string, value: string): Promise<AnimalIdentifier> {
+    return this.post(`/animals/${animalId}/identifiers`, { type, value });
+  }
+
+  static async deleteIdentifier(animalId: string, identifierId: string): Promise<void> {
+    return this.delete(`/animals/${animalId}/identifiers/${identifierId}`);
+  }
+
+  // ========================================
+
   static async logWeight(animalId: string, weight_kg: number, notes?: string, measured_at?: string): Promise<WeightLog> {
     const body: Record<string, any> = { weight_kg };
     if (notes) body.notes = notes;

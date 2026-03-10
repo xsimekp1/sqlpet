@@ -14,9 +14,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Edit, Check, X } from 'lucide-react';
+import { Edit, Check, X, Cpu } from 'lucide-react';
 import { toast } from 'sonner';
-import ApiClient from '@/app/lib/api';
+import ApiClient, { AnimalIdentifier } from '@/app/lib/api';
 import { COLLAR_COLORS, getCollarColor, type CollarColor } from '@/app/lib/collarColors';
 
 interface Breed {
@@ -85,6 +85,66 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
   const [breeds, setBreeds] = useState<Breed[]>([]);
   const [colorImages, setColorImages] = useState<ColorImage[]>([]);
   const [loadingColors, setLoadingColors] = useState(false);
+
+  // Microchip inline edit
+  const [chipEditing, setChipEditing] = useState(false);
+  const [chipValue, setChipValue] = useState('');
+  const [chipSaving, setChipSaving] = useState(false);
+  const existingChip = animal.identifiers?.find(i => i.type === 'microchip');
+
+  const validateChip = (v: string) => {
+    if (!/^\d+$/.test(v)) return 'Čip musí obsahovat pouze číslice';
+    if (v.length < 9) return 'Příliš krátké (min. 9 číslic)';
+    if (v.length > 15) return 'Příliš dlouhé (max. 15 číslic)';
+    return null;
+  };
+
+  const chipWarning = chipValue.length > 0 && chipValue.length !== 15 && !validateChip(chipValue)
+    ? `Mezinárodní standard je 15 číslic (zadáno: ${chipValue.length})`
+    : null;
+
+  const handleChipSave = async () => {
+    const err = validateChip(chipValue);
+    if (err) { toast.error(err); return; }
+    setChipSaving(true);
+    try {
+      if (existingChip) {
+        await ApiClient.deleteIdentifier(animal.id, existingChip.id);
+      }
+      const newId = await ApiClient.addIdentifier(animal.id, 'microchip', chipValue);
+      onAnimalUpdate({
+        ...animal,
+        identifiers: [
+          ...(animal.identifiers?.filter(i => i.type !== 'microchip') ?? []),
+          newId,
+        ],
+      });
+      setChipEditing(false);
+      toast.success('Číslo čipu uloženo');
+    } catch {
+      toast.error('Nepodařilo se uložit číslo čipu');
+    } finally {
+      setChipSaving(false);
+    }
+  };
+
+  const handleChipDelete = async () => {
+    if (!existingChip) return;
+    setChipSaving(true);
+    try {
+      await ApiClient.deleteIdentifier(animal.id, existingChip.id);
+      onAnimalUpdate({
+        ...animal,
+        identifiers: animal.identifiers?.filter(i => i.id !== existingChip.id) ?? [],
+      });
+      setChipEditing(false);
+      toast.success('Číslo čipu odstraněno');
+    } catch {
+      toast.error('Nepodařilo se odstranit číslo čipu');
+    } finally {
+      setChipSaving(false);
+    }
+  };
 
   // Compute initial age years from birth_date_estimated
   const getInitialAgeYears = (): string => {
@@ -214,7 +274,7 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
 
   if (isEditing) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4" onKeyDown={handleKeyDown}>
+      <div className="grid grid-cols-2 gap-4" onKeyDown={handleKeyDown}>
         {/* Sex */}
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Sex</p>
@@ -382,7 +442,7 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 gap-4">
       {/* Public Code - static */}
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">Public Code</p>
@@ -537,6 +597,56 @@ export function EditableAnimalDetails({ animal, onAnimalUpdate }: EditableAnimal
         <Badge className={getStatusColor(animal.status)}>
           {animal.status}
         </Badge>
+      </div>
+
+      {/* Microchip - inline editable, full width */}
+      <div className="col-span-2 border-t pt-3 space-y-1">
+        <p className="text-sm text-muted-foreground flex items-center gap-2">
+          <Cpu className="h-3.5 w-3.5" />
+          Číslo čipu
+          {!chipEditing && (
+            <Button size="sm" variant="outline" onClick={() => { setChipValue(existingChip?.value ?? ''); setChipEditing(true); }} className="h-6 w-6 p-0 ml-1">
+              <Edit className="h-3 w-3" />
+            </Button>
+          )}
+        </p>
+
+        {chipEditing ? (
+          <div className="space-y-1">
+            <div className="flex gap-2 items-center">
+              <Input
+                value={chipValue}
+                onChange={(e) => setChipValue(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                placeholder="např. 203000123456789"
+                disabled={chipSaving}
+                className="font-mono max-w-xs"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleChipSave();
+                  if (e.key === 'Escape') setChipEditing(false);
+                }}
+              />
+              <Button size="sm" onClick={handleChipSave} disabled={chipSaving || chipValue.length < 9}>
+                <Check className="h-3.5 w-3.5" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setChipEditing(false)} disabled={chipSaving}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+              {existingChip && (
+                <Button size="sm" variant="ghost" onClick={handleChipDelete} disabled={chipSaving} className="text-destructive hover:text-destructive">
+                  Smazat
+                </Button>
+              )}
+            </div>
+            {chipWarning && <p className="text-xs text-amber-600">⚠ {chipWarning}</p>}
+            {chipValue.length > 0 && validateChip(chipValue) && <p className="text-xs text-destructive">{validateChip(chipValue)}</p>}
+            <p className="text-xs text-muted-foreground">ISO standard: 15 číslic · Starší čipy: 9–10 číslic</p>
+          </div>
+        ) : (
+          <p className="font-mono font-medium">
+            {existingChip ? existingChip.value : <span className="text-muted-foreground">—</span>}
+          </p>
+        )}
       </div>
     </div>
   );
