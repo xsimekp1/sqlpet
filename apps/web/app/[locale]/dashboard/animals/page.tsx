@@ -439,8 +439,8 @@ export default function AnimalsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : view === 'grid' ? (
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-          {filtered.map((animal) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+          {filtered.map((animal, index) => (
             selectMode ? (
               <div
                 key={animal.id}
@@ -520,19 +520,19 @@ export default function AnimalsPage() {
                         </span>
                       )}
                     </div>
-                    {/* Age + Sex in ONE circle - desktop only */}
+                    {/* Age + Sex in ONE circle - all devices */}
                     {(animal.estimated_age_years == null && !animal.age_group) ? (
-                      /* Unknown age: quarter-circle peeking from top-right corner, no text */
+                      /* Unknown age: quarter-circle peeking from top-right corner */
                       <div className={cn(
-                        "hidden md:block absolute top-0 right-0 w-8 h-8 rounded-bl-full",
+                        "absolute top-0 right-0 w-8 h-8 rounded-bl-full",
                         animal.sex === 'male' ? "bg-blue-600" :
                         animal.sex === 'female' ? "bg-pink-600" :
                         "bg-gray-500"
                       )} />
                     ) : (
-                      /* Known age/group: slightly smaller circle, slightly bigger text */
+                      /* Known age/group: circle with text */
                       <div className={cn(
-                        "hidden md:flex absolute top-1 right-1 w-7 h-7 rounded-full items-center justify-center text-sm font-bold",
+                        "flex absolute top-1 right-1 w-7 h-7 rounded-full items-center justify-center text-sm font-bold",
                         animal.sex === 'male' ? "bg-blue-600 text-white" :
                         animal.sex === 'female' ? "bg-pink-600 text-white" :
                         "bg-gray-500 text-white"
@@ -563,8 +563,8 @@ export default function AnimalsPage() {
                     </div>
                   </div>
                 </div>
-                {/* Card footer */}
-                <div className="p-2 space-y-1">
+                {/* Card footer - alternating bg */}
+                <div className={cn("p-2 space-y-1", index % 2 === 1 && "bg-muted/40")}>
                   {/* Health badges row */}
                   <div className="flex items-center justify-between">
                     <div className="flex gap-1 flex-wrap">

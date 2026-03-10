@@ -1435,7 +1435,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
 
       {/* ── Tabs ── */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="overview">{t('tabs.overview')}</TabsTrigger>
           <TabsTrigger value="timeline">{t('tabs.timeline')}</TabsTrigger>
           <TabsTrigger value="feeding">{t('tabs.feeding')}</TabsTrigger>
@@ -2058,7 +2058,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                   <CardTitle>{t('documents.title')}</CardTitle>
                   <CardDescription>{t('documents.description')}</CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <input
                     ref={documentInputRef}
                     type="file"
