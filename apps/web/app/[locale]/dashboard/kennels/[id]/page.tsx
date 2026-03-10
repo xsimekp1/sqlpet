@@ -410,7 +410,7 @@ export default function KennelDetailPage() {
   }
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-3 md:space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link href="/dashboard/kennels">
@@ -439,13 +439,13 @@ export default function KennelDetailPage() {
         </div>
 
         {/* Status & Info Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {/* Status */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t('detail.status')}</CardTitle>
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">{t('detail.status')}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-1">
               {editingType ? (
                 <Select value={kennel.type} onValueChange={handleSaveType} defaultValue={kennel.type}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -474,10 +474,10 @@ export default function KennelDetailPage() {
 
           {/* Capacity */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t('detail.capacity')}</CardTitle>
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">{t('detail.capacity')}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-1">
               {editingCapacity ? (
                 <div className="flex items-center gap-2">
                   <Input
@@ -508,10 +508,10 @@ export default function KennelDetailPage() {
 
           {/* Dimensions */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t('detail.dimensions')}</CardTitle>
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">{t('detail.dimensions')}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-1">
               {editingDimensions ? (
                 <div className="space-y-2">
                   <div className="flex gap-1 items-center">
@@ -569,10 +569,10 @@ export default function KennelDetailPage() {
 
           {/* Allowed Species */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t('detail.allowedSpecies')}</CardTitle>
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">{t('detail.allowedSpecies')}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-1">
               {editingSpecies ? (
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-2">
@@ -629,8 +629,8 @@ export default function KennelDetailPage() {
           </Card>
         </div>
 
-        {/* Maintenance Card */}
-        <Card className={kennel.maintenance_start_at && new Date(kennel.maintenance_start_at) <= new Date() && (!kennel.maintenance_end_at || new Date(kennel.maintenance_end_at) >= new Date()) ? 'border-yellow-400 bg-yellow-50' : ''}>
+        {/* Maintenance Card — hidden on mobile when nothing planned */}
+        <Card className={`${(!kennel.maintenance_start_at && !kennel.maintenance_reason && !editingMaintenance) ? 'hidden md:block' : ''} ${kennel.maintenance_start_at && new Date(kennel.maintenance_start_at) <= new Date() && (!kennel.maintenance_end_at || new Date(kennel.maintenance_end_at) >= new Date()) ? 'border-yellow-400 bg-yellow-50' : ''}`}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
