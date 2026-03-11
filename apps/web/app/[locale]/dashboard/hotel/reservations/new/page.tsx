@@ -120,7 +120,8 @@ export default function NewHotelReservationPage() {
       const [orgRes, contactsRes, animalsRes] = await Promise.all([
         fetch('/api/organization/current', { headers: getAuthHeaders() }),
         fetch('/api/contacts?page_size=100', { headers: getAuthHeaders() }),
-        fetch('/api/animals?status=with_owner&status=adopted&status=hotel&page_size=200', { headers: getAuthHeaders() }),
+        // Fetch all animals (not just specific statuses) so users can book any past/current animal
+        fetch('/api/animals?page_size=500', { headers: getAuthHeaders() }),
       ]);
 
       if (orgRes.ok) {
@@ -140,9 +141,7 @@ export default function NewHotelReservationPage() {
         const animalsData = await animalsRes.json();
         const fetchedAnimals = animalsData.items || [];
         setAnimals(fetchedAnimals);
-        if (fetchedAnimals.length === 0) {
-          toast.info('Žádná zvířata v databázi - můžete zadat nové');
-        }
+        // Don't show confusing toast - user can always add new animal manually
       } else {
         toast.error('Nepodařilo se načíst zvířata z databáze');
       }
