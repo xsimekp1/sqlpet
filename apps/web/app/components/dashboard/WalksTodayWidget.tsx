@@ -25,8 +25,10 @@ export function WalksTodayWidget({ editMode, onRemove, dragHandleProps }: WalksT
     const fetchWalks = async () => {
       try {
         setLoading(true)
-        const data: WalkListResponse = await ApiClient.getWalks({ page_size: 3 })
-        setWalks(data.items || [])
+        const data: WalkListResponse = await ApiClient.getWalks({ page_size: 10 })
+        // Filter out completed walks - show only in-progress
+        const activeWalks = (data.items || []).filter(w => w.status !== 'completed')
+        setWalks(activeWalks.slice(0, 3))
       } catch {
         setWalks([])
       } finally {
@@ -53,7 +55,7 @@ export function WalksTodayWidget({ editMode, onRemove, dragHandleProps }: WalksT
           </div>
         ) : walks.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Dnes ještě nikdo nevenčil
+            Žádné probíhající aktivity
           </p>
         ) : (
           <div className="space-y-2">
