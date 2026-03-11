@@ -114,15 +114,16 @@ class TestTaskService:
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         # Act
-        result = await task_service.complete_task(
+        task, deductions = await task_service.complete_task(
             task_id=sample_task.id,
             organization_id=sample_task.organization_id,
             completed_by_id=sample_user.id,
         )
 
         # Assert
-        assert result.status == TaskStatus.COMPLETED
-        assert result.completed_at is not None
+        assert task.status == TaskStatus.COMPLETED
+        assert task.completed_at is not None
+        assert deductions == []  # No inventory deductions for general task
         mock_db.flush.assert_called_once()
         mock_audit.log_action.assert_called_once()
 
@@ -141,14 +142,15 @@ class TestTaskService:
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         # Act
-        result = await task_service.complete_task(
+        task, deductions = await task_service.complete_task(
             task_id=sample_task.id,
             organization_id=sample_task.organization_id,
             completed_by_id=sample_user.id,
         )
 
         # Assert
-        assert result.status == TaskStatus.COMPLETED
+        assert task.status == TaskStatus.COMPLETED
+        assert deductions == []  # No inventory item linked
         mock_db.flush.assert_called_once()
         mock_audit.log_action.assert_called_once()
 
@@ -239,3 +241,62 @@ class TestTaskService:
         assert result.status == TaskStatus.PENDING
         mock_db.add.assert_called_once()
         mock_db.flush.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_complete_task_with_inventory_deduction(
+        self, task_service, mock_db, mock_audit, sample_task, sample_user
+    ):
+        """Test completing a task with linked inventory item deducts from stock.
+
+        When a task has linked_inventory_item_id and quantity_to_deduct_g in metadata,
+        completing the task should automatically deduct from inventory.
+
+        Example: Task to consume 200g from a 400g can (unit_weight_g=400):
+        - 200g / 400g = 0.5 cans deducted from inventory
+        """
+        # Arrange
+        inventory_item_id = uuid4()
+        sample_task.linked_inventory_item_id = inventory_item_id
+        sample_task.task_metadata = {"quantity_to_deduct_g": 200}
+        sample_task.status = TaskStatus.PENDING
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = sample_task
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        # Mock the inventory service (patching where it's imported, not where it's defined)
+        mock_deductions = [
+            {
+                "lot_id": uuid4(),
+                "lot_number": "LOT001",
+                "quantity_deducted": 0.5,  # 200g / 400g = 0.5 cans
+                "lot_emptied": False,
+                "transaction_id": uuid4(),
+            }
+        ]
+
+        with patch(
+            "src.app.services.inventory_service.InventoryService"
+        ) as MockInventoryService:
+            mock_inv_service = MagicMock()
+            mock_inv_service.deduct_for_task = AsyncMock(return_value=mock_deductions)
+            MockInventoryService.return_value = mock_inv_service
+
+            # Act
+            task, deductions = await task_service.complete_task(
+                task_id=sample_task.id,
+                organization_id=sample_task.organization_id,
+                completed_by_id=sample_user.id,
+            )
+
+            # Assert
+            assert task.status == TaskStatus.COMPLETED
+            assert len(deductions) == 1
+            assert deductions[0]["quantity_deducted"] == 0.5
+            mock_inv_service.deduct_for_task.assert_called_once_with(
+                organization_id=sample_task.organization_id,
+                item_id=inventory_item_id,
+                amount_g=200.0,
+                task_id=sample_task.id,
+                user_id=sample_user.id,
+            )

@@ -127,8 +127,12 @@ class TaskService:
         organization_id: uuid.UUID,
         completed_by_id: uuid.UUID,
         completion_data: Optional[Dict[str, Any]] = None,
-    ) -> Task:
-        """Complete a task."""
+    ) -> Tuple[Task, List[Dict[str, Any]]]:
+        """Complete a task. Returns (task, inventory_deductions).
+
+        If the task has linked_inventory_item_id and quantity_to_deduct_g in metadata,
+        automatically deducts from inventory using FIFO.
+        """
         stmt = select(Task).where(
             and_(
                 Task.id == task_id,
@@ -147,6 +151,26 @@ class TaskService:
 
         task.status = TaskStatus.COMPLETED
         task.completed_at = datetime.now(timezone.utc)
+
+        # Handle inventory deduction if task has linked inventory item
+        inventory_deductions: List[Dict[str, Any]] = []
+        if task.linked_inventory_item_id:
+            quantity_to_deduct_g = (task.task_metadata or {}).get("quantity_to_deduct_g")
+            if quantity_to_deduct_g is not None and float(quantity_to_deduct_g) > 0:
+                from src.app.services.inventory_service import InventoryService
+                inv_service = InventoryService(self.db)
+                try:
+                    inventory_deductions = await inv_service.deduct_for_task(
+                        organization_id=organization_id,
+                        item_id=task.linked_inventory_item_id,
+                        amount_g=float(quantity_to_deduct_g),
+                        task_id=task_id,
+                        user_id=completed_by_id,
+                    )
+                except Exception as e:
+                    # Log but don't fail task completion
+                    print(f"Warning: Failed to deduct inventory for task {task_id}: {e}")
+
         await self.db.flush()
 
         await self.audit.log_action(
@@ -159,10 +183,11 @@ class TaskService:
                 "status": TaskStatus.COMPLETED.value,
                 "completed_at": str(task.completed_at),
                 "completion_data": completion_data,
+                "inventory_deducted": len(inventory_deductions) > 0,
             },
         )
 
-        return task
+        return task, inventory_deductions
 
     async def cancel_task(
         self,

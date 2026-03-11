@@ -420,6 +420,84 @@ class InventoryService:
 
         return deductions
 
+    async def deduct_for_task(
+        self,
+        organization_id: uuid.UUID,
+        item_id: uuid.UUID,
+        amount_g: float,
+        task_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> List[Dict[str, Any]]:
+        """
+        Deduct inventory for task completion using FIFO across multiple lots.
+        Returns list of deduction dicts (one per lot used).
+
+        Uses unit_weight_g to convert grams to item units:
+        - If item has unit_weight_g (e.g. 400g can): 200g / 400g = 0.5 cans
+        - If unit is 'g': deduct raw grams
+        - If unit is 'kg': convert g to kg
+        """
+        item = await self.get_item_by_id(item_id, organization_id)
+        if not item:
+            raise ValueError(f"Inventory item not found: {item_id}")
+
+        # Find all lots with stock (FIFO: earliest expiry first)
+        lot_stmt = (
+            select(InventoryLot)
+            .where(
+                and_(
+                    InventoryLot.item_id == item.id,
+                    InventoryLot.quantity > 0,
+                )
+            )
+            .order_by(InventoryLot.expires_at.asc().nullslast())
+        )
+        lots = (await self.db.execute(lot_stmt)).scalars().all()
+
+        if not lots:
+            raise ValueError(f"No stock available for item: {item.name}")
+
+        # Convert grams to the item's native unit
+        if item.unit_weight_g:
+            # Unit is countable (e.g. cans of 400g each): 200g / 400g = 0.5 cans
+            remaining = amount_g / float(item.unit_weight_g)
+        elif item.unit == 'g':
+            remaining = amount_g
+        elif item.unit == 'kg':
+            remaining = amount_g / 1000.0
+        else:
+            remaining = amount_g / 1000.0  # fallback: assume kg
+
+        deductions = []
+
+        for lot in lots:
+            if remaining <= 0:
+                break
+            to_deduct = min(float(lot.quantity), remaining)
+            lot_emptied = (float(lot.quantity) - to_deduct) < 0.001
+
+            transaction = await self.record_transaction(
+                organization_id=organization_id,
+                item_id=item.id,
+                lot_id=lot.id,
+                reason=TransactionReason.CONSUMPTION,
+                quantity=to_deduct,
+                note=f"Task completed (task #{task_id})",
+                related_entity_type="task",
+                related_entity_id=task_id,
+                user_id=user_id,
+            )
+            deductions.append({
+                "lot_id": lot.id,
+                "lot_number": lot.lot_number,
+                "quantity_deducted": to_deduct,
+                "lot_emptied": lot_emptied,
+                "transaction_id": transaction.id,
+            })
+            remaining -= to_deduct
+
+        return deductions
+
     async def get_items_with_stock(
         self,
         organization_id: uuid.UUID,

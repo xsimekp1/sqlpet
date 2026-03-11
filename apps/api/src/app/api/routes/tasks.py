@@ -266,20 +266,28 @@ async def complete_task(
     task_service = TaskService(db)
 
     try:
-        task = await task_service.complete_task(
+        # complete_task now returns (task, inventory_deductions)
+        task, inventory_deductions = await task_service.complete_task(
             task_id=task_id,
             organization_id=organization_id,
             completed_by_id=current_user.id,
             completion_data=complete_data.completion_data,
         )
-        # If medical task with linked inventory item → deduct 1 unit and log to timeline
+        if inventory_deductions:
+            print(f"[DEBUG] complete_task: auto-deducted inventory: {inventory_deductions}")
+
+        # If medical task with linked inventory item (vaccine) and no quantity_to_deduct_g,
+        # deduct 1 unit and log vaccination to animal timeline
+        quantity_to_deduct_g = (task.task_metadata or {}).get("quantity_to_deduct_g")
         if (
             task.type == TaskType.MEDICAL
             and task.linked_inventory_item_id
             and task.related_entity_type == "animal"
+            and not quantity_to_deduct_g  # Only if not already handled via quantity_to_deduct_g
+            and not inventory_deductions  # Only if not already deducted
         ):
             from src.app.services.inventory_service import InventoryService
-            from src.app.models.inventory_transaction import TransactionType
+            from src.app.models.inventory_transaction import TransactionReason
             from src.app.models.inventory_item import InventoryItem as InvItem
             from src.app.services.audit_service import AuditService as _AuditService
             from sqlalchemy import select as _sel
@@ -289,9 +297,9 @@ async def complete_task(
                 await inv_service.record_transaction(
                     organization_id=organization_id,
                     item_id=task.linked_inventory_item_id,
-                    transaction_type=TransactionType.OUT,
+                    reason=TransactionReason.CONSUMPTION,
                     quantity=1,
-                    reason=f"Vaccination task {task.id} for animal {task.related_entity_id}",
+                    note=f"Vaccination task {task.id} for animal {task.related_entity_id}",
                     user_id=current_user.id,
                 )
                 inv_result = await db.execute(

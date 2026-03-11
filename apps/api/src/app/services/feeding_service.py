@@ -584,7 +584,7 @@ class FeedingService:
         from src.app.services.task_service import TaskService
 
         task_service = TaskService(self.db)
-        completed_task = await task_service.complete_task(
+        completed_task, _ = await task_service.complete_task(
             task_id=task_id,
             organization_id=organization_id,
             completed_by_id=completed_by_user_id,
