@@ -72,6 +72,7 @@ export default function ShelterFinderScreen() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState<Species | null>(null);
+  const [mapDebug, setMapDebug] = useState<string>('waiting');
   const mapRef = useRef<InstanceType<typeof MapViewType>>(null);
 
   const handleSelectSpecies = async (s: Species) => {
@@ -238,7 +239,7 @@ export default function ShelterFinderScreen() {
                 MAP_AVAILABLE && MapView ? (
                   <MapErrorBoundary>
                     <View style={styles.mapContainer}>
-                      <Text style={styles.mapLabel}>{t('shelterFinder.mapNearestThree')}</Text>
+                      <Text style={styles.mapLabel}>{t('shelterFinder.mapNearestThree')} [DEBUG: {mapDebug}]</Text>
                       <MapView
                         ref={mapRef}
                         style={styles.map}
@@ -251,6 +252,8 @@ export default function ShelterFinderScreen() {
                         }}
                         showsUserLocation
                         showsMyLocationButton={false}
+                        onMapReady={() => { console.log('[MAP DEBUG] Map is ready'); setMapDebug('ready'); }}
+                        onMapLoaded={() => { console.log('[MAP DEBUG] Map loaded (tiles)'); setMapDebug('tiles loaded'); }}
                       >
                         {topThree.map((shelter, index) => (
                           <Marker

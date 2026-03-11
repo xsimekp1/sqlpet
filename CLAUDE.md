@@ -210,6 +210,45 @@ vercel ls
 vercel logs
 ```
 
+### Expo/EAS CLI Setup
+
+**IMPORTANT: Use `bunx eas-cli` instead of `eas` (npm/node not in PATH)**
+
+**Check if logged in:**
+```bash
+cd apps/mobile
+bunx eas-cli whoami
+```
+
+**If not logged in, user must run (requires browser OAuth):**
+```bash
+cd apps/mobile
+bunx eas-cli login
+```
+
+**List builds:**
+```bash
+cd apps/mobile
+bunx eas-cli build:list --platform android --limit 5
+bunx eas-cli build:list --platform ios --limit 5
+```
+
+**Create new build:**
+```bash
+cd apps/mobile
+bunx eas-cli build --platform android --profile preview   # internal testing
+bunx eas-cli build --platform android --profile production  # store release
+```
+
+**Submit to store:**
+```bash
+cd apps/mobile
+bunx eas-cli submit --platform android
+```
+
+**Project ID:** `f0053c82-e684-4160-babf-94e8ec7b198d`
+**Expo Dashboard:** https://expo.dev/projects/f0053c82-e684-4160-babf-94e8ec7b198d
+
 ### Debugging Deployment Issues
 
 **When login fails with CORS errors:**
