@@ -43,10 +43,14 @@ export default function FeedingPlansPage() {
   // Fetch feeding plans
   const { data: plansData, isLoading } = useQuery({
     queryKey: ['feeding-plans', activeFilter],
-    queryFn: () =>
-      ApiClient.get('/feeding/plans', {
-        is_active: activeFilter === 'all' ? undefined : activeFilter === 'active',
-      }),
+    queryFn: () => {
+      // Don't send is_active param when showing all plans
+      const params: Record<string, any> = {};
+      if (activeFilter !== 'all') {
+        params.is_active = activeFilter === 'active';
+      }
+      return ApiClient.get('/feeding/plans', params);
+    },
   });
 
   const plans = plansData?.items || [];
@@ -73,7 +77,7 @@ export default function FeedingPlansPage() {
   });
 
   const handleDeactivate = (planId: string) => {
-    if (confirm('Are you sure you want to deactivate this feeding plan?')) {
+    if (confirm(t('confirmDeactivate'))) {
       deactivatePlanMutation.mutate(planId);
     }
   };
@@ -81,7 +85,7 @@ export default function FeedingPlansPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading plans...</div>
+        <div className="text-muted-foreground">{t('loading')}</div>
       </div>
     );
   }
@@ -92,7 +96,7 @@ export default function FeedingPlansPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('plans')}</h1>
           <p className="text-muted-foreground">
-            Manage feeding schedules for animals
+            {t('plansDescription')}
           </p>
         </div>
         <Link href="/dashboard/feeding/plans/new">
@@ -111,10 +115,10 @@ export default function FeedingPlansPage() {
             onValueChange={(value) => setActiveFilter(value as ActiveFilter)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder={t('filterByStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Plans</SelectItem>
+              <SelectItem value="all">{t('allPlans')}</SelectItem>
               <SelectItem value="active">{t('active')}</SelectItem>
               <SelectItem value="inactive">{t('inactive')}</SelectItem>
             </SelectContent>
@@ -128,14 +132,14 @@ export default function FeedingPlansPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"></TableHead>
-              <TableHead>Animal</TableHead>
-              <TableHead>Food</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Times/Day</TableHead>
-              <TableHead>Schedule</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>End Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('fields.animal')}</TableHead>
+              <TableHead>{t('fields.food')}</TableHead>
+              <TableHead>{t('fields.amount')}</TableHead>
+              <TableHead>{t('timesPerDay')}</TableHead>
+              <TableHead>{t('schedule')}</TableHead>
+              <TableHead>{t('fields.startDate')}</TableHead>
+              <TableHead>{t('fields.endDate')}</TableHead>
+              <TableHead className="text-right">{t('actions.title')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -220,14 +224,14 @@ export default function FeedingPlansPage() {
                         {formatDate(plan.end_date)}
                       </div>
                     ) : (
-                      <span className="text-muted-foreground">Ongoing</span>
+                      <span className="text-muted-foreground">{t('ongoing')}</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
                       <Link href={`/dashboard/feeding/plans/${plan.id}`}>
                         <Button size="sm" variant="outline">
-                          Edit
+                          {t('actions.edit')}
                         </Button>
                       </Link>
                       {plan.is_active && (
@@ -253,7 +257,7 @@ export default function FeedingPlansPage() {
       {plans.length > 0 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div>
-            Showing {plans.length} plan{plans.length !== 1 ? 's' : ''}
+            {t('showingPlans', { count: plans.length })}
           </div>
           <div className="flex gap-4">
             <span>

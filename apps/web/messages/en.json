@@ -1345,6 +1345,14 @@
     "editFood": "Edit Food",
     "noPlan": "No active feeding plan",
     "noPlans": "No feeding plans found",
+    "plansDescription": "Manage feeding schedules for animals",
+    "filterByStatus": "Filter by status",
+    "allPlans": "All Plans",
+    "ongoing": "Ongoing",
+    "showingPlans": "Showing {count} plans",
+    "loading": "Loading...",
+    "confirmDeactivate": "Are you sure you want to deactivate this feeding plan?",
+    "saving": "Saving...",
     "noFoods": "No foods found",
     "noLogs": "No feeding logs found",
     "fedAt": "Fed at",
@@ -1369,6 +1377,7 @@
     "fields": {
       "animal": "Animal",
       "food": "Food",
+      "amount": "Amount",
       "amountGrams": "Amount (g)",
       "amountText": "Amount (description)",
       "timesPerDay": "Times per day",
@@ -1386,13 +1395,16 @@
       "other": "Other"
     },
     "actions": {
+      "title": "Actions",
       "createPlan": "Create Plan",
       "editPlan": "Edit Plan",
+      "edit": "Edit",
       "deactivate": "Deactivate",
       "viewHistory": "View History",
       "generateTasks": "Generate Tasks",
       "logFeeding": "Log Feeding",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "savePlan": "Save Plan"
     },
     "createPlanDesc": "Create a new feeding schedule for an animal",
     "selectAnimal": "Select an animal",

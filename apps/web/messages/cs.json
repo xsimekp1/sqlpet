@@ -1220,6 +1220,14 @@
     "editFood": "Upravit krmivo",
     "noPlan": "Žádný aktivní plán krmení",
     "noPlans": "Žádné plány krmení nenalezeny",
+    "plansDescription": "Správa krmných plánů zvířat",
+    "filterByStatus": "Filtrovat podle stavu",
+    "allPlans": "Všechny plány",
+    "ongoing": "Průběžný",
+    "showingPlans": "Zobrazeno {count} plánů",
+    "loading": "Načítání...",
+    "confirmDeactivate": "Opravdu chcete deaktivovat tento krmný plán?",
+    "saving": "Ukládání...",
     "noFoods": "Žádná krmiva nenalezena",
     "noLogs": "Žádné záznamy krmení nenalezeny",
     "fedAt": "Nakrmeno v",
@@ -1244,6 +1252,7 @@
     "fields": {
       "animal": "Zvíře",
       "food": "Krmivo",
+      "amount": "Množství",
       "amountGrams": "Množství (g)",
       "amountText": "Množství (popis)",
       "timesPerDay": "Kolikrát denně",
@@ -1261,13 +1270,16 @@
       "other": "Jiné"
     },
     "actions": {
+      "title": "Akce",
       "createPlan": "Vytvořit plán",
       "editPlan": "Upravit plán",
+      "edit": "Upravit",
       "deactivate": "Deaktivovat",
       "viewHistory": "Zobrazit historii",
       "generateTasks": "Generovat úkoly",
       "logFeeding": "Zaznamenat krmení",
-      "cancel": "Zrušit"
+      "cancel": "Zrušit",
+      "savePlan": "Uložit plán"
     },
     "createPlanDesc": "Vytvořte nový plán krmení pro zvíře",
     "selectAnimal": "Vyberte zvíře",
