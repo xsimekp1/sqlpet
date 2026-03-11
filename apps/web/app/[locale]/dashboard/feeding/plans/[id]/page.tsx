@@ -82,11 +82,12 @@ export default function EditFeedingPlanPage() {
   const activeAnimals = allAnimals.filter(
     (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
   );
-  // Make sure the current plan's animal is always in the list
-  const currentAnimal = planData?.animal_id
-    ? allAnimals.find((a: any) => a.id === planData.animal_id)
+  // Make sure the current plan's animal is always in the list (compare as strings for UUID safety)
+  const planAnimalId = planData?.animal_id ? String(planData.animal_id) : null;
+  const currentAnimal = planAnimalId
+    ? allAnimals.find((a: any) => String(a.id) === planAnimalId)
     : null;
-  const animals = currentAnimal && !activeAnimals.find((a: any) => a.id === currentAnimal.id)
+  const animals = currentAnimal && !activeAnimals.find((a: any) => String(a.id) === String(currentAnimal.id))
     ? [currentAnimal, ...activeAnimals]
     : activeAnimals;
   const rawFoods = Array.isArray(foodsData) ? foodsData : [];
@@ -95,17 +96,19 @@ export default function EditFeedingPlanPage() {
   // Set form data when plan is loaded
   useEffect(() => {
     if (planData) {
+      const animalId = planData.animal_id ? String(planData.animal_id) : '';
+      const foodId = planData.food_id ? String(planData.food_id) : '';
       reset({
-        animal_id: planData.animal_id,
-        food_id: planData.food_id,
+        animal_id: animalId,
+        food_id: foodId,
         amount_g: planData.amount_g,
         amount_text: planData.amount_text,
         start_date: planData.start_date,
         end_date: planData.end_date,
         notes: planData.notes,
       });
-      setSelectedAnimalId(planData.animal_id);
-      setSelectedFoodId(planData.food_id || '');
+      setSelectedAnimalId(animalId);
+      setSelectedFoodId(foodId);
       if (planData.schedule_json?.times) {
         setScheduleTimes(planData.schedule_json.times);
       }
@@ -237,7 +240,7 @@ export default function EditFeedingPlanPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {animals.map((animal: any) => (
-                    <SelectItem key={animal.id} value={animal.id}>
+                    <SelectItem key={String(animal.id)} value={String(animal.id)}>
                       {animal.name} ({animal.public_code})
                     </SelectItem>
                   ))}
@@ -257,7 +260,7 @@ export default function EditFeedingPlanPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {filteredFoods.map((food: any) => (
-                    <SelectItem key={food.id} value={food.id}>
+                    <SelectItem key={String(food.id)} value={String(food.id)}>
                       {food.name} {food.brand && `(${food.brand})`}
                     </SelectItem>
                   ))}
