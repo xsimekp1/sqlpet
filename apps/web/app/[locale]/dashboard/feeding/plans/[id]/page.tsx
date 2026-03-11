@@ -431,19 +431,29 @@ export default function EditFeedingPlanPage() {
           </CardContent>
         </Card>
 
-        {/* Actions */}
-        <div className="flex gap-4 pt-4">
-          <Button
-            type="submit"
-            disabled={updatePlanMutation.isPending}
-          >
-            {updatePlanMutation.isPending ? t('saving') : t('actions.savePlan')}
-          </Button>
-          <Link href={`/${locale}/dashboard/feeding/plans`}>
-            <Button type="button" variant="outline">
-              {t('actions.cancel')}
+        {/* Sticky footer bar */}
+        <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t bg-background/95 backdrop-blur px-4 py-3 flex items-center justify-between gap-4">
+          <div className="text-sm text-muted-foreground truncate">
+            {selectedAnimal
+              ? `${selectedAnimal.name} · ${scheduleTimes.length > 0 ? `${scheduleTimes.length}× denně` : t('ongoing')}`
+              : t('editPlan')}
+            {watchedAmountG ? ` · ${watchedAmountG} g/den` : ''}
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Link href={`/${locale}/dashboard/feeding/plans`}>
+              <Button type="button" variant="outline">
+                {t('actions.cancel')}
+              </Button>
+            </Link>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={updatePlanMutation.isPending}
+              className="gap-2"
+            >
+              {updatePlanMutation.isPending ? t('saving') : t('actions.savePlan')}
             </Button>
-          </Link>
+          </div>
         </div>
       </form>
     </div>
