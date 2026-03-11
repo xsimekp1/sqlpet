@@ -1806,7 +1806,8 @@
       "open_tasks": "Otevřít úkoly",
       "open_inventory": "Otevřít sklad",
       "open_feeding": "Otevřít krmení"
-    }
+    },
+    "resetToDefault": "Obnoveno na výchozí"
   },
   "calendar": {
     "title": "Kalendář",
