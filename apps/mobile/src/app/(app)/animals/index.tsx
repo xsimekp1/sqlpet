@@ -19,7 +19,7 @@ import type { AnimalListItem, AnimalsListResponse, AnimalStatus, AnimalSex } fro
 
 const COLUMNS = 2;
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const CARD_WIDTH = (SCREEN_WIDTH - 16 * 2 - 8 * (COLUMNS - 1)) / COLUMNS;
+const CARD_WIDTH = (SCREEN_WIDTH - 10 * 2 - 6 * (COLUMNS - 1)) / COLUMNS;
 
 const SPECIES_DEFAULT: Record<string, any> = {
   dog: require('../../../../assets/dog-default.png'),
@@ -114,17 +114,19 @@ function AnimalCard({ animal }: { animal: AnimalListItem }) {
         )}
       </View>
 
-      {/* Footer */}
+      {/* Footer - compact */}
       <View style={styles.footer}>
-        <Text style={styles.name} numberOfLines={1}>{animal.name}</Text>
+        <View style={styles.footerRow}>
+          <Text style={styles.name} numberOfLines={1}>{animal.name}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+            <Text style={[styles.statusText, { color: status.text }]} numberOfLines={1}>
+              {status.label}
+            </Text>
+          </View>
+        </View>
         {animal.public_code && (
           <Text style={styles.publicCode}>#{animal.public_code}</Text>
         )}
-        <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
-          <Text style={[styles.statusText, { color: status.text }]} numberOfLines={1}>
-            {status.label}
-          </Text>
-        </View>
       </View>
     </TouchableOpacity>
   );
@@ -247,17 +249,17 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   grid: {
-    padding: 16,
+    padding: 10,
     paddingBottom: 32,
   },
   row: {
-    gap: 8,
-    marginBottom: 8,
+    gap: 6,
+    marginBottom: 6,
   },
   card: {
     width: CARD_WIDTH,
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    borderRadius: 8,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -266,10 +268,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   photoContainer: {
-    width: CARD_WIDTH,
-    height: CARD_WIDTH,
+    width: '100%',
+    aspectRatio: 1,
     overflow: 'hidden',
-    borderRadius: 10,
   },
   photo: {
     width: '100%',
@@ -299,28 +300,33 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   footer: {
-    paddingHorizontal: 8,
-    paddingTop: 6,
-    paddingBottom: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 5,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 4,
   },
   name: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#111827',
+    flex: 1,
   },
   publicCode: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#9CA3AF',
+    marginTop: 1,
   },
   statusBadge: {
-    borderRadius: 5,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    alignSelf: 'flex-start',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '700',
   },
   center: {
