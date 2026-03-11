@@ -383,7 +383,14 @@ export default function NewFeedingPlanPage() {
         {/* Section B: Feeding Schedule with Presets */}
         <Card>
           <CardHeader>
-            <CardTitle>Feeding Schedule</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Feeding Schedule</CardTitle>
+              {scheduleTimes.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {t('timesPerDay')}: <span className="font-semibold text-foreground">{scheduleTimes.length}×</span>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Quick preset buttons */}

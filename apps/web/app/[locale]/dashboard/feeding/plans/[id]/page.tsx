@@ -77,9 +77,18 @@ export default function EditFeedingPlanPage() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const animals = (animalsData?.items || []).filter(
+  // Filter animals, but always include the currently selected one (even if terminal/no intake)
+  const allAnimals = animalsData?.items || [];
+  const activeAnimals = allAnimals.filter(
     (a: any) => !isTerminal(a.status) && a.current_intake_date !== null
   );
+  // Make sure the current plan's animal is always in the list
+  const currentAnimal = planData?.animal_id
+    ? allAnimals.find((a: any) => a.id === planData.animal_id)
+    : null;
+  const animals = currentAnimal && !activeAnimals.find((a: any) => a.id === currentAnimal.id)
+    ? [currentAnimal, ...activeAnimals]
+    : activeAnimals;
   const rawFoods = Array.isArray(foodsData) ? foodsData : [];
   const foods = rawFoods.map((s: any) => s.item ?? s);
 
@@ -322,7 +331,14 @@ export default function EditFeedingPlanPage() {
         {/* Section B: Feeding Schedule with Presets */}
         <Card>
           <CardHeader>
-            <CardTitle>Feeding Schedule</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Feeding Schedule</CardTitle>
+              {scheduleTimes.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {t('timesPerDay')}: <span className="font-semibold text-foreground">{scheduleTimes.length}×</span>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Quick preset buttons */}
