@@ -41,6 +41,9 @@
       "expo-secure-store",
       ["expo-location", {
         "locationWhenInUsePermission": "Tato aplikace potřebuje přístup k vaší poloze pro nalezení nejbližšího útulku."
+      }],
+      ["react-native-maps", {
+        "androidGoogleMapsApiKey": "AIzaSyAQP_lksd90ayYfqCySrKV1YIon9NpwttY"
       }]
     ],
     "experiments": {
