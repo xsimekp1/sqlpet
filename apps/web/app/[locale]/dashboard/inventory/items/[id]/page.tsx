@@ -160,7 +160,7 @@ export default function InventoryItemDetailPage() {
   });
 
   const editItemMutation = useMutation({
-    mutationFn: (data: { name?: string; kcal_per_100g?: number; reorder_threshold?: number }) => 
+    mutationFn: (data: { name?: string; kcal_per_100g?: number; unit_weight_g?: number; reorder_threshold?: number }) =>
       ApiClient.put(`/inventory/items/${itemId}`, data),
     onSuccess: () => {
       toast({ title: t('messages.itemUpdated'), description: t('messages.itemUpdatedDesc') });
@@ -426,15 +426,26 @@ export default function InventoryItemDetailPage() {
                   />
                 </div>
                 {item?.category === 'food' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-kcal">{t('fields.kcalPer100g')}</Label>
-                    <Input
-                      id="edit-kcal"
-                      type="number"
-                      defaultValue={item?.kcal_per_100g || ''}
-                      placeholder="např. 350"
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-kcal">{t('fields.kcalPer100g')}</Label>
+                      <Input
+                        id="edit-kcal"
+                        type="number"
+                        defaultValue={item?.kcal_per_100g || ''}
+                        placeholder="např. 350"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-unit-weight">{t('fields.unitWeightG')}</Label>
+                      <Input
+                        id="edit-unit-weight"
+                        type="number"
+                        defaultValue={item?.unit_weight_g || ''}
+                        placeholder="např. 400"
+                      />
+                    </div>
+                  </>
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="edit-reorder">{t('fields.reorderThreshold')}</Label>
@@ -450,11 +461,13 @@ export default function InventoryItemDetailPage() {
                 <Button
                   onClick={() => {
                     const name = (document.getElementById('edit-name') as HTMLInputElement).value;
-                    const kcal = (document.getElementById('edit-kcal') as HTMLInputElement).value;
+                    const kcal = (document.getElementById('edit-kcal') as HTMLInputElement)?.value;
+                    const unitWeight = (document.getElementById('edit-unit-weight') as HTMLInputElement)?.value;
                     const reorder = (document.getElementById('edit-reorder') as HTMLInputElement).value;
                     editItemMutation.mutate({
                       name: name || undefined,
                       kcal_per_100g: kcal ? Number(kcal) : undefined,
+                      unit_weight_g: unitWeight ? Number(unitWeight) : undefined,
                       reorder_threshold: reorder ? Number(reorder) : undefined,
                     });
                   }}
@@ -515,6 +528,15 @@ export default function InventoryItemDetailPage() {
               {t('fields.kcalPer100g')}
             </div>
             <div className="text-base font-medium">{item.kcal_per_100g} kcal</div>
+          </div>
+        )}
+        {item.category === 'food' && item.unit_weight_g && (
+          <div className="border rounded-lg p-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-0.5 min-h-[2rem]">
+              <Package className="h-3 w-3" />
+              {t('fields.unitWeightG')}
+            </div>
+            <div className="text-base font-medium">{item.unit_weight_g} g</div>
           </div>
         )}
         {item.category === 'food' && dailyConsumptionG > 0 && (

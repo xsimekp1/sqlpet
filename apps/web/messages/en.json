@@ -1550,6 +1550,7 @@
       "type": "Transaction type",
       "reason": "Reason",
       "kcalPer100g": "Kcal / 100g",
+      "unitWeightG": "Package weight (g)",
       "pricePerUnit": "Price per unit",
       "allowedSpecies": "For which animals",
       "created": "Created",

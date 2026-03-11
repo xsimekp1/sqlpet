@@ -132,7 +132,7 @@ export default function TasksPage() {
       })
     : tasks;
 
-  // Complete task mutation
+  // Complete task mutation with optimistic update
   const completeTaskMutation = useMutation({
     mutationFn: async ({ taskId, isFeedingTask }: { taskId: string; isFeedingTask: boolean }) => {
       if (isFeedingTask) {
@@ -141,8 +141,23 @@ export default function TasksPage() {
         return await ApiClient.completeTask(taskId);
       }
     },
+    onMutate: async ({ taskId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+      // Snapshot current state for rollback
+      const previousData = queryClient.getQueryData(['tasks', statusFilter, typeFilter, page]);
+      // Optimistically remove task from list
+      queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          items: old.items.filter((t: Task) => t.id !== taskId),
+          total: old.total - 1,
+        };
+      });
+      return { previousData };
+    },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       if (variables.isFeedingTask) {
         toast({ title: 'Krmný úkol splněn', description: 'Záznam krmení a odečet skladu provedeny.' });
         for (const d of (data as any)?.deductions ?? []) {
@@ -160,8 +175,16 @@ export default function TasksPage() {
         toast({ title: 'Úkol splněn' });
       }
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], context.previousData);
+      }
       toast({ title: 'Chyba', description: error.message, variant: 'destructive' });
+    },
+    onSettled: () => {
+      // Refetch to sync with server
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 

@@ -1430,6 +1430,7 @@
       "type": "Typ transakce",
       "reason": "Důvod",
       "kcalPer100g": "Kcal / 100 g",
+      "unitWeightG": "Hmotnost balení (g)",
       "pricePerUnit": "Cena za jednotku (Kč)",
       "allowedSpecies": "Pro jaká zvířata",
       "created": "Vytvořeno",

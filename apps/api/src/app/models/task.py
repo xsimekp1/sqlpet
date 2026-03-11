@@ -138,3 +138,7 @@ class Task(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
     @property
     def created_by_name(self) -> Optional[str]:
         return self.created_by.name if self.created_by else None
+
+    @property
+    def assigned_to_name(self) -> Optional[str]:
+        return self.assigned_to.name if self.assigned_to else None

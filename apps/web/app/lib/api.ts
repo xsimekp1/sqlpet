@@ -79,6 +79,7 @@ export interface Task {
   created_by_id: string;
   created_by_name: string | null;
   assigned_to_id: string | null;
+  assigned_to_name: string | null;
   title: string;
   description: string | null;
   type: 'general' | 'feeding' | 'medical' | 'cleaning' | 'maintenance' | 'administrative';

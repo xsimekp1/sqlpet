@@ -57,6 +57,7 @@ class TaskResponse(TaskBase):
     created_at: datetime
     updated_at: datetime
     created_by_name: Optional[str] = None
+    assigned_to_name: Optional[str] = None
 
     class Config:
         from_attributes = True

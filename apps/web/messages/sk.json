@@ -1328,6 +1328,7 @@
       "type": "Typ transakcie",
       "reason": "Dôvod",
       "kcalPer100g": "Kcal / 100 g",
+      "unitWeightG": "Hmotnosť balenia (g)",
       "pricePerUnit": "Cena za jednotku (Sk)",
       "allowedSpecies": "Pre aké zvieratá",
       "created": "Vytvorené",
