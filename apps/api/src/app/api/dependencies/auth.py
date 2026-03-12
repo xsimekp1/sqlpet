@@ -124,7 +124,7 @@ async def get_current_user(
         .where(User.id == user_id)
         .options(load_only(
             User.id, User.name, User.email, User.phone,
-            User.is_superadmin, User.totp_enabled, User.locale,
+            User.is_superadmin, User.profile_photo_url, User.totp_enabled, User.locale,
             User.created_at, User.updated_at,
         ))
     )
