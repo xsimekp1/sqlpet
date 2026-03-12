@@ -709,13 +709,13 @@ export default function NewHotelReservationPage() {
         </Card>
       )}
 
-      {/* Submit */}
-      {(formData.kennel_id || ((formData.animal_mode === 'db' && formData.animal_id) ||
-              (formData.animal_mode === 'manual' && formData.animal_name && formData.animal_species))) && (
-        <div className="flex gap-4">
+      {/* Sticky footer with submit button */}
+      <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-background border-t p-4 z-50">
+        <div className="max-w-2xl mx-auto flex gap-4">
           <Button
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || !formData.kennel_id}
+            className="flex-1"
           >
             {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
             Vytvořit rezervaci
@@ -724,7 +724,7 @@ export default function NewHotelReservationPage() {
             <Button variant="outline">Zrušit</Button>
           </Link>
         </div>
-      )}
+      </div>
     </div>
   );
 }
