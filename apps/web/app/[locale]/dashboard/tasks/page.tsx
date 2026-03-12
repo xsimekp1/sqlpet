@@ -601,6 +601,7 @@ export default function TasksPage() {
                     dismissingTasks.has(task.id) && 'opacity-0 -translate-x-4 bg-red-50 dark:bg-red-950/30',
                     completingTasks.has(task.id) && 'opacity-0 -translate-x-4 bg-green-50 dark:bg-green-950/30'
                   )}
+                >
                   <TableCell className="max-w-[240px]">
                     <TooltipProvider>
                       <Tooltip>

@@ -250,6 +250,23 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"✗ Failed to seed document templates: {e}")
 
+    # Seed feeding demo data on startup (idempotent - only if <50 tasks exist)
+    try:
+        from src.app.db.seed_feeding_demo import seed_feeding_demo_data
+        from src.app.db.session import AsyncSessionLocal
+
+        async with AsyncSessionLocal() as db:
+            result = await seed_feeding_demo_data(db)
+            await db.commit()
+        if result["skipped"]:
+            print("✓ Feeding demo data already exists (skipped)")
+        elif result["tasks"] > 0:
+            print(f"✓ Seeded feeding demo: {result['foods']} foods, {result['plans']} plans, {result['tasks']} tasks")
+        else:
+            print("✓ Feeding demo data: no animals found to seed")
+    except Exception as e:
+        print(f"✗ Failed to seed feeding demo data: {e}")
+
     # Ensure Supabase storage buckets exist
     try:
         from src.app.services.supabase_storage_service import supabase_storage_service
