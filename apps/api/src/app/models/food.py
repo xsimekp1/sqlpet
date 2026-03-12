@@ -40,3 +40,4 @@ class Food(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         nullable=False,
     )
     kcal_per_100g: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    package_weight_g: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)

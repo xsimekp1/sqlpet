@@ -48,6 +48,7 @@ class FoodBase(BaseModel):
     brand: Optional[str] = Field(None, max_length=255)
     type: str  # dry, wet, raw, medical, other
     kcal_per_100g: Optional[float] = None
+    package_weight_g: Optional[float] = None  # weight per can/pack (e.g. 400g for a wet food can)
 
 
 class FoodCreate(FoodBase):
