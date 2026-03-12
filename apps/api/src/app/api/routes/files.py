@@ -367,12 +367,17 @@ async def upload_user_avatar(
         filename=file.filename or "avatar.jpg",
         content_type=content_type,
         organization_id=str(organization_id),
-        subfolder="user-avatars",
+        path_prefix="user-avatars",
     )
 
+    # Re-fetch user to get full object (get_current_user uses load_only)
+    from sqlalchemy import select
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user = result.scalar_one()
+
     # Update user's profile_photo_url
-    current_user.profile_photo_url = file_url
-    db.add(current_user)
+    user.profile_photo_url = file_url
+    db.add(user)
     await db.commit()
 
     return {"file_url": file_url}
