@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Calendar, DollarSign, User, Home, AlertCircle, Plus } from 'lucide-react';
+import { ArrowLeft, Loader2, Calendar, Check, Plus, Dog, Cat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/app/context/AuthContext';
 import { canViewSensitiveInfo, maskPhone } from '@/app/lib/permissions';
+import { cn } from '@/lib/utils';
 
 function getAuthHeaders(): HeadersInit {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -43,8 +44,10 @@ function getAuthHeaders(): HeadersInit {
 interface Kennel {
   id: string;
   name: string;
-  zone: string;
+  code: string;
+  zone_name: string;
   capacity: number;
+  type: string;
 }
 
 interface Contact {
@@ -73,10 +76,9 @@ export default function NewHotelReservationPage() {
   const router = useRouter();
   const { selectedOrg } = useAuth();
   const canViewSensitive = canViewSensitiveInfo(selectedOrg?.role);
-  
+
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-  const [kennels, setKennels] = useState<Kennel[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [organization, setOrganization] = useState<Organization | null>(null);
@@ -84,24 +86,29 @@ export default function NewHotelReservationPage() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [showNewContact, setShowNewContact] = useState(false);
 
-  const [formData, setFormData] = useState({
-    reserved_from: '',
-    reserved_to: '',
-    kennel_id: '',
-    animal_mode: 'manual' as 'db' | 'manual',
-    animal_id: '',
-    animal_name: '',
-    animal_species: 'dog',
-    animal_breed: '',
-    animal_notes: '',
-    contact_id: '',
-    price_per_day: '',
-    requires_single_cage: false,
-    own_food: false,
-    notes: '',
-    checkin_time: '14:00',
-    checkout_time: '10:00',
-  });
+  // Step 1: Quick check
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [species, setSpecies] = useState<'dog' | 'cat'>('dog');
+
+  // Step 2: Animal details
+  const [animalMode, setAnimalMode] = useState<'new' | 'db'>('new');
+  const [animalId, setAnimalId] = useState('');
+  const [animalName, setAnimalName] = useState('');
+  const [animalBreed, setAnimalBreed] = useState('');
+  const [animalNotes, setAnimalNotes] = useState('');
+
+  // Step 3: Kennel
+  const [kennelId, setKennelId] = useState('');
+  const [requiresSingleCage, setRequiresSingleCage] = useState(false);
+  const [ownFood, setOwnFood] = useState(false);
+
+  // Step 4: Contact
+  const [contactId, setContactId] = useState('');
+
+  // Step 5: Price
+  const [pricePerDay, setPricePerDay] = useState('');
+  const [notes, setNotes] = useState('');
 
   const [newContact, setNewContact] = useState({
     name: '',
@@ -110,6 +117,7 @@ export default function NewHotelReservationPage() {
     type: 'other',
   });
 
+  // Load initial data
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -120,7 +128,6 @@ export default function NewHotelReservationPage() {
       const [orgRes, contactsRes, animalsRes] = await Promise.all([
         fetch('/api/organization/current', { headers: getAuthHeaders() }),
         fetch('/api/contacts?page_size=100', { headers: getAuthHeaders() }),
-        // Fetch all animals (not just specific statuses) so users can book any past/current animal
         fetch('/api/animals?page_size=500', { headers: getAuthHeaders() }),
       ]);
 
@@ -128,7 +135,7 @@ export default function NewHotelReservationPage() {
         const orgData = await orgRes.json();
         setOrganization(orgData);
         if (orgData.hotel_price_per_day) {
-          setFormData(prev => ({ ...prev, price_per_day: String(orgData.hotel_price_per_day) }));
+          setPricePerDay(String(orgData.hotel_price_per_day));
         }
       }
 
@@ -139,11 +146,7 @@ export default function NewHotelReservationPage() {
 
       if (animalsRes.ok) {
         const animalsData = await animalsRes.json();
-        const fetchedAnimals = animalsData.items || [];
-        setAnimals(fetchedAnimals);
-        // Don't show confusing toast - user can always add new animal manually
-      } else {
-        toast.error('Nepodařilo se načíst zvířata z databáze');
+        setAnimals(animalsData.items || []);
       }
     } catch (err) {
       console.error('Failed to load initial data:', err);
@@ -152,38 +155,27 @@ export default function NewHotelReservationPage() {
     }
   };
 
-  const checkAvailability = async () => {
-    // Nejprve musíme vybrat zvíře/druh - pes/kočka
-    const animalSpecies = formData.animal_mode === 'db' 
-      ? animals.find(a => a.id === formData.animal_id)?.species 
-      : formData.animal_species;
-    
-    if (!animalSpecies) {
-      toast.error('Nejprve vyberte nebo zadejte druh zvířete (pes/kočka)');
-      return;
-    }
-
-    if (!formData.reserved_from || !formData.reserved_to) {
-      toast.error('Nejprve vyberte datum');
-      return;
-    }
+  // Auto-check availability when date + species change
+  const checkAvailability = useCallback(async () => {
+    if (!dateFrom || !dateTo) return;
 
     setCheckingAvailability(true);
+    setKennelId(''); // Reset kennel selection
     try {
       const res = await fetch('/api/kennels', { headers: getAuthHeaders() });
-      if (!res.ok) throw new Error('Unauthorized');
+      if (!res.ok) throw new Error('Failed to load kennels');
       const data = await res.json();
       const allKennels = Array.isArray(data) ? data : (data.items || []);
 
-      const available = [];
+      const available: Kennel[] = [];
       for (const kennel of allKennels) {
-        // Kočky potřebují single cage - přeskočíme pokud kennel nepodporuje
-        if (animalSpecies === 'cat' && kennel.type === 'standard') {
-          continue; // standard kotce jsou pro psy, kočky potřebují single
+        // Filter by species suitability
+        if (species === 'cat' && kennel.type === 'standard') {
+          continue; // Standard kennels are for dogs
         }
-        
+
         const checkRes = await fetch(
-          `/api/hotel/reservations/kennels/${kennel.id}/availability?from_date=${formData.reserved_from}&to_date=${formData.reserved_to}`,
+          `/api/hotel/reservations/kennels/${kennel.id}/availability?from_date=${dateFrom}&to_date=${dateTo}`,
           { headers: getAuthHeaders() }
         );
         if (checkRes.ok) {
@@ -193,10 +185,7 @@ export default function NewHotelReservationPage() {
           }
         }
       }
-      
-      if (available.length === 0) {
-        toast.info('Žádné dostupné kotce pro zvolené datum a druh zvířete');
-      }
+
       setAvailableKennels(available);
     } catch (err) {
       console.error('Availability check failed:', err);
@@ -204,7 +193,17 @@ export default function NewHotelReservationPage() {
     } finally {
       setCheckingAvailability(false);
     }
-  };
+  }, [dateFrom, dateTo, species]);
+
+  // Trigger availability check when date or species changes
+  useEffect(() => {
+    if (dateFrom && dateTo) {
+      const timeout = setTimeout(() => {
+        checkAvailability();
+      }, 300); // Debounce
+      return () => clearTimeout(timeout);
+    }
+  }, [dateFrom, dateTo, species, checkAvailability]);
 
   const handleCreateContact = async () => {
     if (!newContact.name) {
@@ -225,7 +224,7 @@ export default function NewHotelReservationPage() {
       if (!res.ok) throw new Error('Failed to create contact');
       const created = await res.json();
       setContacts(prev => [...prev, created]);
-      setFormData(prev => ({ ...prev, contact_id: created.id }));
+      setContactId(created.id);
       setShowNewContact(false);
       setNewContact({ name: '', phone: '', email: '', type: 'other' });
       toast.success('Kontakt vytvořen');
@@ -235,44 +234,48 @@ export default function NewHotelReservationPage() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.reserved_from || !formData.reserved_to || !formData.kennel_id) {
-      toast.error('Vyplňte prosím datum a vyberte kotec');
+    if (!dateFrom || !dateTo) {
+      toast.error('Vyplňte datum pobytu');
+      return;
+    }
+    if (!kennelId) {
+      toast.error('Vyberte kotec');
       return;
     }
 
-    const animalName = formData.animal_mode === 'db' && formData.animal_id
-      ? animals.find(a => a.id === formData.animal_id)?.name || ''
-      : formData.animal_name;
+    const finalAnimalName = animalMode === 'db' && animalId
+      ? animals.find(a => a.id === animalId)?.name || ''
+      : animalName;
 
-    if (!animalName) {
-      toast.error('Vyberte zvíře nebo zadejte jméno');
+    if (!finalAnimalName) {
+      toast.error('Zadejte jméno zvířete');
       return;
     }
 
     setLoading(true);
     try {
-      const animal = formData.animal_mode === 'db' && formData.animal_id
-        ? animals.find(a => a.id === formData.animal_id)
+      const animal = animalMode === 'db' && animalId
+        ? animals.find(a => a.id === animalId)
         : null;
 
       const payload = {
-        kennel_id: formData.kennel_id,
-        contact_id: formData.contact_id || null,
-        animal_name: animalName,
-        animal_species: animal?.species || formData.animal_species,
-        animal_breed: formData.animal_breed || null,
-        animal_notes: formData.animal_notes || null,
-        reserved_from: formData.reserved_from,
-        reserved_to: formData.reserved_to,
-        price_per_day: formData.price_per_day ? parseFloat(formData.price_per_day) : null,
-        requires_single_cage: formData.requires_single_cage,
-        own_food: formData.own_food,
-        notes: formData.notes || null,
+        kennel_id: kennelId,
+        contact_id: contactId || null,
+        animal_name: finalAnimalName,
+        animal_species: animal?.species || species,
+        animal_breed: animalBreed || null,
+        animal_notes: animalNotes || null,
+        reserved_from: dateFrom,
+        reserved_to: dateTo,
+        price_per_day: pricePerDay ? parseFloat(pricePerDay) : null,
+        requires_single_cage: requiresSingleCage,
+        own_food: ownFood,
+        notes: notes || null,
       };
 
       const res = await fetch('/api/hotel/reservations', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders()
         },
@@ -293,10 +296,13 @@ export default function NewHotelReservationPage() {
     }
   };
 
-  const totalDays = formData.reserved_from && formData.reserved_to
-    ? (new Date(formData.reserved_to).getTime() - new Date(formData.reserved_from).getTime()) / (1000 * 60 * 60 * 24) + 1
+  const totalDays = dateFrom && dateTo
+    ? Math.max(1, Math.ceil((new Date(dateTo).getTime() - new Date(dateFrom).getTime()) / (1000 * 60 * 60 * 24)) + 1)
     : 0;
-  const totalPrice = formData.price_per_day ? parseFloat(formData.price_per_day) * totalDays : null;
+  const totalPrice = pricePerDay ? parseFloat(pricePerDay) * totalDays : null;
+
+  // Filter animals by selected species
+  const filteredAnimals = animals.filter(a => a.species === species);
 
   if (loadingData) {
     return (
@@ -307,7 +313,8 @@ export default function NewHotelReservationPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl pb-24 md:pb-6">
+    <div className="space-y-6 max-w-2xl pb-24">
+      {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/hotel/reservations">
           <Button variant="ghost" size="icon">
@@ -315,409 +322,344 @@ export default function NewHotelReservationPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Nová hotelová rezervace</h1>
-          <p className="text-muted-foreground">Vytvoření rezervace hotelového pobytu</p>
+          <h1 className="text-3xl font-bold tracking-tight">Nová rezervace</h1>
+          <p className="text-muted-foreground">Hotelový pobyt pro zvíře</p>
         </div>
       </div>
 
-      {/* Step 1: Date */}
+      {/* Step 1: Quick availability check */}
       <Card>
-        <CardHeader>
-          <CardTitle>1. Termín pobytu</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            1. Rychlá kontrola dostupnosti
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Date selection */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Datum od *</Label>
+              <Label>Od *</Label>
               <Input
                 type="date"
-                value={formData.reserved_from}
-                onChange={(e) => { 
-                  setFormData(p => ({ ...p, reserved_from: e.target.value, kennel_id: '' })); 
-                  setAvailableKennels([]);
-                }}
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">Check-in: {formData.checkin_time}</p>
             </div>
             <div className="space-y-2">
-              <Label>Datum do *</Label>
+              <Label>Do *</Label>
               <Input
                 type="date"
-                value={formData.reserved_to}
-                onChange={(e) => { 
-                  setFormData(p => ({ ...p, reserved_to: e.target.value, kennel_id: '' })); 
-                  setAvailableKennels([]);
-                }}
+                value={dateTo}
+                min={dateFrom}
+                onChange={(e) => setDateTo(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">Check-out: {formData.checkout_time}</p>
             </div>
           </div>
 
-          {formData.reserved_from && formData.reserved_to && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={checkAvailability}
-              disabled={checkingAvailability}
-              className="w-full"
-            >
-              {checkingAvailability ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Calendar className="h-4 w-4 mr-2" />}
-              Zkontrolovat dostupné kotce
-            </Button>
-          )}
+          {/* Species selection - big buttons */}
+          <div className="space-y-2">
+            <Label>Druh zvířete *</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSpecies('dog')}
+                className={cn(
+                  "flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
+                  species === 'dog'
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-muted hover:border-primary/50"
+                )}
+              >
+                <Dog className="h-6 w-6" />
+                <span className="font-medium">Pes</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSpecies('cat')}
+                className={cn(
+                  "flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
+                  species === 'cat'
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-muted hover:border-primary/50"
+                )}
+              >
+                <Cat className="h-6 w-6" />
+                <span className="font-medium">Kočka</span>
+              </button>
+            </div>
+          </div>
 
-          {availableKennels.length > 0 && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-700">
-                Nalezeno {availableKennels.length} dostupných kotců
-              </p>
+          {/* Availability result */}
+          {dateFrom && dateTo && (
+            <div className={cn(
+              "p-4 rounded-lg border-2 transition-all",
+              checkingAvailability ? "border-muted bg-muted/50" :
+              availableKennels.length > 0 ? "border-green-500 bg-green-50" : "border-red-300 bg-red-50"
+            )}>
+              {checkingAvailability ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Kontroluji dostupnost...
+                </div>
+              ) : availableKennels.length > 0 ? (
+                <div className="flex items-center gap-2 text-green-700">
+                  <Check className="h-5 w-5" />
+                  <span className="font-medium">
+                    {availableKennels.length} {availableKennels.length === 1 ? 'kotec volný' :
+                      availableKennels.length < 5 ? 'kotce volné' : 'kotců volných'}
+                  </span>
+                </div>
+              ) : (
+                <div className="text-red-700">
+                  Žádné volné kotce pro {species === 'dog' ? 'psa' : 'kočku'} v tomto termínu
+                </div>
+              )}
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Step 2: Animal - MUST be selected BEFORE checking availability */}
-      {formData.reserved_from && formData.reserved_to && (
+      {/* Step 2: Animal details - only show if we have availability */}
+      {availableKennels.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>2. Zvíře</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-4 mb-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="animal_mode"
-                  checked={formData.animal_mode === 'manual'}
-                  onChange={() => setFormData(p => ({ ...p, animal_mode: 'manual', animal_id: '' }))}
-                />
-                <span className="text-sm">Nové zvíře (zatím jen jméno)</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="animal_mode"
-                  checked={formData.animal_mode === 'db'}
-                  onChange={() => setFormData(p => ({ ...p, animal_mode: 'db', animal_name: '' }))}
-                />
-                <span className="text-sm">Vybrat z databáze</span>
-              </label>
+            {/* Mode toggle */}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={animalMode === 'new' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => { setAnimalMode('new'); setAnimalId(''); }}
+              >
+                Nové zvíře
+              </Button>
+              <Button
+                type="button"
+                variant={animalMode === 'db' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => { setAnimalMode('db'); setAnimalName(''); }}
+                disabled={filteredAnimals.length === 0}
+              >
+                Z databáze ({filteredAnimals.length})
+              </Button>
             </div>
 
-            {formData.animal_mode === 'db' ? (
+            {animalMode === 'db' ? (
               <div className="space-y-2">
-                <Label>Zvíře z databáze *</Label>
-                <Select
-                  value={formData.animal_id || undefined}
-                  onValueChange={(v) => {
-                    setFormData(p => ({ ...p, animal_id: v, kennel_id: '' }));
-                    setAvailableKennels([]);
-                  }}
-                >
+                <Label>Vyberte zvíře *</Label>
+                <Select value={animalId} onValueChange={setAnimalId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Vyberte zvíře" />
                   </SelectTrigger>
                   <SelectContent>
-                    {animals.length === 0 ? (
-                      <div className="p-4 text-center text-muted-foreground text-sm">
-                        Žádná zvířata nenalezena
-                      </div>
-                    ) : (
-                      animals.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.name} ({a.public_code}) - {a.species === 'dog' ? 'pes' : a.species === 'cat' ? 'kočka' : a.species}
-                        </SelectItem>
-                      ))
-                    )}
+                    {filteredAnimals.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.name} (#{a.public_code})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             ) : (
-              <>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Jméno zvířete *</Label>
+                  <Label>Jméno *</Label>
                   <Input
-                    value={formData.animal_name}
-                    onChange={(e) => {
-                      setFormData(p => ({ ...p, animal_name: e.target.value, kennel_id: '' }));
-                      setAvailableKennels([]);
-                    }}
-                    placeholder="např. Rex, Micka"
+                    value={animalName}
+                    onChange={(e) => setAnimalName(e.target.value)}
+                    placeholder="např. Rex"
                   />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Druh *</Label>
-                    <Select
-                      value={formData.animal_species || undefined}
-                      onValueChange={(v) => {
-                        setFormData(p => ({ ...p, animal_species: v, kennel_id: '' }));
-                        setAvailableKennels([]);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="dog">Pes</SelectItem>
-                        <SelectItem value="cat">Kočka</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Plemeno</Label>
-                    <Input
-                      value={formData.animal_breed}
-                      onChange={(e) => setFormData(p => ({ ...p, animal_breed: e.target.value }))}
-                      placeholder="Volitelné"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>Plemeno</Label>
+                  <Input
+                    value={animalBreed}
+                    onChange={(e) => setAnimalBreed(e.target.value)}
+                    placeholder="volitelné"
+                  />
                 </div>
-              </>
+              </div>
             )}
 
             <div className="space-y-2">
-              <Label>Poznámky k zvířeti</Label>
+              <Label>Poznámky ke zvířeti</Label>
               <Input
-                value={formData.animal_notes}
-                onChange={(e) => setFormData(p => ({ ...p, animal_notes: e.target.value }))}
-                placeholder="např. Potřebuje speciální stravu, léky"
+                value={animalNotes}
+                onChange={(e) => setAnimalNotes(e.target.value)}
+                placeholder="speciální strava, léky, chování..."
               />
             </div>
-
-            {/* Availability check button - appears after animal is selected */}
-            {((formData.animal_mode === 'db' && formData.animal_id) || 
-              (formData.animal_mode === 'manual' && formData.animal_name && formData.animal_species)) && (
-              <Button
-                type="button"
-                variant="default"
-                onClick={checkAvailability}
-                disabled={checkingAvailability}
-                className="w-full"
-              >
-                {checkingAvailability ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Calendar className="h-4 w-4 mr-2" />}
-                Zkontrolovat dostupnost pro {formData.animal_species === 'cat' ? 'kočku' : 'psa'}
-              </Button>
-            )}
-
-            {availableKennels.length > 0 && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-700">
-                  ✓ Nalezeno {availableKennels.length} dostupných kotců pro {formData.animal_species === 'cat' ? 'kočku' : 'psa'}
-                </p>
-              </div>
-            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Step 3: Kennel - ONLY after animal is selected and availability checked */}
+      {/* Step 3: Kennel selection */}
       {availableKennels.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>3. Výběr kotce</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle>3. Kotec</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Kotec *</Label>
-              <Select
-                value={formData.kennel_id || undefined}
-                onValueChange={(v) => setFormData(p => ({ ...p, kennel_id: v }))}
-              >
+              <Label>Vyberte kotec *</Label>
+              <Select value={kennelId} onValueChange={setKennelId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Vyberte kotec" />
                 </SelectTrigger>
                 <SelectContent>
                   {availableKennels.map((k) => (
                     <SelectItem key={k.id} value={k.id}>
-                      {k.name} ({k.zone})
+                      {k.code || k.name} {k.zone_name ? `(${k.zone_name})` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="single_cage"
-                checked={formData.requires_single_cage}
-                onChange={(e) => setFormData(p => ({ ...p, requires_single_cage: e.target.checked }))}
-              />
-              <Label htmlFor="single_cage" className="text-sm font-normal">
-                Požadavek na samostatný kotec (kočky)
-              </Label>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="own_food"
-                checked={formData.own_food}
-                onChange={(e) => setFormData(p => ({ ...p, own_food: e.target.checked }))}
-              />
-              <Label htmlFor="own_food" className="text-sm font-normal">
-                Vlastní krmivo (majitel přiveze)
-              </Label>
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={requiresSingleCage}
+                  onChange={(e) => setRequiresSingleCage(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-sm">Požadavek na samostatný kotec</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ownFood}
+                  onChange={(e) => setOwnFood(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-sm">Vlastní krmivo (majitel přiveze)</span>
+              </label>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Step 4: Contact */}
-      {(formData.kennel_id || ((formData.animal_mode === 'db' && formData.animal_id) || 
-              (formData.animal_mode === 'manual' && formData.animal_name))) && (
+      {/* Step 4: Contact - optional */}
+      {kennelId && (
         <Card>
-          <CardHeader>
-            <CardTitle>4. Majitel / Kontakt</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle>4. Majitel (volitelné)</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Kontakt (volitelné)</Label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Select
-                    value={formData.contact_id || undefined}
-                    onValueChange={(v) => setFormData(p => ({ ...p, contact_id: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Vyberte kontakt" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {contacts.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name} {c.phone ? `(${canViewSensitive ? c.phone : maskPhone(c.phone)})` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Dialog open={showNewContact} onOpenChange={setShowNewContact}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Nový kontakt</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Jméno *</Label>
-                        <Input
-                          value={newContact.name}
-                          onChange={(e) => setNewContact(p => ({ ...p, name: e.target.value }))}
-                          placeholder="Jméno kontaktu"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Telefon</Label>
-                        <Input
-                          value={newContact.phone}
-                          onChange={(e) => setNewContact(p => ({ ...p, phone: e.target.value }))}
-                          placeholder="+420..."
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Email</Label>
-                        <Input
-                          type="email"
-                          value={newContact.email}
-                          onChange={(e) => setNewContact(p => ({ ...p, email: e.target.value }))}
-                          placeholder="email@..."
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Typ</Label>
-                        <Select
-                          value={newContact.type}
-                          onValueChange={(v) => setNewContact(p => ({ ...p, type: v }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="other">Ostatní</SelectItem>
-                            <SelectItem value="owner">Majitel</SelectItem>
-                            <SelectItem value="foster">Pěstoun</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button onClick={handleCreateContact} className="w-full">
-                        Vytvořit kontakt
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+          <CardContent>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Select value={contactId} onValueChange={setContactId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Vyberte kontakt" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contacts.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name} {c.phone ? `(${canViewSensitive ? c.phone : maskPhone(c.phone)})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              <Dialog open={showNewContact} onOpenChange={setShowNewContact}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Nový kontakt</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Jméno *</Label>
+                      <Input
+                        value={newContact.name}
+                        onChange={(e) => setNewContact(p => ({ ...p, name: e.target.value }))}
+                        placeholder="Jméno kontaktu"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Telefon</Label>
+                      <Input
+                        value={newContact.phone}
+                        onChange={(e) => setNewContact(p => ({ ...p, phone: e.target.value }))}
+                        placeholder="+420..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email</Label>
+                      <Input
+                        type="email"
+                        value={newContact.email}
+                        onChange={(e) => setNewContact(p => ({ ...p, email: e.target.value }))}
+                        placeholder="email@..."
+                      />
+                    </div>
+                    <Button onClick={handleCreateContact} className="w-full">
+                      Vytvořit kontakt
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Step 5: Price and Notes */}
-      {(formData.kennel_id || ((formData.animal_mode === 'db' && formData.animal_id) ||
-              (formData.animal_mode === 'manual' && formData.animal_name && formData.animal_species))) && (
+      {/* Step 5: Price summary */}
+      {kennelId && (
         <Card>
-          <CardHeader>
-            <CardTitle>5. Cena a poznámky</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle>5. Cena</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Cena za den (Kč)</Label>
               <Input
                 type="number"
-                value={formData.price_per_day}
-                onChange={(e) => setFormData(p => ({ ...p, price_per_day: e.target.value }))}
-                placeholder={organization?.hotel_price_per_day ? String(organization.hotel_price_per_day) : 'např. 300'}
+                value={pricePerDay}
+                onChange={(e) => setPricePerDay(e.target.value)}
+                placeholder={organization?.hotel_price_per_day ? String(organization.hotel_price_per_day) : '300'}
               />
-              {organization?.hotel_price_per_day && (
-                <p className="text-xs text-muted-foreground">
-                  Výchozí cena z nastavení organizace: {organization.hotel_price_per_day} Kč
-                </p>
-              )}
             </div>
 
-            {totalPrice && (
+            {totalPrice !== null && totalPrice > 0 && (
               <div className="p-4 bg-muted rounded-lg">
                 <div className="flex justify-between text-sm">
-                  <span>Cena za den:</span>
-                  <span>{formData.price_per_day} Kč</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Počet dní:</span>
-                  <span>{totalDays}</span>
-                </div>
-                <div className="flex justify-between font-bold mt-2 pt-2 border-t">
-                  <span>Celkem:</span>
-                  <span>{totalPrice} Kč</span>
+                  <span>{pricePerDay} Kč × {totalDays} {totalDays === 1 ? 'den' : totalDays < 5 ? 'dny' : 'dní'}</span>
+                  <span className="font-bold">{totalPrice} Kč</span>
                 </div>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label>Poznámky</Label>
+              <Label>Poznámky k rezervaci</Label>
               <Input
-                value={formData.notes}
-                onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
-                placeholder="Volitelné poznámky k rezervaci"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="volitelné"
               />
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Sticky footer with submit button */}
+      {/* Sticky footer */}
       <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-background border-t p-4 z-50">
         <div className="max-w-2xl mx-auto flex gap-4">
           <Button
             onClick={handleSubmit}
-            disabled={loading || !formData.kennel_id}
+            disabled={loading || !kennelId || (!animalName && !animalId)}
             className="flex-1"
           >
-            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Vytvořit rezervaci
           </Button>
           <Link href="/dashboard/hotel/reservations">
