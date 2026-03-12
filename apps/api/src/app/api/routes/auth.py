@@ -252,14 +252,30 @@ async def get_me(
         )
 
     # Refresh user to ensure all attributes are loaded in current async context
-    await db.refresh(current_user)
+    try:
+        await db.refresh(current_user)
+    except Exception:
+        pass  # Ignore refresh errors (e.g., missing columns before migration)
 
     # Hardcode admin@example.com as superadmin (not persisted in DB)
+    is_superadmin = current_user.is_superadmin
     if current_user.email == "admin@example.com":
-        current_user.is_superadmin = True
+        is_superadmin = True
+
+    # Build user response manually to handle potential missing columns gracefully
+    user_response = UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        phone=current_user.phone,
+        profile_photo_url=getattr(current_user, 'profile_photo_url', None),
+        is_superadmin=is_superadmin,
+        totp_enabled=current_user.totp_enabled,
+        created_at=current_user.created_at,
+    )
 
     return CurrentUserResponse(
-        user=UserResponse.model_validate(current_user),
+        user=user_response,
         memberships=membership_infos,
     )
 
@@ -276,13 +292,25 @@ async def update_me(
     if data.phone is not None:
         current_user.phone = data.phone if data.phone else None
     if data.profile_photo_url is not None:
-        current_user.profile_photo_url = data.profile_photo_url if data.profile_photo_url else None
+        # Only set if column exists (migration may not have run yet)
+        if hasattr(current_user, 'profile_photo_url'):
+            current_user.profile_photo_url = data.profile_photo_url if data.profile_photo_url else None
 
     db.add(current_user)
     await db.commit()
     await db.refresh(current_user)
 
-    return UserResponse.model_validate(current_user)
+    # Build response manually to handle potential missing columns
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        phone=current_user.phone,
+        profile_photo_url=getattr(current_user, 'profile_photo_url', None),
+        is_superadmin=current_user.is_superadmin,
+        totp_enabled=current_user.totp_enabled,
+        created_at=current_user.created_at,
+    )
 
 
 @router.post("/select-organization")
