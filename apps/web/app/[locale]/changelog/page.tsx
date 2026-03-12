@@ -54,6 +54,48 @@ export default function ChangelogPage() {
             </p>
           </div>
 
+          {/* Week 11-12.3 */}
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 11. – 12. března 2026</span>
+              <span className="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">NOVÉ</span>
+            </h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-6 space-y-4">
+              <div>
+                <span className="font-semibold text-white">📊 Historie spotřeby krmiva</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Nový přehled kolik kterého krmiva zvíře snědlo za 7/30/90/365 dní.
+                  Report i přímo na kartě zvířete.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🏨 Vylepšený hotel</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Kompletně přepracovaný formulář rezervací – rychlejší zápis z telefonu,
+                  lepší kontrola dostupnosti kotců.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">📦 Automatický odpočet skladu</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Při dokončení úkolu s přiřazenou položkou skladu se automaticky odečte množství.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">👤 Profilové fotky</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Uživatelé si mohou nahrát profilovou fotku v nastavení účtu.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🔧 Řazení úkolů</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Vylepšené řazení seznamu úkolů podle data splnění a priority.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Week 3-10.3 */}
           <section className="mb-12">
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
