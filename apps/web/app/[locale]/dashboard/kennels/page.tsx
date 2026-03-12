@@ -767,7 +767,7 @@ export default function KennelsPage() {
                   <th className="text-left p-3">Zóna</th>
                   <th className="text-left p-3">Typ</th>
                   <th className="text-left p-3">Pro zvířata</th>
-                  <th className="text-left p-3">Kapacita</th>
+                  <th className="text-center p-3">Kapacita</th>
                   <th className="text-left p-3">Stav</th>
                   <th className="text-left p-3">Zvířata</th>
                   <th className="text-left p-3">Akce</th>
@@ -793,7 +793,7 @@ export default function KennelsPage() {
                       </Badge>
                     </td>
                     <td className="p-3"><SpeciesBadges species={kennel.allowed_species} /></td>
-                    <td className="p-3">{kennel.capacity}</td>
+                    <td className="p-3 text-center">{kennel.capacity}</td>
                     <td className="p-3">
                       <Badge variant={getStatusColor(kennel.status)}>
                         {t(`status.${kennel.status}` as any)}
