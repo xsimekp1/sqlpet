@@ -1,40 +1,14 @@
-# Exclude other apps
-apps/api/
+node_modules/
+.git/
+.vscode/
+.idea/
+.claude/
 apps/web/
-
-# Exclude packages
-packages/
-
-# Exclude infrastructure
+apps/api/
 infra/
 seed/
-
-# Exclude directories with large files
-animals/
-dog_symbols_icons_alpha01_sliced/
-cat_symbols_icons_alpha01_sliced/
-
-# Exclude specific large files (root only)
-/*.zip
-/petslog.png
-/prnt1.png
-/*.webm
-
-# Exclude caches and build artifacts
 __pycache__/
 .pytest_cache/
 .ruff_cache/
 .venv/
 venv/
-node_modules/
-
-# Exclude IDE/editor
-.vscode/
-.idea/
-.claude/
-
-# Exclude misc root files
-*.txt
-*.csv
-*.sql
-.git/
