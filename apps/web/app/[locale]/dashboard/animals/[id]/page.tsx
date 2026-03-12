@@ -309,6 +309,7 @@ export default function AnimalDetailPage() {
   // Kennel history
   const [kennelHistory, setKennelHistory] = useState<{ kennel_code: string; assigned_at: string; released_at: string | null }[]>([]);
   const animalId = params.id as string;
+  const locale = params.locale as string;
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
