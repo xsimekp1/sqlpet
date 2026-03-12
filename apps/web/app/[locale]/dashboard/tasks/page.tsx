@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, AlertCircle, Plus, Ban, ArrowUpDown, Bot, Calendar } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Plus, Ban, ArrowUpDown, Bot, ChevronUp, ChevronDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -512,19 +512,6 @@ export default function TasksPage() {
           {prioritySort === 'desc' ? '↑ Urgentní' : prioritySort === 'asc' ? '↓ Nízká' : 'Priorita'}
         </Button>
 
-        <Button
-          variant={dueDateSort ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            setPrioritySort(null);
-            setDueDateSort(prev => prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc');
-          }}
-          title="Seřadit podle termínu"
-        >
-          <Calendar className="h-4 w-4 mr-1" />
-          {dueDateSort === 'asc' ? '↑ Nejbližší' : dueDateSort === 'desc' ? '↓ Nejzazší' : 'Termín'}
-        </Button>
-
         {totalTasks > 0 && (
           <div className="flex items-center text-sm text-muted-foreground ml-auto">
             {totalTasks} úkolů celkem
@@ -541,7 +528,20 @@ export default function TasksPage() {
               <TableHead>Typ</TableHead>
               <TableHead>Priorita</TableHead>
               <TableHead>Stav</TableHead>
-              <TableHead>Termín</TableHead>
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+                onClick={() => {
+                  setPrioritySort(null);
+                  setDueDateSort(prev => prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc');
+                }}
+              >
+                <div className="flex items-center gap-1">
+                  Termín
+                  {dueDateSort === 'asc' && <ChevronUp className="h-4 w-4" />}
+                  {dueDateSort === 'desc' && <ChevronDown className="h-4 w-4" />}
+                  {!dueDateSort && <ChevronUp className="h-4 w-4 opacity-0 group-hover:opacity-30" />}
+                </div>
+              </TableHead>
               <TableHead className="w-10">Zadal</TableHead>
               <TableHead className="text-right">Akce</TableHead>
             </TableRow>
