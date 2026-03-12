@@ -49,6 +49,7 @@ from src.app.api.routes.metrics import router as metrics_router
 from src.app.api.routes.documents import router as documents_router
 from src.app.api.routes.gdpr import router as gdpr_router
 from src.app.api.routes.leads import router as leads_router
+from src.app.api.routes.outreach import router as outreach_router
 
 # Files router is now working properly after fixing import issues
 
@@ -584,3 +585,4 @@ app.include_router(metrics_router)
 app.include_router(documents_router)
 app.include_router(gdpr_router)
 app.include_router(leads_router)
+app.include_router(outreach_router)

@@ -64,6 +64,7 @@ from src.app.models.document_template import (
     DocumentStatus,
 )
 from src.app.models.login_log import LoginLog
+from src.app.models.outreach import OutreachCampaign, OutreachEmail
 
 __all__ = [
     "Base",
@@ -134,4 +135,6 @@ __all__ = [
     "DocumentInstance",
     "DocumentStatus",
     "LoginLog",
+    "OutreachCampaign",
+    "OutreachEmail",
 ]
