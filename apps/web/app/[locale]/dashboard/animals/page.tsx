@@ -695,87 +695,87 @@ export default function AnimalsPage() {
                       <div className="grid grid-cols-3 gap-1">
                         {/* Neutered / Spayed - only show when altered */}
                         {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center bg-green-100"
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-green-100 text-sm"
                             title={animal.species === 'cat'
                               ? (animal.sex === 'male' ? t('animals.health.neuteredCatMale') : t('animals.health.neuteredCatFemale'))
                               : (animal.sex === 'male' ? t('animals.health.neuteredDogMale') : t('animals.health.neuteredDogFemale'))
                             }
                           >
-                            <Scissors className="h-3.5 w-3.5 text-green-600" />
-                          </div>
+                            ✂️
+                          </span>
                         )}
                         {/* Dewormed — only shown when true */}
                         {animal.is_dewormed && (
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center bg-green-100"
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-green-100 text-sm"
                             title={t('animals.health.dewormed')}
                           >
-                            <Pill className="h-3.5 w-3.5 text-green-600" />
-                          </div>
+                            💊
+                          </span>
                         )}
                         {/* Aggressive */}
                         {animal.is_aggressive && (
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center bg-red-100"
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-red-100 text-sm"
                             title={t('animals.health.aggressiveWarning')}
                           >
-                            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
-                          </div>
+                            ⚠️
+                          </span>
                         )}
                         {/* Pregnant */}
                         {animal.is_pregnant && (
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center bg-pink-100"
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-pink-100 text-sm"
                             title={t('animals.health.pregnant')}
                           >
-                            <Baby className="h-3.5 w-3.5 text-pink-500" />
-                          </div>
+                            🤰
+                          </span>
                         )}
                         {/* Lactating */}
                         {animal.is_lactating && (
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-100"
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-100 text-sm"
                             title={t('animals.health.lactating')}
                           >
-                            <Milk className="h-3.5 w-3.5 text-amber-600" />
-                          </div>
+                            🍼
+                          </span>
                         )}
                         {/* Critical */}
                         {animal.is_critical && (
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center bg-red-100"
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-red-100 text-sm"
                             title={t('animals.health.critical')}
                           >
-                            <Zap className="h-3.5 w-3.5 text-red-600" />
-                          </div>
+                            🔥
+                          </span>
                         )}
                         {/* Diabetic */}
                         {animal.is_diabetic && (
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center bg-blue-100"
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-blue-100 text-sm"
                             title={t('animals.health.diabetic')}
                           >
-                            <Syringe className="h-3.5 w-3.5 text-blue-600" />
-                          </div>
+                            💉
+                          </span>
                         )}
                         {/* Cancer */}
                         {animal.is_cancer && (
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center bg-rose-100"
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-rose-100 text-sm"
                             title={t('animals.health.cancer')}
                           >
-                            <Heart className="h-3.5 w-3.5 text-rose-600" />
-                          </div>
+                            🎗️
+                          </span>
                         )}
                         {/* Special needs */}
                         {animal.is_special_needs && (
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center bg-violet-100"
+                          <span
+                            className="w-7 h-7 rounded-full flex items-center justify-center bg-violet-100 text-sm"
                             title="Speciální potřeby"
                           >
-                            <Accessibility className="h-3.5 w-3.5 text-violet-600" />
-                          </div>
+                            ⭐
+                          </span>
                         )}
                       </div>
                     </td>
