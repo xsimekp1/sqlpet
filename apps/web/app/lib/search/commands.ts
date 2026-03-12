@@ -157,9 +157,24 @@ export const COMMANDS: Command[] = [
     descriptionEn: 'Kennel and housing management',
     href: '/dashboard/kennels',
     icon: 'Home',
-    keywords: ['kotce', 'ubytovani', 'mapa', 'prostory'],
-    keywordsEn: ['kennels', 'housing', 'map', 'facilities'],
+    keywords: ['kotce', 'kotec', 'ubytovani', 'mapa', 'prostory', 'klec', 'voliera'],
+    keywordsEn: ['kennels', 'kennel', 'housing', 'map', 'facilities', 'cage', 'aviary'],
     tags: ['kennels'],
+    permission: 'kennels.read',
+  },
+
+  // Hotel
+  {
+    id: 'hotel',
+    title: 'Hotel',
+    titleEn: 'Hotel',
+    description: 'Hotelové rezervace',
+    descriptionEn: 'Hotel reservations',
+    href: '/dashboard/hotel/reservations',
+    icon: 'Hotel',
+    keywords: ['hotel', 'rezervace', 'ubytovani', 'penzion', 'hlidani'],
+    keywordsEn: ['hotel', 'reservations', 'booking', 'boarding', 'pet sitting'],
+    tags: ['hotel'],
     permission: 'kennels.read',
   },
 
@@ -203,6 +218,20 @@ export const COMMANDS: Command[] = [
     keywords: ['ukoly', 'todo', 'cinnosti'],
     keywordsEn: ['tasks', 'todo', 'activities'],
     tags: ['tasks'],
+  },
+
+  // Calendar
+  {
+    id: 'calendar',
+    title: 'Kalendář',
+    titleEn: 'Calendar',
+    description: 'Kalendář událostí',
+    descriptionEn: 'Events calendar',
+    href: '/dashboard/calendar',
+    icon: 'CalendarDays',
+    keywords: ['kalendar', 'udalosti', 'planovani', 'mesic', 'tyden'],
+    keywordsEn: ['calendar', 'events', 'planning', 'month', 'week', 'schedule'],
+    tags: ['calendar'],
   },
 
   // People
@@ -259,5 +288,17 @@ export const COMMANDS: Command[] = [
     keywordsEn: ['organization', 'shelter', 'settings'],
     tags: ['settings'],
     permission: 'admin',
+  },
+  {
+    id: 'settings.profile',
+    title: 'Můj profil',
+    titleEn: 'My Profile',
+    description: 'Profilová fotka a osobní nastavení',
+    descriptionEn: 'Profile photo and personal settings',
+    href: '/dashboard/settings/profile',
+    icon: 'User',
+    keywords: ['profil', 'fotka', 'avatar', 'osobni', 'ucet', 'fotografie'],
+    keywordsEn: ['profile', 'photo', 'avatar', 'personal', 'account', 'picture'],
+    tags: ['settings'],
   },
 ]

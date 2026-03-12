@@ -47,11 +47,21 @@ class CalendarOutcomeEvent(BaseModel):
     outcome_type: str  # 'adopted', 'returned_to_owner', etc.
 
 
+class CalendarAdoptionEligibleEvent(BaseModel):
+    """Event when an animal becomes eligible for adoption (legal deadline expires)."""
+    date: str
+    animal_id: str
+    animal_name: str
+    animal_photo_url: Optional[str] = None
+    deadline_type: Optional[str] = None  # '2m_notice', '4m_transfer', '4m_notice'
+
+
 class CalendarEventsResponse(BaseModel):
     intakes: List[CalendarIntakeEvent]
     litters: List[CalendarLitterEvent]
     escapes: List[CalendarEscapeEvent]
     outcomes: List[CalendarOutcomeEvent]
+    adoption_eligible: List[CalendarAdoptionEligibleEvent]
 
 
 @router.get("/events", response_model=CalendarEventsResponse)
@@ -81,13 +91,14 @@ async def get_calendar_events(
     org_id_str = str(organization_id)
 
     # 1. Get intakes for the month (intake_date)
+    # Use COALESCE to prefer thumbnail over full photo for performance
     intakes_result = await db.execute(
         text("""
-            SELECT 
+            SELECT
                 i.intake_date::text,
                 a.id::text,
                 a.name,
-                a.primary_photo_url
+                COALESCE(a.default_thumbnail_url, a.primary_photo_url) as photo_url
             FROM intakes i
             JOIN animals a ON a.id = i.animal_id
             WHERE i.organization_id = :org_id
@@ -111,11 +122,11 @@ async def get_calendar_events(
     # 2. Get expected litters for the month
     litters_result = await db.execute(
         text("""
-            SELECT 
+            SELECT
                 a.expected_litter_date::text,
                 a.id::text,
                 a.name,
-                a.primary_photo_url
+                COALESCE(a.default_thumbnail_url, a.primary_photo_url) as photo_url
             FROM animals a
             WHERE a.organization_id = :org_id
               AND a.deleted_at IS NULL
@@ -140,11 +151,11 @@ async def get_calendar_events(
     # 3. Get escape incidents for the month
     escapes_result = await db.execute(
         text("""
-            SELECT 
+            SELECT
                 i.incident_date::text,
                 i.animal_id::text,
                 a.name,
-                a.primary_photo_url
+                COALESCE(a.default_thumbnail_url, a.primary_photo_url) as photo_url
             FROM animal_incidents i
             JOIN animals a ON a.id = i.animal_id
             WHERE i.organization_id = :org_id
@@ -168,12 +179,12 @@ async def get_calendar_events(
     # 4. Get planned and actual outcomes for the month
     outcomes_result = await db.execute(
         text("""
-            SELECT 
+            SELECT
                 COALESCE(i.planned_outcome_date, i.actual_outcome_date)::text,
                 a.id::text,
                 a.name,
-                a.primary_photo_url,
-                CASE 
+                COALESCE(a.default_thumbnail_url, a.primary_photo_url) as photo_url,
+                CASE
                     WHEN i.actual_outcome_date IS NOT NULL THEN 'actual'
                     ELSE 'planned'
                 END as outcome_type
@@ -201,9 +212,42 @@ async def get_calendar_events(
         for row in outcomes_result.fetchall()
     ]
 
+    # 5. Get adoption eligibility events (animals where website_deadline_at falls in month)
+    # This shows when animals in legal holding become eligible for adoption
+    adoption_eligible_result = await db.execute(
+        text("""
+            SELECT
+                a.website_deadline_at::text,
+                a.id::text,
+                a.name,
+                COALESCE(a.default_thumbnail_url, a.primary_photo_url) as photo_url,
+                a.website_deadline_type
+            FROM animals a
+            WHERE a.organization_id = :org_id
+              AND a.deleted_at IS NULL
+              AND a.website_deadline_at IS NOT NULL
+              AND a.website_deadline_at >= :start_date
+              AND a.website_deadline_at <= :end_date
+              AND a.status = 'waiting_adoption'
+            ORDER BY a.website_deadline_at ASC
+        """),
+        {"org_id": org_id_str, "start_date": start_date, "end_date": end_date},
+    )
+    adoption_eligible = [
+        CalendarAdoptionEligibleEvent(
+            date=row[0],
+            animal_id=row[1],
+            animal_name=row[2],
+            animal_photo_url=row[3],
+            deadline_type=row[4],
+        )
+        for row in adoption_eligible_result.fetchall()
+    ]
+
     return CalendarEventsResponse(
         intakes=intakes,
         litters=litters,
         escapes=escapes,
         outcomes=outcomes,
+        adoption_eligible=adoption_eligible,
     )

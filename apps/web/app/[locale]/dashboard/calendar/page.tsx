@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { ApiClient } from '@/app/lib/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Baby, LogIn, PersonStanding, Heart, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Baby, LogIn, PersonStanding, Heart, LogOut, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -45,17 +45,27 @@ interface CalendarOutcomeEvent {
   outcome_type: string;
 }
 
+interface CalendarAdoptionEligibleEvent {
+  date: string;
+  animal_id: string;
+  animal_name: string;
+  animal_photo_url: string | null;
+  deadline_type: string | null;
+}
+
 interface CalendarEventsData {
   intakes: CalendarIntakeEvent[];
   litters: CalendarLitterEvent[];
   escapes: CalendarEscapeEvent[];
   outcomes: CalendarOutcomeEvent[];
+  adoption_eligible: CalendarAdoptionEligibleEvent[];
 }
 
 interface CalendarEvent {
   date: string;
-  type: 'intake' | 'litter' | 'escaped' | 'planned_adoption' | 'planned_outcome';
+  type: 'intake' | 'litter' | 'escaped' | 'planned_adoption' | 'planned_outcome' | 'adoption_eligible';
   animal: CalendarEventAnimal;
+  deadlineType?: string | null;
 }
 
 function AnimalMedallion({ animal, title }: { animal: CalendarEventAnimal; title: string }) {
@@ -101,10 +111,10 @@ export default function CalendarPage() {
   const eventsMap = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
 
-    const addEvent = (dateStr: string, type: CalendarEvent['type'], animal: CalendarEventAnimal) => {
+    const addEvent = (dateStr: string, type: CalendarEvent['type'], animal: CalendarEventAnimal, deadlineType?: string | null) => {
       if (!dateStr) return;
       if (!map[dateStr]) map[dateStr] = [];
-      map[dateStr].push({ date: dateStr, type, animal });
+      map[dateStr].push({ date: dateStr, type, animal, deadlineType });
     };
 
     // Add intakes
@@ -143,6 +153,15 @@ export default function CalendarPage() {
         name: outcome.animal_name,
         photo_url: outcome.animal_photo_url,
       });
+    }
+
+    // Add adoption eligibility events (legal deadline expires)
+    for (const eligible of eventsData?.adoption_eligible ?? []) {
+      addEvent(eligible.date, 'adoption_eligible', {
+        id: eligible.animal_id,
+        name: eligible.animal_name,
+        photo_url: eligible.animal_photo_url,
+      }, eligible.deadline_type);
     }
 
     return map;
@@ -211,7 +230,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
         <span className="flex items-center gap-1">
           <LogIn className="h-5 w-5 text-blue-500" /> {t('intakeStart')}
         </span>
@@ -220,6 +239,9 @@ export default function CalendarPage() {
         </span>
         <span className="flex items-center gap-1">
           <PersonStanding className="h-5 w-5 text-orange-500" /> {t('escaped')}
+        </span>
+        <span className="flex items-center gap-1">
+          <CheckCircle className="h-5 w-5 text-emerald-500" /> {t('adoptionEligible')}
         </span>
         <span className="flex items-center gap-1">
           <Heart className="h-5 w-5 text-green-500" /> {t('plannedAdoption')}
@@ -262,6 +284,7 @@ export default function CalendarPage() {
             const litters = events.filter(e => e.type === 'litter');
             const escaped = events.filter(e => e.type === 'escaped');
             const plannedAdoptions = events.filter(e => e.type === 'planned_adoption');
+            const adoptionEligible = events.filter(e => e.type === 'adoption_eligible');
 
             return (
               <div
@@ -344,6 +367,25 @@ export default function CalendarPage() {
                     ))}
                   </div>
                 )}
+
+                {/* Adoption eligible medallions (legal deadline expires) */}
+                {adoptionEligible.length > 0 && (
+                  <div className="flex flex-wrap gap-0.5">
+                    {adoptionEligible.slice(0, 3).map((ev, i) => (
+                      <div key={i} className="relative" title={`${ev.animal.name} — ${t('adoptionEligible')}`}>
+                        <AnimalMedallion animal={ev.animal} title={t('adoptionEligible')} />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border border-white flex items-center justify-center">
+                          <CheckCircle className="h-2 w-2 text-white" />
+                        </div>
+                      </div>
+                    ))}
+                    {adoptionEligible.length > 3 && (
+                      <div className="w-8 h-8 rounded-full bg-muted border-2 border-white shadow flex items-center justify-center text-[9px] text-muted-foreground font-bold">
+                        +{adoptionEligible.length - 3}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -376,6 +418,7 @@ export default function CalendarPage() {
                     escaped: t('escaped'),
                     planned_adoption: t('plannedAdoption'),
                     planned_outcome: t('plannedOutcome'),
+                    adoption_eligible: t('adoptionEligible'),
                   };
                   const typeColors: Record<string, string> = {
                     intake: 'bg-blue-100 text-blue-700 border-blue-200',
@@ -383,6 +426,7 @@ export default function CalendarPage() {
                     escaped: 'bg-orange-100 text-orange-700 border-orange-200',
                     planned_adoption: 'bg-green-100 text-green-700 border-green-200',
                     planned_outcome: 'bg-red-100 text-red-700 border-red-200',
+                    adoption_eligible: 'bg-emerald-100 text-emerald-700 border-emerald-200',
                   };
 
                   return (
