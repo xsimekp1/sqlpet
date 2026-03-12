@@ -1,6 +1,11 @@
 name: EAS Build
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/eas-build.yml'
   workflow_dispatch:
     inputs:
       platform:
@@ -27,6 +32,9 @@ jobs:
     defaults:
       run:
         working-directory: apps/mobile
+    env:
+      PLATFORM: ${{ inputs.platform || 'android' }}
+      PROFILE: ${{ inputs.profile || 'preview' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,9 +54,9 @@ jobs:
         run: npm install
 
       - name: Build Android
-        if: ${{ inputs.platform == 'android' || inputs.platform == 'all' }}
-        run: eas build --platform android --profile ${{ inputs.profile }} --non-interactive
+        if: ${{ env.PLATFORM == 'android' || env.PLATFORM == 'all' }}
+        run: eas build --platform android --profile ${{ env.PROFILE }} --non-interactive
 
       - name: Build iOS
-        if: ${{ inputs.platform == 'ios' || inputs.platform == 'all' }}
-        run: eas build --platform ios --profile ${{ inputs.profile }} --non-interactive
+        if: ${{ env.PLATFORM == 'ios' || env.PLATFORM == 'all' }}
+        run: eas build --platform ios --profile ${{ env.PROFILE }} --non-interactive
