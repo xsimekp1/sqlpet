@@ -569,48 +569,48 @@ export default function AnimalsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex gap-1 flex-wrap">
                       {animal.is_critical && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700" title="Kritický stav">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700" title="Kritický stav">
                           🔥
                         </span>
                       )}
                       {animal.is_diabetic && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700" title="Cukrovka">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700" title="Cukrovka">
                           💉
                         </span>
                       )}
                       {animal.is_pregnant && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-pink-100 text-pink-700" title="Březí">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700" title="Březí">
                           🤰
                         </span>
                       )}
                       {animal.is_lactating && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700" title="Kojící">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700" title="Kojící">
                           🍼
                         </span>
                       )}
                       {animal.is_cancer && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-rose-100 text-rose-700" title="Nádor">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-rose-100 text-rose-700" title="Nádor">
                           🎗️
                         </span>
                       )}
                       {animal.is_aggressive && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700" title="Agresivní">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700" title="Agresivní">
                           ⚠️
                         </span>
                       )}
                       {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700" title="Vykastrované">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="Vykastrované">
                           ✂️
                         </span>
                       )}
                     </div>
-                    <span className="font-mono text-[10px] text-muted-foreground">#{animal.public_code}</span>
+                    <span className="font-mono text-xs text-muted-foreground">#{animal.public_code}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     {animal.current_kennel_code && (
                       <span className="text-xs font-mono font-semibold">{animal.current_kennel_code}</span>
                     )}
-                    <Badge className={cn("text-[10px] px-1.5 py-0", getStatusColor(animal.status))}>
+                    <Badge className={cn("text-xs px-1.5 py-0.5", getStatusColor(animal.status))}>
                       {t(`animals.status.${animal.status}`)}
                     </Badge>
                   </div>
