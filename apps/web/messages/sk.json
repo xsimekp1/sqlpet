@@ -85,7 +85,8 @@
   },
   "errors": {
     "noPermission": "Nemáte oprávnenie k tejto akcii",
-    "generic": "Došlo k chybe. Skúste to znovu."
+    "generic": "Došlo k chybe. Skúste to znovu.",
+    "required": "Toto pole je povinné"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -512,6 +513,8 @@
       "zone": "Zóna",
       "zonePlaceholder": "Vyberte zónu",
       "loadingZones": "Načítam zóny...",
+      "noZones": "Nemáte ešte vytvorené žiadne zóny. Najprv vytvorte aspoň jednu zónu.",
+      "createZoneFirst": "Vytvoriť zónu",
       "type": "Typ",
       "size": "Veľkosť",
       "capacity": "Kapacita",
@@ -1199,7 +1202,10 @@
       "showing": "Zobrazované {count} plán(o)v",
       "active": "Aktívne",
       "inactive": "Neaktívne"
-    }
+    },
+    "significantReduction": "Výrazné zníženie dávky",
+    "reductionWarningMessage": "Znižujete dennú dávku z {oldAmount} g na {newAmount} g (o {percent} %). Takéto výrazné zníženie môže mať vplyv na zdravie zvieraťa. Ste si istí?",
+    "confirmReduction": "Áno, znížiť dávku"
   },
   "people": {
     "title": "Ľudia",

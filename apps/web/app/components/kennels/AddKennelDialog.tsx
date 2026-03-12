@@ -52,8 +52,8 @@ function getAutoName(species: string[]): string | null {
 }
 
 const formSchema = z.object({
-  name: z.string().min(1, 'required'),
-  zone_id: z.string().min(1, 'required'),
+  name: z.string().min(1, 'errors.required'),
+  zone_id: z.string().min(1, 'errors.required'),
   type: z.enum(['indoor', 'outdoor', 'isolation', 'quarantine']),
   size_category: z.enum(['small', 'medium', 'large', 'xlarge']),
   capacity: z.number().min(1).max(50),
@@ -211,18 +211,43 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('add.zone')}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={loadingZones ? t('add.loadingZones') : t('add.zonePlaceholder')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {zones.map(z => (
-                        <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {loadingZones ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t('add.loadingZones')}
+                    </div>
+                  ) : zones.length === 0 ? (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-3 space-y-2">
+                      <p className="text-sm text-amber-800 dark:text-amber-200">
+                        {t('add.noZones')}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          onOpenChange(false);
+                          // Navigate to zone creation or open zone dialog
+                          window.location.href = '/dashboard/kennels?createZone=true';
+                        }}
+                      >
+                        {t('add.createZoneFirst')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('add.zonePlaceholder')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {zones.map(z => (
+                          <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

@@ -85,7 +85,8 @@
   },
   "errors": {
     "noPermission": "Nemáte oprávnění k této akci",
-    "generic": "Došlo k chybě. Zkuste to znovu."
+    "generic": "Došlo k chybě. Zkuste to znovu.",
+    "required": "Toto pole je povinné"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -490,6 +491,8 @@
       "zone": "Zóna",
       "zonePlaceholder": "Vyberte zónu",
       "loadingZones": "Načítám zóny...",
+      "noZones": "Nemáte zatím vytvořené žádné zóny. Nejprve vytvořte alespoň jednu zónu.",
+      "createZoneFirst": "Vytvořit zónu",
       "type": "Typ",
       "size": "Velikost",
       "capacity": "Kapacita",
@@ -744,6 +747,14 @@
       "active": "Aktivní",
       "available": "Dostupná",
       "all": "Všechna"
+    },
+    "sort": {
+      "longestInShelter": "Nejdéle v útulku",
+      "newestArrivals": "Nejnovější příjmy",
+      "nameAZ": "Jméno A-Z",
+      "nameZA": "Jméno Z-A",
+      "newest": "Nejnovější",
+      "oldest": "Nejstarší"
     },
     "species": {
       "label": "Druh",
@@ -1316,7 +1327,10 @@
       "showing": "Zobrazeno {count} plán(ů)",
       "active": "Aktivní",
       "inactive": "Neaktivní"
-    }
+    },
+    "significantReduction": "Výrazné snížení dávky",
+    "reductionWarningMessage": "Snižujete denní dávku z {oldAmount} g na {newAmount} g (o {percent} %). Takto výrazné snížení může mít dopad na zdraví zvířete. Jste si jisti?",
+    "confirmReduction": "Ano, snížit dávku"
   },
   "people": {
     "title": "Lidé",

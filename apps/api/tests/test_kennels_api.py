@@ -356,3 +356,71 @@ async def test_get_animal_kennel_history_unknown_animal_returns_404(client, kenn
     env = kennel_test_env
     resp = await client.get(f"/animals/{uuid.uuid4()}/kennel-history", headers=env["headers"])
     assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# POST /kennels — create kennel validation tests
+# ---------------------------------------------------------------------------
+
+@pytest.mark.anyio
+async def test_create_kennel_requires_zone_id(client, kennel_test_env):
+    """POST /kennels without zone_id should return 422 validation error."""
+    env = kennel_test_env
+    payload = {
+        "name": "New Kennel",
+        "type": "indoor",
+        "size_category": "medium",
+        "capacity": 2,
+        # zone_id intentionally missing
+    }
+    resp = await client.post("/kennels", headers=env["headers"], json=payload)
+    assert resp.status_code == 422
+    data = resp.json()
+    assert "detail" in data
+    # Check that zone_id is mentioned in validation error
+    errors = data["detail"]
+    assert any("zone_id" in str(err) for err in errors)
+
+
+@pytest.mark.anyio
+async def test_create_kennel_with_invalid_zone_id_fails(client, kennel_test_env):
+    """POST /kennels with non-existent zone_id should return 404."""
+    env = kennel_test_env
+    payload = {
+        "name": "New Kennel",
+        "zone_id": str(uuid.uuid4()),  # non-existent zone
+        "type": "indoor",
+        "size_category": "medium",
+        "capacity": 2,
+    }
+    resp = await client.post("/kennels", headers=env["headers"], json=payload)
+    assert resp.status_code == 404
+
+
+@pytest.mark.anyio
+async def test_create_kennel_success(client, kennel_test_env, db_session):
+    """POST /kennels with valid zone_id should create kennel successfully."""
+    env = kennel_test_env
+    payload = {
+        "name": "Test Kennel Created",
+        "zone_id": str(env["zone"].id),
+        "type": "outdoor",
+        "size_category": "large",
+        "capacity": 4,
+        "allowed_species": ["dog"],
+        "notes": "Test notes",
+    }
+    resp = await client.post("/kennels", headers=env["headers"], json=payload)
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["name"] == "Test Kennel Created"
+    assert data["zone_id"] == str(env["zone"].id)
+    assert data["type"] == "outdoor"
+    assert data["size_category"] == "large"
+    assert data["capacity"] == 4
+    assert data["allowed_species"] == ["dog"]
+
+    # Cleanup - delete created kennel
+    kennel_id = data["id"]
+    await db_session.execute(delete(Kennel).where(Kennel.id == uuid.UUID(kennel_id)))
+    await db_session.commit()

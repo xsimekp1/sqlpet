@@ -85,7 +85,8 @@
   },
   "errors": {
     "noPermission": "You don't have permission for this action",
-    "generic": "An error occurred. Please try again."
+    "generic": "An error occurred. Please try again.",
+    "required": "This field is required"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -527,6 +528,8 @@
       "zone": "Zone",
       "zonePlaceholder": "Select zone",
       "loadingZones": "Loading zones...",
+      "noZones": "You don't have any zones yet. Create at least one zone first.",
+      "createZoneFirst": "Create zone",
       "type": "Type",
       "size": "Size",
       "capacity": "Capacity",
@@ -870,6 +873,14 @@
       "active": "Active",
       "available": "Available",
       "all": "All"
+    },
+    "sort": {
+      "longestInShelter": "Longest in shelter",
+      "newestArrivals": "Newest arrivals",
+      "nameAZ": "Name A-Z",
+      "nameZA": "Name Z-A",
+      "newest": "Newest",
+      "oldest": "Oldest"
     },
     "species": {
       "label": "Species",
@@ -1436,7 +1447,10 @@
       "showing": "Showing {count} plan(s)",
       "active": "Active",
       "inactive": "Inactive"
-    }
+    },
+    "significantReduction": "Significant Dose Reduction",
+    "reductionWarningMessage": "You are reducing the daily dose from {oldAmount} g to {newAmount} g (by {percent}%). Such a significant reduction may impact the animal's health. Are you sure?",
+    "confirmReduction": "Yes, reduce dose"
   },
   "people": {
     "title": "People",
