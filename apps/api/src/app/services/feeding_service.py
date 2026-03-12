@@ -469,14 +469,15 @@ class FeedingService:
             notes=notes,
         )
         self.db.add(feeding_log)
-        await self.db.flush()
-        await self.db.refresh(feeding_log)
+        # Removed unnecessary flush+refresh - feeding_log.id is already set
 
         deductions = []
         if auto_deduct_inventory:
             deduct_item_id = inventory_item_id
             deduct_amount = amount_g_override
 
+            # Load plans ONCE and reuse (fixes duplicate query)
+            plans: Optional[List[FeedingPlan]] = None
             if deduct_item_id is None or deduct_amount is None:
                 plans = await self.get_active_plans_for_animal(animal_id, organization_id)
                 if plans:
@@ -488,15 +489,16 @@ class FeedingService:
 
             if deduct_amount is not None:
                 food_name_fallback: Optional[str] = None
-                if deduct_item_id is None:
+                # Reuse already loaded plans instead of querying again
+                if deduct_item_id is None and plans is None:
                     plans = await self.get_active_plans_for_animal(animal_id, organization_id)
-                    if plans and plans[0].food_id:
-                        food_result = await self.db.execute(
-                            select(Food).where(Food.id == plans[0].food_id)
-                        )
-                        food = food_result.scalar_one_or_none()
-                        if food:
-                            food_name_fallback = food.name
+                if deduct_item_id is None and plans and plans[0].food_id:
+                    food_result = await self.db.execute(
+                        select(Food).where(Food.id == plans[0].food_id)
+                    )
+                    food = food_result.scalar_one_or_none()
+                    if food:
+                        food_name_fallback = food.name
 
                 if deduct_item_id is not None or food_name_fallback is not None:
                     from src.app.services.inventory_service import InventoryService

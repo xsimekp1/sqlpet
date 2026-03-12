@@ -1796,7 +1796,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                       <label className="text-xs w-24">Nálezce chce:</label>
                       <Select
                         value={legalDeadlineForm.finder_claims_ownership || 'none'}
-                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, finder_claims_ownership: v === 'none' ? null : v as 'true' | 'false' })}
+                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, finder_claims_ownership: v === 'none' ? '' : v as 'true' | 'false' })}
                       >
                         <SelectTrigger className="h-7 text-xs">
                           <SelectValue placeholder="--" />
@@ -1812,7 +1812,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                       <label className="text-xs w-24">Obec převedla:</label>
                       <Select
                         value={legalDeadlineForm.municipality_irrevocably_transferred || 'none'}
-                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, municipality_irrevocably_transferred: v === 'none' ? null : v as 'true' | 'false' })}
+                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, municipality_irrevocably_transferred: v === 'none' ? '' : v as 'true' | 'false' })}
                       >
                         <SelectTrigger className="h-7 text-xs">
                           <SelectValue placeholder="--" />

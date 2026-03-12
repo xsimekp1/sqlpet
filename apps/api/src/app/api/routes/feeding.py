@@ -1036,3 +1036,108 @@ async def get_food_consumption_by_species(
             "total_animals": total_animals,
         },
     )
+
+
+# Get consumption by inventory item (food) for reports
+@router.get("/consumption/by-item")
+async def get_food_consumption_by_item(
+    days: int = Query(30, ge=1, le=365, description="Days of history"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """
+    Get food consumption aggregated by inventory item (food type).
+    Shows total grams consumed per food item across all animals.
+    """
+    from sqlalchemy import select, and_
+    from src.app.models.task import Task, TaskStatus, TaskType
+    from src.app.models.inventory_item import InventoryItem
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    # Get all completed feeding tasks in the period
+    stmt = select(Task).where(
+        and_(
+            Task.organization_id == organization_id,
+            Task.type == TaskType.FEEDING,
+            Task.status == TaskStatus.COMPLETED,
+            Task.completed_at >= cutoff,
+            Task.deleted_at.is_(None),
+        )
+    )
+    result = await db.execute(stmt)
+    tasks = result.scalars().all()
+
+    # Aggregate by inventory_item_id
+    item_consumption: dict = {}  # item_id -> { total_grams, feeding_count, animal_ids }
+
+    for task in tasks:
+        metadata = task.task_metadata or {}
+        amount_g = metadata.get("amount_g")
+        item_id = metadata.get("inventory_item_id")
+        animal_id = metadata.get("animal_id") or (
+            str(task.related_entity_id) if task.related_entity_id else None
+        )
+
+        if not amount_g:
+            continue
+
+        amount = float(amount_g)
+
+        # Use "unassigned" for tasks without inventory_item_id
+        key = item_id or "unassigned"
+
+        if key not in item_consumption:
+            item_consumption[key] = {
+                "inventory_item_id": item_id,
+                "total_grams": 0.0,
+                "feeding_count": 0,
+                "animal_ids": set(),
+            }
+
+        item_consumption[key]["total_grams"] += amount
+        item_consumption[key]["feeding_count"] += 1
+        if animal_id:
+            item_consumption[key]["animal_ids"].add(animal_id)
+
+    # Load inventory item names
+    item_ids = [uuid.UUID(k) for k in item_consumption.keys() if k != "unassigned"]
+    if item_ids:
+        items_stmt = select(InventoryItem).where(InventoryItem.id.in_(item_ids))
+        items_result = await db.execute(items_stmt)
+        items = {str(i.id): i for i in items_result.scalars().all()}
+    else:
+        items = {}
+
+    # Build response
+    by_item = []
+    for key, data in item_consumption.items():
+        item = items.get(key) if key != "unassigned" else None
+        by_item.append({
+            "inventory_item_id": data["inventory_item_id"],
+            "item_name": item.name if item else ("Nepřiřazeno" if key == "unassigned" else None),
+            "total_grams": data["total_grams"],
+            "total_kg": round(data["total_grams"] / 1000, 2),
+            "feeding_count": data["feeding_count"],
+            "animal_count": len(data["animal_ids"]),
+        })
+
+    # Sort by total consumption descending
+    by_item.sort(key=lambda x: x["total_grams"], reverse=True)
+
+    total_grams = sum(item["total_grams"] for item in by_item)
+    total_feedings = sum(item["feeding_count"] for item in by_item)
+
+    return {
+        "days": days,
+        "period_start": cutoff.isoformat(),
+        "period_end": datetime.now(timezone.utc).isoformat(),
+        "by_item": by_item,
+        "summary": {
+            "total_items": len(by_item),
+            "total_grams": total_grams,
+            "total_kg": round(total_grams / 1000, 2),
+            "total_feedings": total_feedings,
+        },
+    }

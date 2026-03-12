@@ -53,19 +53,76 @@ async def _build_animal_response(
     color_i18n_map: dict | None = None,
 ) -> AnimalResponse:
     """Build AnimalResponse from ORM object with nested breeds and identifiers."""
-    # Use pre-loaded breed i18n map (from bulk load in list endpoint).
-    # Fall back to per-animal query only for single-animal fetches.
-    if breed_i18n_map is None:
-        breed_ids_list = [ab.breed_id for ab in (animal.animal_breeds or [])]
-        if breed_ids_list:
-            i18n_rows = await db.execute(
-                select(BreedI18n.breed_id, BreedI18n.name).where(
-                    BreedI18n.breed_id.in_(breed_ids_list), BreedI18n.locale == "cs"
-                )
-            )
-            breed_i18n_map = {str(r.breed_id): r.name for r in i18n_rows}
-        else:
-            breed_i18n_map = {}
+    animal_id_str = str(animal.id)
+
+    # For single-animal fetches (when maps are None), load all related data in ONE query
+    if breed_i18n_map is None or color_i18n_map is None or kennel_data is None or intake_data is None:
+        breed_ids_list = [str(ab.breed_id) for ab in (animal.animal_breeds or [])]
+
+        # Single query returning JSON with all needed data
+        combined_result = await db.execute(
+            text("""
+                SELECT json_build_object(
+                    'breed_i18n', COALESCE((
+                        SELECT json_object_agg(breed_id::text, name)
+                        FROM breeds_i18n
+                        WHERE breed_id = ANY(:breed_ids::uuid[]) AND locale = 'cs'
+                    ), '{}'::json),
+                    'color_name', (
+                        SELECT name FROM color_i18n
+                        WHERE code = :color AND locale = 'cs' AND organization_id IS NULL
+                        LIMIT 1
+                    ),
+                    'kennel', (
+                        SELECT json_build_object(
+                            'kennel_id', ks.kennel_id::text,
+                            'kennel_name', k.name,
+                            'kennel_code', k.code
+                        )
+                        FROM kennel_stays ks
+                        JOIN kennels k ON k.id = ks.kennel_id
+                        WHERE ks.animal_id = :animal_id AND ks.end_at IS NULL
+                        LIMIT 1
+                    ),
+                    'intake', (
+                        SELECT json_build_object(
+                            'intake_date', intake_date,
+                            'reason', reason,
+                            'notice_published_at', notice_published_at,
+                            'finder_claims_ownership', finder_claims_ownership,
+                            'municipality_irrevocably_transferred', municipality_irrevocably_transferred
+                        )
+                        FROM intakes
+                        WHERE animal_id = :animal_id AND deleted_at IS NULL
+                        ORDER BY intake_date DESC
+                        LIMIT 1
+                    )
+                ) as data
+            """),
+            {
+                "breed_ids": breed_ids_list if breed_ids_list else [],
+                "color": animal.color,
+                "animal_id": animal_id_str,
+            },
+        )
+        row = combined_result.fetchone()
+        data = row[0] if row else {}
+
+        # Parse results into appropriate structures
+        if breed_i18n_map is None:
+            breed_i18n_map = data.get("breed_i18n", {}) or {}
+        if color_i18n_map is None and data.get("color_name"):
+            color_i18n_map = {animal.color: data["color_name"]} if animal.color else {}
+        elif color_i18n_map is None:
+            color_i18n_map = {}
+        if kennel_data is None and data.get("kennel"):
+            kennel_data = {animal_id_str: data["kennel"]}
+        elif kennel_data is None:
+            kennel_data = {}
+        if intake_data is None and data.get("intake"):
+            intake_data = {animal_id_str: data["intake"]}
+        elif intake_data is None:
+            intake_data = {}
 
     breeds = [
         AnimalBreedResponse(
@@ -85,52 +142,20 @@ async def _build_animal_response(
     resp.breeds = breeds
     resp.identifiers = identifiers
 
-    # Překlad barvy z color_i18n — použij předpočítanou mapu nebo fallback dotaz
-    if animal.color:
-        if color_i18n_map is not None:
-            resp.color_display_name = color_i18n_map.get(animal.color)
-        else:
-            color_i18n_result = await db.execute(
-                text(
-                    "SELECT name FROM color_i18n"
-                    " WHERE code = :code AND locale = 'cs' AND organization_id IS NULL"
-                    " LIMIT 1"
-                ),
-                {"code": animal.color},
-            )
-            resp.color_display_name = color_i18n_result.scalar_one_or_none()
+    # Use color from pre-loaded map
+    if animal.color and color_i18n_map:
+        resp.color_display_name = color_i18n_map.get(animal.color)
 
-    # default_image_url is now stored in DB - use it directly
-    # (no query needed)
+    # default_image_url is now stored in DB - use it directly (no query needed)
 
-    # Use pre-loaded kennel data if provided (list endpoint)
-    animal_id_str = str(animal.id)
+    # Use pre-loaded kennel data
     if kennel_data and animal_id_str in kennel_data:
         kd = kennel_data[animal_id_str]
-        resp.current_kennel_id = kd["kennel_id"]
-        resp.current_kennel_name = kd["kennel_name"]
-        resp.current_kennel_code = kd["kennel_code"]
-    elif kennel_data is None:
-        # Fallback: single animal fetch - query if not provided
-        try:
-            stay_result = await db.execute(
-                text("""
-                    SELECT ks.kennel_id::text, k.name, k.code
-                    FROM kennel_stays ks
-                    JOIN kennels k ON k.id = ks.kennel_id
-                    WHERE ks.animal_id = :animal_id AND ks.end_at IS NULL
-                    LIMIT 1
-                """),
-                {"animal_id": animal_id_str},
-            )
-            stay_row = stay_result.first()
-            if stay_row:
-                resp.current_kennel_id = stay_row[0]
-                resp.current_kennel_name = stay_row[1]
-                resp.current_kennel_code = stay_row[2]
-        except Exception:
-            pass
+        resp.current_kennel_id = kd.get("kennel_id")
+        resp.current_kennel_name = kd.get("kennel_name")
+        resp.current_kennel_code = kd.get("kennel_code")
 
+    # Use pre-loaded intake data
     if intake_data and animal_id_str in intake_data:
         intake_info = intake_data[animal_id_str]
         resp.current_intake_date = intake_info.get("intake_date")
@@ -140,29 +165,6 @@ async def _build_animal_response(
         resp.municipality_irrevocably_transferred = intake_info.get(
             "municipality_irrevocably_transferred"
         )
-    elif intake_data is None:
-        # Fallback: single animal fetch - query if not provided
-        try:
-            intake_result = await db.execute(
-                text("""
-                    SELECT intake_date, reason, notice_published_at, 
-                           finder_claims_ownership, municipality_irrevocably_transferred
-                    FROM intakes
-                    WHERE animal_id = :animal_id AND deleted_at IS NULL
-                    ORDER BY intake_date DESC
-                    LIMIT 1
-                """),
-                {"animal_id": animal_id_str},
-            )
-            intake_row = intake_result.first()
-            if intake_row:
-                resp.current_intake_date = intake_row[0]
-                resp.current_intake_reason = intake_row[1]
-                resp.notice_published_at = intake_row[2]
-                resp.finder_claims_ownership = intake_row[3]
-                resp.municipality_irrevocably_transferred = intake_row[4]
-        except Exception:
-            pass
 
     # For legal deadline computation: use intake data OR animal's own legal fields
     # (animal's legal fields are for cases when there's no intake - e.g., animal staying with finder)
@@ -492,11 +494,13 @@ async def list_animals(
     sex: str | None = Query(None),
     search: str | None = Query(None),
     available_for_intake: bool = Query(False),
+    sort_by: str | None = Query(None, description="Sort field: name, days_in_shelter, created_at"),
+    sort_order: str = Query("desc", description="Sort order: asc, desc"),
     current_user: User = Depends(require_permission("animals.read")),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """List animals with pagination and filters."""
+    """List animals with pagination, filters, and sorting."""
 
     try:
         svc = AnimalService(db)
@@ -509,6 +513,8 @@ async def list_animals(
             sex=sex,
             search=search,
             available_for_intake=available_for_intake,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )
         kennel_data = extra_data.get("kennels", {})
         intake_data = extra_data.get("intakes", {})

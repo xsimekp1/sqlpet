@@ -31,16 +31,59 @@ def _to_response(walk: WalkLog) -> WalkResponse:
     return WalkResponse.model_validate(walk)
 
 
+def _to_response_with_animals_from_map(
+    walk: WalkLog, animals_map: dict
+) -> WalkWithAnimalsResponse:
+    """Build response using pre-loaded animals map (no DB query)."""
+    data = WalkWithAnimalsResponse.model_validate(walk)
+
+    animal_ids = walk.animal_ids or []
+    if animal_ids:
+        data.animals = [
+            animals_map[str(aid)]
+            for aid in animal_ids
+            if str(aid) in animals_map
+        ]
+
+    return data
+
+
+async def _bulk_load_animals_for_walks(
+    walks: list[WalkLog], db: AsyncSession
+) -> dict:
+    """Bulk load all animals for a list of walks in ONE query."""
+    # Collect all unique animal IDs from all walks
+    all_animal_ids = set()
+    for walk in walks:
+        if walk.animal_ids:
+            all_animal_ids.update(walk.animal_ids)
+
+    if not all_animal_ids:
+        return {}
+
+    # Single query to load all animals
+    result = await db.execute(
+        select(Animal).where(Animal.id.in_(list(all_animal_ids)))
+    )
+    animals = result.scalars().all()
+
+    # Build map: animal_id -> animal data dict
+    return {
+        str(a.id): {"id": str(a.id), "name": a.name, "public_code": a.public_code}
+        for a in animals
+    }
+
+
 async def _to_response_with_animals(
     walk: WalkLog, db: AsyncSession
 ) -> WalkWithAnimalsResponse:
+    """Single walk response - still needs individual query (for single item endpoints)."""
     data = WalkWithAnimalsResponse.model_validate(walk)
 
     animal_ids = walk.animal_ids or []
     if animal_ids:
         result = await db.execute(select(Animal).where(Animal.id.in_(animal_ids)))
         animals = result.scalars().all()
-        # Convert UUIDs to strings for proper Pydantic serialization
         data.animals = [
             {"id": str(a.id), "name": a.name, "public_code": a.public_code}
             for a in animals
@@ -117,10 +160,10 @@ async def list_walks(
     result = await db.execute(q)
     walks = result.scalars().all()
 
-    items = []
-    for w in walks:
-        item = await _to_response_with_animals(w, db)
-        items.append(item)
+    # Bulk load all animals in ONE query instead of N+1
+    animals_map = await _bulk_load_animals_for_walks(walks, db)
+
+    items = [_to_response_with_animals_from_map(w, animals_map) for w in walks]
 
     return WalkListResponse(
         items=items,
@@ -168,10 +211,10 @@ async def get_animal_walks(
     result = await db.execute(q)
     walks = result.scalars().all()
 
-    items = []
-    for w in walks:
-        item = await _to_response_with_animals(w, db)
-        items.append(item)
+    # Bulk load all animals in ONE query instead of N+1
+    animals_map = await _bulk_load_animals_for_walks(walks, db)
+
+    items = [_to_response_with_animals_from_map(w, animals_map) for w in walks]
 
     return WalkListResponse(
         items=items,
@@ -200,10 +243,10 @@ async def get_today_walks(
     result = await db.execute(q.order_by(WalkLog.started_at.desc()))
     walks = result.scalars().all()
 
-    items = []
-    for w in walks:
-        item = await _to_response_with_animals(w, db)
-        items.append(item)
+    # Bulk load all animals in ONE query instead of N+1
+    animals_map = await _bulk_load_animals_for_walks(walks, db)
+
+    items = [_to_response_with_animals_from_map(w, animals_map) for w in walks]
 
     def _convert_animal_ids(ids):
         if ids is None:

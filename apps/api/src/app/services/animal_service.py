@@ -57,69 +57,108 @@ class AnimalService:
         breed_ids: list[uuid.UUID] | None,
         color: str | None,
     ) -> "DefaultAnimalImage | None":
-        """Compute default image based on species, breed, and color. Returns the full object."""
+        """Compute default image based on species, breed, and color. Returns the full object.
+
+        Uses a single query with computed match_score for priority:
+        - breed + color match = 4
+        - breed only match = 3
+        - color only match = 2
+        - species fallback = 1
+        """
         from src.app.models.file import DefaultAnimalImage
-        from sqlalchemy import or_
+        from sqlalchemy import case, or_, and_
 
         breed_id = breed_ids[0] if breed_ids else None
         species_enum = Species(species)
 
-        queries = []
-        if breed_id and color:
-            queries.append(
-                select(DefaultAnimalImage)
-                .where(
-                    DefaultAnimalImage.species == species_enum,
-                    DefaultAnimalImage.breed_id == breed_id,
-                    DefaultAnimalImage.color_pattern == color,
-                    DefaultAnimalImage.is_active == True,
-                )
-                .order_by(DefaultAnimalImage.priority.desc())
-                .limit(1)
-            )
-        if breed_id:
-            queries.append(
-                select(DefaultAnimalImage)
-                .where(
-                    DefaultAnimalImage.species == species_enum,
-                    DefaultAnimalImage.breed_id == breed_id,
+        # Build conditions for different match types
+        conditions = [
+            DefaultAnimalImage.species == species_enum,
+            DefaultAnimalImage.is_active == True,
+        ]
+
+        # Compute match_score using CASE expression
+        # Higher score = better match, we'll ORDER BY this DESC
+        match_score = case(
+            # breed + color = highest priority (4)
+            (
+                and_(
+                    DefaultAnimalImage.breed_id == breed_id if breed_id else False,
+                    DefaultAnimalImage.color_pattern == color if color else False,
+                ),
+                4,
+            ),
+            # breed only = second priority (3)
+            (
+                and_(
+                    DefaultAnimalImage.breed_id == breed_id if breed_id else False,
                     DefaultAnimalImage.color_pattern.is_(None),
-                    DefaultAnimalImage.is_active == True,
-                )
-                .order_by(DefaultAnimalImage.priority.desc())
-                .limit(1)
-            )
-        if color:
-            queries.append(
-                select(DefaultAnimalImage)
-                .where(
-                    DefaultAnimalImage.species == species_enum,
+                ),
+                3,
+            ),
+            # color only = third priority (2)
+            (
+                and_(
                     DefaultAnimalImage.breed_id.is_(None),
-                    DefaultAnimalImage.color_pattern == color,
-                    DefaultAnimalImage.is_active == True,
-                )
-                .order_by(DefaultAnimalImage.priority.desc())
-                .limit(1)
-            )
-        queries.append(
-            select(DefaultAnimalImage)
-            .where(
-                DefaultAnimalImage.species == species,
+                    DefaultAnimalImage.color_pattern == color if color else False,
+                ),
+                2,
+            ),
+            # species fallback = lowest priority (1)
+            (
+                and_(
+                    DefaultAnimalImage.breed_id.is_(None),
+                    DefaultAnimalImage.color_pattern.is_(None),
+                ),
+                1,
+            ),
+            else_=0,
+        )
+
+        # Build filter: match any of the valid patterns
+        pattern_conditions = [
+            # species fallback (always included)
+            and_(
                 DefaultAnimalImage.breed_id.is_(None),
                 DefaultAnimalImage.color_pattern.is_(None),
-                DefaultAnimalImage.is_active == True,
             )
-            .order_by(DefaultAnimalImage.priority.desc())
+        ]
+        if breed_id and color:
+            pattern_conditions.append(
+                and_(
+                    DefaultAnimalImage.breed_id == breed_id,
+                    DefaultAnimalImage.color_pattern == color,
+                )
+            )
+        if breed_id:
+            pattern_conditions.append(
+                and_(
+                    DefaultAnimalImage.breed_id == breed_id,
+                    DefaultAnimalImage.color_pattern.is_(None),
+                )
+            )
+        if color:
+            pattern_conditions.append(
+                and_(
+                    DefaultAnimalImage.breed_id.is_(None),
+                    DefaultAnimalImage.color_pattern == color,
+                )
+            )
+
+        # Single query with score-based ordering
+        query = (
+            select(DefaultAnimalImage)
+            .where(
+                DefaultAnimalImage.species == species_enum,
+                DefaultAnimalImage.is_active == True,
+                or_(*pattern_conditions),
+            )
+            .order_by(match_score.desc(), DefaultAnimalImage.priority.desc())
             .limit(1)
         )
 
-        for q in queries:
-            result = await self.db.execute(q)
-            img = result.scalar_one_or_none()
-            if img:
-                return img
-
-        return None
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
 
     async def _generate_public_code(self, organization_id: uuid.UUID) -> str:
         year = datetime.now(timezone.utc).year
@@ -313,6 +352,8 @@ class AnimalService:
         sex: str | None = None,
         search: str | None = None,
         available_for_intake: bool = False,
+        sort_by: str | None = None,
+        sort_order: str = "desc",
     ) -> tuple[list[Animal], int, bool, dict]:
         from sqlalchemy.orm import selectinload
         from sqlalchemy import text
@@ -334,18 +375,58 @@ class AnimalService:
         if available_for_intake:
             base = base.where(Animal.status.not_in(["intake", "hotel"]))
 
+        # Determine sort order
+        from sqlalchemy import desc as sql_desc, asc as sql_asc
+        order_func = sql_desc if sort_order == "desc" else sql_asc
+
         # Use has_more pattern: fetch page_size + 1 to determine if there's more
         fetch_size = page_size + 1
-        items_q = (
-            base.options(
+
+        # Apply sorting
+        if sort_by == "days_in_shelter":
+            # For days_in_shelter, we use a subquery to get the max intake_date per animal
+            # DESC = longest in shelter first (oldest intake_date)
+            # ASC = newest arrivals first (recent intake_date)
+            from src.app.models.intake import Intake
+
+            # Subquery to get max intake_date per animal
+            intake_subq = (
+                select(
+                    Intake.animal_id,
+                    func.max(Intake.intake_date).label("max_intake_date")
+                )
+                .where(Intake.deleted_at.is_(None))
+                .group_by(Intake.animal_id)
+                .subquery()
+            )
+
+            items_q = (
+                base.outerjoin(
+                    intake_subq,
+                    Animal.id == intake_subq.c.animal_id
+                )
+                .options(
+                    selectinload(Animal.animal_breeds).joinedload(AnimalBreed.breed),
+                    selectinload(Animal.identifiers),
+                    selectinload(Animal.tags),
+                )
+                .order_by(order_func(intake_subq.c.max_intake_date).nulls_last())
+            )
+        elif sort_by == "name":
+            items_q = base.options(
                 selectinload(Animal.animal_breeds).joinedload(AnimalBreed.breed),
                 selectinload(Animal.identifiers),
                 selectinload(Animal.tags),
-            )
-            .order_by(Animal.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(fetch_size)
-        )
+            ).order_by(order_func(Animal.name))
+        else:
+            # Default: sort by created_at
+            items_q = base.options(
+                selectinload(Animal.animal_breeds).joinedload(AnimalBreed.breed),
+                selectinload(Animal.identifiers),
+                selectinload(Animal.tags),
+            ).order_by(order_func(Animal.created_at))
+
+        items_q = items_q.offset((page - 1) * page_size).limit(fetch_size)
         result = await self.db.execute(items_q)
         items = list(result.scalars().all())
 
@@ -425,13 +506,14 @@ class AnimalService:
         # PATCH semantics: only update fields that were sent
         update_data = data.model_dump(exclude_unset=True)
 
-        # Handle breeds replacement
+        # Handle breeds replacement - use bulk delete instead of N+1
         breeds_data = update_data.pop("breeds", None)
         if breeds_data is not None:
-            # Delete existing
-            for ab in list(animal.animal_breeds):
-                await self.db.delete(ab)
-            await self.db.flush()
+            # Bulk delete existing breeds in one statement
+            from sqlalchemy import delete
+            await self.db.execute(
+                delete(AnimalBreed).where(AnimalBreed.animal_id == animal.id)
+            )
             # Insert new
             for entry in breeds_data:
                 ab = AnimalBreed(
@@ -441,13 +523,14 @@ class AnimalService:
                 )
                 self.db.add(ab)
 
-        # Handle identifiers replacement
+        # Handle identifiers replacement - use bulk delete instead of N+1
         identifiers_data = update_data.pop("identifiers", None)
         if identifiers_data is not None:
-            # Delete existing
-            for ident in list(animal.identifiers):
-                await self.db.delete(ident)
-            await self.db.flush()
+            # Bulk delete existing identifiers in one statement
+            from sqlalchemy import delete
+            await self.db.execute(
+                delete(AnimalIdentifier).where(AnimalIdentifier.animal_id == animal.id)
+            )
             # Insert new
             for ident in identifiers_data:
                 # Convert enum to string value if needed
