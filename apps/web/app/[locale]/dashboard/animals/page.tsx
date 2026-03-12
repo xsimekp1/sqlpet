@@ -570,7 +570,7 @@ export default function AnimalsPage() {
                     <div className="flex gap-1 flex-wrap">
                       {animal.is_critical && (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700" title="Kritický stav">
-                          !
+                          🔥
                         </span>
                       )}
                       {animal.is_diabetic && (
@@ -580,27 +580,27 @@ export default function AnimalsPage() {
                       )}
                       {animal.is_pregnant && (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-pink-100 text-pink-700" title="Březí">
-                          ♀+
+                          🤰
                         </span>
                       )}
                       {animal.is_lactating && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-pink-100 text-pink-700" title="Kojící">
-                          ♀~
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700" title="Kojící">
+                          🍼
                         </span>
                       )}
                       {animal.is_cancer && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-700" title="Nádor">
-                          ☗
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-rose-100 text-rose-700" title="Nádor">
+                          🎗️
                         </span>
                       )}
                       {animal.is_aggressive && (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-700" title="Agresivní">
-                          ⚠
+                          ⚠️
                         </span>
                       )}
                       {(animal.altered_status === 'neutered' || animal.altered_status === 'spayed') && (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700" title="Vykastrované">
-                          ✂
+                          ✂️
                         </span>
                       )}
                     </div>
