@@ -168,8 +168,8 @@ export default function TasksPage() {
       await queryClient.cancelQueries({ queryKey: ['tasks'] });
       // Snapshot current state for rollback
       const previousData = queryClient.getQueryData(['tasks', statusFilter, typeFilter, page]);
-      // Wait for animation before removing
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Wait for animation (400ms) before removing from DOM
+      await new Promise(resolve => setTimeout(resolve, 400));
       // Optimistically remove task from list
       queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], (old: any) => {
         if (!old) return old;
@@ -598,8 +598,9 @@ export default function TasksPage() {
                   key={task.id}
                   className={cn(
                     'transition-all duration-300',
-                    dismissingTasks.has(task.id) && 'opacity-0 -translate-x-4 bg-red-50 dark:bg-red-950/30',
-                    completingTasks.has(task.id) && 'opacity-0 -translate-x-4 bg-green-50 dark:bg-green-950/30'
+                    (dismissingTasks.has(task.id) || completingTasks.has(task.id)) && 'animate-task-dismiss',
+                    dismissingTasks.has(task.id) && 'bg-red-50 dark:bg-red-950/30 dismissing',
+                    completingTasks.has(task.id) && 'bg-green-50 dark:bg-green-950/30 dismissing'
                   )}
                 >
                   <TableCell className="max-w-[240px]">

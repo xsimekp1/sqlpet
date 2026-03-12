@@ -307,6 +307,42 @@
   animation: urgent-pulse 3s ease-in-out infinite;
 }
 
+/* Task row dismiss animation - collapses height for smooth slide-up of rows below */
+@keyframes task-row-dismiss {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 60px;
+  }
+  50% {
+    opacity: 0;
+    transform: translateX(-16px);
+    max-height: 60px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-16px);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+.animate-task-dismiss {
+  animation: task-row-dismiss 400ms ease-out forwards;
+  overflow: hidden;
+}
+
+.animate-task-dismiss td {
+  transition: padding 200ms ease-out 200ms;
+  overflow: hidden;
+}
+
+.animate-task-dismiss.dismissing td {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 /* =============================================
    PRINT STYLES
    ============================================= */
