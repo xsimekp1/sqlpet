@@ -24,6 +24,8 @@ from src.app.schemas.feeding import (
     LotDeductionResponse,
     MERCalculateRequest,
     MERCalculationResponse,
+    FoodConsumptionBySpeciesResponse,
+    SpeciesConsumptionItem,
 )
 from src.app.services.feeding_service import FeedingService
 
@@ -859,3 +861,112 @@ async def get_todays_food_consumption(
         )
         for row in rows
     ]
+
+
+# Get food consumption by species for dashboard widget
+@router.get("/consumption/by-species", response_model=FoodConsumptionBySpeciesResponse)
+async def get_food_consumption_by_species(
+    days: int = Query(7, ge=1, le=365, description="Days of history"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """
+    Get food consumption aggregated by species for the last N days.
+    Uses completed feeding tasks to calculate actual consumption.
+    """
+    from sqlalchemy import select, func, and_
+    from src.app.models.task import Task, TaskStatus, TaskType
+    from src.app.models.animal import Animal
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    # Get all completed feeding tasks in the period
+    stmt = select(Task).where(
+        and_(
+            Task.organization_id == organization_id,
+            Task.type == TaskType.FEEDING,
+            Task.status == TaskStatus.COMPLETED,
+            Task.completed_at >= cutoff,
+            Task.deleted_at.is_(None),
+        )
+    )
+    result = await db.execute(stmt)
+    tasks = result.scalars().all()
+
+    # Aggregate by animal first
+    animal_consumption: dict = {}  # animal_id -> total_grams
+
+    for task in tasks:
+        metadata = task.task_metadata or {}
+        amount_g = metadata.get("amount_g")
+        animal_id = metadata.get("animal_id") or (
+            str(task.related_entity_id) if task.related_entity_id else None
+        )
+
+        if not animal_id or not amount_g:
+            continue
+
+        amount = float(amount_g)
+
+        if animal_id not in animal_consumption:
+            animal_consumption[animal_id] = 0.0
+        animal_consumption[animal_id] += amount
+
+    # Load animals to get their species
+    if animal_consumption:
+        animal_ids = [uuid.UUID(aid) for aid in animal_consumption.keys()]
+        animals_stmt = select(Animal).where(Animal.id.in_(animal_ids))
+        animals_result = await db.execute(animals_stmt)
+        animals = {str(a.id): a for a in animals_result.scalars().all()}
+    else:
+        animals = {}
+
+    # Aggregate by species
+    species_consumption: dict = {}  # species -> { total_grams, animal_count }
+
+    for animal_id, total_grams in animal_consumption.items():
+        animal = animals.get(animal_id)
+        if animal:
+            species = (
+                animal.species.value
+                if hasattr(animal.species, "value")
+                else str(animal.species)
+            )
+        else:
+            species = "unknown"
+
+        if species not in species_consumption:
+            species_consumption[species] = {"total_grams": 0.0, "animal_ids": set()}
+
+        species_consumption[species]["total_grams"] += total_grams
+        species_consumption[species]["animal_ids"].add(animal_id)
+
+    # Build response
+    by_species = []
+    for species, data in species_consumption.items():
+        by_species.append(
+            SpeciesConsumptionItem(
+                species=species,
+                total_grams=data["total_grams"],
+                animal_count=len(data["animal_ids"]),
+            )
+        )
+
+    # Sort by total consumption descending
+    by_species.sort(key=lambda x: x.total_grams, reverse=True)
+
+    total_grams = sum(item.total_grams for item in by_species)
+    total_animals = sum(item.animal_count for item in by_species)
+
+    return FoodConsumptionBySpeciesResponse(
+        days=days,
+        period_start=cutoff.isoformat(),
+        period_end=datetime.now(timezone.utc).isoformat(),
+        by_species=by_species,
+        summary={
+            "total_species": len(by_species),
+            "total_grams": total_grams,
+            "total_animals": total_animals,
+        },
+    )

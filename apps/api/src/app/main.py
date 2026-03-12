@@ -235,6 +235,21 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"✗ Failed to seed data: {e}")
 
+    # Seed document templates on startup
+    try:
+        from src.app.db.seed_document_templates import seed_document_templates
+        from src.app.db.session import AsyncSessionLocal
+
+        async with AsyncSessionLocal() as db:
+            templates_created = await seed_document_templates(db)
+            await db.commit()
+        if templates_created > 0:
+            print(f"✓ Seeded {templates_created} document templates")
+        else:
+            print("✓ Document templates already exist")
+    except Exception as e:
+        print(f"✗ Failed to seed document templates: {e}")
+
     # Ensure Supabase storage buckets exist
     try:
         from src.app.services.supabase_storage_service import supabase_storage_service

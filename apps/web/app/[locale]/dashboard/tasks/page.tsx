@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClient, Task } from '@/app/lib/api';
+import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
@@ -62,6 +63,10 @@ export default function TasksPage() {
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
+
+  // Animation state for dismissing tasks
+  const [dismissingTasks, setDismissingTasks] = useState<Set<string>>(new Set());
+  const [completingTasks, setCompletingTasks] = useState<Set<string>>(new Set());
 
   // Edit dialog state
   const [editTask, setEditTask] = useState<Task | null>(null);
@@ -147,7 +152,7 @@ export default function TasksPage() {
     return result;
   })();
 
-  // Complete task mutation with optimistic update
+  // Complete task mutation with animation
   const completeTaskMutation = useMutation({
     mutationFn: async ({ taskId, isFeedingTask }: { taskId: string; isFeedingTask: boolean }) => {
       if (isFeedingTask) {
@@ -157,10 +162,14 @@ export default function TasksPage() {
       }
     },
     onMutate: async ({ taskId }) => {
+      // Start animation
+      setCompletingTasks(prev => new Set(prev).add(taskId));
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['tasks'] });
       // Snapshot current state for rollback
       const previousData = queryClient.getQueryData(['tasks', statusFilter, typeFilter, page]);
+      // Wait for animation before removing
+      await new Promise(resolve => setTimeout(resolve, 300));
       // Optimistically remove task from list
       queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], (old: any) => {
         if (!old) return old;
@@ -169,6 +178,11 @@ export default function TasksPage() {
           items: old.items.filter((t: Task) => t.id !== taskId),
           total: old.total - 1,
         };
+      });
+      setCompletingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(taskId);
+        return next;
       });
       return { previousData };
     },
@@ -190,7 +204,13 @@ export default function TasksPage() {
         toast({ title: 'Úkol splněn' });
       }
     },
-    onError: (error: Error, _variables, context) => {
+    onError: (error: Error, variables, context) => {
+      // Remove from completing set on error
+      setCompletingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(variables.taskId);
+        return next;
+      });
       // Rollback on error
       if (context?.previousData) {
         queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], context.previousData);
@@ -203,14 +223,18 @@ export default function TasksPage() {
     },
   });
 
-  // Reject/cancel task mutation with optimistic update
+  // Reject/cancel task mutation with animation
   const rejectTaskMutation = useMutation({
     mutationFn: (taskId: string) => ApiClient.cancelTask(taskId, 'rejected'),
     onMutate: async (taskId) => {
+      // Start dismissing animation
+      setDismissingTasks(prev => new Set(prev).add(taskId));
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['tasks'] });
       // Snapshot current state for rollback
       const previousData = queryClient.getQueryData(['tasks', statusFilter, typeFilter, page]);
+      // Wait for animation before removing
+      await new Promise(resolve => setTimeout(resolve, 300));
       // Optimistically remove task from list (if filter shows only active tasks)
       queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], (old: any) => {
         if (!old) return old;
@@ -230,12 +254,24 @@ export default function TasksPage() {
           total: old.total - 1,
         };
       });
+      // Clear dismissing state
+      setDismissingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(taskId);
+        return next;
+      });
       return { previousData };
     },
     onSuccess: () => {
       toast({ title: 'Úkol zamítnut' });
     },
-    onError: (error: Error, _taskId, context) => {
+    onError: (error: Error, taskId, context) => {
+      // Remove from dismissing set on error
+      setDismissingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(taskId);
+        return next;
+      });
       // Rollback on error
       if (context?.previousData) {
         queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], context.previousData);
@@ -558,7 +594,13 @@ export default function TasksPage() {
               </TableRow>
             ) : (
               sortedTasks.map((task) => (
-                <TableRow key={task.id}>
+                <TableRow
+                  key={task.id}
+                  className={cn(
+                    'transition-all duration-300',
+                    dismissingTasks.has(task.id) && 'opacity-0 -translate-x-4 bg-red-50 dark:bg-red-950/30',
+                    completingTasks.has(task.id) && 'opacity-0 -translate-x-4 bg-green-50 dark:bg-green-950/30'
+                  )}
                   <TableCell className="max-w-[240px]">
                     <TooltipProvider>
                       <Tooltip>

@@ -237,3 +237,18 @@ class FoodConsumptionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Food consumption by species for dashboard widget
+class SpeciesConsumptionItem(BaseModel):
+    species: str
+    total_grams: float
+    animal_count: int
+
+
+class FoodConsumptionBySpeciesResponse(BaseModel):
+    days: int
+    period_start: str
+    period_end: str
+    by_species: List[SpeciesConsumptionItem]
+    summary: Dict[str, Any]

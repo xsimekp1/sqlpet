@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## User Preferences
+
+**IMPORTANT: The user prefers autonomous work.**
+- Run commands (including Railway, git, etc.) automatically without asking
+- Make decisions independently when possible
+- Only ask questions when truly necessary (e.g., major architectural decisions)
+- Execute database migrations, seed scripts, and deployments automatically
+- Don't ask "should I run this?" - just run it
+
 ## Project Overview
 
 **SQLpet / PawShelter (ÚtulekOS)** — a cloud-based animal shelter management system (DMS) targeting small Czech shelters with global market ambitions. The full specification lives in `claude_pet.txt` (Czech language). Code, variables, and DB names are in English; UI text goes through i18n (cs + en).

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { MedicalTodayWidget } from './MedicalTodayWidget'
 import { FeedingTodayWidget } from './FeedingTodayWidget'
 import { FoodConsumptionWidget } from './FoodConsumptionWidget'
+import { FoodConsumptionBySpeciesWidget } from './FoodConsumptionBySpeciesWidget'
 import { TasksWidget } from './TasksWidget'
 import { ShelterStatsWidget } from './ShelterStatsWidget'
 import { OccupancyWidget } from './OccupancyWidget'
@@ -22,6 +23,7 @@ const ALL_WIDGETS: { id: string }[] = [
   { id: 'medical-today' },
   { id: 'feeding-today' },
   { id: 'food-consumption' },
+  { id: 'food-consumption-by-species' },
   { id: 'tasks' },
   { id: 'shelter-stats' },
   { id: 'occupancy' },
@@ -35,6 +37,7 @@ const widgetLabels: Record<string, string> = {
   'medical-today': 'medicalToday',
   'feeding-today': 'feedingToday',
   'food-consumption': 'foodConsumption',
+  'food-consumption-by-species': 'foodConsumptionBySpecies',
   'tasks': 'tasks',
   'shelter-stats': 'shelterStats',
   'occupancy': 'occupancy',
@@ -49,6 +52,7 @@ const widgetComponents = {
   'medical-today': MedicalTodayWidget,
   'feeding-today': FeedingTodayWidget,
   'food-consumption': FoodConsumptionWidget,
+  'food-consumption-by-species': FoodConsumptionBySpeciesWidget,
   'tasks': TasksWidget,
   'shelter-stats': ShelterStatsWidget,
   'occupancy': OccupancyWidget,

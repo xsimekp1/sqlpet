@@ -1333,6 +1333,39 @@ class ApiClient {
     }
   }
 
+  static async getFoodConsumptionBySpecies(days: number = 7): Promise<{
+    days: number;
+    period_start: string;
+    period_end: string;
+    by_species: Array<{
+      species: string;
+      total_grams: number;
+      animal_count: number;
+    }>;
+    summary: {
+      total_species: number;
+      total_grams: number;
+      total_animals: number;
+    };
+  }> {
+    try {
+      const response = await axios.get(
+        `${API_URL}/feeding/consumption/by-species`,
+        {
+          headers: this.getAuthHeaders(),
+          params: { days }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<ApiError>;
+        throw new Error(axiosError.response?.data?.detail || 'Failed to fetch food consumption by species');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
   static async getTask(id: string): Promise<Task> {
     try {
       const response = await axios.get<Task>(
