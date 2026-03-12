@@ -50,6 +50,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import ApiClient, { Animal, WeightLog, MERCalculation } from '@/app/lib/api';
 import MERCalculator from '@/app/components/feeding/MERCalculator';
+import { ConsumptionHistory } from '@/app/components/feeding/ConsumptionHistory';
 import { getAnimalImageUrl } from '@/app/lib/utils';
 import { toast } from 'sonner';
 import RequestMedicalProcedureDialog from '@/app/components/animals/RequestMedicalProcedureDialog';
@@ -1808,6 +1809,16 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               </CardContent>
             </Card>
           )}
+
+          {/* Consumption History */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Historie krmení</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ConsumptionHistory animalId={animalId} animalName={animal.name} />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ── Timeline ── */}

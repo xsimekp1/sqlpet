@@ -599,6 +599,84 @@ async def get_todays_feeding_tasks(
     }
 
 
+# Get consumption history for an animal (from completed tasks)
+@router.get("/consumption/history/{animal_id}")
+async def get_animal_consumption_history(
+    animal_id: uuid.UUID,
+    days: int = Query(30, ge=1, le=365, description="Days of history"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """
+    Get consumption history for a specific animal from completed feeding tasks.
+    Returns total grams consumed per food item.
+    """
+    from sqlalchemy import select, func, and_, cast, String
+    from src.app.models.task import Task, TaskStatus, TaskType
+    from src.app.models.inventory_item import InventoryItem
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    # Get completed feeding tasks for this animal
+    stmt = select(Task).where(
+        and_(
+            Task.organization_id == organization_id,
+            Task.type == TaskType.FEEDING,
+            Task.status == TaskStatus.COMPLETED,
+            Task.related_entity_id == animal_id,
+            Task.completed_at >= cutoff,
+            Task.deleted_at.is_(None),
+        )
+    )
+    result = await db.execute(stmt)
+    tasks = result.scalars().all()
+
+    # Aggregate by food (inventory_item_id)
+    consumption_by_food: dict = {}
+    total_grams = 0.0
+    total_feedings = 0
+
+    for task in tasks:
+        metadata = task.task_metadata or {}
+        amount_g = metadata.get("amount_g")
+        inv_item_id = metadata.get("inventory_item_id")
+
+        if amount_g:
+            amount = float(amount_g)
+            total_grams += amount
+            total_feedings += 1
+
+            if inv_item_id:
+                if inv_item_id not in consumption_by_food:
+                    consumption_by_food[inv_item_id] = {
+                        "inventory_item_id": inv_item_id,
+                        "total_grams": 0.0,
+                        "feeding_count": 0,
+                        "food_name": None,
+                    }
+                consumption_by_food[inv_item_id]["total_grams"] += amount
+                consumption_by_food[inv_item_id]["feeding_count"] += 1
+
+    # Load food names
+    if consumption_by_food:
+        item_ids = [uuid.UUID(k) for k in consumption_by_food.keys()]
+        items_stmt = select(InventoryItem).where(InventoryItem.id.in_(item_ids))
+        items_result = await db.execute(items_stmt)
+        items = items_result.scalars().all()
+        for item in items:
+            if str(item.id) in consumption_by_food:
+                consumption_by_food[str(item.id)]["food_name"] = item.name
+
+    return {
+        "animal_id": str(animal_id),
+        "days": days,
+        "total_grams": total_grams,
+        "total_feedings": total_feedings,
+        "by_food": list(consumption_by_food.values()),
+    }
+
+
 # Get today's food consumption summary (for dashboard widget)
 @router.get("/consumption/today")
 async def get_todays_food_consumption(
