@@ -27,11 +27,6 @@ import { TimePresetsButtons } from '@/app/components/feeding/TimePresetsButtons'
 import { AmountDistribution } from '@/app/components/feeding/AmountDistribution';
 import { FeedingPreview } from '@/app/components/feeding/FeedingPreview';
 import { calcMER, snapToNice } from '@/app/lib/energy';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 
 interface FeedingPlanFormData {
   animal_id: string;
@@ -297,53 +292,43 @@ export default function NewFeedingPlanPage() {
 
             {/* Amount */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="amount_g">{t('fields.amountGrams')} *</Label>
-                {showCalcPanel && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-orange-500 hover:text-orange-700">
-                        <Flame className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 text-sm" align="start">
-                      <div className="space-y-2">
-                        <p className="font-semibold text-orange-800">Výpočet doporučené dávky</p>
-                        {merKcal && kcalPer100g ? (
-                          <>
-                            <div className="flex flex-col gap-1 text-muted-foreground">
-                              <span>Kalorická potřeba: <strong className="text-foreground">{merKcal} kcal/den</strong></span>
-                              <span>Krmivo: <strong className="text-foreground">{kcalPer100g} kcal/100g</strong></span>
-                            </div>
-                            <p>Doporučená denní dávka: <strong>{gramsPerDay} g/den</strong>
-                              {gramsPerMeal && <span className="text-muted-foreground ml-1">(≈ {gramsPerMeal} g/dávku)</span>}
-                            </p>
-                            <Button type="button" size="sm" variant="outline" className="w-full border-orange-300 hover:bg-orange-50" onClick={applyRecommendation}>
-                              ↗ Použít → {gramsPerDay} g
-                            </Button>
-                          </>
-                        ) : merKcal ? (
-                          <p className="text-muted-foreground">Vyberte krmivo s kcal hodnotou.</p>
-                        ) : (
-                          <p className="text-muted-foreground">Zvíře nemá zadanou váhu.</p>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+              <Label htmlFor="amount_g">{t('fields.amountGrams')} *</Label>
+              <div className="flex gap-2">
+                <Input
+                  className={`flex-1 ${reqCls(!!watchedAmountG)}`}
+                  id="amount_g"
+                  type="number"
+                  step="1"
+                  placeholder="e.g. 200"
+                  {...register('amount_g', { required: true })}
+                  onBlur={(e) => {
+                    const v = parseFloat(e.target.value);
+                    if (!isNaN(v)) setValue('amount_g', Math.round(v));
+                  }}
+                />
+                {gramsPerDay && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0 border-orange-300 bg-orange-50 hover:bg-orange-100 text-orange-700"
+                    onClick={applyRecommendation}
+                  >
+                    <Flame className="h-4 w-4 mr-2" />
+                    {gramsPerDay} g
+                  </Button>
                 )}
               </div>
-              <Input
-                className={reqCls(!!watchedAmountG)}
-                id="amount_g"
-                type="number"
-                step="1"
-                placeholder="e.g. 200"
-                {...register('amount_g', { required: true })}
-                onBlur={(e) => {
-                  const v = parseFloat(e.target.value);
-                  if (!isNaN(v)) setValue('amount_g', Math.round(v));
-                }}
-              />
+              {showCalcPanel && (
+                <p className="text-xs text-muted-foreground">
+                  {merKcal && kcalPer100g ? (
+                    <>MER: {merKcal} kcal/den · Krmivo: {kcalPer100g} kcal/100g</>
+                  ) : merKcal ? (
+                    <>MER: {merKcal} kcal/den · Vyberte krmivo pro výpočet dávky</>
+                  ) : (
+                    <>Zvíře nemá zadanou váhu pro výpočet MER</>
+                  )}
+                </p>
+              )}
             </div>
 
             {/* Amount text */}

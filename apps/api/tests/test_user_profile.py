@@ -35,9 +35,10 @@ async def test_get_me_without_profile_photo(client, test_user, auth_headers):
     assert data["user"]["profile_photo_url"] is None
 
 
-async def test_update_profile_name(client, test_user, auth_headers, test_org):
+async def test_update_profile_name(client, test_user, auth_headers, test_org_with_membership):
     """Test PATCH /auth/me can update user name."""
-    headers = make_org_headers(auth_headers, test_org.id)
+    org, _, _ = test_org_with_membership
+    headers = make_org_headers(auth_headers, org.id)
 
     new_name = "Updated Test User"
     resp = await client.patch(
@@ -52,9 +53,10 @@ async def test_update_profile_name(client, test_user, auth_headers, test_org):
     assert data["email"] == test_user.email
 
 
-async def test_update_profile_phone(client, test_user, auth_headers, test_org):
+async def test_update_profile_phone(client, test_user, auth_headers, test_org_with_membership):
     """Test PATCH /auth/me can update user phone."""
-    headers = make_org_headers(auth_headers, test_org.id)
+    org, _, _ = test_org_with_membership
+    headers = make_org_headers(auth_headers, org.id)
 
     new_phone = "+420 123 456 789"
     resp = await client.patch(
@@ -68,14 +70,16 @@ async def test_update_profile_phone(client, test_user, auth_headers, test_org):
     assert data["phone"] == new_phone
 
 
-async def test_update_profile_clears_phone(client, test_user, auth_headers, test_org, db_session):
+async def test_update_profile_clears_phone(client, test_user, auth_headers, test_org_with_membership, db_session):
     """Test PATCH /auth/me can clear user phone by sending empty string."""
+    org, _, _ = test_org_with_membership
+
     # First set a phone
     test_user.phone = "+420 111 222 333"
     db_session.add(test_user)
     await db_session.commit()
 
-    headers = make_org_headers(auth_headers, test_org.id)
+    headers = make_org_headers(auth_headers, org.id)
 
     # Clear phone
     resp = await client.patch(
@@ -89,9 +93,10 @@ async def test_update_profile_clears_phone(client, test_user, auth_headers, test
     assert data["phone"] is None
 
 
-async def test_update_profile_photo_url(client, test_user, auth_headers, test_org):
+async def test_update_profile_photo_url(client, test_user, auth_headers, test_org_with_membership):
     """Test PATCH /auth/me can set profile_photo_url."""
-    headers = make_org_headers(auth_headers, test_org.id)
+    org, _, _ = test_org_with_membership
+    headers = make_org_headers(auth_headers, org.id)
 
     photo_url = "https://example.com/photo.jpg"
     resp = await client.patch(
@@ -105,15 +110,17 @@ async def test_update_profile_photo_url(client, test_user, auth_headers, test_or
     assert data["profile_photo_url"] == photo_url
 
 
-async def test_update_profile_clears_photo_url(client, test_user, auth_headers, test_org, db_session):
+async def test_update_profile_clears_photo_url(client, test_user, auth_headers, test_org_with_membership, db_session):
     """Test PATCH /auth/me can clear profile_photo_url."""
+    org, _, _ = test_org_with_membership
+
     # First set a photo URL
     if hasattr(test_user, 'profile_photo_url'):
         test_user.profile_photo_url = "https://example.com/old-photo.jpg"
         db_session.add(test_user)
         await db_session.commit()
 
-    headers = make_org_headers(auth_headers, test_org.id)
+    headers = make_org_headers(auth_headers, org.id)
 
     # Clear photo URL
     resp = await client.patch(
@@ -127,9 +134,10 @@ async def test_update_profile_clears_photo_url(client, test_user, auth_headers, 
     assert data["profile_photo_url"] is None
 
 
-async def test_update_profile_multiple_fields(client, test_user, auth_headers, test_org):
+async def test_update_profile_multiple_fields(client, test_user, auth_headers, test_org_with_membership):
     """Test PATCH /auth/me can update multiple fields at once."""
-    headers = make_org_headers(auth_headers, test_org.id)
+    org, _, _ = test_org_with_membership
+    headers = make_org_headers(auth_headers, org.id)
 
     resp = await client.patch(
         "/auth/me",
@@ -148,9 +156,10 @@ async def test_update_profile_multiple_fields(client, test_user, auth_headers, t
     assert data["profile_photo_url"] == "https://example.com/multi.jpg"
 
 
-async def test_update_profile_empty_name_fails(client, auth_headers, test_org):
+async def test_update_profile_empty_name_fails(client, auth_headers, test_org_with_membership):
     """Test PATCH /auth/me rejects empty name."""
-    headers = make_org_headers(auth_headers, test_org.id)
+    org, _, _ = test_org_with_membership
+    headers = make_org_headers(auth_headers, org.id)
 
     resp = await client.patch(
         "/auth/me",
