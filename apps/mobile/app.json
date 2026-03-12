@@ -1,8 +1,4 @@
 {
-  "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-3769855629143605~9438574844",
-    "ios_app_id": "ca-app-pub-3769855629143605~9438574844"
-  },
   "expo": {
     "name": "Petslog",
     "slug": "petslog",
@@ -39,12 +35,19 @@
       "expo-dev-client",
       "expo-router",
       "expo-secure-store",
-      ["expo-location", {
-        "locationWhenInUsePermission": "Tato aplikace potřebuje přístup k vaší poloze pro nalezení nejbližšího útulku."
-      }],
-      ["react-native-maps", {
-        "androidGoogleMapsApiKey": "AIzaSyAQP_lksd90ayYfqCySrKV1YIon9NpwttY"
-      }]
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Tato aplikace potřebuje přístup k vaší poloze pro nalezení nejbližšího útulku."
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3769855629143605~9438574844",
+          "iosAppId": "ca-app-pub-3769855629143605~9438574844"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
