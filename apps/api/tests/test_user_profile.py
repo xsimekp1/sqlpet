@@ -171,3 +171,43 @@ async def test_update_profile_unauthenticated(client):
     """Test PATCH /auth/me requires authentication."""
     resp = await client.patch("/auth/me", json={"name": "Hacker"})
     assert resp.status_code in [401, 403]
+
+
+async def test_get_me_no_greenlet_error(client, test_user, auth_headers):
+    """
+    Test that GET /auth/me doesn't cause greenlet/lazy-loading errors.
+
+    This test ensures all User fields are properly loaded via load_only()
+    in get_current_user dependency, preventing SQLAlchemy from attempting
+    lazy loads outside of async context.
+    """
+    resp = await client.get("/auth/me", headers=auth_headers)
+
+    # If we get 500, it's likely a greenlet error from lazy loading
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}. Body: {resp.text}"
+
+    data = resp.json()
+
+    # Verify all expected fields are present and accessible
+    user_data = data["user"]
+    assert "id" in user_data
+    assert "email" in user_data
+    assert "name" in user_data
+    assert "phone" in user_data
+    assert "profile_photo_url" in user_data
+    assert "is_superadmin" in user_data
+    assert "totp_enabled" in user_data
+    assert "created_at" in user_data
+
+
+async def test_get_me_multiple_calls_no_error(client, test_user, auth_headers):
+    """
+    Test multiple calls to GET /auth/me work correctly.
+
+    This catches issues with request caching and session management.
+    """
+    for _ in range(3):
+        resp = await client.get("/auth/me", headers=auth_headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["user"]["email"] == test_user.email
