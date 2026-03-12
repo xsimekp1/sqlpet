@@ -57,7 +57,7 @@ export default function TasksPage() {
   const [statusFilter, setStatusFilter] = useState<TaskStatus>(initialStatus);
   const [typeFilter, setTypeFilter] = useState<TaskType>(initialType);
   const [prioritySort, setPrioritySort] = useState<'desc' | 'asc' | null>(null);
-  const [dueDateSort, setDueDateSort] = useState<'desc' | 'asc'>('asc');
+  const [dueDateSort, setDueDateSort] = useState<'desc' | 'asc' | null>('asc');
   const [page, setPage] = useState(1);
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
