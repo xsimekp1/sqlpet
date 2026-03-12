@@ -31,6 +31,7 @@ from src.app.schemas.auth import (
     BackupCodesResponse,
     ForgotPasswordRequest,
     ResetPasswordRequest,
+    UpdateProfileRequest,
 )
 from src.app.services.auth_service import AuthService
 from src.app.services.two_factor_service import TwoFactorService
@@ -258,6 +259,27 @@ async def get_me(
         user=UserResponse.model_validate(current_user),
         memberships=membership_infos,
     )
+
+
+@router.patch("/me", response_model=UserResponse)
+async def update_me(
+    data: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update current user's profile (name, phone, profile_photo_url)."""
+    if data.name is not None:
+        current_user.name = data.name
+    if data.phone is not None:
+        current_user.phone = data.phone if data.phone else None
+    if data.profile_photo_url is not None:
+        current_user.profile_photo_url = data.profile_photo_url if data.profile_photo_url else None
+
+    db.add(current_user)
+    await db.commit()
+    await db.refresh(current_user)
+
+    return UserResponse.model_validate(current_user)
 
 
 @router.post("/select-organization")

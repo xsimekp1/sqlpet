@@ -1836,6 +1836,35 @@ class ApiClient {
     return response.data;
   }
 
+  static async uploadUserAvatar(file: File): Promise<{ file_url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post<{ file_url: string }>(
+      `${API_URL}/files/user/upload-avatar`,
+      formData,
+      { headers: { ...this.getAuthHeaders() } }
+    );
+    return response.data;
+  }
+
+  static async updateProfile(data: { name?: string; phone?: string; profile_photo_url?: string | null }): Promise<{
+    id: string;
+    email: string;
+    name: string;
+    phone: string | null;
+    profile_photo_url: string | null;
+    is_superadmin: boolean;
+    totp_enabled: boolean;
+    created_at: string;
+  }> {
+    const response = await axios.patch(
+      `${API_URL}/auth/me`,
+      data,
+      { headers: { ...this.getAuthHeaders() } }
+    );
+    return response.data;
+  }
+
   static async getFindings(params?: {
     page?: number;
     page_size?: number;

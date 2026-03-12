@@ -48,11 +48,18 @@ class UserResponse(BaseModel):
     email: str
     name: str
     phone: str | None
+    profile_photo_url: str | None = None
     is_superadmin: bool
     totp_enabled: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class UpdateProfileRequest(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=255)
+    phone: str | None = None
+    profile_photo_url: str | None = None
 
 
 class MembershipInfo(BaseModel):

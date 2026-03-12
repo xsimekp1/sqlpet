@@ -348,6 +348,36 @@ async def upload_contact_avatar(
     return {"file_url": file_url}
 
 
+@router.post("/user/upload-avatar")
+async def upload_user_avatar(
+    file: UploadFile = FastAPIFile(...),
+    current_user: User = Depends(get_current_user),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload avatar photo for the current user."""
+    file_content, content_type = await file_upload_service.process_upload(
+        file=file,
+        organization_id=str(organization_id),
+        is_public=True,
+    )
+
+    file_url, storage_path = await supabase_storage_service.upload_file(
+        file_content=file_content,
+        filename=file.filename or "avatar.jpg",
+        content_type=content_type,
+        organization_id=str(organization_id),
+        subfolder="user-avatars",
+    )
+
+    # Update user's profile_photo_url
+    current_user.profile_photo_url = file_url
+    db.add(current_user)
+    await db.commit()
+
+    return {"file_url": file_url}
+
+
 @router.post("/organization/logo")
 async def upload_organization_logo(
     file: UploadFile = FastAPIFile(...),

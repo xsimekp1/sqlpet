@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean
+from sqlalchemy import String, Boolean, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.app.db.base import Base, UUIDPrimaryKeyMixin, TimestampMixin
@@ -14,6 +14,7 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     is_superadmin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    profile_photo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     locale: Mapped[str] = mapped_column(String(5), default="cs", nullable=False, server_default="cs")
 

@@ -17,6 +17,8 @@ import {
   Palette,
   Coins,
   Building2,
+  User,
+  Camera,
 } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -96,6 +98,63 @@ export default function SettingsPage() {
   const { user, selectedOrg } = useAuth();
   const canViewSensitive = canViewSensitiveInfo(selectedOrg?.role);
   const { theme, setTheme } = useTheme();
+
+  // Profile state
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profilePhone, setProfilePhone] = useState(user?.phone || '');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync profile state when user changes
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.name || '');
+      setProfilePhone(user.phone || '');
+    }
+  }, [user]);
+
+  // Profile handlers
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAvatar(true);
+    try {
+      const result = await ApiClient.uploadUserAvatar(file);
+      toast.success('Profilová fotka nahrána');
+      // Refresh user data
+      window.location.reload();
+    } catch (error) {
+      toast.error('Nepodařilo se nahrát fotku');
+      console.error(error);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profileName.trim()) {
+      toast.error('Jméno je povinné');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      await ApiClient.updateProfile({
+        name: profileName.trim(),
+        phone: profilePhone.trim() || undefined,
+      });
+      toast.success('Profil uložen');
+      // Refresh user data
+      window.location.reload();
+    } catch (error) {
+      toast.error('Nepodařilo se uložit profil');
+      console.error(error);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   // Default images state
   const [images, setImages] = useState<DefaultImage[]>([]);
@@ -628,7 +687,115 @@ export default function SettingsPage() {
         </TabsList>
 
         {/* ── General tab ── */}
-        <TabsContent value="general">
+        <TabsContent value="general" className="space-y-6">
+          {/* Profile section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Můj profil
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Avatar */}
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border">
+                    {(user as any)?.profile_photo_url ? (
+                      <Image
+                        src={(user as any).profile_photo_url}
+                        alt={user?.name || 'Avatar'}
+                        width={80}
+                        height={80}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <span className="text-2xl font-semibold text-muted-foreground">
+                        {user?.name?.charAt(0).toUpperCase() || '?'}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={isUploadingAvatar}
+                    className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    title="Změnit fotku"
+                  >
+                    {isUploadingAvatar ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4" />
+                    )}
+                  </button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm text-muted-foreground">Profilová fotka</p>
+                  <p className="text-xs text-muted-foreground">
+                    Klikni na ikonu fotoaparátu pro nahrání nové fotky
+                  </p>
+                </div>
+              </div>
+
+              {/* Name & Phone */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="profile-name">Jméno</Label>
+                  <Input
+                    id="profile-name"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    placeholder="Vaše jméno"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="profile-phone">Telefon</Label>
+                  <Input
+                    id="profile-phone"
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    placeholder="+420 123 456 789"
+                  />
+                </div>
+              </div>
+
+              {/* Email (read-only) */}
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input
+                  value={canViewSensitive ? user?.email : maskEmail(user?.email || '')}
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">E-mail nelze změnit</p>
+              </div>
+
+              <Button
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile || !profileName.trim()}
+              >
+                {isSavingProfile ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Ukládám...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Uložit profil
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Preferences section */}
           <Card>
             <CardHeader>
               <CardTitle>{t('preferences')}</CardTitle>
