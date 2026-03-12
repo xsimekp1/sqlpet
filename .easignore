@@ -1,14 +1,36 @@
-# Exclude everything except apps/mobile
-*
+# Exclude API and web apps
+apps/api
+apps/web
 
-# But include apps/mobile
-!apps/
-!apps/mobile/
-!apps/mobile/**
+# Exclude packages
+packages
 
-# Also need package.json from root if it exists
-!package.json
-!package-lock.json
+# Exclude infrastructure
+infra
+seed
 
-# Exclude node_modules even in mobile (will be installed fresh)
-apps/mobile/node_modules/
+# Exclude large binary files in root (not in apps/mobile)
+/*.zip
+/*.pdf
+/*.png
+/*.webm
+/animals
+/dog_symbols_icons_alpha01_sliced
+/cat_symbols_icons_alpha01_sliced
+
+# Exclude caches
+__pycache__
+.pytest_cache
+.ruff_cache
+.venv
+venv
+node_modules
+
+# Exclude IDE/editor
+.vscode
+.idea
+.claude
+
+# Exclude misc
+*.md
+.git
