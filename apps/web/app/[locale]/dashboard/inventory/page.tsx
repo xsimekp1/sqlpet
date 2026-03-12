@@ -194,7 +194,7 @@ export default function InventoryPage() {
               <TableHead>{t('fields.unit')}</TableHead>
               <TableHead>{t('lots')}</TableHead>
               <TableHead>{t('reorderThreshold')}</TableHead>
-              <TableHead className="text-right">{t('actions')}</TableHead>
+              <TableHead className="text-right">{t('actions.title')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

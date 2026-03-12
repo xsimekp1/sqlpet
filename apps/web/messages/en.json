@@ -1511,7 +1511,6 @@
     "items": "Items",
     "lots": "Lots",
     "transactions": "Transactions",
-    "actions": "Actions",
     "delete": "Delete",
     "deleteItem": "Delete item?",
     "deleteItemConfirm": "This will permanently delete item \"{name}\". This action cannot be undone.",
@@ -1573,6 +1572,7 @@
       "notesPlaceholder": "Product description, storage instructions, notes…"
     },
     "actions": {
+      "title": "Actions",
       "createItem": "Create Item",
       "editItem": "Edit Item",
       "addLot": "Add Lot",

@@ -15,10 +15,11 @@
     "@tanstack/react-query": "^5.0.0",
     "expo": "^54.0.33",
     "expo-build-properties": "~1.0.10",
+    "expo-constants": "^55.0.7",
     "expo-dev-client": "~6.0.20",
     "expo-linking": "~8.0.11",
     "expo-localization": "~17.0.8",
-    "expo-location": "~18.0.0",
+    "expo-location": "~19.0.8",
     "expo-router": "~6.0.23",
     "expo-secure-store": "~15.0.8",
     "expo-status-bar": "~3.0.9",
@@ -26,6 +27,7 @@
     "nanoid": "^5.1.6",
     "nativewind": "^4.0.0",
     "react": "19.1.0",
+    "react-dom": "^19.2.4",
     "react-native": "^0.81.5",
     "react-native-google-mobile-ads": "^16.0.0",
     "react-native-maps": "1.20.1",
@@ -39,7 +41,6 @@
   "devDependencies": {
     "@babel/core": "^7.25.0",
     "@types/react": "~19.1.0",
-    "eas-cli": "^3.0.0",
     "typescript": "~5.9.2"
   },
   "private": true

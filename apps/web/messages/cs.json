@@ -1391,7 +1391,6 @@
     "items": "Položky",
     "lots": "Šarže",
     "transactions": "Transakce",
-    "actions": "Akce",
     "delete": "Smazat",
     "deleteItem": "Smazat položku?",
     "deleteItemConfirm": "Toto trvale smaže položku \"{name}\". Tuto akci nelze vrátit zpět.",
@@ -1453,6 +1452,7 @@
       "notesPlaceholder": "Popis produktu, skladovací instrukce, poznámky…"
     },
     "actions": {
+      "title": "Akce",
       "createItem": "Vytvořit položku",
       "editItem": "Upravit položku",
       "save": "Uložit",
