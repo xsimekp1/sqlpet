@@ -57,7 +57,7 @@ export default function TasksPage() {
   const [statusFilter, setStatusFilter] = useState<TaskStatus>(initialStatus);
   const [typeFilter, setTypeFilter] = useState<TaskType>(initialType);
   const [prioritySort, setPrioritySort] = useState<'desc' | 'asc' | null>(null);
-  const [dueDateSort, setDueDateSort] = useState<'desc' | 'asc' | null>(null);
+  const [dueDateSort, setDueDateSort] = useState<'desc' | 'asc'>('asc');
   const [page, setPage] = useState(1);
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -532,14 +532,12 @@ export default function TasksPage() {
                 className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
                 onClick={() => {
                   setPrioritySort(null);
-                  setDueDateSort(prev => prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc');
+                  setDueDateSort(prev => prev === 'asc' ? 'desc' : 'asc');
                 }}
               >
                 <div className="flex items-center gap-1">
                   Termín
-                  {dueDateSort === 'asc' && <ChevronUp className="h-4 w-4" />}
-                  {dueDateSort === 'desc' && <ChevronDown className="h-4 w-4" />}
-                  {!dueDateSort && <ChevronUp className="h-4 w-4 opacity-0 group-hover:opacity-30" />}
+                  {dueDateSort === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </div>
               </TableHead>
               <TableHead className="w-10">Zadal</TableHead>
