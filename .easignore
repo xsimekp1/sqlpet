@@ -1,36 +1,40 @@
-# Exclude API and web apps
-apps/api
-apps/web
+# Exclude other apps
+apps/api/
+apps/web/
 
 # Exclude packages
-packages
+packages/
 
 # Exclude infrastructure
-infra
-seed
+infra/
+seed/
 
-# Exclude large binary files in root (not in apps/mobile)
-/*.zip
-/*.pdf
-/*.png
-/*.webm
-/animals
-/dog_symbols_icons_alpha01_sliced
-/cat_symbols_icons_alpha01_sliced
+# Exclude directories with large files
+animals/
+dog_symbols_icons_alpha01_sliced/
+cat_symbols_icons_alpha01_sliced/
 
-# Exclude caches
-__pycache__
-.pytest_cache
-.ruff_cache
-.venv
-venv
-node_modules
+# Exclude specific large files
+*.zip
+petslog.png
+prnt1.png
+*.webm
+
+# Exclude caches and build artifacts
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+node_modules/
 
 # Exclude IDE/editor
-.vscode
-.idea
-.claude
+.vscode/
+.idea/
+.claude/
 
-# Exclude misc
-*.md
-.git
+# Exclude misc root files
+*.txt
+*.csv
+*.sql
+.git/
