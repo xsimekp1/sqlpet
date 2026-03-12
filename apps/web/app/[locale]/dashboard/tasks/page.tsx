@@ -233,8 +233,8 @@ export default function TasksPage() {
       await queryClient.cancelQueries({ queryKey: ['tasks'] });
       // Snapshot current state for rollback
       const previousData = queryClient.getQueryData(['tasks', statusFilter, typeFilter, page]);
-      // Wait for animation before removing
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Wait for animation (400ms) before removing from DOM
+      await new Promise(resolve => setTimeout(resolve, 400));
       // Optimistically remove task from list (if filter shows only active tasks)
       queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], (old: any) => {
         if (!old) return old;
