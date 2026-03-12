@@ -79,6 +79,7 @@ const STATUS_LABELS: Record<string, string> = {
   checked_in: 'Nastoupil/a',
   checked_out: 'Odjel/a',
   cancelled: 'Zrušeno',
+  completed: 'Dokončeno',
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -87,6 +88,7 @@ const STATUS_COLORS: Record<string, string> = {
   checked_in: 'bg-green-100 text-green-800 border-green-200',
   checked_out: 'bg-gray-100 text-gray-800 border-gray-200',
   cancelled: 'bg-red-100 text-red-800 border-red-200',
+  completed: 'bg-green-100 text-green-800 border-green-200',
 };
 
 export default function HotelReservationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -471,13 +473,13 @@ export default function HotelReservationDetailPage({ params }: { params: Promise
           <CardTitle>Majitel</CardTitle>
         </CardHeader>
         <CardContent>
-          <Select value={contactId} onValueChange={setContactId} disabled={!isEditable}>
-            <SelectTrigger>
-              <SelectValue placeholder="Vyberte kontakt" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Bez kontaktu</SelectItem>
-              {contacts.map((c) => (
+            <Select value={contactId || 'none'} onValueChange={(v) => setContactId(v === 'none' ? '' : v)} disabled={!isEditable}>
+              <SelectTrigger>
+                <SelectValue placeholder="Vyberte kontakt" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Bez kontaktu</SelectItem>
+                {contacts.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name} {c.phone ? `(${canViewSensitive ? c.phone : maskPhone(c.phone)})` : ''}
                 </SelectItem>
@@ -551,6 +553,7 @@ export default function HotelReservationDetailPage({ params }: { params: Promise
                 <SelectItem value="confirmed">Potvrzeno</SelectItem>
                 <SelectItem value="checked_in">Nastoupil/a</SelectItem>
                 <SelectItem value="checked_out">Odjel/a</SelectItem>
+                <SelectItem value="completed">Dokončeno</SelectItem>
                 <SelectItem value="cancelled">Zrušeno</SelectItem>
               </SelectContent>
             </Select>

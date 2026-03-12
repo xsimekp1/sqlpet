@@ -96,6 +96,7 @@ class IntakeResponse(BaseModel):
     animal_id: Optional[str] = None
     animal_name: Optional[str] = None
     animal_species: Optional[str] = None
+    is_animal_deleted: bool = False
     kennel_id: Optional[str] = None
     reason: str
     intake_date: date
@@ -117,12 +118,16 @@ class IntakeResponse(BaseModel):
 
 
 def _to_response(i: Intake, animal=None) -> IntakeResponse:
+    is_animal_deleted = animal is None or (
+        animal.deleted_at is not None if hasattr(animal, "deleted_at") else False
+    )
     return IntakeResponse(
         id=str(i.id),
         organization_id=str(i.organization_id),
         animal_id=str(i.animal_id) if i.animal_id else None,
         animal_name=animal.name if animal else None,
         animal_species=animal.species if animal else None,
+        is_animal_deleted=is_animal_deleted,
         kennel_id=str(i.kennel_id) if i.kennel_id else None,
         reason=i.reason.value if isinstance(i.reason, IntakeReason) else str(i.reason),
         intake_date=i.intake_date,
@@ -465,7 +470,9 @@ class IntakeOutcome(str, enum.Enum):
     DECEASED = "deceased"
     LOST = "lost"
     HOTEL_END = "hotel_end"
-    RETURNED_TO_OWNER = "returned_to_owner"  # Original owner reclaimed during waiting period
+    RETURNED_TO_OWNER = (
+        "returned_to_owner"  # Original owner reclaimed during waiting period
+    )
 
 
 class IntakeClose(BaseModel):
@@ -529,7 +536,10 @@ async def close_intake(
         animal.status = _OUTCOME_STATUS_MAP[data.outcome]  # type: ignore
 
         # Log audit event for returned_to_owner during waiting period
-        if data.outcome == IntakeOutcome.RETURNED_TO_OWNER and animal.status == AnimalStatus.WAITING_ADOPTION:
+        if (
+            data.outcome == IntakeOutcome.RETURNED_TO_OWNER
+            and animal.status == AnimalStatus.WAITING_ADOPTION
+        ):
             from src.app.services.audit_service import AuditService
 
             audit_service = AuditService(db)

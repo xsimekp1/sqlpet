@@ -906,7 +906,14 @@ class ApiClient {
   // ANIMALS
   // ========================================
 
-  static async getAnimals(params?: { status?: string; species?: string; search?: string; page_size?: number }): Promise<{ items: Animal[]; total: number }> {
+  static async getAnimals(params?: {
+    status?: string;
+    species?: string;
+    search?: string;
+    page_size?: number;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+  }): Promise<{ items: Animal[]; total: number }> {
     if (!this.getOrganizationId()) {
       throw new Error('No organization selected. Please select an organization first.');
     }
@@ -916,6 +923,8 @@ class ApiClient {
       if (params?.species) queryParams.append('species', params.species);
       if (params?.search) queryParams.append('search', params.search);
       if (params?.page_size) queryParams.append('page_size', String(params.page_size));
+      if (params?.sort_by) queryParams.append('sort_by', params.sort_by);
+      if (params?.sort_order) queryParams.append('sort_order', params.sort_order);
       const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
       const response = await axios.get<{ items: Animal[]; total: number; page: number; page_size: number }>(
         `${API_URL}/animals${queryString}`,

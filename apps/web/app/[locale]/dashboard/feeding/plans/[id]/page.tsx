@@ -31,6 +31,16 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface FeedingPlanFormData {
   animal_id: string;
@@ -58,6 +68,9 @@ export default function EditFeedingPlanPage() {
   const [newTime, setNewTime] = useState('08:00');
   const [selectedAnimalId, setSelectedAnimalId] = useState('');
   const [selectedFoodId, setSelectedFoodId] = useState('');
+  const [originalAmountG, setOriginalAmountG] = useState<number | null>(null);
+  const [showReductionWarning, setShowReductionWarning] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<FeedingPlanFormData | null>(null);
 
   const watchedAmountG = watch('amount_g');
 
@@ -114,6 +127,10 @@ export default function EditFeedingPlanPage() {
       });
       setSelectedAnimalId(animalId);
       setSelectedFoodId(foodId);
+      // Store original amount for reduction warning
+      if (planData.amount_g && originalAmountG === null) {
+        setOriginalAmountG(planData.amount_g);
+      }
       if (planData.schedule_json?.times) {
         setScheduleTimes(planData.schedule_json.times);
       }
@@ -180,7 +197,31 @@ export default function EditFeedingPlanPage() {
       }
     }
 
+    // Check for significant reduction (> 20%)
+    if (originalAmountG && data.amount_g) {
+      const reductionPercent = ((originalAmountG - data.amount_g) / originalAmountG) * 100;
+      if (reductionPercent > 20) {
+        // Store form data and show warning
+        setPendingFormData(data);
+        setShowReductionWarning(true);
+        return;
+      }
+    }
+
     updatePlanMutation.mutate(data);
+  };
+
+  const confirmReduction = () => {
+    if (pendingFormData) {
+      updatePlanMutation.mutate(pendingFormData);
+      setShowReductionWarning(false);
+      setPendingFormData(null);
+    }
+  };
+
+  const cancelReduction = () => {
+    setShowReductionWarning(false);
+    setPendingFormData(null);
   };
 
   const handlePresetSelect = (times: string[]) => {
@@ -568,6 +609,37 @@ export default function EditFeedingPlanPage() {
           </div>
         </div>
       </form>
+
+      {/* Significant reduction warning dialog */}
+      <AlertDialog open={showReductionWarning} onOpenChange={setShowReductionWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              {t('significantReduction')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {originalAmountG && pendingFormData?.amount_g && (
+                <>
+                  {t('reductionWarningMessage', {
+                    oldAmount: originalAmountG,
+                    newAmount: pendingFormData.amount_g,
+                    percent: Math.round(((originalAmountG - pendingFormData.amount_g) / originalAmountG) * 100),
+                  })}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelReduction}>
+              {t('actions.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmReduction} className="bg-yellow-600 hover:bg-yellow-700">
+              {t('confirmReduction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -33,6 +33,7 @@ interface IntakeRecord {
   animal_id: string;
   animal_name: string | null;
   animal_species: string | null;
+  is_animal_deleted: boolean;
   reason: string;
   intake_date: string;
   planned_end_date: string | null;
@@ -231,7 +232,7 @@ export default function IntakePage() {
                 {intakes.map(intake => (
                   <tr key={intake.id} className="border-b hover:bg-muted/50 transition-colors">
                     <td className="px-4 py-3">
-                      {intake.animal_id ? (
+                      {intake.animal_id && !intake.is_animal_deleted ? (
                         <Link
                           href={`/dashboard/animals/${intake.animal_id}`}
                           className="text-primary hover:underline font-medium text-sm"
@@ -240,7 +241,8 @@ export default function IntakePage() {
                         </Link>
                       ) : (
                         <span className="font-medium text-sm text-muted-foreground">
-                          {intake.animal_name ?? 'Hotelová rezervace'}
+                          {intake.animal_name ?? (intake.reason === 'hotel' ? 'Hotelová rezervace' : `${intake.animal_id?.slice(0, 8)}…`)}
+                          {intake.is_animal_deleted && <Badge variant="outline" className="ml-2 text-xs">smazáno</Badge>}
                         </span>
                       )}
                       {intake.animal_species && (

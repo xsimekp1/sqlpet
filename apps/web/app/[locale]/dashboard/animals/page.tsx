@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList, Dog, Download, Zap, Syringe, Milk, Heart, QrCode } from 'lucide-react';
+import { Plus, Search, Loader2, LayoutGrid, List, ArrowRight, Scissors, Pill, AlertTriangle, Baby, Accessibility, CheckSquare, Square, ClipboardList, Dog, Download, Zap, Syringe, Milk, Heart, QrCode, ArrowUpDown } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -86,6 +86,8 @@ export default function AnimalsPage() {
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'active' | 'available' | 'all'>('active');
   const [deadlineFilter, setDeadlineFilter] = useState<'all' | 'urgent' | 'expired' | 'missing'>('all');
+  const [sortBy, setSortBy] = useState<string>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'grid' | 'table'>('grid');
@@ -163,7 +165,11 @@ export default function AnimalsPage() {
     const fetchAnimals = async () => {
       try {
         setLoading(true);
-        const data = await ApiClient.getAnimals();
+        const data = await ApiClient.getAnimals({
+          page_size: 500,
+          sort_by: sortBy,
+          sort_order: sortOrder,
+        });
         console.log('[ANIMALS_LIST] Raw API response:', data);
         console.log('[ANIMALS_LIST] First item:', data.items[0]);
         setAnimals(data.items);
@@ -176,7 +182,7 @@ export default function AnimalsPage() {
     };
 
     fetchAnimals();
-  }, []);
+  }, [sortBy, sortOrder]);
 
   const availableSpecies = useMemo(
     () => [...new Set(animals.map((a) => a.species))].sort(),
@@ -338,6 +344,27 @@ export default function AnimalsPage() {
               className="pl-8 h-8"
             />
           </div>
+          <Select
+            value={`${sortBy}_${sortOrder}`}
+            onValueChange={(v) => {
+              const [field, order] = v.split('_') as [string, 'asc' | 'desc'];
+              setSortBy(field);
+              setSortOrder(order);
+            }}
+          >
+            <SelectTrigger className="h-8 w-auto min-w-[140px] text-xs">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-1.5" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="days_in_shelter_desc">{t('animals.sort.longestInShelter')}</SelectItem>
+              <SelectItem value="days_in_shelter_asc">{t('animals.sort.newestArrivals')}</SelectItem>
+              <SelectItem value="name_asc">{t('animals.sort.nameAZ')}</SelectItem>
+              <SelectItem value="name_desc">{t('animals.sort.nameZA')}</SelectItem>
+              <SelectItem value="created_at_desc">{t('animals.sort.newest')}</SelectItem>
+              <SelectItem value="created_at_asc">{t('animals.sort.oldest')}</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             variant={statusFilter === 'active' ? 'default' : 'outline'}
             size="sm"

@@ -93,7 +93,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-// Simple inline SVG sparkline for weight history
+// Smooth spline sparkline for weight history
 function WeightSparkline({ logs }: { logs: WeightLog[] }) {
   const sorted = [...logs]
     .sort((a, b) => new Date(a.measured_at).getTime() - new Date(b.measured_at).getTime());
@@ -112,28 +112,72 @@ function WeightSparkline({ logs }: { logs: WeightLog[] }) {
     return { x, y, w: Number(l.weight_kg), d: l.measured_at };
   });
 
-  const polyline = pts.map(p => `${p.x},${p.y}`).join(' ');
+  // Generate smooth spline path using catmull-rom to bezier conversion
+  const getSplinePath = () => {
+    if (pts.length < 2) return '';
+    if (pts.length === 2) return `M${pts[0].x},${pts[0].y} L${pts[1].x},${pts[1].y}`;
+
+    let path = `M${pts[0].x},${pts[0].y}`;
+
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(pts.length - 1, i + 2)];
+
+      // Catmull-Rom to Cubic Bezier conversion
+      const tension = 0.3;
+      const cp1x = p1.x + (p2.x - p0.x) * tension;
+      const cp1y = p1.y + (p2.y - p0.y) * tension;
+      const cp2x = p2.x - (p3.x - p1.x) * tension;
+      const cp2y = p2.y - (p3.y - p1.y) * tension;
+
+      path += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+    }
+    return path;
+  };
+
+  const splinePath = getSplinePath();
+
+  // Create area fill path
+  const areaPath = `${splinePath} L${pts[pts.length - 1].x},${H} L${pts[0].x},${H} Z`;
+
   const avg = weights.reduce((a, b) => a + b, 0) / weights.length;
   const avgY = H - pad - ((avg - minW) / range) * (H - pad * 2);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-16" aria-hidden>
+      {/* Gradient definition */}
+      <defs>
+        <linearGradient id="weightGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
+        </linearGradient>
+      </defs>
+
+      {/* Average line */}
       <line
         x1={pad} y1={avgY} x2={W - pad} y2={avgY}
-        stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth="1" opacity="0.5"
+        stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth="1" opacity="0.4"
       />
       <text x={W - pad + 2} y={avgY + 4} fontSize="9" fill="hsl(var(--muted-foreground))">{avg.toFixed(1)}</text>
-      <polyline
-        points={polyline}
+
+      {/* Area fill */}
+      <path d={areaPath} fill="url(#weightGradient)" />
+
+      {/* Smooth spline line */}
+      <path
+        d={splinePath}
         fill="none"
         stroke="hsl(var(--primary))"
         strokeWidth="2"
-        strokeLinejoin="round"
         strokeLinecap="round"
       />
+
+      {/* Data points - smaller dots */}
       {pts.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="hsl(var(--primary))">
-          <title>{`${p.w} kg · ${new Date(p.d).toLocaleDateString()}`}</title>
+        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="hsl(var(--primary))" stroke="white" strokeWidth="1">
+          <title>{`${p.w.toFixed(1)} kg · ${new Date(p.d).toLocaleDateString()}`}</title>
         </circle>
       ))}
     </svg>
@@ -256,6 +300,7 @@ export default function AnimalDetailPage() {
   // Weight
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
   const [vaccinations, setVaccinations] = useState<any[]>([]);
+  const [activeFeedingPlan, setActiveFeedingPlan] = useState<any>(null);
   const [weightInput, setWeightInput] = useState('');
   const [weightDate, setWeightDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [weightNotes, setWeightNotes] = useState('');
@@ -345,11 +390,12 @@ if (photoInputRef.current) photoInputRef.current.value = '';
         setLoadingIntakes(true);
         setLoadingVaccinations(true);
         
-        const [wLogs, kHistory, intakes, vacs] = await Promise.all([
+        const [wLogs, kHistory, intakes, vacs, feedingPlans] = await Promise.all([
           ApiClient.getWeightHistory(animalId).catch(() => []),
           ApiClient.getAnimalKennelHistory(animalId).catch(() => []),
           ApiClient.get('/intakes', { animal_id: animalId }).catch(() => []),
           ApiClient.get(`/vaccinations/animal/${animalId}`).catch(() => ({ items: [] })),
+          ApiClient.get('/feeding/plans', { animal_id: animalId, is_active: true }).catch(() => ({ items: [] })),
         ]);
         setWeightLogs(wLogs);
         setKennelHistory(kHistory);
@@ -357,6 +403,9 @@ if (photoInputRef.current) photoInputRef.current.value = '';
         setActiveIntakeId(activeIntake?.id ?? null);
         setActiveIntakeReason(activeIntake?.reason ?? null);
         setVaccinations(vacs.items || []);
+        // Set active feeding plan (take the first one if exists)
+        const plans = feedingPlans?.items || [];
+        setActiveFeedingPlan(plans.length > 0 ? plans[0] : null);
         
         setLoadingWeight(false);
         setLoadingKennelHistory(false);
@@ -1746,14 +1795,14 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                     <div className="flex items-center gap-2">
                       <label className="text-xs w-24">Nálezce chce:</label>
                       <Select
-                        value={legalDeadlineForm.finder_claims_ownership}
-                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, finder_claims_ownership: v as '' | 'true' | 'false' })}
+                        value={legalDeadlineForm.finder_claims_ownership || 'none'}
+                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, finder_claims_ownership: v === 'none' ? null : v as 'true' | 'false' })}
                       >
                         <SelectTrigger className="h-7 text-xs">
                           <SelectValue placeholder="--" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">--</SelectItem>
+                          <SelectItem value="none">--</SelectItem>
                           <SelectItem value="true">Ano</SelectItem>
                           <SelectItem value="false">Ne</SelectItem>
                         </SelectContent>
@@ -1762,14 +1811,14 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                     <div className="flex items-center gap-2">
                       <label className="text-xs w-24">Obec převedla:</label>
                       <Select
-                        value={legalDeadlineForm.municipality_irrevocably_transferred}
-                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, municipality_irrevocably_transferred: v as '' | 'true' | 'false' })}
+                        value={legalDeadlineForm.municipality_irrevocably_transferred || 'none'}
+                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, municipality_irrevocably_transferred: v === 'none' ? null : v as 'true' | 'false' })}
                       >
                         <SelectTrigger className="h-7 text-xs">
                           <SelectValue placeholder="--" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">--</SelectItem>
+                          <SelectItem value="none">--</SelectItem>
                           <SelectItem value="true">Ano</SelectItem>
                           <SelectItem value="false">Ne</SelectItem>
                         </SelectContent>
@@ -1840,6 +1889,66 @@ if (photoInputRef.current) photoInputRef.current.value = '';
             </CardContent>
           </Card>
           
+          {/* Active Feeding Plan */}
+          {activeFeedingPlan ? (
+            <Card className="bg-orange-50 border-orange-200">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg text-orange-800">Aktivní krmný plán</CardTitle>
+                  <Link href={`/${locale}/dashboard/feeding/plans/${activeFeedingPlan.id}`}>
+                    <Button variant="outline" size="sm" className="text-orange-700 border-orange-300 hover:bg-orange-100">
+                      Upravit plán
+                    </Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-3xl font-bold text-orange-700">
+                    {activeFeedingPlan.amount_g} <span className="text-lg font-normal">g/den</span>
+                  </p>
+                  {activeFeedingPlan.schedule_json?.times && (
+                    <span className="text-sm text-orange-600">
+                      ({activeFeedingPlan.schedule_json.times.length}× denně)
+                    </span>
+                  )}
+                </div>
+                {activeFeedingPlan.food_name && (
+                  <p className="text-sm text-orange-600 mt-1">
+                    Krmivo: {activeFeedingPlan.food_name}
+                  </p>
+                )}
+                {activeFeedingPlan.schedule_json?.times && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {activeFeedingPlan.schedule_json.times.map((time: string, idx: number) => (
+                      <span key={time} className="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-sm">
+                        {time}
+                        {activeFeedingPlan.schedule_json?.amounts?.[idx] && (
+                          <span className="font-medium ml-1">
+                            ({activeFeedingPlan.schedule_json.amounts[idx]}g)
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="pt-6">
+                <div className="text-center text-muted-foreground">
+                  <p className="mb-2">Toto zvíře nemá aktivní krmný plán</p>
+                  <Link href={`/${locale}/dashboard/feeding/plans/new?animal=${animalId}`}>
+                    <Button variant="outline" size="sm">
+                      Vytvořit krmný plán
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Current MER from DB */}
           {animal.mer_kcal_per_day && (
             <Card className="bg-green-50 border-green-200">
@@ -1977,10 +2086,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                   ))
                 })()}
 
-                <p className="text-xs text-muted-foreground mt-2">
-                  {/* TODO: M4 - load full event history from API */}
-                  {t('timeline.comingSoon')}
-                </p>
               </div>
             </CardContent>
           </Card>

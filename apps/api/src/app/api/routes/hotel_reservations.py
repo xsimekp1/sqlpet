@@ -512,6 +512,7 @@ async def checkin_reservation(
         animal_id=None,  # Hotel animal - not from shelter
         reason=IntakeReason.HOTEL,
         intake_date=checkin_date,
+        planned_end_date=reservation.end_date,  # From hotel reservation
         notes=f"Hotel reservation: {reservation.animal_name} ({reservation.animal_species}). {reservation.notes or ''}",
         created_by_id=current_user.id,
     )

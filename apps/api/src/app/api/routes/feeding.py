@@ -1,7 +1,10 @@
 """API routes for feeding management."""
 
 import uuid
+import csv
+import io
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List
 from datetime import datetime, timedelta, timezone
@@ -605,6 +608,7 @@ async def get_todays_feeding_tasks(
 @router.get("/consumption/report")
 async def get_consumption_report(
     days: int = Query(30, ge=1, le=365, description="Days of history"),
+    format: str = Query("json", regex="^(json|csv)$", description="Response format"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     organization_id: uuid.UUID = Depends(get_current_organization_id),
@@ -612,6 +616,7 @@ async def get_consumption_report(
     """
     Get consumption report for all animals from completed feeding tasks.
     Returns list of animals with their food consumption totals.
+    Supports JSON or CSV format.
     """
     from sqlalchemy import select, and_
     from sqlalchemy.orm import selectinload
@@ -640,7 +645,9 @@ async def get_consumption_report(
     for task in tasks:
         metadata = task.task_metadata or {}
         amount_g = metadata.get("amount_g")
-        animal_id = metadata.get("animal_id") or (str(task.related_entity_id) if task.related_entity_id else None)
+        animal_id = metadata.get("animal_id") or (
+            str(task.related_entity_id) if task.related_entity_id else None
+        )
         food_id = metadata.get("inventory_item_id")
 
         if not animal_id or not amount_g:
@@ -684,7 +691,9 @@ async def get_consumption_report(
         food_ids.update(data["by_food"].keys())
 
     if food_ids:
-        foods_stmt = select(InventoryItem).where(InventoryItem.id.in_([uuid.UUID(fid) for fid in food_ids]))
+        foods_stmt = select(InventoryItem).where(
+            InventoryItem.id.in_([uuid.UUID(fid) for fid in food_ids])
+        )
         foods_result = await db.execute(foods_stmt)
         foods = {str(f.id): f for f in foods_result.scalars().all()}
     else:
@@ -697,25 +706,82 @@ async def get_consumption_report(
         by_food_list = []
         for food_id, food_data in data["by_food"].items():
             food = foods.get(food_id)
-            by_food_list.append({
-                "food_id": food_id,
-                "food_name": food.name if food else None,
-                "total_grams": food_data["total_grams"],
-                "feeding_count": food_data["feeding_count"],
-            })
+            by_food_list.append(
+                {
+                    "food_id": food_id,
+                    "food_name": food.name if food else None,
+                    "total_grams": food_data["total_grams"],
+                    "feeding_count": food_data["feeding_count"],
+                }
+            )
 
-        report_items.append({
-            "animal_id": animal_id,
-            "animal_name": animal.name if animal else None,
-            "animal_public_code": animal.public_code if animal else None,
-            "species": animal.species.value if animal and hasattr(animal.species, 'value') else (str(animal.species) if animal else None),
-            "total_grams": data["total_grams"],
-            "total_feedings": data["total_feedings"],
-            "by_food": by_food_list,
-        })
+        report_items.append(
+            {
+                "animal_id": animal_id,
+                "animal_name": animal.name if animal else None,
+                "animal_public_code": animal.public_code if animal else None,
+                "species": animal.species.value
+                if animal and hasattr(animal.species, "value")
+                else (str(animal.species) if animal else None),
+                "total_grams": data["total_grams"],
+                "total_feedings": data["total_feedings"],
+                "by_food": by_food_list,
+            }
+        )
 
     # Sort by total consumption descending
     report_items.sort(key=lambda x: x["total_grams"], reverse=True)
+
+    if format == "csv":
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(
+            [
+                "animal_id",
+                "animal_name",
+                "public_code",
+                "species",
+                "food_name",
+                "total_grams",
+                "feeding_count",
+            ]
+        )
+        for item in report_items:
+            if item["by_food"]:
+                for food_item in item["by_food"]:
+                    writer.writerow(
+                        [
+                            item["animal_id"],
+                            item["animal_name"],
+                            item["animal_public_code"],
+                            item["species"],
+                            food_item["food_name"],
+                            food_item["total_grams"],
+                            food_item["feeding_count"],
+                        ]
+                    )
+            else:
+                writer.writerow(
+                    [
+                        item["animal_id"],
+                        item["animal_name"],
+                        item["animal_public_code"],
+                        item["species"],
+                        "",
+                        0,
+                        0,
+                    ]
+                )
+
+        output.seek(0)
+        filename = (
+            f"feeding_consumption_{days}days_{datetime.now().strftime('%Y%m%d')}.csv"
+        )
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
 
     return {
         "days": days,

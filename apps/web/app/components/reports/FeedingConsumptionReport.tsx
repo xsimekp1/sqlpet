@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Utensils, Loader2, ChevronDown, ChevronRight, Dog, Cat } from 'lucide-react';
+import { Utensils, Loader2, ChevronDown, ChevronRight, Dog, Cat, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FoodConsumption {
@@ -85,6 +85,13 @@ export function FeedingConsumptionReport() {
     setExpandedAnimals(newExpanded);
   };
 
+  const handleExportCSV = () => {
+    window.open(
+      `${process.env.NEXT_PUBLIC_API_URL || ''}/feeding/consumption/report?days=${days}&format=csv`,
+      '_blank'
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -109,6 +116,15 @@ export function FeedingConsumptionReport() {
               <SelectItem value="365">1 rok</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            disabled={!data || data.items.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            CSV
+          </Button>
         </div>
       </CardHeader>
       <CardContent>

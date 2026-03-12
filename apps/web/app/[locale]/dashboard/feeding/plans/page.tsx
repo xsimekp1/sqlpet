@@ -165,12 +165,17 @@ export default function FeedingPlansPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">
-                      {plan.animal_name || 'Unknown'}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {plan.animal_public_code || ''}
-                    </div>
+                    <Link
+                      href={`/dashboard/animals/${plan.animal_id}`}
+                      className="hover:underline"
+                    >
+                      <div className="font-medium">
+                        {plan.animal_name || 'Unknown'}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {plan.animal_public_code || ''}
+                      </div>
+                    </Link>
                   </TableCell>
                   <TableCell>
                     {plan.food_name ? (
@@ -229,11 +234,6 @@ export default function FeedingPlansPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
-                      <Link href={`/dashboard/feeding/plans/${plan.id}`}>
-                        <Button size="sm" variant="outline">
-                          {t('actions.edit')}
-                        </Button>
-                      </Link>
                       {plan.is_active && (
                         <Button
                           size="sm"

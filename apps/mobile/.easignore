@@ -1,0 +1,13 @@
+# Ignore everything except mobile app
+*
+!app.json
+!package.json
+!eas.json
+!src/
+!assets/
+!metro.config.js
+!babel.config.js
+!bun.lock
+!node_modules/
+!.gitignore
+!.npmrc

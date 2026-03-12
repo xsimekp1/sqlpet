@@ -211,12 +211,12 @@ export default function RequestMedicalProcedureDialog({
                     {t('medical.noVaccineInStock')}
                   </div>
                 ) : (
-                  <Select value={linkedInventoryItemId} onValueChange={setLinkedInventoryItemId}>
+                  <Select value={linkedInventoryItemId || 'none'} onValueChange={(v) => setLinkedInventoryItemId(v === 'none' ? '' : v)}>
                     <SelectTrigger>
                       <SelectValue placeholder={t('medical.vaccinePickerPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">{t('medical.vaccineNone')}</SelectItem>
+                      <SelectItem value="none">{t('medical.vaccineNone')}</SelectItem>
                       {vaccines.map((v: any) => (
                         <SelectItem key={v.item?.id ?? v.id} value={v.item?.id ?? v.id}>
                           {v.item?.name ?? v.name} ({v.total_quantity ?? 0} {v.item?.unit ?? v.unit})
