@@ -577,7 +577,11 @@ export default function TasksPage() {
                 </div>
               </TableHead>
               <TableHead className="w-10">Zadal</TableHead>
-              <TableHead className="text-right">Akce</TableHead>
+              <TableHead className="text-right">
+                <span className="text-green-600">✓</span>
+                {' / '}
+                <span className="text-red-500">✗</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -663,32 +667,46 @@ export default function TasksPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     {(task.status === 'pending' || task.status === 'in_progress') && (
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleCompleteTask(task)}
-                          disabled={completeTaskMutation.isPending || rejectTaskMutation.isPending}
-                        >
-                          <CheckCircle2 className="h-4 w-4 mr-1" />
-                          Splnit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
-                          onClick={() => handleRejectTask(task)}
-                          disabled={completeTaskMutation.isPending || rejectTaskMutation.isPending}
-                        >
-                          <Ban className="h-4 w-4 mr-1" />
-                          Zamítnout
-                        </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={() => handleCompleteTask(task)}
+                                disabled={completeTaskMutation.isPending || rejectTaskMutation.isPending}
+                              >
+                                <CheckCircle2 className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Splnit</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => handleRejectTask(task)}
+                                disabled={completeTaskMutation.isPending || rejectTaskMutation.isPending}
+                              >
+                                <Ban className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Zamítnout</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     )}
                     {task.status === 'completed' && (
-                      <span className="text-sm text-green-600">✓ Splněno</span>
+                      <span className="text-green-600 font-medium">✓</span>
                     )}
                     {task.status === 'cancelled' && (
-                      <span className="text-sm text-muted-foreground">Zamítnuto</span>
+                      <span className="text-muted-foreground">✗</span>
                     )}
                   </TableCell>
                 </TableRow>
