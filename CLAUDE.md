@@ -629,20 +629,6 @@ Steps:
 }
 ```
 
-### Keyboard Shortcuts
-
-Default shortcuts (customizable per user):
-- `Ctrl+K` - Global search
-- `Ctrl+Shift+A` - Animals
-- `Ctrl+Shift+K` - Kennels
-- `Ctrl+Shift+T` - Tasks
-- `Ctrl+Shift+I` - Inventory
-- `Ctrl+Shift+F` - Feeding
-
-Shortcuts are displayed:
-- In sidebar as right-aligned text (when expanded)
-- As tooltip on hover (when collapsed)
-
 ### Weather Widget
 
 - **Provider**: Open-Meteo API (free, no API key)
