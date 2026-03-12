@@ -188,15 +188,48 @@ export default function TasksPage() {
     },
   });
 
-  // Reject/cancel task mutation
+  // Reject/cancel task mutation with optimistic update
   const rejectTaskMutation = useMutation({
     mutationFn: (taskId: string) => ApiClient.cancelTask(taskId, 'rejected'),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({ title: 'Úkol zamítnut/a' });
+    onMutate: async (taskId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+      // Snapshot current state for rollback
+      const previousData = queryClient.getQueryData(['tasks', statusFilter, typeFilter, page]);
+      // Optimistically remove task from list (if filter shows only active tasks)
+      queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], (old: any) => {
+        if (!old) return old;
+        // If showing cancelled tasks, update status instead of removing
+        if (statusFilter === 'cancelled' || statusFilter === 'all') {
+          return {
+            ...old,
+            items: old.items.map((t: Task) =>
+              t.id === taskId ? { ...t, status: 'cancelled' } : t
+            ),
+          };
+        }
+        // Otherwise remove from list
+        return {
+          ...old,
+          items: old.items.filter((t: Task) => t.id !== taskId),
+          total: old.total - 1,
+        };
+      });
+      return { previousData };
     },
-    onError: (error: Error) => {
+    onSuccess: () => {
+      toast({ title: 'Úkol zamítnut' });
+    },
+    onError: (error: Error, _taskId, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['tasks', statusFilter, typeFilter, page], context.previousData);
+      }
       toast({ title: 'Chyba', description: error.message, variant: 'destructive' });
+    },
+    onSettled: () => {
+      // Refetch to sync with server
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
 
