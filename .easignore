@@ -1,0 +1,14 @@
+# Exclude everything except apps/mobile
+*
+
+# But include apps/mobile
+!apps/
+!apps/mobile/
+!apps/mobile/**
+
+# Also need package.json from root if it exists
+!package.json
+!package-lock.json
+
+# Exclude node_modules even in mobile (will be installed fresh)
+apps/mobile/node_modules/
