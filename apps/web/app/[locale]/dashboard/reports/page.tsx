@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import ApiClient from '@/app/lib/api';
 import { toast } from 'sonner';
+import { FeedingConsumptionReport } from '@/app/components/reports/FeedingConsumptionReport';
 // ApiClient imported for chart data only — document preview navigates to /reports/preview
 
 // ── Simple SVG line chart for daily animal count ────────────────────────────
@@ -230,6 +231,9 @@ const plannedReports = [
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Feeding consumption report ── */}
+      <FeedingConsumptionReport />
 
       {/* ── Planned reports placeholder ── */}
       <Card className="border-dashed">

@@ -599,6 +599,135 @@ async def get_todays_feeding_tasks(
     }
 
 
+# Get consumption report for all animals (for reports page)
+@router.get("/consumption/report")
+async def get_consumption_report(
+    days: int = Query(30, ge=1, le=365, description="Days of history"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
+):
+    """
+    Get consumption report for all animals from completed feeding tasks.
+    Returns list of animals with their food consumption totals.
+    """
+    from sqlalchemy import select, and_
+    from sqlalchemy.orm import selectinload
+    from src.app.models.task import Task, TaskStatus, TaskType
+    from src.app.models.animal import Animal
+    from src.app.models.inventory_item import InventoryItem
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    # Get all completed feeding tasks
+    stmt = select(Task).where(
+        and_(
+            Task.organization_id == organization_id,
+            Task.type == TaskType.FEEDING,
+            Task.status == TaskStatus.COMPLETED,
+            Task.completed_at >= cutoff,
+            Task.deleted_at.is_(None),
+        )
+    )
+    result = await db.execute(stmt)
+    tasks = result.scalars().all()
+
+    # Aggregate by animal and food
+    consumption: dict = {}  # animal_id -> { food_id -> data }
+
+    for task in tasks:
+        metadata = task.task_metadata or {}
+        amount_g = metadata.get("amount_g")
+        animal_id = metadata.get("animal_id") or (str(task.related_entity_id) if task.related_entity_id else None)
+        food_id = metadata.get("inventory_item_id")
+
+        if not animal_id or not amount_g:
+            continue
+
+        amount = float(amount_g)
+
+        if animal_id not in consumption:
+            consumption[animal_id] = {
+                "animal_id": animal_id,
+                "total_grams": 0.0,
+                "total_feedings": 0,
+                "by_food": {},
+            }
+
+        consumption[animal_id]["total_grams"] += amount
+        consumption[animal_id]["total_feedings"] += 1
+
+        if food_id:
+            if food_id not in consumption[animal_id]["by_food"]:
+                consumption[animal_id]["by_food"][food_id] = {
+                    "food_id": food_id,
+                    "total_grams": 0.0,
+                    "feeding_count": 0,
+                }
+            consumption[animal_id]["by_food"][food_id]["total_grams"] += amount
+            consumption[animal_id]["by_food"][food_id]["feeding_count"] += 1
+
+    # Load animal names
+    animal_ids = [uuid.UUID(aid) for aid in consumption.keys()]
+    if animal_ids:
+        animals_stmt = select(Animal).where(Animal.id.in_(animal_ids))
+        animals_result = await db.execute(animals_stmt)
+        animals = {str(a.id): a for a in animals_result.scalars().all()}
+    else:
+        animals = {}
+
+    # Load food names
+    food_ids = set()
+    for data in consumption.values():
+        food_ids.update(data["by_food"].keys())
+
+    if food_ids:
+        foods_stmt = select(InventoryItem).where(InventoryItem.id.in_([uuid.UUID(fid) for fid in food_ids]))
+        foods_result = await db.execute(foods_stmt)
+        foods = {str(f.id): f for f in foods_result.scalars().all()}
+    else:
+        foods = {}
+
+    # Build response
+    report_items = []
+    for animal_id, data in consumption.items():
+        animal = animals.get(animal_id)
+        by_food_list = []
+        for food_id, food_data in data["by_food"].items():
+            food = foods.get(food_id)
+            by_food_list.append({
+                "food_id": food_id,
+                "food_name": food.name if food else None,
+                "total_grams": food_data["total_grams"],
+                "feeding_count": food_data["feeding_count"],
+            })
+
+        report_items.append({
+            "animal_id": animal_id,
+            "animal_name": animal.name if animal else None,
+            "animal_public_code": animal.public_code if animal else None,
+            "species": animal.species.value if animal and hasattr(animal.species, 'value') else (str(animal.species) if animal else None),
+            "total_grams": data["total_grams"],
+            "total_feedings": data["total_feedings"],
+            "by_food": by_food_list,
+        })
+
+    # Sort by total consumption descending
+    report_items.sort(key=lambda x: x["total_grams"], reverse=True)
+
+    return {
+        "days": days,
+        "period_start": cutoff.isoformat(),
+        "period_end": datetime.now(timezone.utc).isoformat(),
+        "items": report_items,
+        "summary": {
+            "total_animals": len(report_items),
+            "total_grams": sum(item["total_grams"] for item in report_items),
+            "total_feedings": sum(item["total_feedings"] for item in report_items),
+        },
+    }
+
+
 # Get consumption history for an animal (from completed tasks)
 @router.get("/consumption/history/{animal_id}")
 async def get_animal_consumption_history(
