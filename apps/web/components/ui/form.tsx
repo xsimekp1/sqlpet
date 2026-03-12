@@ -12,6 +12,7 @@ import {
   type FieldPath,
   type FieldValues,
 } from "react-hook-form"
+import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
@@ -137,11 +138,17 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
 
 function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
   const { error, formMessageId } = useFormField()
-  const body = error ? String(error?.message ?? "") : props.children
+  const t = useTranslations()
+  const rawBody = error ? String(error?.message ?? "") : props.children
 
-  if (!body) {
+  if (!rawBody) {
     return null
   }
+
+  // Translate if it looks like an i18n key (contains a dot, e.g. "register.passwordsNotMatch")
+  const body = typeof rawBody === 'string' && rawBody.includes('.') && !rawBody.includes(' ')
+    ? t(rawBody as any)
+    : rawBody
 
   return (
     <p
