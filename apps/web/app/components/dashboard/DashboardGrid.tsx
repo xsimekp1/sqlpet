@@ -91,7 +91,7 @@ function SortableWidget({ widget, editMode, onRemove }: SortableWidgetProps) {
   }
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className="h-full">
       <WidgetComponent
         editMode={editMode}
         onRemove={onRemove}
@@ -136,7 +136,7 @@ export function DashboardGrid() {
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={dashboardWidgets.map(w => w.id)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
           {dashboardWidgets.map((widget) => (
             <SortableWidget
               key={widget.id}

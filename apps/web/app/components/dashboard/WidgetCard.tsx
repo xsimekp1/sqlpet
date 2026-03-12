@@ -27,7 +27,7 @@ export function WidgetCard({
   dragHandleProps
 }: WidgetCardProps) {
   return (
-    <Card className={cn('relative', className)}>
+    <Card className={cn('relative h-full min-h-[220px] flex flex-col', className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
           <Icon className="h-4 w-4 text-primary" />
@@ -54,7 +54,7 @@ export function WidgetCard({
           </div>
         )}
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="flex-1">{children}</CardContent>
     </Card>
   )
 }
