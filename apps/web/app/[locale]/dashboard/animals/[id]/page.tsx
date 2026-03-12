@@ -1287,7 +1287,7 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           <div className="flex flex-col sm:flex-row gap-2 justify-center sm:justify-start flex-wrap">
             {animal.current_intake_date === null ? (
               /* No active intake — show only intake button */
-              <Link href={`/dashboard/intake/new?animal_id=${animal.id}`}>
+              <Link href={`/dashboard/intake/new?animal_id=${animal.id}&animal_name=${encodeURIComponent(animal.name)}&animal_code=${encodeURIComponent(animal.public_code || '')}&animal_species=${encodeURIComponent(animal.species || '')}`}>
                 <Button variant="default" size="sm">
                   <LogIn className="h-4 w-4 mr-2" />
                   {t('intake.registerIntake')}

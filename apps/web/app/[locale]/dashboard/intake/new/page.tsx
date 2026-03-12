@@ -91,19 +91,46 @@ const today = new Date().toISOString().split('T')[0];
   const [previousIntakes, setPreviousIntakes] = useState<IntakeRecord[]>([]);
   const [loadingPreviousIntakes, setLoadingPreviousIntakes] = useState(false);
 
-  // Pre-fill animal when animal_id or animalId is passed via URL
+  // Pre-fill animal when animal_id is passed via URL
+  // If animal_name is also provided, skip the API call entirely
   useEffect(() => {
     const urlAnimalId = searchParams.get('animal_id') || searchParams.get('animalId');
     if (!urlAnimalId) return;
-    (async () => {
-      try {
-        const a = await ApiClient.getAnimal(urlAnimalId);
-        if (a) {
-          await selectAnimal(a);
-          setStep(1);
+
+    const urlAnimalName = searchParams.get('animal_name');
+
+    if (urlAnimalName) {
+      // Fast path: we have all the info we need, no API call required
+      set('animal_id', urlAnimalId);
+      set('animal_name', decodeURIComponent(urlAnimalName));
+      setStep(1);
+      // Still fetch previous intakes in background (non-blocking)
+      (async () => {
+        setLoadingPreviousIntakes(true);
+        try {
+          const rawData = await ApiClient.get(`/intakes?animal_id=${urlAnimalId}`);
+          const intakes: IntakeRecord[] = Array.isArray(rawData)
+            ? rawData
+            : (rawData?.items ?? []);
+          setPreviousIntakes(intakes);
+        } catch {
+          setPreviousIntakes([]);
+        } finally {
+          setLoadingPreviousIntakes(false);
         }
-      } catch { /* silently ignore — user can search manually */ }
-    })();
+      })();
+    } else {
+      // Fallback: fetch animal data from API (slower)
+      (async () => {
+        try {
+          const a = await ApiClient.getAnimal(urlAnimalId);
+          if (a) {
+            await selectAnimal(a);
+            setStep(1);
+          }
+        } catch { /* silently ignore — user can search manually */ }
+      })();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
