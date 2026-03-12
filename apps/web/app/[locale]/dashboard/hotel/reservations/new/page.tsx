@@ -425,7 +425,7 @@ export default function NewHotelReservationPage() {
                     ) : (
                       animals.map((a) => (
                         <SelectItem key={a.id} value={a.id}>
-                          {a.name} ({a.public_code}) - {a.species}
+                          {a.name} ({a.public_code}) - {a.species === 'dog' ? 'pes' : a.species === 'cat' ? 'kočka' : a.species}
                         </SelectItem>
                       ))
                     )}
