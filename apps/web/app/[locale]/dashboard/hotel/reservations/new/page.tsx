@@ -307,7 +307,7 @@ export default function NewHotelReservationPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl pb-24 md:pb-6">
       <div className="flex items-center gap-4">
         <Link href="/dashboard/hotel/reservations">
           <Button variant="ghost" size="icon">
@@ -658,7 +658,8 @@ export default function NewHotelReservationPage() {
       )}
 
       {/* Step 5: Price and Notes */}
-      {formData.contact_id && (
+      {(formData.kennel_id || ((formData.animal_mode === 'db' && formData.animal_id) ||
+              (formData.animal_mode === 'manual' && formData.animal_name && formData.animal_species))) && (
         <Card>
           <CardHeader>
             <CardTitle>5. Cena a poznámky</CardTitle>
@@ -709,7 +710,8 @@ export default function NewHotelReservationPage() {
       )}
 
       {/* Submit */}
-      {formData.contact_id && (
+      {(formData.kennel_id || ((formData.animal_mode === 'db' && formData.animal_id) ||
+              (formData.animal_mode === 'manual' && formData.animal_name && formData.animal_species))) && (
         <div className="flex gap-4">
           <Button
             onClick={handleSubmit}

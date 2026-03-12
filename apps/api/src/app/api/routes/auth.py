@@ -251,6 +251,9 @@ async def get_me(
             )
         )
 
+    # Refresh user to ensure all attributes are loaded in current async context
+    await db.refresh(current_user)
+
     # Hardcode admin@example.com as superadmin (not persisted in DB)
     if current_user.email == "admin@example.com":
         current_user.is_superadmin = True
