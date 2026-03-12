@@ -447,7 +447,7 @@ export default function AnimalsPage() {
                 onClick={() => toggleSelect(animal.id)}
                 className={`cursor-pointer rounded-lg border overflow-hidden transition-colors ${selectedIds.has(animal.id) ? 'border-primary ring-2 ring-primary/30' : 'border-border'}`}
               >
-                <Card className="border-0 rounded-none">
+                <Card className="border-0 rounded-none p-0 gap-0">
                   <div className="relative w-full aspect-square bg-muted overflow-hidden">
                     <Image src={getAnimalImageUrl(animal)} alt={animal.name} fill className="object-cover object-center" unoptimized />
                     {selectedIds.has(animal.id) && (
@@ -468,7 +468,7 @@ export default function AnimalsPage() {
               </div>
             ) : (
             <Link key={animal.id} href={`/dashboard/animals/${animal.id}`} onClick={(e) => { console.log('[ANIMALS_LIST] Link clicked, animal:', animal); e.preventDefault(); router.push(`/dashboard/animals/${animal.id}`) }}>
-              <Card className="hover:bg-accent transition-colors cursor-pointer overflow-hidden">
+              <Card className="hover:bg-accent transition-colors cursor-pointer overflow-hidden p-0 gap-0">
                 {/* Square thumbnail — equal padding on all sides */}
                 <div className={cn(
                   "relative w-full aspect-square bg-muted overflow-hidden",
