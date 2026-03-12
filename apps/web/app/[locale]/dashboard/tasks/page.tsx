@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, AlertCircle, Plus, Ban, ArrowUpDown, Bot } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Plus, Ban, ArrowUpDown, Bot, Calendar } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -57,6 +57,7 @@ export default function TasksPage() {
   const [statusFilter, setStatusFilter] = useState<TaskStatus>(initialStatus);
   const [typeFilter, setTypeFilter] = useState<TaskType>(initialType);
   const [prioritySort, setPrioritySort] = useState<'desc' | 'asc' | null>(null);
+  const [dueDateSort, setDueDateSort] = useState<'desc' | 'asc' | null>(null);
   const [page, setPage] = useState(1);
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -122,15 +123,29 @@ export default function TasksPage() {
   const totalTasks = taskData?.total ?? 0;
   const totalPages = Math.ceil(totalTasks / 10);
 
-  // Client-side sort by priority
+  // Client-side sort by priority or due date
   const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-  const sortedTasks = prioritySort
-    ? [...tasks].sort((a, b) => {
+  const sortedTasks = (() => {
+    let result = [...tasks];
+    if (prioritySort) {
+      result.sort((a, b) => {
         const aOrder = priorityOrder[a.priority as keyof typeof priorityOrder] ?? 4;
         const bOrder = priorityOrder[b.priority as keyof typeof priorityOrder] ?? 4;
         return prioritySort === 'desc' ? aOrder - bOrder : bOrder - aOrder;
-      })
-    : tasks;
+      });
+    } else if (dueDateSort) {
+      result.sort((a, b) => {
+        // Tasks without due date go to the end
+        if (!a.due_at && !b.due_at) return 0;
+        if (!a.due_at) return 1;
+        if (!b.due_at) return -1;
+        const aTime = new Date(a.due_at).getTime();
+        const bTime = new Date(b.due_at).getTime();
+        return dueDateSort === 'asc' ? aTime - bTime : bTime - aTime;
+      });
+    }
+    return result;
+  })();
 
   // Complete task mutation with optimistic update
   const completeTaskMutation = useMutation({
@@ -487,11 +502,27 @@ export default function TasksPage() {
         <Button
           variant={prioritySort ? 'default' : 'outline'}
           size="sm"
-          onClick={() => setPrioritySort(prev => prev === 'desc' ? 'asc' : prev === 'asc' ? null : 'desc')}
+          onClick={() => {
+            setDueDateSort(null);
+            setPrioritySort(prev => prev === 'desc' ? 'asc' : prev === 'asc' ? null : 'desc');
+          }}
           title="Seřadit podle priority"
         >
           <ArrowUpDown className="h-4 w-4 mr-1" />
-          {prioritySort === 'desc' ? 'Urgentní' : prioritySort === 'asc' ? 'Nízká' : 'Řadit'}
+          {prioritySort === 'desc' ? '↑ Urgentní' : prioritySort === 'asc' ? '↓ Nízká' : 'Priorita'}
+        </Button>
+
+        <Button
+          variant={dueDateSort ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setPrioritySort(null);
+            setDueDateSort(prev => prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc');
+          }}
+          title="Seřadit podle termínu"
+        >
+          <Calendar className="h-4 w-4 mr-1" />
+          {dueDateSort === 'asc' ? '↑ Nejbližší' : dueDateSort === 'desc' ? '↓ Nejzazší' : 'Termín'}
         </Button>
 
         {totalTasks > 0 && (
