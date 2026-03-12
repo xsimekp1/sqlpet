@@ -378,12 +378,18 @@ export default function InventoryItemDetailPage() {
         <div className="flex items-center gap-2 ml-1">
           {/* Delete Dialog */}
           <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                <Trash2 className="h-4 w-4 mr-1.5" />
-                {t('delete')}
-              </Button>
-            </DialogTrigger>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>{t('delete')}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{t('deleteItem')}</DialogTitle>
@@ -406,12 +412,18 @@ export default function InventoryItemDetailPage() {
 
           {/* Edit Dialog */}
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Pencil className="h-4 w-4 mr-1.5" />
-                {t('actions.editItem')}
-              </Button>
-            </DialogTrigger>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>{t('actions.editItem')}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{t('actions.editItem')}</DialogTitle>
@@ -655,16 +667,22 @@ export default function InventoryItemDetailPage() {
                         {formatDate(lot.created_at)}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => deleteLotMutation.mutate(lot.id)}
-                          disabled={deleteLotMutation.isPending}
-                          title="Delete lot"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => deleteLotMutation.mutate(lot.id)}
+                                disabled={deleteLotMutation.isPending}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('deleteLot')}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                     </TableRow>
                   ))
@@ -679,12 +697,18 @@ export default function InventoryItemDetailPage() {
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold">{t('transactions.title')}</h2>
             <Dialog open={addTransactionOpen} onOpenChange={setAddTransactionOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t('transactions.add')}
-                </Button>
-              </DialogTrigger>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DialogTrigger asChild>
+                      <Button size="icon" className="h-8 w-8">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('transactions.add')}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>{t('transactions.add')}</DialogTitle>
@@ -802,19 +826,26 @@ export default function InventoryItemDetailPage() {
                         {formatDate(tx.created_at, true)}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          disabled={cancelTransactionMutation.isPending}
-                          onClick={() => {
-                            if (window.confirm(t('transactions.confirmCancel'))) {
-                              cancelTransactionMutation.mutate(tx.id);
-                            }
-                          }}
-                        >
-                          <XCircle className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                disabled={cancelTransactionMutation.isPending}
+                                onClick={() => {
+                                  if (window.confirm(t('transactions.confirmCancel'))) {
+                                    cancelTransactionMutation.mutate(tx.id);
+                                  }
+                                }}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('transactions.cancel')}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                     </TableRow>
                   ))

@@ -1617,8 +1617,10 @@
       },
       "confirmCancel": "Cancel this transaction? A reversal entry will be created.",
       "cancelled": "Transaction cancelled",
-      "cancelledDesc": "A reversal transaction has been created."
+      "cancelledDesc": "A reversal transaction has been created.",
+      "cancel": "Cancel transaction"
     },
+    "deleteLot": "Delete lot",
     "messages": {
       "showingItems": "Showing {count} items",
       "outOfStock": "Out of stock",

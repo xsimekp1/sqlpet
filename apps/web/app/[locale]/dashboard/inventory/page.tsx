@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, AlertTriangle, Package, AlertCircle, ShoppingCart } from 'lucide-react';
+import { Plus, AlertTriangle, Package, AlertCircle, ShoppingCart, Eye } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -278,16 +278,23 @@ export default function InventoryPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
                       <AddToCartButton
                         item={stock.item}
                         totalQuantity={stock.total_quantity}
                       />
-                      <Link href={`/dashboard/inventory/items/${stock.item.id}`}>
-                        <Button size="sm" variant="ghost">
-                          {t('actions.viewDetails')}
-                        </Button>
-                      </Link>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link href={`/dashboard/inventory/items/${stock.item.id}`}>
+                              <Button size="icon" variant="ghost" className="h-8 w-8">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent>{t('actions.viewDetails')}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </TableCell>
                 </TableRow>

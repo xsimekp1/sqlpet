@@ -461,11 +461,11 @@ export default function RegisteredSheltersPage() {
 
       {/* Add Shelter Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Přidat nový útulek</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 overflow-y-auto flex-1 pr-2">
             <div className="grid gap-2">
               <Label htmlFor="regNumber">Registrační číslo *</Label>
               <Input
@@ -584,11 +584,11 @@ export default function RegisteredSheltersPage() {
 
       {/* Edit Contact & Notes Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Kontakt &amp; poznámky</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 overflow-y-auto flex-1 pr-2">
             <div className="grid gap-2">
               <Label htmlFor="editPhone">Telefon</Label>
               <Input

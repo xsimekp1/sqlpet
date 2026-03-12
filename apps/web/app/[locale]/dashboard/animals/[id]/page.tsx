@@ -9,7 +9,7 @@ import {
   CheckCircle2, XCircle, HelpCircle, AlertTriangle, Pill, Scissors,
   ChevronLeft, ChevronRight, Baby, Scale, Accessibility, Home, Camera,
   PersonStanding, LogIn, CheckCheck, FileText, Upload, X, ExternalLink,
-  QrCode, Globe, UserCheck, Clock, Edit2, Info,
+  QrCode, Globe, UserCheck, Clock, Edit2, Info, MoreHorizontal,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -48,6 +48,13 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import ApiClient, { Animal, WeightLog, MERCalculation } from '@/app/lib/api';
 import MERCalculator from '@/app/components/feeding/MERCalculator';
 import { ConsumptionHistory } from '@/app/components/feeding/ConsumptionHistory';
@@ -1226,108 +1233,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
             </div>
           )}
 
-          {/* Legal Deadline Section - for found animals, only CZ profile */}
-          {(animal.current_intake_reason === 'found' || animal.legal_notice_published_at) && legalProfile === 'CZ' && (
-            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-semibold text-amber-800 dark:text-amber-200 text-sm">
-                  ⚖️ Nálezové lhůty
-                </h4>
-                {isSuperadmin && !editingLegalDeadline && (
-                  <Button size="sm" variant="ghost" onClick={startEditLegalDeadline} className="h-6 text-xs">
-                    ✏️
-                  </Button>
-                )}
-              </div>
-              
-              {editingLegalDeadline ? (
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs w-24">Vyhlášení obcí:</label>
-                    <Input
-                      type="date"
-                      value={legalDeadlineForm.notice_published_at}
-                      onChange={(e) => setLegalDeadlineForm({ ...legalDeadlineForm, notice_published_at: e.target.value })}
-                      className="h-7 text-xs"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs w-24">Nálezce chce:</label>
-                    <Select
-                      value={legalDeadlineForm.finder_claims_ownership}
-                      onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, finder_claims_ownership: v as '' | 'true' | 'false' })}
-                    >
-                      <SelectTrigger className="h-7 text-xs">
-                        <SelectValue placeholder="--" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">--</SelectItem>
-                        <SelectItem value="true">Ano</SelectItem>
-                        <SelectItem value="false">Ne</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs w-24">Obec převedla:</label>
-                    <Select
-                      value={legalDeadlineForm.municipality_irrevocably_transferred}
-                      onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, municipality_irrevocably_transferred: v as '' | 'true' | 'false' })}
-                    >
-                      <SelectTrigger className="h-7 text-xs">
-                        <SelectValue placeholder="--" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">--</SelectItem>
-                        <SelectItem value="true">Ano</SelectItem>
-                        <SelectItem value="false">Ne</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <Button size="sm" onClick={handleSaveLegalDeadline} disabled={savingLegalDeadline} className="h-7 text-xs">
-                      {savingLegalDeadline ? '...' : '💾 Uložit'}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditingLegalDeadline(false)} className="h-7 text-xs">
-                      ✕
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-1 text-sm">
-                  {animal.legal_deadline_state === 'missing_data' ? (
-                    <div className="text-red-600 dark:text-red-400">
-                      ⚠️ {animal.legal_deadline_label || 'Chybí údaje pro výpočet lhůty'}
-                    </div>
-                  ) : animal.legal_deadline_state === 'expired' ? (
-                    <div className="text-red-600 dark:text-red-400 font-semibold">
-                      ❌ Lhůta vypršela
-                      {animal.legal_deadline_label && <span className="font-normal ml-1">({animal.legal_deadline_label})</span>}
-                    </div>
-                  ) : animal.legal_deadline_days_left != null && animal.legal_deadline_days_left <= 14 ? (
-                    <div className="text-orange-600 dark:text-orange-400 font-semibold">
-                      ⏰ Zbývá {animal.legal_deadline_days_left} dní
-                      {animal.legal_deadline_label && <span className="font-normal ml-1">({animal.legal_deadline_label})</span>}
-                    </div>
-                  ) : (
-                    <div className="text-green-600 dark:text-green-400">
-                      ✓ {animal.legal_deadline_label || 'Bez lhůty'}
-                    </div>
-                  )}
-                  {animal.notice_published_at && (
-                    <div className="text-xs text-muted-foreground">
-                      Vyhlášeno: {new Date(animal.notice_published_at).toLocaleDateString('cs-CZ')}
-                    </div>
-                  )}
-                  {animal.legal_deadline_type === '4m_notice' && (
-                    <div className="text-xs text-muted-foreground">
-                      Přímé předání nálezcem · lhůta 4 měsíce od vyhlášení
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-2 justify-center sm:justify-start flex-wrap">
             {animal.current_intake_date === null ? (
@@ -1412,24 +1317,85 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                 {activeIntakeReason === 'hotel' ? t('intake.closeIntake') : t('intake.closeIntake')}
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              {t('delete')}
-            </Button>
-            <div className="hidden md:flex">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => setQrDialogOpen(true)} className="h-8 w-8">
-                      <QrCode className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>QR kód</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+
+            {/* Dropdown "Další akce" */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <MoreHorizontal className="h-4 w-4 mr-2" />
+                  Další akce
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {/* Mark as available - only for intake status */}
+                {animal.status === 'intake' && (
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      if (!confirm(`Označit ${animal.name} jako dostupné k adopci?`)) return;
+                      try {
+                        const updated = await ApiClient.updateAnimal(animal.id, { status: 'available' } as any);
+                        setAnimal(updated);
+                        toast.success(t('overview.statusChanged', { status: t('status.available') }));
+                      } catch { toast.error(t('overview.statusChangeError')); }
+                    }}
+                    className="text-green-600"
+                  >
+                    <CheckCheck className="h-4 w-4 mr-2" />
+                    {t('markAvailable')}
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuItem onClick={() => setQrDialogOpen(true)}>
+                  <QrCode className="h-4 w-4 mr-2" />
+                  QR kód
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                {/* Escape - only for non-terminal, non-escaped */}
+                {!['deceased', 'adopted', 'euthanized', 'escaped', 'transferred', 'returned_to_owner'].includes(animal.status) && (
+                  <DropdownMenuItem onClick={() => setEscapeOpen(true)} className="text-orange-600">
+                    <PersonStanding className="h-4 w-4 mr-2" />
+                    {t('escape.button')}
+                  </DropdownMenuItem>
+                )}
+
+                {/* Found after escape */}
+                {animal.status === 'escaped' && (
+                  <DropdownMenuItem onClick={() => setFoundOpen(true)} className="text-blue-600">
+                    <LogIn className="h-4 w-4 mr-2" />
+                    {t('escape.foundButton')}
+                  </DropdownMenuItem>
+                )}
+
+                {/* Record death */}
+                {!['deceased', 'adopted', 'euthanized'].includes(animal.status) && (
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      if (!confirm(t('confirmDeath', { name: animal.name }))) return;
+                      try {
+                        const updated = await ApiClient.updateAnimal(animal.id, { status: 'deceased' } as any);
+                        setAnimal(updated);
+                        setHealthEvents(prev => [{ text: t('healthEvents.deathRecorded'), date: new Date() }, ...prev]);
+                        toast.success(t('deathRecorded'));
+                        setTimeout(() => toast.info(t('deathTaskCreated')), 800);
+                      } catch { toast.error(t('deathError')); }
+                    }}
+                    className="text-red-600"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    {t('recordDeath')}
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t('delete')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -1500,102 +1466,112 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                 )}
               </div>
 
-              {/* Toggle buttons */}
-              <div className="flex flex-wrap gap-2 pt-1 border-t border-border/40">
-                {/* Neutered toggle – disabled with tooltip if already altered */}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span>
+              {/* Toggle buttons - grouped */}
+              <details
+                className="border-t border-border/40 pt-2"
+                open={animal.is_critical || animal.is_diabetic || animal.is_cancer || animal.is_aggressive || animal.is_pregnant || animal.is_lactating}
+              >
+                <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground select-none">
+                  Upravit zdravotní stavy
+                </summary>
+                <div className="mt-3 space-y-3">
+                  {/* Běžné */}
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Běžné</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <button
+                                className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={toggleAltered}
+                                disabled={togglingAltered || animal.is_pregnant || animal.altered_status !== 'intact'}
+                              >
+                                {togglingAltered ? '...' : (animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? t('health.markIntact') : t('health.markAltered'))}
+                              </button>
+                            </span>
+                          </TooltipTrigger>
+                          {animal.is_pregnant && <TooltipContent>{t('overview.noNeuteringPregnant')}</TooltipContent>}
+                          {!animal.is_pregnant && animal.altered_status !== 'intact' && <TooltipContent>{t('overview.alreadyAltered')}</TooltipContent>}
+                        </Tooltip>
+                      </TooltipProvider>
+                      <button
+                        className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_dewormed ? 'bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-200' : 'border-input hover:bg-accent'}`}
+                        onClick={toggleDewormed}
+                        disabled={togglingDewormed}
+                      >
+                        {togglingDewormed ? '...' : (animal.is_dewormed ? '✓ ' + t('health.dewormed') : t('health.dewormed'))}
+                      </button>
+                      <button
+                        className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_special_needs ? 'bg-violet-100 border-violet-300 text-violet-800 dark:bg-violet-900 dark:border-violet-700 dark:text-violet-200' : 'border-input hover:bg-accent'}`}
+                        onClick={toggleSpecialNeeds}
+                        disabled={togglingSpecialNeeds}
+                      >
+                        {togglingSpecialNeeds ? '...' : (animal.is_special_needs ? `✓ ${t('overview.specNeeds')}` : t('overview.specNeeds'))}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Zdravotní stavy */}
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Zdravotní stavy</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_critical ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' : 'border-input hover:bg-accent'}`}
+                        onClick={toggleCritical}
+                        disabled={togglingCritical}
+                      >
+                        {togglingCritical ? '...' : (animal.is_critical ? '✓ ' + t('health.critical') : t('health.critical'))}
+                      </button>
+                      <button
+                        className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_diabetic ? 'bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-200' : 'border-input hover:bg-accent'}`}
+                        onClick={toggleDiabetic}
+                        disabled={togglingDiabetic}
+                      >
+                        {togglingDiabetic ? '...' : (animal.is_diabetic ? '✓ ' + t('health.diabetic') : t('health.diabetic'))}
+                      </button>
+                      <button
+                        className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_cancer ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' : 'border-input hover:bg-accent'}`}
+                        onClick={toggleCancer}
+                        disabled={togglingCancer}
+                      >
+                        {togglingCancer ? '...' : (animal.is_cancer ? '✓ ' + t('health.cancer') : t('health.cancer'))}
+                      </button>
+                      <button
+                        className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_aggressive ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' : 'border-input hover:bg-accent'}`}
+                        onClick={toggleAggressive}
+                        disabled={togglingAggressive}
+                      >
+                        {togglingAggressive ? '...' : (animal.is_aggressive ? '⚠ ' + t('health.aggressive') : t('health.aggressive'))}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Samice */}
+                  {animal.sex !== 'male' && (
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Reprodukce</p>
+                      <div className="flex flex-wrap gap-1.5">
                         <button
-                          className="text-xs px-2 py-1 rounded border border-input hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          onClick={toggleAltered}
-                          disabled={togglingAltered || animal.is_pregnant || animal.altered_status !== 'intact'}
+                          className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_pregnant ? 'bg-pink-100 border-pink-300 text-pink-800 dark:bg-pink-900 dark:border-pink-700 dark:text-pink-200' : 'border-input hover:bg-accent'}`}
+                          onClick={togglePregnant}
+                          disabled={togglingPregnant}
                         >
-                          {togglingAltered ? '...' : (animal.altered_status === 'neutered' || animal.altered_status === 'spayed' ? t('health.markIntact') : t('health.markAltered'))}
+                          {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('health.pregnant') : t('health.pregnant'))}
                         </button>
-                      </span>
-                    </TooltipTrigger>
-                    {animal.is_pregnant && <TooltipContent>{t('overview.noNeuteringPregnant')}</TooltipContent>}
-                    {!animal.is_pregnant && animal.altered_status !== 'intact' && <TooltipContent>{t('overview.alreadyAltered')}</TooltipContent>}
-                  </Tooltip>
-                </TooltipProvider>
-
-                <button
-                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_dewormed ? 'bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-200' : 'border-input hover:bg-accent'}`}
-                  onClick={toggleDewormed}
-                  disabled={togglingDewormed}
-                  title={t('health.toggleDewormed')}
-                >
-                  {togglingDewormed ? '...' : (animal.is_dewormed ? '✓ ' + t('health.dewormed') : t('health.dewormed') + '?')}
-                </button>
-
-                <button
-                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_aggressive ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' : 'border-input hover:bg-accent'}`}
-                  onClick={toggleAggressive}
-                  disabled={togglingAggressive}
-                  title={t('health.toggleAggressive')}
-                >
-                  {togglingAggressive ? '...' : (animal.is_aggressive ? '⚠ ' + t('health.aggressive') : t('health.aggressive') + '?')}
-                </button>
-
-                {animal.sex !== 'male' && (
-                  <>
-                    <button
-                      className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_pregnant ? 'bg-pink-100 border-pink-300 text-pink-800 dark:bg-pink-900 dark:border-pink-700 dark:text-pink-200' : 'border-input hover:bg-accent'}`}
-                      onClick={togglePregnant}
-                      disabled={togglingPregnant}
-                      title={t('health.togglePregnant')}
-                    >
-                      {togglingPregnant ? '...' : (animal.is_pregnant ? '✓ ' + t('health.pregnant') : t('health.pregnant') + '?')}
-                    </button>
-                    <button
-                      className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_lactating ? 'bg-pink-100 border-pink-300 text-pink-800 dark:bg-pink-900 dark:border-pink-700 dark:text-pink-200' : 'border-input hover:bg-accent'}`}
-                      onClick={toggleLactating}
-                      disabled={togglingLactating}
-                      title={t('health.toggleLactating')}
-                    >
-                      {togglingLactating ? '...' : (animal.is_lactating ? '✓ ' + t('health.lactating') : t('health.lactating') + '?')}
-                    </button>
-                  </>
-                )}
-
-                <button
-                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_critical ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' : 'border-input hover:bg-accent'}`}
-                  onClick={toggleCritical}
-                  disabled={togglingCritical}
-                  title={t('health.toggleCritical')}
-                >
-                  {togglingCritical ? '...' : (animal.is_critical ? '✓ ' + t('health.critical') : t('health.critical') + '?')}
-                </button>
-
-                <button
-                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_diabetic ? 'bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-200' : 'border-input hover:bg-accent'}`}
-                  onClick={toggleDiabetic}
-                  disabled={togglingDiabetic}
-                  title={t('health.toggleDiabetic')}
-                >
-                  {togglingDiabetic ? '...' : (animal.is_diabetic ? '✓ ' + t('health.diabetic') : t('health.diabetic') + '?')}
-                </button>
-
-                <button
-                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_cancer ? 'bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200' : 'border-input hover:bg-accent'}`}
-                  onClick={toggleCancer}
-                  disabled={togglingCancer}
-                  title={t('health.toggleCancer')}
-                >
-                  {togglingCancer ? '...' : (animal.is_cancer ? '✓ ' + t('health.cancer') : t('health.cancer') + '?')}
-                </button>
-
-                <button
-                  className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_special_needs ? 'bg-violet-100 border-violet-300 text-violet-800 dark:bg-violet-900 dark:border-violet-700 dark:text-violet-200' : 'border-input hover:bg-accent'}`}
-                  onClick={toggleSpecialNeeds}
-                  disabled={togglingSpecialNeeds}
-                  title={t('overview.toggleSpecialNeeds')}
-                >
-                  {togglingSpecialNeeds ? '...' : (animal.is_special_needs ? `✓ ${t('overview.specNeeds')}` : `${t('overview.specNeeds')}?`)}
-                </button>
-              </div>
+                        <button
+                          className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-50 ${animal.is_lactating ? 'bg-pink-100 border-pink-300 text-pink-800 dark:bg-pink-900 dark:border-pink-700 dark:text-pink-200' : 'border-input hover:bg-accent'}`}
+                          onClick={toggleLactating}
+                          disabled={togglingLactating}
+                        >
+                          {togglingLactating ? '...' : (animal.is_lactating ? '✓ ' + t('health.lactating') : t('health.lactating'))}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </details>
 
               {/* Pregnancy extras */}
               {animal.is_pregnant && (
@@ -1653,56 +1629,24 @@ if (photoInputRef.current) photoInputRef.current.value = '';
                     {new Date(latestWeight.measured_at).toLocaleDateString()}
                     {latestWeight.notes && ` · ${latestWeight.notes}`}
                   </p>
-                  {/* Energy needs */}
-                  <p className="text-sm text-muted-foreground mt-1">
-                    ⚡ {t('health.energyNeeds')}: ~{calcMER(
-                      Number(latestWeight.weight_kg),
-                      animal.age_group,
-                      animal.altered_status,
-                      animal.is_pregnant,
-                      animal.is_lactating,
-                      animal.is_critical,
-                      animal.is_diabetic,
-                      animal.is_cancer,
-                      animal.species,
-                    )} kcal/den
-                  </p>
-                  <details className="text-xs text-muted-foreground mt-1 ml-2">
-                    <summary className="cursor-pointer hover:text-foreground">{t('weight.showCalc')}</summary>
-                    <div className="mt-1 space-y-0.5 font-mono">
-                      <p>RER = 70 × {Number(latestWeight.weight_kg).toFixed(1)}^0.75 = {calcRER(Number(latestWeight.weight_kg))} kcal</p>
-                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} ({getMERFactorLabel(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)})</p>
-                      <p>MER = {calcRER(Number(latestWeight.weight_kg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} = {calcMER(Number(latestWeight.weight_kg), animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} kcal/den</p>
-                    </div>
-                  </details>
                 </div>
               ) : weightKg ? (
                 <div>
                   <p className="text-2xl font-bold">{Number(weightKg).toFixed(1)} kg</p>
                   <p className="text-xs text-muted-foreground">{t('weight.estimated')}</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    ⚡ {t('health.energyNeeds')}: ~{calcMER(
-                      Number(weightKg),
-                      animal.age_group,
-                      animal.altered_status,
-                      animal.is_pregnant,
-                      animal.is_lactating,
-                      animal.is_critical,
-                      animal.is_diabetic,
-                      animal.is_cancer,
-                      animal.species,
-                    )} kcal/den
-                  </p>
-                  <details className="text-xs text-muted-foreground mt-1 ml-2">
-                    <summary className="cursor-pointer hover:text-foreground">{t('weight.showCalc')}</summary>
-                    <div className="mt-1 space-y-0.5 font-mono">
-                      <p>RER = 70 × {Number(weightKg).toFixed(1)}^0.75 = {calcRER(Number(weightKg))} kcal</p>
-                      <p>Faktor = {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} ({getMERFactorLabel(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)})</p>
-                      <p>MER = {calcRER(Number(weightKg))} × {getMERFactor(animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} = {calcMER(Number(weightKg), animal.age_group, animal.altered_status, animal.is_pregnant, animal.is_lactating, animal.is_critical, animal.is_diabetic, animal.is_cancer, animal.species)} kcal/den</p>
-                    </div>
-                  </details>
                 </div>
               ) : null}
+
+              {/* Sparkline - show if 2+ measurements */}
+              {weightLogs.length >= 2 && (
+                <div className="pt-2">
+                  <WeightSparkline logs={weightLogs} />
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+                    <span>{new Date(weightLogs[weightLogs.length - 1].measured_at).toLocaleDateString()}</span>
+                    <span>{new Date(weightLogs[0].measured_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              )}
 
               {/* No measurements yet */}
               {weightLogs.length === 0 && (
@@ -1773,6 +1717,109 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               )}
             </CardContent>
           </Card>
+
+          {/* Legal Deadline Card - for found animals, only CZ profile */}
+          {(animal.current_intake_reason === 'found' || animal.legal_notice_published_at) && legalProfile === 'CZ' && (
+            <Card className="border-amber-200 dark:border-amber-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                  ⚖️ Nálezové lhůty
+                  {isSuperadmin && !editingLegalDeadline && (
+                    <Button size="sm" variant="ghost" onClick={startEditLegalDeadline} className="h-6 text-xs ml-auto">
+                      ✏️
+                    </Button>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {editingLegalDeadline ? (
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs w-24">Vyhlášení obcí:</label>
+                      <Input
+                        type="date"
+                        value={legalDeadlineForm.notice_published_at}
+                        onChange={(e) => setLegalDeadlineForm({ ...legalDeadlineForm, notice_published_at: e.target.value })}
+                        className="h-7 text-xs"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs w-24">Nálezce chce:</label>
+                      <Select
+                        value={legalDeadlineForm.finder_claims_ownership}
+                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, finder_claims_ownership: v as '' | 'true' | 'false' })}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue placeholder="--" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">--</SelectItem>
+                          <SelectItem value="true">Ano</SelectItem>
+                          <SelectItem value="false">Ne</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs w-24">Obec převedla:</label>
+                      <Select
+                        value={legalDeadlineForm.municipality_irrevocably_transferred}
+                        onValueChange={(v) => setLegalDeadlineForm({ ...legalDeadlineForm, municipality_irrevocably_transferred: v as '' | 'true' | 'false' })}
+                      >
+                        <SelectTrigger className="h-7 text-xs">
+                          <SelectValue placeholder="--" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">--</SelectItem>
+                          <SelectItem value="true">Ano</SelectItem>
+                          <SelectItem value="false">Ne</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" onClick={handleSaveLegalDeadline} disabled={savingLegalDeadline} className="h-7 text-xs">
+                        {savingLegalDeadline ? '...' : '💾 Uložit'}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingLegalDeadline(false)} className="h-7 text-xs">
+                        ✕
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1 text-sm">
+                    {animal.legal_deadline_state === 'missing_data' ? (
+                      <div className="text-red-600 dark:text-red-400">
+                        ⚠️ {animal.legal_deadline_label || 'Chybí údaje pro výpočet lhůty'}
+                      </div>
+                    ) : animal.legal_deadline_state === 'expired' ? (
+                      <div className="text-red-600 dark:text-red-400 font-semibold">
+                        ❌ Lhůta vypršela
+                        {animal.legal_deadline_label && <span className="font-normal ml-1">({animal.legal_deadline_label})</span>}
+                      </div>
+                    ) : animal.legal_deadline_days_left != null && animal.legal_deadline_days_left <= 14 ? (
+                      <div className="text-orange-600 dark:text-orange-400 font-semibold">
+                        ⏰ Zbývá {animal.legal_deadline_days_left} dní
+                        {animal.legal_deadline_label && <span className="font-normal ml-1">({animal.legal_deadline_label})</span>}
+                      </div>
+                    ) : (
+                      <div className="text-green-600 dark:text-green-400">
+                        ✓ {animal.legal_deadline_label || 'Bez lhůty'}
+                      </div>
+                    )}
+                    {animal.notice_published_at && (
+                      <div className="text-xs text-muted-foreground">
+                        Vyhlášeno: {new Date(animal.notice_published_at).toLocaleDateString('cs-CZ')}
+                      </div>
+                    )}
+                    {animal.legal_deadline_type === '4m_notice' && (
+                      <div className="text-xs text-muted-foreground">
+                        Přímé předání nálezcem · lhůta 4 měsíce od vyhlášení
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* ── Feeding ── */}
@@ -1947,31 +1994,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
               {t('medical.requestProcedure')}
             </Button>
           </div>
-          {/* Weight history sparkline */}
-          {loadingWeight ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">{t('health.weightHistory')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-16 w-full" />
-              </CardContent>
-            </Card>
-          ) : weightLogs.length >= 2 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">{t('health.weightHistory')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <WeightSparkline logs={weightLogs} />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>{new Date(weightLogs[weightLogs.length - 1].measured_at).toLocaleDateString()}</span>
-                  <span>{new Date(weightLogs[0].measured_at).toLocaleDateString()}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
           {/* Vaccinations */}
           <Card>
             <CardHeader>
@@ -2220,89 +2242,6 @@ if (photoInputRef.current) photoInputRef.current.value = '';
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* ── Action zone – de-emphasized, at the bottom ── */}
-      {!['deceased', 'adopted', 'euthanized'].includes(animal.status) && (
-        <div className="pt-8 border-t border-dashed flex flex-wrap gap-3 items-center">
-
-          {/* Mark as available — for intake animals */}
-          {animal.status === 'intake' && (
-            <div className="relative inline-block">
-              <button
-                className="text-xs text-muted-foreground/50 hover:text-green-600 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-green-400"
-                onClick={async () => {
-                  if (!confirm(`Označit ${animal.name} jako dostupné k adopci?`)) return;
-                  try {
-                    const updated = await ApiClient.updateAnimal(animal.id, { status: 'available' } as any);
-                    setAnimal(updated);
-                    toast.success(t('overview.statusChanged', { status: t('status.available') }));
-                  } catch { toast.error(t('overview.statusChangeError')); }
-                }}
-              >
-                <CheckCheck className="inline h-3 w-3 mr-1" />
-                {t('markAvailable')}
-              </button>
-            </div>
-          )}
-
-          {/* Escape — only for non-terminal, non-escaped animals */}
-          {!['escaped', 'transferred', 'returned_to_owner'].includes(animal.status) && (
-            <div className="relative inline-block">
-              <button
-                className="text-xs text-muted-foreground/50 hover:text-orange-500 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-orange-300"
-                onClick={() => setEscapeOpen(true)}
-              >
-                <PersonStanding className="inline h-3 w-3 mr-1" />
-                {t('escape.button')}
-              </button>
-            </div>
-          )}
-
-          {/* Found after escape */}
-          {animal.status === 'escaped' && (
-            <div className="relative inline-block">
-              <button
-                className="text-xs text-muted-foreground/50 hover:text-blue-600 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-blue-300"
-                onClick={() => setFoundOpen(true)}
-              >
-                <LogIn className="inline h-3 w-3 mr-1" />
-                {t('escape.foundButton')}
-              </button>
-            </div>
-          )}
-
-          {/* Record death */}
-          <div className="relative inline-block">
-            <button
-              className="text-xs text-muted-foreground/50 hover:text-red-500 transition-colors px-3 py-1.5 rounded border border-dashed border-muted-foreground/20 hover:border-red-300"
-              onClick={async () => {
-                if (!confirm(t('confirmDeath', { name: animal.name }))) return;
-                try {
-                  const updated = await ApiClient.updateAnimal(animal.id, { status: 'deceased' } as any);
-                  setAnimal(updated);
-                  setHealthEvents(prev => [{ text: t('healthEvents.deathRecorded'), date: new Date() }, ...prev]);
-                  toast.success(t('deathRecorded'));
-                  setTimeout(() => toast.info(t('deathTaskCreated')), 800);
-                } catch { toast.error(t('deathError')); }
-              }}
-            >
-              {t('recordDeath')}
-            </button>
-            {/* Diagonal mourning stripe */}
-            <span
-              className="absolute inset-0 pointer-events-none rounded overflow-hidden"
-              aria-hidden
-            >
-              <span className="absolute inset-0 opacity-20"
-                style={{
-                  background: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.3) 4px, rgba(0,0,0,0.3) 5px)',
-                }}
-              />
-            </span>
-          </div>
-
-        </div>
-      )}
 
       {/* Medical Request Dialog */}
       {animal && (

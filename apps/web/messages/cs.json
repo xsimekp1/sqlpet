@@ -1498,8 +1498,10 @@
       },
       "confirmCancel": "Opravdu zrušit tuto transakci? Vytvoří se obrácený pohyb.",
       "cancelled": "Transakce zrušena",
-      "cancelledDesc": "Byl vytvořen opačný pohyb skladu."
+      "cancelledDesc": "Byl vytvořen opačný pohyb skladu.",
+      "cancel": "Zrušit transakci"
     },
+    "deleteLot": "Smazat šarži",
     "messages": {
       "showingItems": "Zobrazeno {count} položek",
       "outOfStock": "Není skladem",
