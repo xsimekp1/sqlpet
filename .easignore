@@ -14,11 +14,11 @@ animals/
 dog_symbols_icons_alpha01_sliced/
 cat_symbols_icons_alpha01_sliced/
 
-# Exclude specific large files
-*.zip
-petslog.png
-prnt1.png
-*.webm
+# Exclude specific large files (root only)
+/*.zip
+/petslog.png
+/prnt1.png
+/*.webm
 
 # Exclude caches and build artifacts
 __pycache__/

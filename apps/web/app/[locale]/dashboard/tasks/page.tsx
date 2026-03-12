@@ -716,6 +716,33 @@ export default function TasksPage() {
         </Table>
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between py-4">
+          <div className="text-sm text-muted-foreground">
+            Strana {page} z {totalPages}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 1}
+            >
+              ← Předchozí
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => p + 1)}
+              disabled={page >= totalPages}
+            >
+              Další →
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Edit task dialog */}
       <Dialog open={!!editTask} onOpenChange={(o) => !o && setEditTask(null)}>
         <DialogContent className="max-w-lg">
@@ -845,34 +872,6 @@ export default function TasksPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Pagination */}
-      {totalTasks > 0 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Strana {page} z {totalPages || 1}
-            &nbsp;· {totalTasks} úkolů celkem
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => p - 1)}
-              disabled={page === 1}
-            >
-              ← Předchozí
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => p + 1)}
-              disabled={page >= totalPages}
-            >
-              Další →
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
