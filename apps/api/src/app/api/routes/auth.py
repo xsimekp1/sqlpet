@@ -24,6 +24,7 @@ from src.app.models.role import Role
 from src.app.models.membership import Membership, MembershipStatus
 from src.app.models.login_log import LoginLog
 from src.app.services.auth_service import AuthService
+from src.app.services.two_factor_service import TwoFactorService
 from src.app.schemas.auth import (
     RegisterRequest,
     LoginRequest,
@@ -38,6 +39,7 @@ from src.app.schemas.auth import (
     TwoFactorVerifyRequest,
     TwoFactorDisableRequest,
     BackupCodesResponse,
+    MembershipInfo,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
