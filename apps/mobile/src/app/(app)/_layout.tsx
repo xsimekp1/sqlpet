@@ -74,6 +74,7 @@ export default function AppLayout() {
         }}
       />
       {/* Hidden screens - accessible via router but not shown in tab bar */}
+      <Tabs.Screen name="chat/[partnerId]" options={{ href: null }} />
       <Tabs.Screen name="tasks"     options={{ href: null }} />
       <Tabs.Screen name="inventory" options={{ href: null }} />
       <Tabs.Screen name="people"    options={{ href: null }} />

@@ -1732,6 +1732,55 @@
     "plannedPerson": "Planned adopter/foster",
     "funding": "Funding source"
   },
+  "hotel": {
+    "title": "Hotel",
+    "pageTitle": "Hotel Reservations",
+    "new": "New Reservation",
+    "selectKennel": "Select kennel",
+    "selectContact": "Select contact",
+    "animalName": "Animal name",
+    "species": "Species",
+    "breed": "Breed",
+    "from": "From",
+    "to": "To",
+    "pricePerDay": "Price per day",
+    "totalPrice": "Total price",
+    "currency": "CZK",
+    "checkAvailability": "Check availability",
+    "available": "Kennel is available",
+    "notAvailable": "Kennel is not available",
+    "requiresSingleCage": "Requires single cage",
+    "ownFood": "own food",
+    "checkin": "Check-in",
+    "checkout": "Check-out",
+    "cancel": "Cancel",
+    "cancelReservation": "Cancel reservation",
+    "cancelConfirm": "Do you really want to cancel the reservation for {name}?",
+    "back": "Back",
+    "filter": {
+      "active": "Active",
+      "all": "All",
+      "archive": "Archive"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checked_in": "Checked in",
+      "checked_out": "Checked out",
+      "cancelled": "Cancelled"
+    },
+    "empty": {
+      "active": "No active reservations",
+      "archive": "No archived reservations",
+      "all": "No reservations"
+    },
+    "errors": {
+      "checkin": "Failed to check in.",
+      "checkout": "Failed to check out.",
+      "cancel": "Failed to cancel reservation.",
+      "generic": "Error"
+    }
+  },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
     "description": "Customize keyboard shortcuts for quick navigation",

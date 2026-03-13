@@ -1735,7 +1735,8 @@
     "funding": "Způsob financování"
   },
   "hotel": {
-    "title": "Hotelové rezervace",
+    "title": "Hotel",
+    "pageTitle": "Hotelové rezervace",
     "new": "Nová rezervace",
     "selectKennel": "Vyberte kotec",
     "selectContact": "Vyberte kontakt",
@@ -1746,17 +1747,40 @@
     "to": "Do",
     "pricePerDay": "Cena za den",
     "totalPrice": "Celková cena",
+    "currency": "Kč",
     "checkAvailability": "Zkontrolovat dostavnost",
     "available": "Kotec je dostupný",
     "notAvailable": "Kotec není dostupný",
     "requiresSingleCage": "Požadavek na samostatný kotec",
+    "ownFood": "vlastní",
     "checkin": "Check-in",
+    "checkout": "Check-out",
     "cancel": "Zrušit",
+    "cancelReservation": "Zrušit rezervaci",
+    "cancelConfirm": "Opravdu chcete zrušit rezervaci pro {name}?",
+    "back": "Zpět",
+    "filter": {
+      "active": "Aktivní",
+      "all": "Vše",
+      "archive": "Archiv"
+    },
     "status": {
-      "pending": "Čeká na potvrzení",
+      "pending": "Čeká",
       "confirmed": "Potvrzeno",
-      "cancelled": "Zrušeno",
-      "completed": "Dokončeno"
+      "checked_in": "Nastoupila",
+      "checked_out": "Odjela",
+      "cancelled": "Zrušeno"
+    },
+    "empty": {
+      "active": "Žádné aktivní rezervace",
+      "archive": "Žádné archivované rezervace",
+      "all": "Žádné rezervace"
+    },
+    "errors": {
+      "checkin": "Nepodařilo se provést check-in.",
+      "checkout": "Nepodařilo se provést check-out.",
+      "cancel": "Nepodařilo se zrušit rezervaci.",
+      "generic": "Chyba"
     }
   },
   "shortcuts": {

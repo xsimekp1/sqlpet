@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,14 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  Animated,
+  PanResponder,
+  Dimensions,
 } from 'react-native';
+import { Check, X, Trash2 } from 'lucide-react-native';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../stores/authStore';
 import api from '../../lib/api';
@@ -80,50 +87,127 @@ function formatDueDate(due_at: string | null): { label: string; overdue: boolean
   return { label: `${dateStr} ${timeStr}`, overdue };
 }
 
-function TaskRow({ task, onComplete }: { task: Task; onComplete: (id: string) => void }) {
+function SwipeableTaskRow({
+  task,
+  onComplete,
+  onDelete
+}: {
+  task: Task;
+  onComplete: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
   const priority = PRIORITY_COLOR[task.priority] ?? '#9CA3AF';
   const typeCfg = TYPE_BADGE_COLORS[task.type] ?? TYPE_BADGE_COLORS.other;
   const typeLabel = TYPE_LABELS[task.type] ?? task.type;
   const due = formatDueDate(task.due_at);
   const isCompleted = task.status === 'completed';
 
-  return (
-    <View style={styles.taskRow}>
-      {/* Priority dot */}
-      <View style={[styles.priorityDot, { backgroundColor: priority }]} />
+  const translateX = useRef(new Animated.Value(0)).current;
 
-      {/* Content */}
-      <View style={styles.taskContent}>
-        <View style={styles.taskTitleRow}>
-          <Text style={[styles.taskTitle, isCompleted && styles.taskTitleDone]} numberOfLines={2}>
-            {task.title}
-          </Text>
-          <View style={[styles.typeBadge, { backgroundColor: typeCfg.bg }]}>
-            <Text style={[styles.typeText, { color: typeCfg.text }]}>{typeLabel}</Text>
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to horizontal swipes
+        return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 20;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        translateX.setValue(gestureState.dx);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > SWIPE_THRESHOLD) {
+          // Swipe right - complete task
+          Animated.timing(translateX, {
+            toValue: SCREEN_WIDTH,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => onComplete(task.id));
+        } else if (gestureState.dx < -SWIPE_THRESHOLD) {
+          // Swipe left - delete task
+          Animated.timing(translateX, {
+            toValue: -SCREEN_WIDTH,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => onDelete(task.id));
+        } else {
+          // Reset position
+          Animated.spring(translateX, {
+            toValue: 0,
+            useNativeDriver: true,
+            friction: 8,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  // Background colors based on swipe direction
+  const leftAction = translateX.interpolate({
+    inputRange: [0, SWIPE_THRESHOLD],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  const rightAction = translateX.interpolate({
+    inputRange: [-SWIPE_THRESHOLD, 0],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <View style={styles.swipeContainer}>
+      {/* Left background - Complete (green) */}
+      <Animated.View style={[styles.swipeActionLeft, { opacity: leftAction }]}>
+        <Check size={24} color="#FFFFFF" />
+        <Text style={styles.swipeActionText}>Splnit</Text>
+      </Animated.View>
+
+      {/* Right background - Delete (red) */}
+      <Animated.View style={[styles.swipeActionRight, { opacity: rightAction }]}>
+        <Text style={styles.swipeActionText}>Smazat</Text>
+        <Trash2 size={24} color="#FFFFFF" />
+      </Animated.View>
+
+      {/* Swipeable card */}
+      <Animated.View
+        style={[styles.taskRow, { transform: [{ translateX }] }]}
+        {...panResponder.panHandlers}
+      >
+        {/* Priority dot */}
+        <View style={[styles.priorityDot, { backgroundColor: priority }]} />
+
+        {/* Content */}
+        <View style={styles.taskContent}>
+          <View style={styles.taskTitleRow}>
+            <Text style={[styles.taskTitle, isCompleted && styles.taskTitleDone]} numberOfLines={2}>
+              {task.title}
+            </Text>
+            <View style={[styles.typeBadge, { backgroundColor: typeCfg.bg }]}>
+              <Text style={[styles.typeText, { color: typeCfg.text }]}>{typeLabel}</Text>
+            </View>
           </View>
+
+          {due.label ? (
+            <Text style={[styles.taskDue, due.overdue && styles.taskDueOverdue]}>
+              {due.overdue ? '⚠️ Opožděno — ' : '⏰ '}{due.label}
+            </Text>
+          ) : null}
+
+          {task.description ? (
+            <Text style={styles.taskDesc} numberOfLines={1}>{task.description}</Text>
+          ) : null}
         </View>
 
-        {due.label ? (
-          <Text style={[styles.taskDue, due.overdue && styles.taskDueOverdue]}>
-            {due.overdue ? '⚠️ Opožděno — ' : '⏰ '}{due.label}
-          </Text>
-        ) : null}
-
-        {task.description ? (
-          <Text style={styles.taskDesc} numberOfLines={1}>{task.description}</Text>
-        ) : null}
-      </View>
-
-      {/* Complete button */}
-      {!isCompleted && (
-        <TouchableOpacity
-          style={styles.completeBtn}
-          onPress={() => onComplete(task.id)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.completeBtnText}>✓</Text>
-        </TouchableOpacity>
-      )}
+        {/* Complete button - still visible for tap */}
+        {!isCompleted && (
+          <TouchableOpacity
+            style={styles.completeBtn}
+            onPress={() => onComplete(task.id)}
+            activeOpacity={0.7}
+          >
+            <Check size={18} color="#166534" />
+          </TouchableOpacity>
+        )}
+      </Animated.View>
     </View>
   );
 }
@@ -150,6 +234,31 @@ export default function TasksScreen() {
   const completeMutation = useMutation({
     mutationFn: (taskId: string) =>
       api.post<unknown>(`/tasks/${taskId}/complete`, {}, {
+        'x-organization-id': selectedOrganizationId ?? '',
+      }),
+    onMutate: async (taskId) => {
+      await queryClient.cancelQueries({ queryKey });
+      const prev = queryClient.getQueryData<TaskListResponse>(queryKey);
+      if (prev) {
+        queryClient.setQueryData<TaskListResponse>(queryKey, {
+          ...prev,
+          items: prev.items.filter((t) => t.id !== taskId),
+          total: prev.total - 1,
+        });
+      }
+      return { prev };
+    },
+    onError: (_err, _taskId, context) => {
+      if (context?.prev) queryClient.setQueryData(queryKey, context.prev);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', selectedOrganizationId] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (taskId: string) =>
+      api.delete<unknown>(`/tasks/${taskId}`, {
         'x-organization-id': selectedOrganizationId ?? '',
       }),
     onMutate: async (taskId) => {
@@ -228,7 +337,11 @@ export default function TasksScreen() {
           data={tasks}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TaskRow task={item} onComplete={(id) => completeMutation.mutate(id)} />
+            <SwipeableTaskRow
+              task={item}
+              onComplete={(id) => completeMutation.mutate(id)}
+              onDelete={(id) => deleteMutation.mutate(id)}
+            />
           )}
           contentContainerStyle={styles.list}
           refreshControl={
@@ -300,12 +413,47 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 32,
   },
+  swipeContainer: {
+    marginHorizontal: 16,
+    marginVertical: 4,
+    position: 'relative',
+  },
+  swipeActionLeft: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#22C55E',
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 20,
+    gap: 8,
+  },
+  swipeActionRight: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#EF4444',
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingRight: 20,
+    gap: 8,
+  },
+  swipeActionText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
+  },
   taskRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginVertical: 4,
     borderRadius: 12,
     padding: 12,
     gap: 10,

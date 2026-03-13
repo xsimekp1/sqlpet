@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1A1A2E',
     marginBottom: 4,

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Petslog",
     "slug": "petslog",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -23,7 +23,7 @@
         "backgroundColor": "#6B4EFF"
       },
       "package": "com.sqlpet.petslog",
-      "versionCode": 4,
+      "versionCode": 5,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAQP_lksd90ayYfqCySrKV1YIon9NpwttY"

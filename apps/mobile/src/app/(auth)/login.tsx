@@ -195,7 +195,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        <Text style={styles.version}>v1.0.0</Text>
+        <Text style={styles.version}>v1.0.4</Text>
       </View>
     </KeyboardAvoidingView>
   );

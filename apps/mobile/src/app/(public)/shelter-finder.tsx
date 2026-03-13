@@ -72,7 +72,6 @@ export default function ShelterFinderScreen() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locating, setLocating] = useState<Species | null>(null);
-  const [mapDebug, setMapDebug] = useState<string>('waiting');
   const mapRef = useRef<InstanceType<typeof MapViewType>>(null);
 
   const handleSelectSpecies = async (s: Species) => {
@@ -127,12 +126,22 @@ export default function ShelterFinderScreen() {
     }
   }, [topThree.length, location]);
 
-  const renderShelterCard = ({ item }: { item: NearbyShelter }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <MapPin size={16} color="#6B4EFF" />
-        <Text style={styles.cardName}>{item.name}</Text>
-      </View>
+  const renderShelterCard = ({ item, index }: { item: NearbyShelter; index: number }) => {
+    const isTopThree = index < 3;
+    const markerColor = isTopThree ? PIN_COLORS[index] : undefined;
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          {isTopThree ? (
+            <View style={[styles.rankBadge, { backgroundColor: markerColor }]}>
+              <Text style={styles.rankText}>{index + 1}</Text>
+            </View>
+          ) : (
+            <MapPin size={16} color="#6B4EFF" />
+          )}
+          <Text style={styles.cardName}>{item.name}</Text>
+        </View>
       <Text style={styles.cardAddress}>{item.address}</Text>
       <View style={styles.cardFooter}>
         <View style={styles.distanceBadge}>
@@ -156,7 +165,8 @@ export default function ShelterFinderScreen() {
         </TouchableOpacity>
       )}
     </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -239,7 +249,7 @@ export default function ShelterFinderScreen() {
                 MAP_AVAILABLE && MapView ? (
                   <MapErrorBoundary>
                     <View style={styles.mapContainer}>
-                      <Text style={styles.mapLabel}>{t('shelterFinder.mapNearestThree')} [DEBUG: {mapDebug}]</Text>
+                      <Text style={styles.mapLabel}>{t('shelterFinder.mapNearestThree')}</Text>
                       <MapView
                         ref={mapRef}
                         style={styles.map}
@@ -252,8 +262,6 @@ export default function ShelterFinderScreen() {
                         }}
                         showsUserLocation
                         showsMyLocationButton={false}
-                        onMapReady={() => { console.log('[MAP DEBUG] Map is ready'); setMapDebug('ready'); }}
-                        onMapLoaded={() => { console.log('[MAP DEBUG] Map loaded (tiles)'); setMapDebug('tiles loaded'); }}
                       >
                         {topThree.map((shelter, index) => (
                           <Marker
@@ -263,7 +271,12 @@ export default function ShelterFinderScreen() {
                           >
                             <Callout>
                               <View style={styles.callout}>
-                                <Text style={styles.calloutName}>{shelter.name}</Text>
+                                <View style={styles.calloutHeader}>
+                                  <View style={[styles.calloutRank, { backgroundColor: PIN_COLORS[index] }]}>
+                                    <Text style={styles.calloutRankText}>{index + 1}</Text>
+                                  </View>
+                                  <Text style={styles.calloutName}>{shelter.name}</Text>
+                                </View>
                                 <Text style={styles.calloutDist}>
                                   {t('shelterFinder.distance').replace(
                                     '{km}',
@@ -494,11 +507,29 @@ const styles = StyleSheet.create({
     maxWidth: 220,
     padding: 8,
   },
+  calloutHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  calloutRank: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calloutRankText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
   calloutName: {
     fontSize: 14,
     fontWeight: '600',
     color: '#1A1A2E',
-    marginBottom: 2,
+    flex: 1,
   },
   calloutDist: {
     fontSize: 13,
@@ -532,6 +563,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 4,
+  },
+  rankBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   cardName: {
     fontSize: 16,

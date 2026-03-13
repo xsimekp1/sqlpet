@@ -13,26 +13,21 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Hotel, UtensilsCrossed } from 'lucide-react-native';
 import { useAuthStore } from '../../../stores/authStore';
+import { useTranslations } from '../../../i18n';
 import api from '../../../lib/api';
 import type { HotelReservation } from '../../../types/hotel';
 
 type Filter = 'active' | 'all' | 'archive';
 
-const FILTER_OPTIONS: { value: Filter; label: string }[] = [
-  { value: 'active',  label: 'Aktivn\u00ED' },
-  { value: 'all',     label: 'V\u0161e' },
-  { value: 'archive', label: 'Archiv' },
-];
-
 const ACTIVE_STATUSES = ['pending', 'confirmed', 'checked_in'];
 const ARCHIVE_STATUSES = ['checked_out', 'cancelled'];
 
-const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  pending:    { label: '\u010Cek\u00E1',       bg: '#FEF9C3', text: '#CA8A04' },
-  confirmed:  { label: 'Potvrzeno',  bg: '#DBEAFE', text: '#1D4ED8' },
-  checked_in: { label: 'Nastoupila', bg: '#DCFCE7', text: '#15803D' },
-  checked_out:{ label: 'Odjela',     bg: '#F3F4F6', text: '#374151' },
-  cancelled:  { label: 'Zru\u0161eno',    bg: '#FEE2E2', text: '#B91C1C' },
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  pending:     { bg: '#FEF9C3', text: '#CA8A04' },
+  confirmed:   { bg: '#DBEAFE', text: '#1D4ED8' },
+  checked_in:  { bg: '#DCFCE7', text: '#15803D' },
+  checked_out: { bg: '#F3F4F6', text: '#374151' },
+  cancelled:   { bg: '#FEE2E2', text: '#B91C1C' },
 };
 
 const SPECIES_EMOJI: Record<string, string> = {
@@ -54,17 +49,20 @@ function ReservationCard({
   onCheckout,
   onCancel,
   onPress,
+  t,
 }: {
   item: HotelReservation;
   onCheckin: (id: string) => void;
   onCheckout: (id: string) => void;
   onCancel: (id: string, name: string) => void;
   onPress: (id: string) => void;
+  t: (key: string) => string;
 }) {
-  const statusCfg = STATUS_CONFIG[item.status] ?? { label: item.status, bg: '#F3F4F6', text: '#374151' };
+  const statusColors = STATUS_COLORS[item.status] ?? { bg: '#F3F4F6', text: '#374151' };
+  const statusLabel = t(`hotel.status.${item.status}`);
   const emoji = SPECIES_EMOJI[item.animal_species] ?? '\uD83D\uDC3E';
-  const dateRange = `${formatDate(item.reserved_from)} \u2192 ${formatDate(item.reserved_to)}`;
-  const priceLabel = item.total_price != null ? `${item.total_price} K\u010D` : null;
+  const dateRange = `${formatDate(item.reserved_from)} → ${formatDate(item.reserved_to)}`;
+  const priceLabel = item.total_price != null ? `${item.total_price} ${t('hotel.currency')}` : null;
 
   const showCheckin  = item.status === 'pending' || item.status === 'confirmed';
   const showCheckout = item.status === 'checked_in';
@@ -101,7 +99,7 @@ function ReservationCard({
             {item.own_food ? (
               <View style={styles.ownFoodBadge}>
                 <UtensilsCrossed size={11} color="#D97706" />
-                <Text style={styles.ownFoodText}>vlastn\u00ED</Text>
+                <Text style={styles.ownFoodText}>{t('hotel.ownFood')}</Text>
               </View>
             ) : null}
           </View>
@@ -109,9 +107,9 @@ function ReservationCard({
 
         {/* Right: status badge */}
         <View style={styles.cardRight}>
-          <View style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}>
-            <Text style={[styles.statusBadgeText, { color: statusCfg.text }]}>
-              {statusCfg.label}
+          <View style={[styles.statusBadge, { backgroundColor: statusColors.bg }]}>
+            <Text style={[styles.statusBadgeText, { color: statusColors.text }]}>
+              {statusLabel}
             </Text>
           </View>
         </View>
@@ -126,7 +124,7 @@ function ReservationCard({
               onPress={(e) => { e.stopPropagation(); onCheckin(item.id); }}
               activeOpacity={0.8}
             >
-              <Text style={styles.actionBtnText}>Check-in</Text>
+              <Text style={styles.actionBtnText}>{t('hotel.checkin')}</Text>
             </TouchableOpacity>
           ) : null}
           {showCheckout ? (
@@ -135,7 +133,7 @@ function ReservationCard({
               onPress={(e) => { e.stopPropagation(); onCheckout(item.id); }}
               activeOpacity={0.8}
             >
-              <Text style={styles.actionBtnText}>Check-out</Text>
+              <Text style={styles.actionBtnText}>{t('hotel.checkout')}</Text>
             </TouchableOpacity>
           ) : null}
           {showCancel ? (
@@ -144,7 +142,7 @@ function ReservationCard({
               onPress={(e) => { e.stopPropagation(); onCancel(item.id, item.animal_name); }}
               activeOpacity={0.8}
             >
-              <Text style={[styles.actionBtnText, styles.actionBtnCancelText]}>\u2715 Zru\u0161it</Text>
+              <Text style={[styles.actionBtnText, styles.actionBtnCancelText]}>✕ {t('hotel.cancel')}</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -155,9 +153,16 @@ function ReservationCard({
 
 export default function HotelScreen() {
   const router = useRouter();
+  const { t } = useTranslations();
   const [filter, setFilter] = useState<Filter>('active');
   const { selectedOrganizationId } = useAuthStore();
   const queryClient = useQueryClient();
+
+  const FILTER_OPTIONS: { value: Filter; label: string }[] = [
+    { value: 'active',  label: t('hotel.filter.active') },
+    { value: 'all',     label: t('hotel.filter.all') },
+    { value: 'archive', label: t('hotel.filter.archive') },
+  ];
 
   const { data, isLoading, refetch, isRefetching } = useQuery<HotelReservation[]>({
     queryKey: ['hotel-reservations', selectedOrganizationId],
@@ -188,7 +193,7 @@ export default function HotelScreen() {
       });
       invalidate();
     } catch {
-      Alert.alert('Chyba', 'Nepoda\u0159ilo se prov\u00E9st check-in.');
+      Alert.alert(t('hotel.errors.generic'), t('hotel.errors.checkin'));
     }
   };
 
@@ -199,18 +204,18 @@ export default function HotelScreen() {
       });
       invalidate();
     } catch {
-      Alert.alert('Chyba', 'Nepoda\u0159ilo se prov\u00E9st check-out.');
+      Alert.alert(t('hotel.errors.generic'), t('hotel.errors.checkout'));
     }
   };
 
   const handleCancel = (id: string, animalName: string) => {
     Alert.alert(
-      'Zru\u0161it rezervaci',
-      `Opravdu chcete zru\u0161it rezervaci pro ${animalName}?`,
+      t('hotel.cancelReservation'),
+      t('hotel.cancelConfirm').replace('{name}', animalName),
       [
-        { text: 'Zp\u011Bt', style: 'cancel' },
+        { text: t('hotel.back'), style: 'cancel' },
         {
-          text: 'Zru\u0161it rezervaci',
+          text: t('hotel.cancelReservation'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -218,9 +223,9 @@ export default function HotelScreen() {
                 'x-organization-id': selectedOrganizationId!,
               });
             } catch (err) {
-              // 204 No Content causes JSON parse to throw \u2014 still a success
+              // 204 No Content causes JSON parse to throw — still a success
               if (err instanceof Error && err.message.startsWith('Request failed')) {
-                Alert.alert('Chyba', 'Nepoda\u0159ilo se zru\u0161it rezervaci.');
+                Alert.alert(t('hotel.errors.generic'), t('hotel.errors.cancel'));
                 return;
               }
             }
@@ -239,7 +244,7 @@ export default function HotelScreen() {
     <View style={styles.screen}>
       <View style={styles.header}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>Hotel</Text>
+          <Text style={styles.headerTitle}>{t('hotel.title')}</Text>
           {activeCount > 0 ? (
             <View style={styles.countBadge}>
               <Text style={styles.countBadgeText}>{activeCount}</Text>
@@ -278,6 +283,7 @@ export default function HotelScreen() {
               onCheckout={handleCheckout}
               onCancel={handleCancel}
               onPress={handlePress}
+              t={t}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -288,11 +294,7 @@ export default function HotelScreen() {
             <View style={styles.emptyContainer}>
               <Hotel size={40} color="#D1D5DB" />
               <Text style={styles.emptyText}>
-                {filter === 'active'
-                  ? '\u017D\u00E1dn\u00E9 aktivn\u00ED rezervace'
-                  : filter === 'archive'
-                  ? '\u017D\u00E1dn\u00E9 archivovan\u00E9 rezervace'
-                  : '\u017D\u00E1dn\u00E9 rezervace'}
+                {t(`hotel.empty.${filter}`)}
               </Text>
             </View>
           }
