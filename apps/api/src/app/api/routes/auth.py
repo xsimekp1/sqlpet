@@ -22,14 +22,19 @@ from src.app.models.role import Role
 from src.app.models.membership import Membership, MembershipStatus
 from src.app.models.login_log import LoginLog
 from src.app.schemas.auth import (
+    RegisterRequest,
     LoginRequest,
     TokenResponse,
-    RefreshTokenRequest,
+    RefreshRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
     UserResponse,
     CurrentUserResponse,
     UpdateProfileRequest,
+    TwoFactorSetupResponse,
+    TwoFactorVerifyRequest,
+    TwoFactorDisableRequest,
+    BackupCodesResponse,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
