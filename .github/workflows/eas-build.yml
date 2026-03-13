@@ -1,4 +1,4 @@
-name: EAS Build
+name: EAS Build (Local)
 
 on:
   push:
@@ -15,8 +15,6 @@ on:
         type: choice
         options:
           - android
-          - ios
-          - all
       profile:
         description: 'Build profile'
         required: true
@@ -33,7 +31,6 @@ jobs:
       run:
         working-directory: apps/mobile
     env:
-      PLATFORM: ${{ inputs.platform || 'android' }}
       PROFILE: ${{ inputs.profile || 'preview' }}
     steps:
       - name: Checkout
@@ -44,6 +41,15 @@ jobs:
         with:
           node-version: 20
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
@@ -53,10 +59,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Android
-        if: ${{ env.PLATFORM == 'android' || env.PLATFORM == 'all' }}
-        run: eas build --platform android --profile ${{ env.PROFILE }} --non-interactive --clear-cache
+      - name: Build Android (Local)
+        run: eas build --platform android --profile ${{ env.PROFILE }} --local --output ./build.apk
 
-      - name: Build iOS
-        if: ${{ env.PLATFORM == 'ios' || env.PLATFORM == 'all' }}
-        run: eas build --platform ios --profile ${{ env.PROFILE }} --non-interactive --clear-cache
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build
+          path: apps/mobile/build.apk
+          retention-days: 30
