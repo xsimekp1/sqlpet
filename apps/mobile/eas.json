@@ -6,7 +6,7 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_AD_MODE": "test"
+        "EXPO_PUBLIC_AD_MODE": "production"
       }
     },
     "production": {
