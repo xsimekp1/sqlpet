@@ -73,13 +73,27 @@ jobs:
           sudo rm -rf /usr/local/share/boost
 
       - name: Build Android (Local)
-        run: eas build --platform android --profile ${{ env.PROFILE }} --local --output ./build.apk
+        run: |
+          if [ "${{ env.PROFILE }}" = "production" ]; then
+            eas build --platform android --profile ${{ env.PROFILE }} --local --output ./build.aab
+          else
+            eas build --platform android --profile ${{ env.PROFILE }} --local --output ./build.apk
+          fi
         env:
           EAS_LOCAL_BUILD_SKIP_CLEANUP: 1
 
-      - name: Upload APK
+      - name: Upload APK (preview)
+        if: env.PROFILE == 'preview'
         uses: actions/upload-artifact@v4
         with:
-          name: android-build
+          name: android-build-apk
           path: apps/mobile/build.apk
+          retention-days: 30
+
+      - name: Upload AAB (production)
+        if: env.PROFILE == 'production'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-aab
+          path: apps/mobile/build.aab
           retention-days: 30
