@@ -1,14 +1,48 @@
-node_modules/
+# EAS Build - Monorepo configuration
+# Exclude everything except apps/mobile
+
+# Git and IDE
 .git/
 .vscode/
 .idea/
 .claude/
+
+# Other apps and infrastructure
 apps/web/
 apps/api/
 infra/
 seed/
+packages/
+
+# Python artifacts
 __pycache__/
 .pytest_cache/
 .ruff_cache/
 .venv/
 venv/
+*.pyc
+
+# Large asset files in repo root
+*.zip
+animals/
+cat_symbols_icons_alpha01_sliced/
+dog_symbols_icons_alpha01_sliced/
+
+# Documentation (not needed for build)
+docs/
+*.md
+*.txt
+!apps/mobile/**/*.md
+!apps/mobile/**/*.txt
+
+# Misc
+Dockerfile
+.dockerignore
+*.sql
+
+# Node artifacts in mobile (EAS will install fresh)
+apps/mobile/node_modules/
+apps/mobile/.expo/
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/eas-archive-inspect/
