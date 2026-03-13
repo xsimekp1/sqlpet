@@ -1,13 +1,26 @@
-# Ignore everything except mobile app
-*
-!app.json
-!package.json
-!eas.json
-!src/
-!assets/
-!metro.config.js
-!babel.config.js
-!bun.lock
-!node_modules/
-!.gitignore
-!.npmrc
+# EAS Build - Mobile app
+# Exclude build artifacts and unnecessary files
+
+# Build outputs
+node_modules/
+.expo/
+android/
+ios/
+dist/
+build/
+
+# Development
+.env.local
+.env.development.local
+
+# Test artifacts
+eas-archive-inspect/
+eas-build-test/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
