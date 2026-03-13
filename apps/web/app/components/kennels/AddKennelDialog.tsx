@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -53,11 +52,9 @@ function getAutoName(species: string[]): string | null {
 
 const formSchema = z.object({
   name: z.string().min(1, 'errors.required'),
-  zone_id: z.string().min(1, 'errors.required'),
+  zone_id: z.string().optional(),
   type: z.enum(['indoor', 'outdoor', 'isolation', 'quarantine']),
-  size_category: z.enum(['small', 'medium', 'large', 'xlarge']),
   capacity: z.number().min(1).max(50),
-  notes: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -82,9 +79,7 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
       name: '',
       zone_id: '',
       type: 'indoor',
-      size_category: 'medium',
       capacity: 1,
-      notes: '',
     },
   });
 
@@ -122,14 +117,14 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
   const onSubmit = async (data: FormData) => {
     setSubmitting(true);
     try {
+      // zone_id: send null if empty or "none"
+      const zoneId = data.zone_id && data.zone_id !== 'none' ? data.zone_id : null;
       await ApiClient.createKennel({
         name: data.name,
-        zone_id: data.zone_id,
+        zone_id: zoneId,
         type: data.type,
-        size_category: data.size_category,
         capacity: data.capacity,
         allowed_species: selectedSpecies.length > 0 ? selectedSpecies : null,
-        notes: data.notes || null,
       });
       toast.success(t('add.success'));
       form.reset();
@@ -204,19 +199,19 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
               )}
             />
 
-            {/* Zone */}
-            <FormField
-              control={form.control}
-              name="zone_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('add.zone')}</FormLabel>
-                  {loadingZones ? (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {t('add.loadingZones')}
-                    </div>
-                  ) : (
+            {/* Zone - only show if zones exist */}
+            {loadingZones ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t('add.loadingZones')}
+              </div>
+            ) : zones.length > 0 && (
+              <FormField
+                control={form.control}
+                name="zone_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('add.zone')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || 'none'}>
                       <FormControl>
                         <SelectTrigger>
@@ -230,59 +225,34 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
                         ))}
                       </SelectContent>
                     </Select>
-                  )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Type */}
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('add.type')}</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="indoor">{t('type.indoor')}</SelectItem>
+                      <SelectItem value="outdoor">{t('type.outdoor')}</SelectItem>
+                      <SelectItem value="isolation">{t('type.isolation')}</SelectItem>
+                      <SelectItem value="quarantine">{t('type.quarantine')}</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* Type */}
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('add.type')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="indoor">{t('type.indoor')}</SelectItem>
-                        <SelectItem value="outdoor">{t('type.outdoor')}</SelectItem>
-                        <SelectItem value="isolation">{t('type.isolation')}</SelectItem>
-                        <SelectItem value="quarantine">{t('type.quarantine')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Size */}
-              <FormField
-                control={form.control}
-                name="size_category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('add.size')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="small">{t('size.small')}</SelectItem>
-                        <SelectItem value="medium">{t('size.medium')}</SelectItem>
-                        <SelectItem value="large">{t('size.large')}</SelectItem>
-                        <SelectItem value="xlarge">{t('size.xlarge')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
             {/* Capacity */}
             <FormField
@@ -299,21 +269,6 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
                       {...field}
                       onChange={e => field.onChange(e.target.valueAsNumber)}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Notes */}
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('add.notes')}</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder={t('add.notesPlaceholder')} className="resize-none" rows={3} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

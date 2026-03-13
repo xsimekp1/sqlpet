@@ -582,7 +582,7 @@ async def create_kennel(
             "id": str(kennel.id),
             "code": kennel.code,
             "name": kennel.name,
-            "zone_id": str(kennel.zone_id),
+            "zone_id": str(kennel.zone_id) if kennel.zone_id else None,
             "status": kennel.status,
             "type": kennel.type,
             "size_category": kennel.size_category,

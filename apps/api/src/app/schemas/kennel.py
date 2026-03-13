@@ -27,9 +27,9 @@ class KennelStatus(str, Enum):
 
 class KennelBase(BaseModel):
     name: str = Field(..., min_length=3, max_length=200, description="Název kotce")
-    zone_id: str = Field(..., description="ID zóny, do které kotce patří")
+    zone_id: Optional[str] = Field(None, description="ID zóny, do které kotce patří")
     type: KennelType = Field(..., description="Typ kotce")
-    size_category: KennelSizeCategory = Field(..., description="Velikostní kategorie")
+    size_category: Optional[KennelSizeCategory] = Field(KennelSizeCategory.MEDIUM, description="Velikostní kategorie")
     capacity: int = Field(..., ge=1, le=50, description="Maximální kapacita kotce")
     capacity_rules: Optional[Dict[str, int]] = Field(None, description="Kapacitní pravidla pro jednotlivé druhy zvířat")
     allowed_species: Optional[list[str]] = Field(None, description="Povolené druhy zvířat, e.g. ['dog', 'cat']")

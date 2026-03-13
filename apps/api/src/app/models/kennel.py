@@ -91,10 +91,10 @@ class Kennel(Base, UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin):
         nullable=False,
         index=True,
     )
-    zone_id: Mapped[uuid.UUID] = mapped_column(
+    zone_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("zones.id", ondelete="CASCADE"),
-        nullable=False,
+        ForeignKey("zones.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)

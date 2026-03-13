@@ -356,9 +356,9 @@ export interface KennelZone {
 
 export interface CreateKennelRequest {
   name: string;
-  zone_id: string;
+  zone_id?: string | null;
   type: 'indoor' | 'outdoor' | 'isolation' | 'quarantine';
-  size_category: 'small' | 'medium' | 'large' | 'xlarge';
+  size_category?: 'small' | 'medium' | 'large' | 'xlarge';
   capacity: number;
   allowed_species?: string[] | null;
   notes?: string | null;

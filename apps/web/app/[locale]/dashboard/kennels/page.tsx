@@ -616,20 +616,22 @@ export default function KennelsPage() {
               <Footprints className="h-4 w-4" />
               {t('quickActions.walkMode')}
             </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link href="/dashboard/kennels/qr-sheet">
-                    <Button variant="outline" size="icon">
-                      <QrCode className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>QR sheet</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {kennels.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link href="/dashboard/kennels/qr-sheet">
+                      <Button variant="outline" size="icon">
+                        <QrCode className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>QR sheet</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
           <Button size="icon" className="md:w-auto md:px-4 md:gap-2" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4" />

@@ -363,23 +363,26 @@ async def test_get_animal_kennel_history_unknown_animal_returns_404(client, kenn
 # ---------------------------------------------------------------------------
 
 @pytest.mark.anyio
-async def test_create_kennel_requires_zone_id(client, kennel_test_env):
-    """POST /kennels without zone_id should return 422 validation error."""
+async def test_create_kennel_without_zone_id(client, kennel_test_env, db_session):
+    """POST /kennels without zone_id should create kennel with zone_id=null."""
     env = kennel_test_env
     payload = {
-        "name": "New Kennel",
+        "name": "New Kennel No Zone",
         "type": "indoor",
-        "size_category": "medium",
         "capacity": 2,
-        # zone_id intentionally missing
+        # zone_id intentionally missing - should be optional
     }
     resp = await client.post("/kennels", headers=env["headers"], json=payload)
-    assert resp.status_code == 422
+    assert resp.status_code == 201
     data = resp.json()
-    assert "detail" in data
-    # Check that zone_id is mentioned in validation error
-    errors = data["detail"]
-    assert any("zone_id" in str(err) for err in errors)
+    assert data["name"] == "New Kennel No Zone"
+    assert data["zone_id"] is None
+    assert data["size_category"] == "medium"  # default value
+
+    # Cleanup
+    kennel_id = data["id"]
+    await db_session.execute(delete(Kennel).where(Kennel.id == uuid.UUID(kennel_id)))
+    await db_session.commit()
 
 
 @pytest.mark.anyio

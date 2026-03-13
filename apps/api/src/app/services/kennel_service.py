@@ -200,11 +200,11 @@ async def move_animal(
 async def create_kennel(
     session: AsyncSession,
     name: str,
-    zone_id: str,
+    zone_id: str | None,
     organization_id: uuid.UUID,
     kennel_type: str,
-    size_category: str,
-    capacity: int,
+    size_category: str | None = "medium",
+    capacity: int = 1,
     capacity_rules: dict[str, int] | None = None,
     allowed_species: list[str] | None = None,
     primary_photo_path: str | None = None,
@@ -235,11 +235,11 @@ async def create_kennel(
     # Create new kennel
     new_kennel = Kennel(
         organization_id=organization_id,
-        zone_id=uuid.UUID(zone_id),
+        zone_id=uuid.UUID(zone_id) if zone_id else None,
         name=name,
         code=kennel_code,
         type=kennel_type,
-        size_category=size_category,
+        size_category=size_category or "medium",
         capacity=capacity,
         capacity_rules=capacity_rules,
         allowed_species=allowed_species,
