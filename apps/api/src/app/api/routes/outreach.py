@@ -21,10 +21,9 @@ router = APIRouter(prefix="/superadmin/outreach", tags=["outreach"])
 
 # ─── helpers ────────────────────────────────────────────────────────────────
 
+
 def _require_superadmin(current_user: User, token: str) -> None:
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -39,6 +38,7 @@ def _require_superadmin(current_user: User, token: str) -> None:
 
 
 # ─── schemas ─────────────────────────────────────────────────────────────────
+
 
 class CampaignCreate(BaseModel):
     name: str
@@ -115,6 +115,7 @@ class EditDraftRequest(BaseModel):
 
 # ─── campaigns ───────────────────────────────────────────────────────────────
 
+
 @router.post("/campaigns", response_model=CampaignResponse, status_code=201)
 async def create_campaign(
     body: CampaignCreate,
@@ -154,7 +155,15 @@ async def list_campaigns(
     """List all outreach campaigns."""
     _require_superadmin(current_user, token)
 
-    campaigns = (await db.execute(select(OutreachCampaign).order_by(OutreachCampaign.created_at.desc()))).scalars().all()
+    campaigns = (
+        (
+            await db.execute(
+                select(OutreachCampaign).order_by(OutreachCampaign.created_at.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     # Batch-load status counts
     counts_q = await db.execute(
@@ -216,7 +225,9 @@ async def update_campaign_status(
 
     valid = {"draft", "active", "paused", "completed"}
     if new_status not in valid:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid status. Must be one of: {valid}"
+        )
 
     campaign = await db.get(OutreachCampaign, campaign_id)
     if not campaign:
@@ -227,6 +238,7 @@ async def update_campaign_status(
 
 
 # ─── email drafts ─────────────────────────────────────────────────────────────
+
 
 @router.get("/campaigns/{campaign_id}/emails", response_model=dict)
 async def list_emails(
@@ -249,8 +261,18 @@ async def list_emails(
     if status_filter:
         q = q.where(OutreachEmail.status == status_filter)
 
-    total = (await db.execute(select(func.count()).select_from(q.subquery()))).scalar_one()
-    emails = (await db.execute(q.order_by(OutreachEmail.created_at.desc()).offset(offset).limit(limit))).scalars().all()
+    total = (
+        await db.execute(select(func.count()).select_from(q.subquery()))
+    ).scalar_one()
+    emails = (
+        (
+            await db.execute(
+                q.order_by(OutreachEmail.created_at.desc()).offset(offset).limit(limit)
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     items = []
     for e in emails:
@@ -282,7 +304,12 @@ async def list_emails(
         )
         items.append(d)
 
-    return {"items": [i.model_dump() for i in items], "total": total, "offset": offset, "limit": limit}
+    return {
+        "items": [i.model_dump() for i in items],
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+    }
 
 
 @router.patch("/emails/{email_id}/approve")
@@ -299,9 +326,13 @@ async def approve_email(
     if not email:
         raise HTTPException(status_code=404, detail="Email not found")
     if email.status not in ("draft", "pending"):
-        raise HTTPException(status_code=400, detail=f"Cannot approve email with status '{email.status}'")
+        raise HTTPException(
+            status_code=400, detail=f"Cannot approve email with status '{email.status}'"
+        )
     if not email.generated_body or not email.generated_subject:
-        raise HTTPException(status_code=400, detail="Email has no generated content yet")
+        raise HTTPException(
+            status_code=400, detail="Email has no generated content yet"
+        )
 
     email.status = "approved"
     email.approved_by_user_id = current_user.id
@@ -351,7 +382,9 @@ async def edit_email_draft(
     if not email:
         raise HTTPException(status_code=404, detail="Email not found")
     if email.status not in ("draft", "pending"):
-        raise HTTPException(status_code=400, detail=f"Cannot edit email with status '{email.status}'")
+        raise HTTPException(
+            status_code=400, detail=f"Cannot edit email with status '{email.status}'"
+        )
 
     if body.generated_subject is not None:
         email.generated_subject = body.generated_subject
@@ -380,6 +413,7 @@ async def skip_email(
 
 
 # ─── Resend inbound webhook ───────────────────────────────────────────────────
+
 
 class ResendInboundPayload(BaseModel):
     from_: Optional[str] = None
@@ -413,7 +447,9 @@ async def inbound_email_webhook(
     matched_email = None
     if in_reply_to:
         result = await db.execute(
-            select(OutreachEmail).where(OutreachEmail.resend_message_id == in_reply_to.strip("<>"))
+            select(OutreachEmail).where(
+                OutreachEmail.resend_message_id == in_reply_to.strip("<>")
+            )
         )
         matched_email = result.scalar_one_or_none()
 
@@ -422,7 +458,8 @@ async def inbound_email_webhook(
         # Find shelter with this email
         shelter_result = await db.execute(
             select(RegisteredShelter).where(
-                func.lower(RegisteredShelter.email) == from_email.lower().split("<")[-1].strip(">").strip()
+                func.lower(RegisteredShelter.email)
+                == from_email.lower().split("<")[-1].strip(">").strip()
                 if "<" in from_email
                 else func.lower(RegisteredShelter.email) == from_email.lower()
             )

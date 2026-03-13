@@ -139,6 +139,7 @@ async def link_file_to_entity(
 @router.get("/download/{file_id}")
 async def download_file(
     file_id: str,
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -147,6 +148,9 @@ async def download_file(
     file_obj = await db.get(FileModel, UUID(file_id))
     if not file_obj:
         raise HTTPException(status_code=404, detail="File not found")
+
+    if file_obj.organization_id != organization_id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     url = await supabase_storage_service.get_public_url(
         storage_path=file_obj.storage_path
@@ -158,6 +162,7 @@ async def download_file(
 @router.delete("/{file_id}")
 async def delete_file(
     file_id: str,
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -166,6 +171,9 @@ async def delete_file(
     file_obj = await db.get(FileModel, UUID(file_id))
     if not file_obj:
         raise HTTPException(status_code=404, detail="File not found")
+
+    if file_obj.organization_id != organization_id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     # Delete from Supabase Storage
     await supabase_storage_service.delete_file(storage_path=file_obj.storage_path)
@@ -181,6 +189,7 @@ async def delete_file(
 async def upload_primary_animal_photo(
     animal_id: str,
     file: UploadFile = FastAPIFile(...),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -190,6 +199,9 @@ async def upload_primary_animal_photo(
     animal = await db.get(Animal, UUID(animal_id))
     if not animal:
         raise HTTPException(status_code=404, detail="Animal not found")
+
+    if animal.organization_id != organization_id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     # Process file upload
     file_content, content_type = await file_upload_service.process_upload(
@@ -320,6 +332,7 @@ async def upload_inventory_item_photo(
 async def upload_contact_avatar(
     contact_id: str,
     file: UploadFile = FastAPIFile(...),
+    organization_id: uuid.UUID = Depends(get_current_organization_id),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -327,6 +340,9 @@ async def upload_contact_avatar(
     contact = await db.get(Contact, UUID(contact_id))
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
+
+    if contact.organization_id != organization_id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     file_content, content_type = await file_upload_service.process_upload(
         file=file,
@@ -372,6 +388,7 @@ async def upload_user_avatar(
 
     # Re-fetch user to get full object (get_current_user uses load_only)
     from sqlalchemy import select
+
     result = await db.execute(select(User).where(User.id == current_user.id))
     user = result.scalar_one()
 
@@ -444,6 +461,9 @@ async def get_animal_documents(
     animal = await db.get(Animal, UUID(animal_id))
     if not animal:
         raise HTTPException(status_code=404, detail="Animal not found")
+
+    if animal.organization_id != organization_id:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     q = (
         select(EntityFile, FileModel, User)

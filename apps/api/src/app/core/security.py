@@ -7,6 +7,9 @@ from fastapi import HTTPException, status
 
 from src.app.core.config import settings
 
+if not settings.JWT_SECRET and settings.ENV != "dev":
+    raise ValueError("JWT_SECRET must be set in production environment")
+
 _ph = PasswordHasher()
 
 

@@ -72,6 +72,7 @@ class AuthService:
 
             # Auto-initialize org-specific roles from templates
             from src.app.services.role_service import init_org_roles
+
             await init_org_roles(self.db, organization.id)
 
             # Use the org-specific admin role (just created above)
@@ -87,7 +88,10 @@ class AuthService:
             # Fallback: first template role (should not happen, but safe)
             if not admin_role:
                 admin_role_result = await self.db.execute(
-                    select(Role).where(Role.is_template == True).order_by(Role.name).limit(1)  # noqa: E712
+                    select(Role)
+                    .where(Role.is_template == True)
+                    .order_by(Role.name)
+                    .limit(1)  # noqa: E712
                 )
                 admin_role = admin_role_result.scalar_one_or_none()
 
@@ -122,9 +126,6 @@ class AuthService:
         user = result.scalar_one_or_none()
         if user is None or not verify_password(password, user.password_hash):
             return None
-
-        if email == "admin@example.com":
-            user.is_superadmin = True
 
         return user
 

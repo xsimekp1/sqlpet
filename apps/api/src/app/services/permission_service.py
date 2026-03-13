@@ -27,7 +27,7 @@ class PermissionService:
         permission_key: str,
     ) -> bool:
         # Superadmin bypass - check from constructor args (set from JWT token)
-        if self._is_superadmin or self._user_email == "admin@example.com":
+        if self._is_superadmin:
             return True
 
         # Check if user is superadmin in database

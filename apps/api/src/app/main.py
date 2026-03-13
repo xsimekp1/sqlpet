@@ -262,7 +262,9 @@ async def lifespan(app: FastAPI):
         if result["skipped"]:
             print("✓ Feeding demo data already exists (skipped)")
         elif result["tasks"] > 0:
-            print(f"✓ Seeded feeding demo: {result['foods']} foods, {result['plans']} plans, {result['tasks']} tasks")
+            print(
+                f"✓ Seeded feeding demo: {result['foods']} foods, {result['plans']} plans, {result['tasks']} tasks"
+            )
         else:
             print("✓ Feeding demo data: no animals found to seed")
     except Exception as e:
@@ -547,6 +549,25 @@ async def timing_middleware(request: Request, call_next):
 
     response.headers["X-Request-ID"] = request_id
     return response
+
+
+# Rate limiting
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+from slowapi.errors import RateLimitExceeded
+from fastapi import Request as FastAPIRequest
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: FastAPIRequest, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Too many requests. Please try again later."},
+    )
 
 
 app.include_router(health_router)

@@ -1029,8 +1029,6 @@ async def get_all_organizations(
     """Get all organizations with their admin members. Only accessible by superadmin."""
     # Check superadmin
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1115,8 +1113,6 @@ async def update_organization(
     """Update organization phone or admin_note. Only accessible by superadmin."""
     # Check superadmin
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1165,8 +1161,6 @@ async def delete_organization(
     """Delete an organization. Only accessible by superadmin."""
     # Check superadmin
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1213,8 +1207,6 @@ async def get_organization_members(
     """Get all members of an organization. Only accessible by superadmin."""
     # Check superadmin
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1286,8 +1278,6 @@ async def get_registered_shelters(
     """Get all registered shelters. Only accessible by superadmin."""
     # Check superadmin from user, token, or hardcoded email (for backwards compatibility)
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1344,8 +1334,6 @@ async def get_shelter_regions(
 ):
     """Get list of unique regions. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1378,8 +1366,6 @@ async def import_registered_shelters(
 ):
     """Import registered shelters from uploaded CSV file. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1626,8 +1612,6 @@ async def create_registered_shelter(
 ):
     """Create a new registered shelter. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1701,8 +1685,6 @@ async def update_registered_shelter(
 ):
     """Update contact details and notes for a shelter. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             payload = decode_token(token)
@@ -1853,11 +1835,10 @@ async def set_user_2fa(
 ):
     """Superadmin can enable or disable 2FA for any user."""
     if not current_user.is_superadmin:
-        if current_user.email != "admin@example.com":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only superadmins can manage 2FA for other users",
-            )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmins can manage 2FA for other users",
+        )
 
     try:
         user_uuid = uuid.UUID(user_id)
@@ -1905,8 +1886,6 @@ async def run_migrations(
 ):
     """Run alembic migrations. Only accessible by superadmin."""
     is_superadmin = current_user.is_superadmin
-    if not is_superadmin and current_user.email == "admin@example.com":
-        is_superadmin = True
     if not is_superadmin and token:
         try:
             from src.app.core.security import decode_token

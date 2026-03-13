@@ -31,10 +31,6 @@ async def get_current_organization_id(
     if hasattr(request.state, "_cached_org_id"):
         return request.state._cached_org_id
 
-    print(
-        f"DEBUG get_current_organization_id called, token present: {token is not None}, x_org_id: {x_organization_id}"
-    )
-
     if token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -44,9 +40,7 @@ async def get_current_organization_id(
 
     try:
         payload = decode_token(token)
-        print(f"DEBUG: org_id from token: {payload.get('org_id')}")
     except Exception as e:
-        print(f"DEBUG: decode_token failed in get_current_organization_id: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)[:100]}",
@@ -81,9 +75,7 @@ async def get_current_user(
     if hasattr(request.state, "_cached_user"):
         return request.state._cached_user
 
-    print(f"DEBUG get_current_user called, token present: {token is not None}")
     if token is None:
-        print("DEBUG: No token in get_current_user")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
@@ -91,9 +83,7 @@ async def get_current_user(
         )
     try:
         payload = decode_token(token)
-        print(f"DEBUG: token decoded, sub: {payload.get('sub')}")
     except Exception as e:
-        print(f"DEBUG: decode_token failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
@@ -122,11 +112,20 @@ async def get_current_user(
     result = await db.execute(
         select(User)
         .where(User.id == user_id)
-        .options(load_only(
-            User.id, User.name, User.email, User.phone,
-            User.is_superadmin, User.profile_photo_url, User.totp_enabled, User.locale,
-            User.created_at, User.updated_at,
-        ))
+        .options(
+            load_only(
+                User.id,
+                User.name,
+                User.email,
+                User.phone,
+                User.is_superadmin,
+                User.profile_photo_url,
+                User.totp_enabled,
+                User.locale,
+                User.created_at,
+                User.updated_at,
+            )
+        )
     )
     user = result.scalar_one_or_none()
     if user is None:

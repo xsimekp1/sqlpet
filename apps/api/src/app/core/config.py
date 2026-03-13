@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     DATABASE_URL_ASYNC: str = "postgresql+asyncpg://pet:pet@localhost:5432/petdb"
     DATABASE_URL_SYNC: str = "postgresql://pet:pet@localhost:5432/petdb"
 
-    JWT_SECRET: str = "dev-secret-change-me"
+    JWT_SECRET: str = ""  # Required in production - generate with: openssl rand -hex 32
     JWT_ISSUER: str = "sqlpet"
     JWT_ACCESS_TTL_MIN: int = 120  # 2 hours - enough for a work session
     JWT_REFRESH_TTL_DAYS: int = 30

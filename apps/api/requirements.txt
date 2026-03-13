@@ -13,6 +13,9 @@ argon2-cffi
 PyJWT
 python-dotenv
 
+# Rate limiting
+slowapi
+
 # 2FA
 pyotp
 qrcode

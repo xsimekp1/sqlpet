@@ -1,8 +1,12 @@
 import logging
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from src.app.api.dependencies.db import get_db
 from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
@@ -18,28 +22,24 @@ from src.app.models.role import Role
 from src.app.models.membership import Membership, MembershipStatus
 from src.app.models.login_log import LoginLog
 from src.app.schemas.auth import (
-    RegisterRequest,
     LoginRequest,
-    RefreshRequest,
     TokenResponse,
-    UserResponse,
-    CurrentUserResponse,
-    MembershipInfo,
-    TwoFactorSetupResponse,
-    TwoFactorVerifyRequest,
-    TwoFactorDisableRequest,
-    BackupCodesResponse,
+    RefreshTokenRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
+    UserResponse,
+    CurrentUserResponse,
     UpdateProfileRequest,
 )
-from src.app.services.auth_service import AuthService
-from src.app.services.two_factor_service import TwoFactorService
-from src.app.core.security import hash_password, verify_password
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def get_login_rate_limit_key(request: Request) -> str:
+    return request.client.host
+
+
+limiter = Limiter(key_func=get_login_rate_limit_key)
 
 
 @router.post(
@@ -62,11 +62,15 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
 
 
 @router.post("/forgot-password")
+@limiter.limit("5/15minutes")
 async def forgot_password(
-    request: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)
+    request: Request,
+    request_body: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
 ):
     """Send password reset email to user."""
     from src.app.services.email_service import EmailService
+    from datetime import datetime, timedelta
 
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
@@ -75,6 +79,9 @@ async def forgot_password(
         import secrets
 
         token = secrets.token_urlsafe(32)
+        user.password_reset_token = token
+        user.password_reset_expires = datetime.utcnow() + timedelta(hours=1)
+        await db.commit()
 
         try:
             EmailService.send_password_reset_email(user.email, token)
@@ -90,11 +97,10 @@ async def reset_password(
 ):
     """Reset password using token from email."""
     from src.app.core.security import hash_password
+    from datetime import datetime
 
     result = await db.execute(
-        select(User).where(
-            User.email == request.token.split("_")[0] if "_" in request.token else ""
-        )
+        select(User).where(User.password_reset_token == request.token)
     )
     user = result.scalar_one_or_none()
 
@@ -103,25 +109,36 @@ async def reset_password(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token"
         )
 
+    if (
+        user.password_reset_expires is None
+        or user.password_reset_expires < datetime.utcnow()
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Token has expired"
+        )
+
     user.password_hash = hash_password(request.new_password)
+    user.password_reset_token = None
+    user.password_reset_expires = None
     await db.commit()
 
     return {"message": "Password has been reset successfully"}
 
 
 @router.post("/login")
+@limiter.limit("10/15minutes")
 async def login(
-    request: LoginRequest, http_request: Request, db: AsyncSession = Depends(get_db)
+    request: Request, request_body: LoginRequest, db: AsyncSession = Depends(get_db)
 ):
-    ip = http_request.client.host if http_request.client else None
-    user_agent = http_request.headers.get("user-agent")
+    ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
 
     # Look up user by email to determine failure reason for login log
-    result = await db.execute(select(User).where(User.email == request.email))
+    result = await db.execute(select(User).where(User.email == request_body.email))
     existing_user = result.scalar_one_or_none()
 
     svc = AuthService(db)
-    user = await svc.authenticate_user(request.email, request.password)
+    user = await svc.authenticate_user(request_body.email, request_body.password)
 
     # Write login log (non-blocking — never break login flow on log failure)
     try:
@@ -257,19 +274,14 @@ async def get_me(
     except Exception:
         pass  # Ignore refresh errors (e.g., missing columns before migration)
 
-    # Hardcode admin@example.com as superadmin (not persisted in DB)
-    is_superadmin = current_user.is_superadmin
-    if current_user.email == "admin@example.com":
-        is_superadmin = True
-
     # Build user response manually to handle potential missing columns gracefully
     user_response = UserResponse(
         id=current_user.id,
         email=current_user.email,
         name=current_user.name,
         phone=current_user.phone,
-        profile_photo_url=getattr(current_user, 'profile_photo_url', None),
-        is_superadmin=is_superadmin,
+        profile_photo_url=getattr(current_user, "profile_photo_url", None),
+        is_superadmin=current_user.is_superadmin,
         totp_enabled=current_user.totp_enabled,
         created_at=current_user.created_at,
     )
@@ -293,8 +305,10 @@ async def update_me(
         current_user.phone = data.phone if data.phone else None
     if data.profile_photo_url is not None:
         # Only set if column exists (migration may not have run yet)
-        if hasattr(current_user, 'profile_photo_url'):
-            current_user.profile_photo_url = data.profile_photo_url if data.profile_photo_url else None
+        if hasattr(current_user, "profile_photo_url"):
+            current_user.profile_photo_url = (
+                data.profile_photo_url if data.profile_photo_url else None
+            )
 
     db.add(current_user)
     await db.commit()
@@ -306,7 +320,7 @@ async def update_me(
         email=current_user.email,
         name=current_user.name,
         phone=current_user.phone,
-        profile_photo_url=getattr(current_user, 'profile_photo_url', None),
+        profile_photo_url=getattr(current_user, "profile_photo_url", None),
         is_superadmin=current_user.is_superadmin,
         totp_enabled=current_user.totp_enabled,
         created_at=current_user.created_at,

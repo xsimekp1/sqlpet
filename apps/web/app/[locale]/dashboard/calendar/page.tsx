@@ -54,11 +54,10 @@ interface CalendarAdoptionEligibleEvent {
 }
 
 interface CalendarEventsData {
-  intakes: CalendarIntakeEvent[];
-  litters: CalendarLitterEvent[];
-  escapes: CalendarEscapeEvent[];
-  outcomes: CalendarOutcomeEvent[];
-  adoption_eligible: CalendarAdoptionEligibleEvent[];
+  intakes: Array<{ date: string; animal_id: string; animal_name: string; animal_photo_url: string | null }>;
+  litters: Array<{ date: string; animal_id: string; animal_name: string; animal_photo_url: string | null }>;
+  escapes: Array<{ date: string; animal_id: string; animal_name: string; animal_photo_url: string | null }>;
+  outcomes: Array<{ date: string; animal_id: string; animal_name: string; animal_photo_url: string | null; outcome_type: string }>;
 }
 
 interface CalendarEvent {
@@ -153,15 +152,6 @@ export default function CalendarPage() {
         name: outcome.animal_name,
         photo_url: outcome.animal_photo_url,
       });
-    }
-
-    // Add adoption eligibility events (legal deadline expires)
-    for (const eligible of eventsData?.adoption_eligible ?? []) {
-      addEvent(eligible.date, 'adoption_eligible', {
-        id: eligible.animal_id,
-        name: eligible.animal_name,
-        photo_url: eligible.animal_photo_url,
-      }, eligible.deadline_type);
     }
 
     return map;
