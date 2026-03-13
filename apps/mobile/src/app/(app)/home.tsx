@@ -186,9 +186,6 @@ export default function HomeScreen() {
                     <Text style={styles.animalMiniName} numberOfLines={1}>
                       {animal.name}
                     </Text>
-                    <Text style={styles.animalMiniSpecies}>
-                      {SPECIES_EMOJI[animal.species] ?? '🐾'}
-                    </Text>
                     {days !== null && (
                       <Text style={styles.animalMiniDays}>
                         {days === 0 ? 'Dnes' : `${days} d`}
@@ -372,10 +369,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
     textAlign: 'center',
-    marginBottom: 2,
-  },
-  animalMiniSpecies: {
-    fontSize: 14,
     marginBottom: 2,
   },
   animalMiniDays: {

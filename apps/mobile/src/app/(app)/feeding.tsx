@@ -23,14 +23,6 @@ const FILTER_OPTIONS: { value: Filter; label: string }[] = [
   { value: 'all',      label: 'Vše' },
 ];
 
-const SPECIES_EMOJI: Record<string, string> = {
-  dog:    '🐕',
-  cat:    '🐈',
-  rodent: '🐹',
-  bird:   '🐦',
-  other:  '🐾',
-};
-
 function PlanCard({
   item,
   onDeactivate,
@@ -38,11 +30,10 @@ function PlanCard({
   item: FeedingPlan;
   onDeactivate: (id: string) => void;
 }) {
-  const speciesEmoji = SPECIES_EMOJI[item.animal?.species ?? ''] ?? '🐾';
-  const animalName = item.animal?.name ?? '—';
-  const publicCode = item.animal?.public_code ? `#${item.animal.public_code}` : '';
-  const foodName = item.food?.name ?? '—';
-  const foodBrand = item.food?.brand ? ` · ${item.food.brand}` : '';
+  const animalName = item.animal_name ?? '—';
+  const publicCode = item.animal_public_code ? `#${item.animal_public_code}` : '';
+  const foodName = item.food_name ?? '—';
+  const foodBrand = item.food_brand ? ` · ${item.food_brand}` : '';
   const amountLabel = item.amount_g
     ? `${item.amount_g} g`
     : item.amount_text ?? '—';
@@ -72,9 +63,9 @@ function PlanCard({
       activeOpacity={0.85}
       onLongPress={handleLongPress}
     >
-      {/* Left: species + animal */}
+      {/* Left: animal name */}
       <View style={styles.cardLeft}>
-        <Text style={styles.speciesEmoji}>{speciesEmoji}</Text>
+        <UtensilsCrossed size={20} color="#6B4EFF" style={{ marginBottom: 4 }} />
         <Text style={styles.animalName}>{animalName}</Text>
         {publicCode ? <Text style={styles.publicCode}>{publicCode}</Text> : null}
       </View>
@@ -288,10 +279,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: 52,
     marginRight: 12,
-  },
-  speciesEmoji: {
-    fontSize: 24,
-    marginBottom: 4,
   },
   animalName: {
     fontSize: 12,
