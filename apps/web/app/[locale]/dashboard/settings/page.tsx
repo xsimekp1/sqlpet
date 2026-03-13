@@ -1674,7 +1674,7 @@ export default function SettingsPage() {
       <Dialog open={!!setPasswordTarget} onOpenChange={(open) => !open && setSetPasswordTarget(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Změnit heslo — {setPasswordTarget?.name}</DialogTitle>
+            <DialogTitle>Změnit heslo {setPasswordTarget?.name ? `uživatele ${setPasswordTarget.name}` : ''}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 mt-2">
             <div className="space-y-1">
