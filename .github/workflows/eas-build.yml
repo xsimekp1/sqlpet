@@ -32,6 +32,8 @@ jobs:
         working-directory: apps/mobile
     env:
       PROFILE: ${{ inputs.profile || 'preview' }}
+      # Increase memory for Gradle
+      GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError"'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,8 +66,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+
       - name: Build Android (Local)
         run: eas build --platform android --profile ${{ env.PROFILE }} --local --output ./build.apk
+        env:
+          EAS_LOCAL_BUILD_SKIP_CLEANUP: 1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
