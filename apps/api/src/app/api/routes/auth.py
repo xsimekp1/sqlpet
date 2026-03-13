@@ -8,6 +8,8 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+logger = logging.getLogger(__name__)
+
 from src.app.api.dependencies.db import get_db
 from src.app.api.dependencies.auth import get_current_user, get_current_organization_id
 from src.app.core.config import settings
@@ -78,7 +80,7 @@ async def forgot_password(
     from src.app.services.email_service import EmailService
     from datetime import datetime, timedelta
 
-    result = await db.execute(select(User).where(User.email == request.email))
+    result = await db.execute(select(User).where(User.email == request_body.email))
     user = result.scalar_one_or_none()
 
     if user:
@@ -152,7 +154,7 @@ async def login(
             log = LoginLog(
                 id=uuid.uuid4(),
                 user_id=user.id,
-                email=request.email,
+                email=request_body.email,
                 ip=ip,
                 user_agent=user_agent,
                 success=True,
@@ -165,7 +167,7 @@ async def login(
             log = LoginLog(
                 id=uuid.uuid4(),
                 user_id=existing_user.id if existing_user else None,
-                email=request.email,
+                email=request_body.email,
                 ip=ip,
                 user_agent=user_agent,
                 success=False,
