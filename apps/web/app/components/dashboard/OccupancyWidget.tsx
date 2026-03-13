@@ -65,30 +65,23 @@ export function OccupancyWidget({ editMode, onRemove, dragHandleProps }: Occupan
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-[var(--color-primary-soft)]">
-                <Grid3x3 className="h-6 w-6 text-[var(--color-primary)]" />
+            {/* Total on one line */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-[var(--color-primary-soft)]">
+                  <Grid3x3 className="h-5 w-5 text-[var(--color-primary)]" />
+                </div>
+                <div>
+                  <span className="text-3xl font-bold text-[var(--color-primary)]">{totalOccupied}</span>
+                  <span className="text-lg text-muted-foreground"> / {totalCapacity}</span>
+                  <span className="text-sm text-muted-foreground ml-2">({Math.round(overallPercentage)}%)</span>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-4xl font-bold text-[var(--color-primary)]">{totalOccupied}</p>
-                <p className="text-sm text-muted-foreground">/ {totalCapacity} {t('totalCapacity')}</p>
-              </div>
-            </div>
-
-            {/* Overall progress */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{t('overall')}</span>
-                <span className="font-medium text-[var(--color-primary)]">
-                  {Math.round(overallPercentage)}%
-                </span>
-              </div>
-              <div className="h-2 rounded-full bg-[var(--color-primary-soft)] overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary)] transition-all duration-300"
-                  style={{ width: `${overallPercentage}%` }}
-                />
-              </div>
+              <Link href="/dashboard/kennels">
+                <Button variant="link" size="sm" className="px-0 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300">
+                  {t('viewAll')} <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+              </Link>
             </div>
 
             {/* Zone breakdown */}
@@ -108,12 +101,6 @@ export function OccupancyWidget({ editMode, onRemove, dragHandleProps }: Occupan
             )}
           </>
         )}
-
-        <Link href="/dashboard/kennels">
-          <Button variant="link" size="sm" className="px-0 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300">
-            {t('viewAll')} <ArrowRight className="ml-1 h-3 w-3" />
-          </Button>
-        </Link>
       </div>
     </WidgetCard>
   )
