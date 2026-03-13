@@ -21,6 +21,7 @@ from src.app.models.organization import Organization
 from src.app.models.role import Role
 from src.app.models.membership import Membership, MembershipStatus
 from src.app.models.login_log import LoginLog
+from src.app.services.auth_service import AuthService
 from src.app.schemas.auth import (
     RegisterRequest,
     LoginRequest,
