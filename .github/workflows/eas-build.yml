@@ -55,8 +55,8 @@ jobs:
 
       - name: Build Android
         if: ${{ env.PLATFORM == 'android' || env.PLATFORM == 'all' }}
-        run: eas build --platform android --profile ${{ env.PROFILE }} --non-interactive
+        run: eas build --platform android --profile ${{ env.PROFILE }} --non-interactive --clear-cache
 
       - name: Build iOS
         if: ${{ env.PLATFORM == 'ios' || env.PLATFORM == 'all' }}
-        run: eas build --platform ios --profile ${{ env.PROFILE }} --non-interactive
+        run: eas build --platform ios --profile ${{ env.PROFILE }} --non-interactive --clear-cache
