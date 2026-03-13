@@ -1778,6 +1778,7 @@ function getPermissionLabel(key: string): string {
     'animals.write': 'Zápis zvířat',
     'intakes.write': 'Příjem zvířat',
     'outcomes.write': 'Výdej zvířat',
+    'kennels.read': 'Čtení kotců',
     'kennels.manage': 'Správa kotců',
     'medical.read': 'Čtení zdravotních záznamů',
     'medical.write': 'Zápis zdravotních záznamů',
@@ -1797,6 +1798,10 @@ function getPermissionLabel(key: string): string {
     'tasks.write': 'Zápis úkolů',
     'feeding.read': 'Čtení krmení',
     'feeding.write': 'Zápis krmení',
+    'walks.read': 'Čtení procházek',
+    'walks.write': 'Zápis procházek',
+    'adoptions.read': 'Čtení adopcí',
+    'adoptions.write': 'Zápis adopcí',
     'chat.use': 'Použití chatu',
   };
   return labels[key] || key;
