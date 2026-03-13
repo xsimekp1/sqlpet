@@ -1667,6 +1667,49 @@ class ApiClient {
     }
   }
 
+  // Documents
+  static async getDocuments(options: {
+    animalId?: string;
+    templateId?: string;
+    limit?: number;
+    skip?: number;
+  } = {}): Promise<DocumentListResponse> {
+    const { animalId, templateId, limit = 50, skip = 0 } = options;
+    try {
+      const params = new URLSearchParams();
+      params.set('limit', String(limit));
+      params.set('skip', String(skip));
+      if (animalId) params.set('animal_id', animalId);
+      if (templateId) params.set('template_id', templateId);
+
+      const response = await axios.get<DocumentListResponse>(
+        `${API_URL}/documents?${params.toString()}`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.detail || 'Failed to fetch documents');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
+  static async getDocumentTemplates(): Promise<any> {
+    try {
+      const response = await axios.get(
+        `${API_URL}/document-templates`,
+        { headers: this.getAuthHeaders() }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.detail || 'Failed to fetch document templates');
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
+
   static async createIncident(data: {
     animal_id: string;
     incident_type: string;
@@ -2209,6 +2252,57 @@ class ApiClient {
   }> {
     return this.post(`/feeding/tasks/ensure-window?hours_ahead=${hoursAhead}`);
   }
+
+  // ─── Outreach Campaigns ────────────────────────────────────────────────────
+
+  static async getOutreachCampaigns(): Promise<OutreachCampaign[]> {
+    return this.get('/superadmin/outreach/campaigns');
+  }
+
+  static async getOutreachCampaign(campaignId: string): Promise<OutreachCampaign> {
+    return this.get(`/superadmin/outreach/campaigns/${campaignId}`);
+  }
+
+  static async createOutreachCampaign(data: {
+    name: string;
+    description?: string;
+    subject_template: string;
+    body_template?: string;
+    from_email?: string;
+    reply_to?: string;
+  }): Promise<OutreachCampaign> {
+    return this.post('/superadmin/outreach/campaigns', data);
+  }
+
+  static async updateCampaignStatus(campaignId: string, status: 'draft' | 'active' | 'paused' | 'completed'): Promise<{ id: string; status: string }> {
+    return this.patch(`/superadmin/outreach/campaigns/${campaignId}/status?new_status=${status}`);
+  }
+
+  static async getCampaignEmails(
+    campaignId: string,
+    params?: { status?: string; offset?: number; limit?: number }
+  ): Promise<OutreachEmailListResponse> {
+    return this.get(`/superadmin/outreach/campaigns/${campaignId}/emails`, params);
+  }
+
+  static async approveOutreachEmail(emailId: string): Promise<{ id: string; status: string }> {
+    return this.patch(`/superadmin/outreach/emails/${emailId}/approve`);
+  }
+
+  static async bulkApproveOutreachEmails(emailIds: string[]): Promise<{ approved: number }> {
+    return this.post('/superadmin/outreach/emails/bulk-approve', { email_ids: emailIds });
+  }
+
+  static async editOutreachEmailDraft(emailId: string, data: {
+    generated_subject?: string;
+    generated_body?: string;
+  }): Promise<{ id: string; status: string }> {
+    return this.patch(`/superadmin/outreach/emails/${emailId}/edit`, data);
+  }
+
+  static async skipOutreachEmail(emailId: string): Promise<{ id: string; status: string }> {
+    return this.patch(`/superadmin/outreach/emails/${emailId}/skip`);
+  }
 }
 
 // Search types
@@ -2244,4 +2338,79 @@ export interface FindingListResponse {
   total: number;
   page: number;
   page_size: number;
+}
+
+// Document types
+export interface DocumentInstance {
+  id: string;
+  template_id: string;
+  template_name: string | null;
+  template_code: string | null;
+  animal_id: string | null;
+  animal_name: string | null;
+  animal_public_code: string | null;
+  status: string;
+  created_at: string | null;
+  created_by_name: string | null;
+}
+
+export interface DocumentListResponse {
+  items: DocumentInstance[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+// Outreach types
+export interface OutreachCampaign {
+  id: string;
+  name: string;
+  description: string | null;
+  subject_template: string;
+  body_template: string | null;
+  from_email: string;
+  reply_to: string | null;
+  status: 'draft' | 'active' | 'paused' | 'completed';
+  total_targets: number;
+  sent_count: number;
+  replied_count: number;
+  draft_count: number;
+  approved_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OutreachShelterInfo {
+  id: string;
+  name: string;
+  email: string | null;
+  website: string | null;
+  region: string | null;
+}
+
+export interface OutreachEmail {
+  id: string;
+  campaign_id: string;
+  shelter_id: string;
+  shelter: OutreachShelterInfo;
+  status: 'pending' | 'draft' | 'approved' | 'sent' | 'replied' | 'skipped' | 'bounced';
+  generated_subject: string | null;
+  generated_body: string | null;
+  sent_at: string | null;
+  replied_at: string | null;
+  reply_subject: string | null;
+  reply_content: string | null;
+  reply_from: string | null;
+  approved_at: string | null;
+  error_message: string | null;
+  generation_attempts: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OutreachEmailListResponse {
+  items: OutreachEmail[];
+  total: number;
+  offset: number;
+  limit: number;
 }

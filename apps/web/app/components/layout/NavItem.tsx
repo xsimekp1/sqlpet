@@ -138,7 +138,7 @@ export function NavItem({
             {navLink}
           </div>
         </TooltipTrigger>
-        <TooltipContent side="right" className="flex items-center gap-2">
+        <TooltipContent side="right" sideOffset={5} className="z-50 flex items-center gap-2">
           <span>{t(label)}</span>
           <kbd className="font-mono text-[10px] border border-current/20 rounded px-1.5 py-0.5 opacity-60">{formatShortcut(shortcut)}</kbd>
         </TooltipContent>

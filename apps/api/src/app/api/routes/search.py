@@ -13,6 +13,7 @@ from src.app.models.animal import Animal
 from src.app.models.kennel import Kennel, Zone
 from src.app.models.contact import Contact
 from src.app.models.inventory_item import InventoryItem
+from src.app.models.document_template import DocumentInstance, DocumentTemplate
 
 router = APIRouter(prefix="/search", tags=["search"])
 
@@ -134,7 +135,9 @@ async def global_search(
         {
             "id": str(row.id),
             "name": row.name,
-            "category": row.category.value if hasattr(row.category, 'value') else row.category,
+            "category": row.category.value
+            if hasattr(row.category, "value")
+            else row.category,
             "unit": row.unit,
         }
         for row in inventory_result.all()

@@ -1,5 +1,14 @@
 """Document Template models for generating contracts and forms."""
-from sqlalchemy import Column, String, Text, Boolean, ForeignKey, DateTime, Enum as SQLEnum
+
+from sqlalchemy import (
+    Column,
+    String,
+    Text,
+    Boolean,
+    ForeignKey,
+    DateTime,
+    Enum as SQLEnum,
+)
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
@@ -11,6 +20,7 @@ from src.app.db.base import Base
 
 class DocumentStatus(str, enum.Enum):
     """Status of generated document instance."""
+
     DRAFT = "draft"
     FINAL = "final"
 
@@ -22,6 +32,7 @@ class DocumentTemplate(Base):
     Templates contain HTML/Markdown with placeholders like {{animal.name}}, {{org.name}}.
     Admins can create and edit templates.
     """
+
     __tablename__ = "document_templates"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -29,11 +40,13 @@ class DocumentTemplate(Base):
         UUID(as_uuid=True),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=True,  # NULL = global template, otherwise org-specific override
-        index=True
+        index=True,
     )
 
     # Template identification
-    code = Column(String(64), nullable=False, index=True)  # e.g. "donation_contract_dog"
+    code = Column(
+        String(64), nullable=False, index=True
+    )  # e.g. "donation_contract_dog"
     name = Column(String(255), nullable=False)  # e.g. "Darovací smlouva na psa"
     language = Column(String(5), nullable=False, default="cs")  # cs, en
 
@@ -46,11 +59,17 @@ class DocumentTemplate(Base):
 
     # Metadata
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+    created_by_user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
 
     # Relationships
-    instances = relationship("DocumentInstance", back_populates="template", cascade="all, delete-orphan")
+    instances = relationship(
+        "DocumentInstance", back_populates="template", cascade="all, delete-orphan"
+    )
     organization = relationship("Organization")
     created_by = relationship("User")
 
@@ -64,6 +83,7 @@ class DocumentInstance(Base):
 
     Stores a snapshot of the rendered document with all data filled in.
     """
+
     __tablename__ = "document_instances"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -71,25 +91,23 @@ class DocumentInstance(Base):
         UUID(as_uuid=True),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
-        index=True
+        index=True,
     )
 
     # References
     animal_id = Column(
         UUID(as_uuid=True),
         ForeignKey("animals.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        nullable=True,  # Optional - for org-wide documents without specific animal
+        index=True,
     )
     template_id = Column(
         UUID(as_uuid=True),
         ForeignKey("document_templates.id", ondelete="RESTRICT"),
-        nullable=False
+        nullable=False,
     )
     created_by_user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id"),
-        nullable=False
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )
 
     # Manual fields (user-entered data not in DB)
@@ -97,7 +115,9 @@ class DocumentInstance(Base):
     manual_fields = Column(JSONB, nullable=False, default=dict)
 
     # Rendered output (cached)
-    rendered_html = Column(Text, nullable=True)  # Final HTML after placeholder replacement
+    rendered_html = Column(
+        Text, nullable=True
+    )  # Final HTML after placeholder replacement
 
     # Optional PDF storage
     pdf_storage_path = Column(String(512), nullable=True)
@@ -105,9 +125,13 @@ class DocumentInstance(Base):
 
     # Status
     status = Column(
-        SQLEnum(DocumentStatus, name="document_status_enum", values_callable=lambda obj: [e.value for e in obj]),
+        SQLEnum(
+            DocumentStatus,
+            name="document_status_enum",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
         nullable=False,
-        default=DocumentStatus.FINAL
+        default=DocumentStatus.FINAL,
     )
 
     # Metadata

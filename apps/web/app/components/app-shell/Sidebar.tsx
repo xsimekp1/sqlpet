@@ -27,6 +27,8 @@ import {
   Building2,
   Search,
   MapPin,
+  FileText,
+  Mail,
 } from 'lucide-react'
 import { NavItem } from '../layout/NavItem'
 import { useAuth } from '@/app/context/AuthContext'
@@ -138,6 +140,7 @@ export function Sidebar() {
       title: 'nav.system',
       items: [
         { label: 'nav.intake', href: '/dashboard/intake', icon: Inbox, permission: 'intakes.write' },
+        { label: 'nav.documents', href: '/dashboard/documents', icon: FileText, permission: 'documents.read' },
         { label: 'nav.reports', href: '/dashboard/reports', icon: BarChart3, permission: 'reports.run' },
         // Settings moved to topbar header
         ...(user?.is_superadmin ? [{ label: 'nav.newOrg', href: '/dashboard/new-org', icon: PlusCircle, permission: null, isSuperadminOnly: true }] : []),
@@ -151,6 +154,7 @@ export function Sidebar() {
       items: [
         { label: 'nav.organizations', href: '/dashboard/superadmin/organizations', icon: Building2, permission: null, isSuperadminOnly: true },
         { label: 'nav.registeredShelters', href: '/dashboard/admin/registered-shelters', icon: MapPin, permission: null, isSuperadminOnly: true },
+        { label: 'nav.outreach', href: '/dashboard/superadmin/outreach', icon: Mail, permission: null, isSuperadminOnly: true },
       ]
     }] : [])
   ]

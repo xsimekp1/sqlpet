@@ -216,32 +216,15 @@ export function AddKennelDialog({ open, onOpenChange, onCreated }: AddKennelDial
                       <Loader2 className="h-4 w-4 animate-spin" />
                       {t('add.loadingZones')}
                     </div>
-                  ) : zones.length === 0 ? (
-                    <div className="rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-3 space-y-2">
-                      <p className="text-sm text-amber-800 dark:text-amber-200">
-                        {t('add.noZones')}
-                      </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          onOpenChange(false);
-                          // Navigate to zone creation or open zone dialog
-                          window.location.href = '/dashboard/kennels?createZone=true';
-                        }}
-                      >
-                        {t('add.createZoneFirst')}
-                      </Button>
-                    </div>
                   ) : (
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || 'none'}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={t('add.zonePlaceholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="none">— Bez zóny —</SelectItem>
                         {zones.map(z => (
                           <SelectItem key={z.id} value={z.id}>{z.name}</SelectItem>
                         ))}

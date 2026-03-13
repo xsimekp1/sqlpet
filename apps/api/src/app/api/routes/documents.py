@@ -575,3 +575,85 @@ async def delete_document(
 
     await db.delete(document)
     await db.commit()
+
+
+# --- Document Instances (All documents list) ---
+
+
+@router.get("/documents")
+async def list_documents(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    x_organization_id: Annotated[str, Header()],
+    animal_id: UUID | None = None,
+    template_id: UUID | None = None,
+    skip: int = 0,
+    limit: int = 50,
+):
+    """
+    List all document instances for the organization with optional filters.
+    Supports filtering by animal_id, template_id.
+    """
+    org_id = UUID(x_organization_id)
+
+    query = (
+        select(DocumentInstance)
+        .options(
+            selectinload(DocumentInstance.animal),
+            selectinload(DocumentInstance.template),
+        )
+        .where(DocumentInstance.organization_id == org_id)
+    )
+
+    if animal_id is not None:
+        query = query.where(DocumentInstance.animal_id == animal_id)
+    elif animal_id is None and template_id is None:
+        # Default: show all (both animal-specific and org-wide)
+        pass
+
+    if template_id is not None:
+        query = query.where(DocumentInstance.template_id == template_id)
+
+    query = query.order_by(DocumentInstance.created_at.desc()).offset(skip).limit(limit)
+
+    result = await db.execute(query)
+    documents = result.scalars().all()
+
+    # Get total count
+    count_query = select(func.count(DocumentInstance.id)).where(
+        DocumentInstance.organization_id == org_id
+    )
+    if animal_id is not None:
+        count_query = count_query.where(DocumentInstance.animal_id == animal_id)
+    if template_id is not None:
+        count_query = count_query.where(DocumentInstance.template_id == template_id)
+
+    count_result = await db.execute(count_query)
+    total = count_result.scalar()
+
+    items = []
+    for doc in documents:
+        animal = doc.animal
+        items.append(
+            {
+                "id": str(doc.id),
+                "template_id": str(doc.template_id),
+                "template_name": doc.template.name if doc.template else None,
+                "template_code": doc.template.code if doc.template else None,
+                "animal_id": str(doc.animal_id) if doc.animal_id else None,
+                "animal_name": animal.name if animal else None,
+                "animal_public_code": animal.public_code if animal else None,
+                "status": doc.status.value
+                if hasattr(doc.status, "value")
+                else str(doc.status),
+                "created_at": doc.created_at.isoformat() if doc.created_at else None,
+                "created_by_name": doc.created_by.name if doc.created_by else None,
+            }
+        )
+
+    return {
+        "items": items,
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+    }

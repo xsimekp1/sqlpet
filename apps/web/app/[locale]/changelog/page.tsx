@@ -54,11 +54,50 @@ export default function ChangelogPage() {
             </p>
           </div>
 
-          {/* Week 11-12.3 */}
+          {/* Week 9-13.3 */}
           <section className="mb-12">
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 11. – 12. března 2026</span>
+              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 9. – 13. března 2026</span>
               <span className="bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">NOVÉ</span>
+            </h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-6 space-y-4">
+              <div>
+                <span className="font-semibold text-white">⚡ Rychlejší aplikace</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Optimalizovány pomalé API endpointy – načítání dat je nyní výrazně rychlejší.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🔍 Pokročilé vyhledávání</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Vylepšené vyhledávání zvířat – filtry pro kalendář, eligibility k adopci.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🥫 Váha krmiva</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Podpora pro různé velikosti balení mokrého krmiva – správné výpočty spotřeby.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🛠️ Drobná vylepšení UX</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Lepší zobrazování tooltipů, sjednocená výška widgetů, překlady validačních chyb.
+                </p>
+              </div>
+              <div>
+                <span className="font-semibold text-white">🌍 Víc jazyků</span>
+                <p className="text-teal-100 text-sm mt-1">
+                  Opravena lokalizace na detailu zvířete – správné načítání jazyka z URL.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Week 2-6.3 */}
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+              <span className="bg-white/20 rounded-full px-3 py-1 text-sm">📅 2. – 6. března 2026</span>
             </h2>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/10 p-6 space-y-4">
               <div>
